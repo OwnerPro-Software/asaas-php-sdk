@@ -1,2 +1,9 @@
-/.idea
-/vendors
+/vendor/
+/node_modules/
+.phpunit.result.cache
+.phpunit.cache/
+coverage/
+.php-cs-fixer.cache
+.idea/
+.DS_Store
+*.swp

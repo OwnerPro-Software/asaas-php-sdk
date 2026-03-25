@@ -1,0 +1,68 @@
+{
+    "name": "ownerpro/asaas-php-sdk",
+    "description": "Clean PHP SDK for the Asaas payment platform API",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.1",
+        "illuminate/http": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "OwnerPro\\Asaas\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OwnerPro\\Asaas\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "OwnerPro\\Asaas\\AsaasServiceProvider"
+            ],
+            "aliases": {
+                "Asaas": "OwnerPro\\Asaas\\Asaas"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/pest --coverage --min=100 --parallel",
+        "test:mutate": "./vendor/bin/pest --mutate --min=100 --parallel",
+        "test:type-coverage": "./vendor/bin/pest --type-coverage --min=100",
+        "analyse:phpstan": "./vendor/bin/phpstan analyse",
+        "analyse:psalm": "./vendor/bin/psalm --taint-analysis",
+        "analyse:rector": "./vendor/bin/rector --dry-run",
+        "format": "./vendor/bin/pint",
+        "format:check": "./vendor/bin/pint --test",
+        "quality": [
+            "@test",
+            "@test:mutate",
+            "@test:type-coverage",
+            "@analyse:rector",
+            "@analyse:phpstan",
+            "@analyse:psalm",
+            "@format:check"
+        ]
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require-dev": {
+        "driftingly/rector-laravel": "^2.2",
+        "laravel/pint": "^1.29",
+        "orchestra/testbench": "^10.11",
+        "pestphp/pest": "^4.4",
+        "pestphp/pest-plugin-mutate": "^4.0",
+        "pestphp/pest-plugin-type-coverage": "^4.0",
+        "rector/rector": "^2.3",
+        "vimeo/psalm": "^6.16"
+    }
+}
