@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use RectorLaravel\Rector\MethodCall\ContainerBindConcreteWithClosureOnlyRector;
 use RectorLaravel\Set\LaravelSetProvider;
 
 return RectorConfig::configure()
@@ -13,6 +14,11 @@ return RectorConfig::configure()
     ->withSetProviders(LaravelSetProvider::class)
     ->withComposerBased(laravel: true)
     ->withImportNames(removeUnusedImports: true)
+    ->withSkip([
+        ContainerBindConcreteWithClosureOnlyRector::class => [
+            __DIR__.'/src/AsaasServiceProvider.php',
+        ],
+    ])
     ->withPreparedSets(
         deadCode: true,
         codeQuality: true,

@@ -1,0 +1,11 @@
+{
+    "id": "pay_123",
+    "customer": "cus_456",
+    "billingType": "PIX",
+    "value": 100.00,
+    "status": "PENDING",
+    "dueDate": "2026-04-01",
+    "description": "Test payment",
+    "invoiceUrl": "https://invoice.url",
+    "bankSlipUrl": null
+}

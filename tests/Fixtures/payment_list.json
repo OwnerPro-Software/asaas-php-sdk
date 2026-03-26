@@ -1,0 +1,23 @@
+{
+    "object": "list",
+    "hasMore": true,
+    "totalCount": 50,
+    "limit": 10,
+    "offset": 0,
+    "data": [
+        {
+            "id": "pay_1",
+            "customer": "cus_1",
+            "billingType": "PIX",
+            "value": 50.00,
+            "status": "PENDING"
+        },
+        {
+            "id": "pay_2",
+            "customer": "cus_2",
+            "billingType": "BOLETO",
+            "value": 75.00,
+            "status": "CONFIRMED"
+        }
+    ]
+}
