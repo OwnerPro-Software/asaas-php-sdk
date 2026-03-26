@@ -2,23 +2,21 @@
 
 declare(strict_types=1);
 
-namespace OwnerPro\Asaas\Account\Request;
+namespace OwnerPro\Asaas\Pix\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class UpdateAccessTokenRequest
+final class PixKeyRequest
 {
     use HasArrayFactory;
 
     public function __construct(
-        public readonly ?string $name = null,
-        public readonly ?bool $enabled = null,
-        public readonly ?string $expirationDate = null,
+        public readonly string $type,
     ) {}
 
     /** @return list<string> */
     protected static function requiredFields(): array
     {
-        return [];
+        return ['type'];
     }
 }

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\DTO\Bank;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
-use OwnerPro\Asaas\Transfer\Request\CreateTransferRequest;
+use OwnerPro\Asaas\Transfer\Request\TransferRequest;
 use OwnerPro\Asaas\Transfer\Response\TransferResponse;
 use OwnerPro\Asaas\Transfer\TransferResource;
 
@@ -50,7 +50,7 @@ it('creates a transfer from array', function (array $fixture): void {
 it('creates a transfer from request object', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = transferResource()->create(new CreateTransferRequest(value: 100.00, pixAddressKey: 'email@test.com'));
+    $result = transferResource()->create(new TransferRequest(value: 100.00, pixAddressKey: 'email@test.com'));
 
     expect($result->success)->toBeTrue();
 
@@ -121,7 +121,7 @@ it('iterates all transfers lazily', function (array $page1): void {
 it('creates transfer with typed BankAccount DTO', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = transferResource()->create(new CreateTransferRequest(
+    $result = transferResource()->create(new TransferRequest(
         value: 500.00,
         bankAccount: new BankAccount(
             ownerName: 'John Doe',

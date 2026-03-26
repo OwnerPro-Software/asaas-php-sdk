@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Pix\PixResource;
-use OwnerPro\Asaas\Pix\Request\CreatePixKeyRequest;
-use OwnerPro\Asaas\Pix\Request\CreateStaticQrCodeRequest;
+use OwnerPro\Asaas\Pix\Request\PixKeyRequest;
+use OwnerPro\Asaas\Pix\Request\StaticQrCodeRequest;
 use OwnerPro\Asaas\Pix\Response\PixResponse;
 use OwnerPro\Asaas\Pix\Response\StaticQrCodeResponse;
 use OwnerPro\Asaas\Pix\Response\TokenBucketResponse;
@@ -55,7 +55,7 @@ it('creates a pix key from array', function (array $fixture): void {
 it('creates a pix key from request object', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = pixResource()->createKey(new CreatePixKeyRequest(type: 'EVP'));
+    $result = pixResource()->createKey(new PixKeyRequest(type: 'EVP'));
 
     expect($result->success)->toBeTrue();
     expect($result->data->id)->toBe('pix_123');
@@ -181,7 +181,7 @@ it('creates static qr code from request object', function (): void {
         'id' => 'qr_123', 'encodedImage' => 'base64...', 'payload' => '00020126...',
     ], 200)]);
 
-    $result = pixResource()->createStaticQrCode(new CreateStaticQrCodeRequest(
+    $result = pixResource()->createStaticQrCode(new StaticQrCodeRequest(
         addressKey: 'pix_key_123',
         value: 50.00,
     ));

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Pix;
 
 use Generator;
-use OwnerPro\Asaas\Pix\Request\CreatePixKeyRequest;
-use OwnerPro\Asaas\Pix\Request\CreateStaticQrCodeRequest;
+use OwnerPro\Asaas\Pix\Request\PixKeyRequest;
+use OwnerPro\Asaas\Pix\Request\StaticQrCodeRequest;
 use OwnerPro\Asaas\Pix\Response\PixResponse;
 use OwnerPro\Asaas\Pix\Response\StaticQrCodeResponse;
 use OwnerPro\Asaas\Pix\Response\TokenBucketResponse;
@@ -19,10 +19,10 @@ final class PixResource
 {
     public function __construct(private readonly AsaasConnector $asaasConnector) {}
 
-    /** @param array<string, mixed>|CreatePixKeyRequest $data */
-    public function createKey(array|CreatePixKeyRequest $data): AsaasResult
+    /** @param array<string, mixed>|PixKeyRequest $data */
+    public function createKey(array|PixKeyRequest $data): AsaasResult
     {
-        $request = $data instanceof CreatePixKeyRequest ? $data : CreatePixKeyRequest::fromArray($data);
+        $request = $data instanceof PixKeyRequest ? $data : PixKeyRequest::fromArray($data);
 
         return $this->asaasConnector->post('/v3/pix/addressKeys', $request->toArray(), PixResponse::class);
     }
@@ -43,10 +43,10 @@ final class PixResource
         return $this->asaasConnector->delete('/v3/pix/addressKeys/'.$id, PixResponse::class);
     }
 
-    /** @param array<string, mixed>|CreateStaticQrCodeRequest $data */
-    public function createStaticQrCode(array|CreateStaticQrCodeRequest $data = []): AsaasResult
+    /** @param array<string, mixed>|StaticQrCodeRequest $data */
+    public function createStaticQrCode(array|StaticQrCodeRequest $data = []): AsaasResult
     {
-        $request = $data instanceof CreateStaticQrCodeRequest ? $data : CreateStaticQrCodeRequest::fromArray($data);
+        $request = $data instanceof StaticQrCodeRequest ? $data : StaticQrCodeRequest::fromArray($data);
 
         return $this->asaasConnector->post('/v3/pix/qrCodes/static', $request->toArray(), StaticQrCodeResponse::class);
     }

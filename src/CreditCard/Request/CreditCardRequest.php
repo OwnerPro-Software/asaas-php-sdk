@@ -8,7 +8,7 @@ use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class TokenizeCreditCardRequest
+final class CreditCardRequest
 {
     use HasArrayFactory;
 

@@ -8,17 +8,17 @@ use Generator;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
-use OwnerPro\Asaas\Transfer\Request\CreateTransferRequest;
+use OwnerPro\Asaas\Transfer\Request\TransferRequest;
 use OwnerPro\Asaas\Transfer\Response\TransferResponse;
 
 final class TransferResource
 {
     public function __construct(private readonly AsaasConnector $asaasConnector) {}
 
-    /** @param array<string, mixed>|CreateTransferRequest $data */
-    public function create(array|CreateTransferRequest $data): AsaasResult
+    /** @param array<string, mixed>|TransferRequest $data */
+    public function create(array|TransferRequest $data): AsaasResult
     {
-        $request = $data instanceof CreateTransferRequest ? $data : CreateTransferRequest::fromArray($data);
+        $request = $data instanceof TransferRequest ? $data : TransferRequest::fromArray($data);
 
         return $this->asaasConnector->post('/v3/transfers', $request->toArray(), TransferResponse::class);
     }

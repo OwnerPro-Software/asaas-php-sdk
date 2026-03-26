@@ -6,7 +6,7 @@ namespace OwnerPro\Asaas\Pix\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class CreateStaticQrCodeRequest
+final class StaticQrCodeRequest
 {
     use HasArrayFactory;
 

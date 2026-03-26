@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Account;
 
 use Generator;
-use OwnerPro\Asaas\Account\Request\CreateAccountRequest;
-use OwnerPro\Asaas\Account\Request\UpdateAccessTokenRequest;
+use OwnerPro\Asaas\Account\Request\AccountRequest;
+use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Response\AccessTokenResponse;
 use OwnerPro\Asaas\Account\Response\AccountResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -18,10 +18,10 @@ final class AccountResource
 {
     public function __construct(private readonly AsaasConnector $asaasConnector) {}
 
-    /** @param array<string, mixed>|CreateAccountRequest $data */
-    public function create(array|CreateAccountRequest $data): AsaasResult
+    /** @param array<string, mixed>|AccountRequest $data */
+    public function create(array|AccountRequest $data): AsaasResult
     {
-        $request = $data instanceof CreateAccountRequest ? $data : CreateAccountRequest::fromArray($data);
+        $request = $data instanceof AccountRequest ? $data : AccountRequest::fromArray($data);
 
         return $this->asaasConnector->post('/v3/accounts', $request->toArray(), AccountResponse::class);
     }
@@ -47,10 +47,10 @@ final class AccountResource
         return $this->asaasConnector->post(sprintf('/v3/accounts/%s/accessTokens', $accountId), [], AccessTokenResponse::class);
     }
 
-    /** @param array<string, mixed>|UpdateAccessTokenRequest $data */
-    public function updateAccessToken(string $accountId, string $tokenId, array|UpdateAccessTokenRequest $data): AsaasResult
+    /** @param array<string, mixed>|AccessTokenRequest $data */
+    public function updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
     {
-        $request = $data instanceof UpdateAccessTokenRequest ? $data : UpdateAccessTokenRequest::fromArray($data);
+        $request = $data instanceof AccessTokenRequest ? $data : AccessTokenRequest::fromArray($data);
 
         return $this->asaasConnector->put(sprintf('/v3/accounts/%s/accessTokens/%s', $accountId, $tokenId), $request->toArray(), AccessTokenResponse::class);
     }

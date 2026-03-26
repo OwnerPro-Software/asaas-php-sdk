@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\CreditCard;
 
-use OwnerPro\Asaas\CreditCard\Request\SetPreAuthConfigRequest;
-use OwnerPro\Asaas\CreditCard\Request\TokenizeCreditCardRequest;
+use OwnerPro\Asaas\CreditCard\Request\PreAuthConfigRequest;
+use OwnerPro\Asaas\CreditCard\Request\CreditCardRequest;
 use OwnerPro\Asaas\CreditCard\Response\CreditCardResponse;
 use OwnerPro\Asaas\CreditCard\Response\PreAuthConfigResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -15,10 +15,10 @@ final class CreditCardResource
 {
     public function __construct(private readonly AsaasConnector $asaasConnector) {}
 
-    /** @param array<string, mixed>|TokenizeCreditCardRequest $data */
-    public function tokenize(array|TokenizeCreditCardRequest $data): AsaasResult
+    /** @param array<string, mixed>|CreditCardRequest $data */
+    public function tokenize(array|CreditCardRequest $data): AsaasResult
     {
-        $request = $data instanceof TokenizeCreditCardRequest ? $data : TokenizeCreditCardRequest::fromArray($data);
+        $request = $data instanceof CreditCardRequest ? $data : CreditCardRequest::fromArray($data);
 
         return $this->asaasConnector->post('/v3/creditCard/tokenizeCreditCard', $request->toArray(), CreditCardResponse::class);
     }
@@ -28,10 +28,10 @@ final class CreditCardResource
         return $this->asaasConnector->get('/v3/creditCard/preAuthorization/config', [], PreAuthConfigResponse::class);
     }
 
-    /** @param array<string, mixed>|SetPreAuthConfigRequest $data */
-    public function setPreAuthorizationConfig(array|SetPreAuthConfigRequest $data): AsaasResult
+    /** @param array<string, mixed>|PreAuthConfigRequest $data */
+    public function setPreAuthorizationConfig(array|PreAuthConfigRequest $data): AsaasResult
     {
-        $request = $data instanceof SetPreAuthConfigRequest ? $data : SetPreAuthConfigRequest::fromArray($data);
+        $request = $data instanceof PreAuthConfigRequest ? $data : PreAuthConfigRequest::fromArray($data);
 
         return $this->asaasConnector->post('/v3/creditCard/preAuthorization/config', $request->toArray(), PreAuthConfigResponse::class);
     }

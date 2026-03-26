@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Account\AccountResource;
-use OwnerPro\Asaas\Account\Request\CreateAccountRequest;
-use OwnerPro\Asaas\Account\Request\UpdateAccessTokenRequest;
+use OwnerPro\Asaas\Account\Request\AccountRequest;
+use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Response\AccessTokenResponse;
 use OwnerPro\Asaas\Account\Response\AccountResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -53,7 +53,7 @@ it('creates a subaccount', function (array $fixture, array $payload): void {
 it('creates a subaccount from request object', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = accountResource()->create(new CreateAccountRequest(
+    $result = accountResource()->create(new AccountRequest(
         name: 'Sub Account',
         email: 'sub@test.com',
         cpfCnpj: '12345678900',
@@ -149,7 +149,7 @@ it('updates an access token from request object', function (): void {
         'id' => 'tok_1', 'name' => 'Updated', 'enabled' => false,
     ], 200)]);
 
-    $result = accountResource()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRequest(
+    $result = accountResource()->updateAccessToken('acc_123', 'tok_1', new AccessTokenRequest(
         name: 'Updated',
         enabled: false,
         expirationDate: '2027-01-01',

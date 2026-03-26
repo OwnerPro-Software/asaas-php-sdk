@@ -6,7 +6,7 @@ namespace OwnerPro\Asaas\Account\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class CreateAccountRequest
+final class AccountRequest
 {
     use HasArrayFactory;
 

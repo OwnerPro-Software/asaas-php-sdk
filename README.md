@@ -206,9 +206,9 @@ Available nested DTOs (`OwnerPro\Asaas\Support\DTO\*`):
 
 | DTO | Used in |
 |-----|---------|
-| `CreditCard` | `CreatePaymentRequest`, `TokenizeCreditCardRequest`, `PayWithCreditCardRequest` |
-| `CreditCardHolderInfo` | `CreatePaymentRequest`, `TokenizeCreditCardRequest`, `PayWithCreditCardRequest` |
-| `BankAccount` | `CreateTransferRequest` |
+| `CreditCard` | `CreatePaymentRequest`, `CreditCardRequest`, `PayWithCreditCardRequest` |
+| `CreditCardHolderInfo` | `CreatePaymentRequest`, `CreditCardRequest`, `PayWithCreditCardRequest` |
+| `BankAccount` | `TransferRequest` |
 | `Bank` | Nested inside `BankAccount` |
 | `Taxes` | `CreateInvoiceRequest`, `UpdateInvoiceRequest` |
 | `Split` | `CreatePaymentRequest`, `UpdatePaymentRequest` |
@@ -301,9 +301,9 @@ Asaas::pixTransactions()->payQrCode(new PayQrCodeRequest(
 **Pix:**
 
 ```php
-use OwnerPro\Asaas\Pix\Request\CreateStaticQrCodeRequest;
+use OwnerPro\Asaas\Pix\Request\StaticQrCodeRequest;
 
-Asaas::pix()->createStaticQrCode(new CreateStaticQrCodeRequest(
+Asaas::pix()->createStaticQrCode(new StaticQrCodeRequest(
     addressKey: 'abc-uuid-key',
     description: 'Store payment',
     value: 49.90,
@@ -323,15 +323,15 @@ Asaas::billPayments()->simulate(new SimulateBillPaymentRequest(
 
 ### Updated Request DTOs with Nested DTO Support
 
-`CreatePaymentRequest`, `TokenizeCreditCardRequest`, `CreateInvoiceRequest`, and `CreateTransferRequest` now accept typed nested DTOs alongside plain arrays:
+`CreatePaymentRequest`, `CreditCardRequest`, `CreateInvoiceRequest`, and `TransferRequest` now accept typed nested DTOs alongside plain arrays:
 
 ```php
-use OwnerPro\Asaas\CreditCard\Request\TokenizeCreditCardRequest;
+use OwnerPro\Asaas\CreditCard\Request\CreditCardRequest;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 
 // Tokenize with typed DTOs
-Asaas::creditCards()->tokenize(new TokenizeCreditCardRequest(
+Asaas::creditCards()->tokenize(new CreditCardRequest(
     customer: 'cus_abc123',
     creditCard: new CreditCard(
         holderName: 'John Doe',
@@ -377,12 +377,12 @@ Asaas::invoices()->create(new CreateInvoiceRequest(
 ```
 
 ```php
-use OwnerPro\Asaas\Transfer\Request\CreateTransferRequest;
+use OwnerPro\Asaas\Transfer\Request\TransferRequest;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\DTO\Bank;
 
 // Transfer with typed BankAccount
-Asaas::transfers()->create(new CreateTransferRequest(
+Asaas::transfers()->create(new TransferRequest(
     value: 1000.00,
     bankAccount: new BankAccount(
         ownerName: 'Jane Doe',
@@ -458,11 +458,11 @@ Asaas::payments()->all(array $filters = []): Generator
 ### Pix Keys (`pix()`)
 
 ```php
-Asaas::pix()->createKey(array|CreatePixKeyRequest $data): AsaasResult
+Asaas::pix()->createKey(array|PixKeyRequest $data): AsaasResult
 Asaas::pix()->findKey(string $id): AsaasResult
 Asaas::pix()->listKeys(array $query = []): AsaasPaginatedResult
 Asaas::pix()->deleteKey(string $id): AsaasResult
-Asaas::pix()->createStaticQrCode(array|CreateStaticQrCodeRequest $data = []): AsaasResult
+Asaas::pix()->createStaticQrCode(array|StaticQrCodeRequest $data = []): AsaasResult
 Asaas::pix()->deleteStaticQrCode(string $id): AsaasResult
 Asaas::pix()->tokenBucket(): AsaasResult
 Asaas::pix()->all(array $filters = []): Generator
@@ -482,7 +482,7 @@ Asaas::pixTransactions()->all(array $filters = []): Generator
 ### Transfers (`transfers()`)
 
 ```php
-Asaas::transfers()->create(array|CreateTransferRequest $data): AsaasResult
+Asaas::transfers()->create(array|TransferRequest $data): AsaasResult
 Asaas::transfers()->find(string $id): AsaasResult
 Asaas::transfers()->list(array $query = []): AsaasPaginatedResult
 Asaas::transfers()->cancel(string $id): AsaasResult
@@ -516,12 +516,12 @@ Asaas::invoices()->all(array $filters = []): Generator
 ### Accounts (`accounts()`)
 
 ```php
-Asaas::accounts()->create(array|CreateAccountRequest $data): AsaasResult
+Asaas::accounts()->create(array|AccountRequest $data): AsaasResult
 Asaas::accounts()->find(string $id): AsaasResult
 Asaas::accounts()->list(array $query = []): AsaasPaginatedResult
 Asaas::accounts()->listAccessTokens(string $accountId): AsaasResult
 Asaas::accounts()->createAccessToken(string $accountId): AsaasResult
-Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|UpdateAccessTokenRequest $data): AsaasResult
+Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
 Asaas::accounts()->deleteAccessToken(string $accountId, string $tokenId): AsaasResult
 Asaas::accounts()->all(array $filters = []): Generator
 ```
@@ -529,9 +529,9 @@ Asaas::accounts()->all(array $filters = []): Generator
 ### Credit Cards (`creditCards()`)
 
 ```php
-Asaas::creditCards()->tokenize(array|TokenizeCreditCardRequest $data): AsaasResult
+Asaas::creditCards()->tokenize(array|CreditCardRequest $data): AsaasResult
 Asaas::creditCards()->getPreAuthorizationConfig(): AsaasResult
-Asaas::creditCards()->setPreAuthorizationConfig(array|SetPreAuthConfigRequest $data): AsaasResult
+Asaas::creditCards()->setPreAuthorizationConfig(array|PreAuthConfigRequest $data): AsaasResult
 ```
 
 ### Bill Payments (`billPayments()`)

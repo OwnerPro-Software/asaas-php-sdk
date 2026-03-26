@@ -7,7 +7,7 @@ namespace OwnerPro\Asaas\Transfer\Request;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class CreateTransferRequest
+final class TransferRequest
 {
     use HasArrayFactory;
 

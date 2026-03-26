@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
-use OwnerPro\Asaas\CreditCard\Request\SetPreAuthConfigRequest;
-use OwnerPro\Asaas\CreditCard\Request\TokenizeCreditCardRequest;
+use OwnerPro\Asaas\CreditCard\Request\PreAuthConfigRequest;
+use OwnerPro\Asaas\CreditCard\Request\CreditCardRequest;
 use OwnerPro\Asaas\CreditCard\Response\CreditCardResponse;
 use OwnerPro\Asaas\CreditCard\Response\PreAuthConfigResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -49,7 +49,7 @@ it('tokenizes a credit card from request object', function (): void {
         'creditCardNumber' => '8829', 'creditCardBrand' => 'VISA', 'creditCardToken' => 'tok_abc',
     ], 200)]);
 
-    $result = creditCardResource()->tokenize(new TokenizeCreditCardRequest(
+    $result = creditCardResource()->tokenize(new CreditCardRequest(
         customer: 'cus_1',
         creditCard: ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
         creditCardHolderInfo: ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '1199999'],
@@ -95,7 +95,7 @@ it('sets pre-authorization config from array', function (): void {
 it('sets pre-authorization config from request object', function (): void {
     Http::fake(['*' => Http::response(['daysToExpire' => 7], 200)]);
 
-    $result = creditCardResource()->setPreAuthorizationConfig(new SetPreAuthConfigRequest(daysToExpire: 7));
+    $result = creditCardResource()->setPreAuthorizationConfig(new PreAuthConfigRequest(daysToExpire: 7));
 
     expect($result->success)->toBeTrue();
     expect($result->data->daysToExpire)->toBe(7);
@@ -111,7 +111,7 @@ it('validates required fields for setPreAuthorizationConfig', function (): void 
 it('tokenizes with typed CreditCard DTOs', function (): void {
     Http::fake(['*' => Http::response(['creditCardNumber' => '1111', 'creditCardBrand' => 'VISA', 'creditCardToken' => 'tok_123'], 200)]);
 
-    $result = creditCardResource()->tokenize(new TokenizeCreditCardRequest(
+    $result = creditCardResource()->tokenize(new CreditCardRequest(
         customer: 'cus_456',
         creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
         creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
