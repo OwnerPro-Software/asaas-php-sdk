@@ -9,7 +9,7 @@ use Closure;
 final class AsaasPaginatedResult
 {
     /**
-     * @param  list<BaseDTO>  $data
+     * @param  list<BaseResponse>  $data
      * @param  ?list<array{code?: string, description?: string}>  $errors
      * @param  ?(Closure(int): self)  $nextPageFetcher
      */
@@ -26,7 +26,7 @@ final class AsaasPaginatedResult
     ) {}
 
     /**
-     * @param  list<BaseDTO>  $data
+     * @param  list<BaseResponse>  $data
      * @param  ?Closure(int): self  $nextPageFetcher
      */
     public static function success(

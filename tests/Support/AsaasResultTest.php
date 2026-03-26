@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 use OwnerPro\Asaas\Support\AsaasRequestException;
 use OwnerPro\Asaas\Support\AsaasResult;
-use OwnerPro\Asaas\Support\BaseDTO;
+use OwnerPro\Asaas\Support\BaseResponse;
 
 mutates(AsaasResult::class);
 
-// Concrete test DTO
-final class ResultTestDTO extends BaseDTO
+// Concrete test response
+final class ResultTestResponse extends BaseResponse
 {
     public string $id;
 }
 
 it('creates a successful result with data', function () {
-    $dto = new ResultTestDTO(['id' => 'abc']);
+    $dto = new ResultTestResponse(['id' => 'abc']);
     $result = AsaasResult::success($dto, 200);
 
     expect($result->success)->toBeTrue();
@@ -35,7 +35,7 @@ it('creates a failed result with errors', function () {
 });
 
 it('throw() returns self on success', function () {
-    $dto = new ResultTestDTO(['id' => 'abc']);
+    $dto = new ResultTestResponse(['id' => 'abc']);
     $result = AsaasResult::success($dto, 200);
 
     expect($result->throw())->toBe($result);

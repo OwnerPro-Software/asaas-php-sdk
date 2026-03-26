@@ -11,16 +11,16 @@ final class AsaasResult
      */
     public function __construct(
         public readonly bool $success,
-        public readonly ?BaseDTO $data,
+        public readonly ?BaseResponse $data,
         public readonly ?array $errors,
         public readonly int $statusCode,
     ) {}
 
-    public static function success(BaseDTO $baseDTO, int $statusCode): self
+    public static function success(BaseResponse $baseResponse, int $statusCode): self
     {
         return new self(
             success: true,
-            data: $baseDTO,
+            data: $baseResponse,
             errors: null,
             statusCode: $statusCode,
         );

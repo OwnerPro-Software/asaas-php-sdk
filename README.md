@@ -1,6 +1,6 @@
 # Asaas PHP SDK
 
-Clean PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API with typed resources, tolerant DTOs, and result-based error handling.
+Clean PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API with typed resources, tolerant responses, and result-based error handling.
 
 ## Requirements
 
@@ -86,7 +86,7 @@ All resource methods return `AsaasResult` or `AsaasPaginatedResult`.
 $result = Asaas::payments()->create([...]);
 
 if ($result->success) {
-    $payment = $result->data;       // PaymentDTO
+    $payment = $result->data;       // PaymentResponse
     echo $payment->id;
     echo $payment->status;
 } else {
@@ -117,9 +117,9 @@ try {
 }
 ```
 
-## Input: Arrays or DTOs
+## Input: Arrays or Request Objects
 
-Every `create()` and `update()` method accepts either a plain array or a typed DTO:
+Every `create()` and `update()` method accepts either a plain array or a typed request object:
 
 ```php
 // Array (validated at runtime via required fields)
@@ -130,10 +130,10 @@ $result = Asaas::payments()->create([
     'dueDate' => '2026-04-01',
 ]);
 
-// DTO (validated at construction)
-use OwnerPro\Asaas\Payment\CreatePaymentData;
+// Request object (validated at construction)
+use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
 
-$result = Asaas::payments()->create(new CreatePaymentData(
+$result = Asaas::payments()->create(new CreatePaymentRequest(
     customer: 'cus_abc123',
     billingType: 'PIX',
     value: 100.00,
@@ -141,10 +141,10 @@ $result = Asaas::payments()->create(new CreatePaymentData(
 ));
 ```
 
-DTOs can also be created from arrays via `fromArray()`:
+Request objects can also be created from arrays via `fromArray()`:
 
 ```php
-$data = CreatePaymentData::fromArray($request->validated());
+$data = CreatePaymentRequest::fromArray($request->validated());
 ```
 
 ## Pagination
@@ -154,7 +154,7 @@ List methods return `AsaasPaginatedResult`:
 ```php
 $result = Asaas::payments()->list(['limit' => 10]);
 
-$result->data;        // array of PaymentDTO
+$result->data;        // array of PaymentResponse
 $result->totalCount;  // total items available
 $result->hasMore;     // more pages available?
 $result->limit;
@@ -184,10 +184,10 @@ Unlike other methods that return result objects, `all()` throws `AsaasRequestExc
 ### Payments (`payments()`)
 
 ```php
-Asaas::payments()->create(array|CreatePaymentData $data): AsaasResult
+Asaas::payments()->create(array|CreatePaymentRequest $data): AsaasResult
 Asaas::payments()->find(string $id): AsaasResult
 Asaas::payments()->list(array $query = []): AsaasPaginatedResult
-Asaas::payments()->update(string $id, array|UpdatePaymentData $data): AsaasResult
+Asaas::payments()->update(string $id, array|UpdatePaymentRequest $data): AsaasResult
 Asaas::payments()->delete(string $id): AsaasResult
 Asaas::payments()->refund(string $id, array $data = []): AsaasResult
 Asaas::payments()->restore(string $id): AsaasResult
@@ -208,7 +208,7 @@ Asaas::payments()->all(array $filters = []): Generator
 ### Pix Keys (`pix()`)
 
 ```php
-Asaas::pix()->createKey(array|CreatePixKeyData $data): AsaasResult
+Asaas::pix()->createKey(array|CreatePixKeyRequest $data): AsaasResult
 Asaas::pix()->findKey(string $id): AsaasResult
 Asaas::pix()->listKeys(array $query = []): AsaasPaginatedResult
 Asaas::pix()->deleteKey(string $id): AsaasResult
@@ -232,7 +232,7 @@ Asaas::pixTransactions()->all(array $filters = []): Generator
 ### Transfers (`transfers()`)
 
 ```php
-Asaas::transfers()->create(array|CreateTransferData $data): AsaasResult
+Asaas::transfers()->create(array|CreateTransferRequest $data): AsaasResult
 Asaas::transfers()->find(string $id): AsaasResult
 Asaas::transfers()->list(array $query = []): AsaasPaginatedResult
 Asaas::transfers()->cancel(string $id): AsaasResult
@@ -242,10 +242,10 @@ Asaas::transfers()->all(array $filters = []): Generator
 ### Webhooks (`webhooks()`)
 
 ```php
-Asaas::webhooks()->create(array|CreateWebhookData $data): AsaasResult
+Asaas::webhooks()->create(array|CreateWebhookRequest $data): AsaasResult
 Asaas::webhooks()->find(string $id): AsaasResult
 Asaas::webhooks()->list(array $query = []): AsaasPaginatedResult
-Asaas::webhooks()->update(string $id, array|UpdateWebhookData $data): AsaasResult
+Asaas::webhooks()->update(string $id, array|UpdateWebhookRequest $data): AsaasResult
 Asaas::webhooks()->delete(string $id): AsaasResult
 Asaas::webhooks()->removeBackoff(string $id): AsaasResult
 Asaas::webhooks()->all(array $filters = []): Generator
@@ -254,10 +254,10 @@ Asaas::webhooks()->all(array $filters = []): Generator
 ### Invoices (`invoices()`)
 
 ```php
-Asaas::invoices()->create(array|CreateInvoiceData $data): AsaasResult
+Asaas::invoices()->create(array|CreateInvoiceRequest $data): AsaasResult
 Asaas::invoices()->find(string $id): AsaasResult
 Asaas::invoices()->list(array $query = []): AsaasPaginatedResult
-Asaas::invoices()->update(string $id, array|UpdateInvoiceData $data): AsaasResult
+Asaas::invoices()->update(string $id, array|UpdateInvoiceRequest $data): AsaasResult
 Asaas::invoices()->authorize(string $id): AsaasResult
 Asaas::invoices()->cancel(string $id): AsaasResult
 Asaas::invoices()->all(array $filters = []): Generator
@@ -266,12 +266,12 @@ Asaas::invoices()->all(array $filters = []): Generator
 ### Accounts (`accounts()`)
 
 ```php
-Asaas::accounts()->create(array|CreateAccountData $data): AsaasResult
+Asaas::accounts()->create(array|CreateAccountRequest $data): AsaasResult
 Asaas::accounts()->find(string $id): AsaasResult
 Asaas::accounts()->list(array $query = []): AsaasPaginatedResult
 Asaas::accounts()->listAccessTokens(string $accountId): AsaasResult
 Asaas::accounts()->createAccessToken(string $accountId): AsaasResult
-Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|UpdateAccessTokenData $data): AsaasResult
+Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|UpdateAccessTokenRequest $data): AsaasResult
 Asaas::accounts()->deleteAccessToken(string $accountId, string $tokenId): AsaasResult
 Asaas::accounts()->all(array $filters = []): Generator
 ```
@@ -279,15 +279,15 @@ Asaas::accounts()->all(array $filters = []): Generator
 ### Credit Cards (`creditCards()`)
 
 ```php
-Asaas::creditCards()->tokenize(array|TokenizeCreditCardData $data): AsaasResult
+Asaas::creditCards()->tokenize(array|TokenizeCreditCardRequest $data): AsaasResult
 Asaas::creditCards()->getPreAuthorizationConfig(): AsaasResult
-Asaas::creditCards()->setPreAuthorizationConfig(array|SetPreAuthConfigData $data): AsaasResult
+Asaas::creditCards()->setPreAuthorizationConfig(array|SetPreAuthConfigRequest $data): AsaasResult
 ```
 
 ### Bill Payments (`billPayments()`)
 
 ```php
-Asaas::billPayments()->create(array|CreateBillPaymentData $data): AsaasResult
+Asaas::billPayments()->create(array|CreateBillPaymentRequest $data): AsaasResult
 Asaas::billPayments()->find(string $id): AsaasResult
 Asaas::billPayments()->list(array $query = []): AsaasPaginatedResult
 Asaas::billPayments()->simulate(array $data = []): AsaasResult
@@ -302,9 +302,9 @@ Asaas::statements()->list(array $query = []): AsaasPaginatedResult
 Asaas::statements()->all(array $filters = []): Generator
 ```
 
-## Tolerant DTOs
+## Tolerant Responses
 
-Response DTOs use a tolerant reader pattern. Known fields are typed, but unknown fields from the API are also accessible:
+Response objects use a tolerant reader pattern. Known fields are typed, but unknown fields from the API are also accessible:
 
 ```php
 $payment = $result->data;
@@ -317,7 +317,7 @@ $payment->status;    // ?string
 $payment->someNewField;  // mixed (returns null if not present)
 ```
 
-DTOs are immutable. Attempting to modify a property throws `LogicException`.
+Response objects are immutable. Attempting to modify a property throws `LogicException`.
 
 ## License
 

@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
-use OwnerPro\Asaas\Account\AccessTokenDTO;
-use OwnerPro\Asaas\Account\AccountDTO;
 use OwnerPro\Asaas\Account\AccountResource;
-use OwnerPro\Asaas\Account\CreateAccountData;
-use OwnerPro\Asaas\Account\UpdateAccessTokenData;
+use OwnerPro\Asaas\Account\Request\CreateAccountRequest;
+use OwnerPro\Asaas\Account\Request\UpdateAccessTokenRequest;
+use OwnerPro\Asaas\Account\Response\AccessTokenResponse;
+use OwnerPro\Asaas\Account\Response\AccountResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasResult;
 
@@ -43,17 +43,17 @@ it('creates a subaccount', function (array $fixture, array $payload): void {
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccountDTO::class);
+    expect($result->data)->toBeInstanceOf(AccountResponse::class);
     expect($result->data->id)->toBe('acc_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts'
         && $request->method() === 'POST');
 })->with('account_fixture', 'create_account_payload');
 
-it('creates a subaccount from DTO', function (array $fixture): void {
+it('creates a subaccount from request object', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = accountResource()->create(new CreateAccountData(
+    $result = accountResource()->create(new CreateAccountRequest(
         name: 'Sub Account',
         email: 'sub@test.com',
         cpfCnpj: '12345678900',
@@ -109,7 +109,7 @@ it('lists access tokens', function (): void {
     $result = accountResource()->listAccessTokens('acc_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccessTokenDTO::class);
+    expect($result->data)->toBeInstanceOf(AccessTokenResponse::class);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens');
 });
@@ -122,7 +122,7 @@ it('creates an access token', function (): void {
     $result = accountResource()->createAccessToken('acc_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccessTokenDTO::class);
+    expect($result->data)->toBeInstanceOf(AccessTokenResponse::class);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens'
         && $request->method() === 'POST');
@@ -138,25 +138,25 @@ it('updates an access token from array', function (): void {
     ]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccessTokenDTO::class);
+    expect($result->data)->toBeInstanceOf(AccessTokenResponse::class);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens/tok_1'
         && $request->method() === 'PUT');
 });
 
-it('updates an access token from DTO', function (): void {
+it('updates an access token from request object', function (): void {
     Http::fake(['*' => Http::response([
         'id' => 'tok_1', 'name' => 'Updated', 'enabled' => false,
     ], 200)]);
 
-    $result = accountResource()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenData(
+    $result = accountResource()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRequest(
         name: 'Updated',
         enabled: false,
         expirationDate: '2027-01-01',
     ));
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccessTokenDTO::class);
+    expect($result->data)->toBeInstanceOf(AccessTokenResponse::class);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens/tok_1'
         && $request->method() === 'PUT');
@@ -188,7 +188,7 @@ it('iterates all accounts lazily', function (): void {
     $items = iterator_to_array(accountResource()->all(['limit' => 2]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(AccountDTO::class);
+    expect($items[0])->toBeInstanceOf(AccountResponse::class);
     expect($items[2]->id)->toBe('acc_3');
 });
 

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
-use OwnerPro\Asaas\Transfer\CreateTransferData;
-use OwnerPro\Asaas\Transfer\TransferDTO;
+use OwnerPro\Asaas\Transfer\Request\CreateTransferRequest;
+use OwnerPro\Asaas\Transfer\Response\TransferResponse;
 use OwnerPro\Asaas\Transfer\TransferResource;
 
 mutates(TransferResource::class);
@@ -38,17 +38,17 @@ it('creates a transfer from array', function (array $fixture): void {
     $result = transferResource()->create(['value' => 100.00, 'pixAddressKey' => 'email@test.com']);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(TransferDTO::class);
+    expect($result->data)->toBeInstanceOf(TransferResponse::class);
     expect($result->data->id)->toBe('tr_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/transfers'
         && $request->method() === 'POST');
 })->with('transfer_fixture');
 
-it('creates a transfer from DTO', function (array $fixture): void {
+it('creates a transfer from request object', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = transferResource()->create(new CreateTransferData(value: 100.00, pixAddressKey: 'email@test.com'));
+    $result = transferResource()->create(new CreateTransferRequest(value: 100.00, pixAddressKey: 'email@test.com'));
 
     expect($result->success)->toBeTrue();
 
@@ -112,7 +112,7 @@ it('iterates all transfers lazily', function (array $page1): void {
     $items = iterator_to_array(transferResource()->all(['limit' => 10]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(TransferDTO::class);
+    expect($items[0])->toBeInstanceOf(TransferResponse::class);
     expect($items[2]->id)->toBe('tr_3');
 })->with('transfer_list_fixture');
 

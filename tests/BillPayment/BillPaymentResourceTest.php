@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
-use OwnerPro\Asaas\BillPayment\BillPaymentDTO;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
-use OwnerPro\Asaas\BillPayment\BillSimulationDTO;
-use OwnerPro\Asaas\BillPayment\CreateBillPaymentData;
+use OwnerPro\Asaas\BillPayment\Request\CreateBillPaymentRequest;
+use OwnerPro\Asaas\BillPayment\Response\BillPaymentResponse;
+use OwnerPro\Asaas\BillPayment\Response\BillSimulationResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 
 mutates(BillPaymentResource::class);
@@ -33,17 +33,17 @@ it('creates a bill payment from array', function (array $fixture): void {
     $result = billPaymentResource()->create(['identificationField' => '12345.67890...']);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(BillPaymentDTO::class);
+    expect($result->data)->toBeInstanceOf(BillPaymentResponse::class);
     expect($result->data->id)->toBe('bill_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/bill'
         && $request->method() === 'POST');
 })->with('bill_fixture');
 
-it('creates a bill payment from DTO', function (array $fixture): void {
+it('creates a bill payment from request object', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = billPaymentResource()->create(new CreateBillPaymentData(identificationField: '12345.67890...'));
+    $result = billPaymentResource()->create(new CreateBillPaymentRequest(identificationField: '12345.67890...'));
 
     expect($result->success)->toBeTrue();
     expect($result->data->id)->toBe('bill_123');
@@ -90,7 +90,7 @@ it('simulates a bill payment', function (): void {
     $result = billPaymentResource()->simulate(['identificationField' => '12345...']);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(BillSimulationDTO::class);
+    expect($result->data)->toBeInstanceOf(BillSimulationResponse::class);
     expect($result->data->fee)->toBe(1.50);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/bill/simulate'
@@ -124,7 +124,7 @@ it('iterates all bill payments lazily', function (): void {
     $items = iterator_to_array(billPaymentResource()->all(['limit' => 2]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(BillPaymentDTO::class);
+    expect($items[0])->toBeInstanceOf(BillPaymentResponse::class);
     expect($items[2]->id)->toBe('bill_3');
 });
 

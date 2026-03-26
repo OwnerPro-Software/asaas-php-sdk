@@ -9,11 +9,11 @@ use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasRequestException;
 use OwnerPro\Asaas\Support\AsaasResult;
-use OwnerPro\Asaas\Support\BaseDTO;
+use OwnerPro\Asaas\Support\BaseResponse;
 
 mutates(AsaasConnector::class);
 
-final class ConnectorTestDTO extends BaseDTO
+final class ConnectorTestResponse extends BaseResponse
 {
     public string $id;
 
@@ -28,7 +28,7 @@ it('uses sandbox base url', function (): void {
     Http::fake(['https://api-sandbox.asaas.com/*' => Http::response(['id' => 'x', 'status' => 'OK'], 200)]);
 
     $connector = new AsaasConnector('test-key', 'sandbox', 30);
-    $result = $connector->get('/v3/payments/x', [], ConnectorTestDTO::class);
+    $result = $connector->get('/v3/payments/x', [], ConnectorTestResponse::class);
 
     expect($result->success)->toBeTrue();
     expect($result->data->id)->toBe('x');
@@ -43,7 +43,7 @@ it('uses production base url', function (): void {
     Http::fake(['https://api.asaas.com/*' => Http::response(['id' => 'x', 'status' => 'OK'], 200)]);
 
     $connector = new AsaasConnector('prod-key', 'production', 30);
-    $result = $connector->get('/v3/payments/x', [], ConnectorTestDTO::class);
+    $result = $connector->get('/v3/payments/x', [], ConnectorTestResponse::class);
 
     expect($result->success)->toBeTrue();
 
@@ -52,14 +52,14 @@ it('uses production base url', function (): void {
     });
 });
 
-it('returns AsaasResult with DTO on successful GET', function (): void {
+it('returns AsaasResult with response on successful GET', function (): void {
     Http::fake(['*' => Http::response(
         json_decode(file_get_contents(__DIR__.'/../Fixtures/payment.json'), true),
         200
     )]);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $result = $connector->get('/v3/payments/pay_123', [], ConnectorTestDTO::class);
+    $result = $connector->get('/v3/payments/pay_123', [], ConnectorTestResponse::class);
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
@@ -70,11 +70,11 @@ it('returns AsaasResult with DTO on successful GET', function (): void {
         && $request->method() === 'GET');
 });
 
-it('returns AsaasResult with DTO on successful POST', function (): void {
+it('returns AsaasResult with response on successful POST', function (): void {
     Http::fake(['*' => Http::response(['id' => 'pay_new', 'status' => 'PENDING'], 200)]);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $result = $connector->post('/v3/payments', ['value' => 100], ConnectorTestDTO::class);
+    $result = $connector->post('/v3/payments', ['value' => 100], ConnectorTestResponse::class);
 
     expect($result->success)->toBeTrue();
     expect($result->data->id)->toBe('pay_new');
@@ -83,11 +83,11 @@ it('returns AsaasResult with DTO on successful POST', function (): void {
         && $request->method() === 'POST');
 });
 
-it('returns AsaasResult with DTO on successful PUT', function (): void {
+it('returns AsaasResult with response on successful PUT', function (): void {
     Http::fake(['*' => Http::response(['id' => 'pay_123', 'status' => 'UPDATED'], 200)]);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $result = $connector->put('/v3/payments/pay_123', ['value' => 200], ConnectorTestDTO::class);
+    $result = $connector->put('/v3/payments/pay_123', ['value' => 200], ConnectorTestResponse::class);
 
     expect($result->success)->toBeTrue();
     expect($result->data->status)->toBe('UPDATED');
@@ -100,7 +100,7 @@ it('returns AsaasResult on DELETE', function (): void {
     Http::fake(['*' => Http::response(['deleted' => true, 'id' => 'pay_123'], 200)]);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $result = $connector->delete('/v3/payments/pay_123', ConnectorTestDTO::class);
+    $result = $connector->delete('/v3/payments/pay_123', ConnectorTestResponse::class);
 
     expect($result->success)->toBeTrue();
 
@@ -115,7 +115,7 @@ it('returns failure result on error response', function (): void {
     )]);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $result = $connector->post('/v3/payments', ['bad' => 'data'], ConnectorTestDTO::class);
+    $result = $connector->post('/v3/payments', ['bad' => 'data'], ConnectorTestResponse::class);
 
     expect($result->success)->toBeFalse();
     expect($result->statusCode)->toBe(400);
@@ -133,7 +133,7 @@ it('returns AsaasPaginatedResult on paginate', function (): void {
     )]);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $result = $connector->paginate('/v3/payments', ['limit' => 10], ConnectorTestDTO::class);
+    $result = $connector->paginate('/v3/payments', ['limit' => 10], ConnectorTestResponse::class);
 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeTrue();
@@ -154,7 +154,7 @@ it('paginate returns failure on error', function (): void {
     )]);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $result = $connector->paginate('/v3/payments', [], ConnectorTestDTO::class);
+    $result = $connector->paginate('/v3/payments', [], ConnectorTestResponse::class);
 
     expect($result->success)->toBeFalse();
     expect($result->statusCode)->toBe(400);
@@ -172,7 +172,7 @@ it('iterates all pages lazily via all()', function (): void {
     Http::fakeSequence()->push($page1, 200)->push($page2, 200);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 10], ConnectorTestDTO::class));
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 10], ConnectorTestResponse::class));
 
     expect($items)->toHaveCount(3);
     expect($items[0]->id)->toBe('pay_1');
@@ -190,7 +190,7 @@ it('all() uses default limit of 100 when not specified', function (): void {
     Http::fake(['*' => Http::response($page, 200)]);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $items = iterator_to_array($connector->all('/v3/payments', [], ConnectorTestDTO::class));
+    $items = iterator_to_array($connector->all('/v3/payments', [], ConnectorTestResponse::class));
 
     expect($items)->toHaveCount(1);
 
@@ -211,7 +211,7 @@ it('all() sends correct offset and limit on each page', function (): void {
     Http::fakeSequence()->push($page1, 200)->push($page2, 200);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 2], ConnectorTestDTO::class));
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 2], ConnectorTestResponse::class));
 
     expect($items)->toHaveCount(3);
     expect($items[0]->id)->toBe('a1');
@@ -237,7 +237,7 @@ it('all() throws on error during pagination', function (): void {
     Http::fakeSequence()->push($page1, 200)->push($errorResponse, 400);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    iterator_to_array($connector->all('/v3/payments', ['limit' => 10], ConnectorTestDTO::class));
+    iterator_to_array($connector->all('/v3/payments', ['limit' => 10], ConnectorTestResponse::class));
 })->throws(AsaasRequestException::class, 'The value field is required');
 
 it('paginate uses defaults for missing pagination fields', function (): void {
@@ -246,7 +246,7 @@ it('paginate uses defaults for missing pagination fields', function (): void {
     ], 200)]);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $result = $connector->paginate('/v3/payments', [], ConnectorTestDTO::class);
+    $result = $connector->paginate('/v3/payments', [], ConnectorTestResponse::class);
 
     expect($result->success)->toBeTrue();
     expect($result->totalCount)->toBe(0);
@@ -269,7 +269,7 @@ it('paginate next page fetcher passes correct offset in URL', function (): void 
     Http::fakeSequence()->push($page1, 200)->push($page2, 200);
 
     $connector = new AsaasConnector('key', 'sandbox', 30);
-    $result = $connector->paginate('/v3/payments', ['limit' => 2], ConnectorTestDTO::class);
+    $result = $connector->paginate('/v3/payments', ['limit' => 2], ConnectorTestResponse::class);
 
     expect($result->hasMore)->toBeTrue();
 

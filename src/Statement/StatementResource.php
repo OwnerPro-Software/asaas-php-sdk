@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Statement;
 
 use Generator;
+use OwnerPro\Asaas\Statement\Response\StatementResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 
@@ -15,15 +16,15 @@ final class StatementResource
     /** @param array<string, mixed> $query */
     public function list(array $query = []): AsaasPaginatedResult
     {
-        return $this->asaasConnector->paginate('/v3/financialTransactions', $query, StatementDTO::class);
+        return $this->asaasConnector->paginate('/v3/financialTransactions', $query, StatementResponse::class);
     }
 
     /**
      * @param  array<string, mixed>  $filters
-     * @return Generator<int, StatementDTO>
+     * @return Generator<int, StatementResponse>
      */
     public function all(array $filters = []): Generator
     {
-        return $this->asaasConnector->all('/v3/financialTransactions', $filters, StatementDTO::class);
+        return $this->asaasConnector->all('/v3/financialTransactions', $filters, StatementResponse::class);
     }
 }

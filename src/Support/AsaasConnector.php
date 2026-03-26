@@ -33,50 +33,50 @@ final class AsaasConnector
 
     /**
      * @param  array<string, mixed>  $query
-     * @param  class-string<BaseDTO>  $dtoClass
+     * @param  class-string<BaseResponse>  $responseClass
      */
-    public function get(string $path, array $query, string $dtoClass): AsaasResult
+    public function get(string $path, array $query, string $responseClass): AsaasResult
     {
         $response = $this->pendingRequest->get($path, $query);
 
-        return $this->toResult($response, $dtoClass);
+        return $this->toResult($response, $responseClass);
     }
 
     /**
      * @param  array<string, mixed>  $data
-     * @param  class-string<BaseDTO>  $dtoClass
+     * @param  class-string<BaseResponse>  $responseClass
      */
-    public function post(string $path, array $data, string $dtoClass): AsaasResult
+    public function post(string $path, array $data, string $responseClass): AsaasResult
     {
         $response = $this->pendingRequest->post($path, $data);
 
-        return $this->toResult($response, $dtoClass);
+        return $this->toResult($response, $responseClass);
     }
 
     /**
      * @param  array<string, mixed>  $data
-     * @param  class-string<BaseDTO>  $dtoClass
+     * @param  class-string<BaseResponse>  $responseClass
      */
-    public function put(string $path, array $data, string $dtoClass): AsaasResult
+    public function put(string $path, array $data, string $responseClass): AsaasResult
     {
         $response = $this->pendingRequest->put($path, $data);
 
-        return $this->toResult($response, $dtoClass);
+        return $this->toResult($response, $responseClass);
     }
 
-    /** @param class-string<BaseDTO> $dtoClass */
-    public function delete(string $path, string $dtoClass): AsaasResult
+    /** @param class-string<BaseResponse> $responseClass */
+    public function delete(string $path, string $responseClass): AsaasResult
     {
         $response = $this->pendingRequest->delete($path);
 
-        return $this->toResult($response, $dtoClass);
+        return $this->toResult($response, $responseClass);
     }
 
     /**
      * @param  array<string, mixed>  $query
-     * @param  class-string<BaseDTO>  $dtoClass
+     * @param  class-string<BaseResponse>  $responseClass
      */
-    public function paginate(string $path, array $query, string $dtoClass): AsaasPaginatedResult
+    public function paginate(string $path, array $query, string $responseClass): AsaasPaginatedResult
     {
         $response = $this->pendingRequest->get($path, $query);
 
@@ -90,16 +90,16 @@ final class AsaasConnector
         /** @var array{data?: list<array<string, mixed>>, totalCount?: int, hasMore?: bool, limit?: int, offset?: int} $json */
         $json = $response->json();
 
-        /** @var list<BaseDTO> $data */
+        /** @var list<BaseResponse> $data */
         $data = array_map(
-            fn (array $item): BaseDTO => new $dtoClass($item),
+            fn (array $item): BaseResponse => new $responseClass($item),
             $json['data'] ?? [],
         );
 
         $nextPageFetcher = fn (int $offset): AsaasPaginatedResult => $this->paginate(
             $path,
             array_merge($query, ['offset' => $offset]),
-            $dtoClass,
+            $responseClass,
         );
 
         return AsaasPaginatedResult::success(
@@ -116,13 +116,13 @@ final class AsaasConnector
     /**
      * Lazy iterator that auto-paginates through all pages.
      *
-     * @template T of BaseDTO
+     * @template T of BaseResponse
      *
      * @param  array<string, mixed>  $filters
-     * @param  class-string<T>  $dtoClass
+     * @param  class-string<T>  $responseClass
      * @return Generator<int, T>
      */
-    public function all(string $path, array $filters, string $dtoClass): Generator
+    public function all(string $path, array $filters, string $responseClass): Generator
     {
         $offset = 0;
         $limit = is_int($filters['limit'] ?? null) ? $filters['limit'] : 100;
@@ -131,7 +131,7 @@ final class AsaasConnector
             $result = $this->paginate(
                 $path,
                 array_merge($filters, ['offset' => $offset, 'limit' => $limit]),
-                $dtoClass,
+                $responseClass,
             );
 
             $result->throw();
@@ -147,8 +147,8 @@ final class AsaasConnector
         } while ($result->hasMore);
     }
 
-    /** @param class-string<BaseDTO> $dtoClass */
-    private function toResult(Response $response, string $dtoClass): AsaasResult
+    /** @param class-string<BaseResponse> $responseClass */
+    private function toResult(Response $response, string $responseClass): AsaasResult
     {
         if ($response->failed()) {
             return AsaasResult::failure(
@@ -160,7 +160,7 @@ final class AsaasConnector
         /** @var array<string, mixed> $json */
         $json = $response->json();
 
-        return AsaasResult::success(new $dtoClass($json), $response->status());
+        return AsaasResult::success(new $responseClass($json), $response->status());
     }
 
     /** @return list<array{code?: string, description?: string}> */

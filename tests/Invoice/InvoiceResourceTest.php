@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
-use OwnerPro\Asaas\Invoice\CreateInvoiceData;
-use OwnerPro\Asaas\Invoice\InvoiceDTO;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
-use OwnerPro\Asaas\Invoice\UpdateInvoiceData;
+use OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest;
+use OwnerPro\Asaas\Invoice\Request\UpdateInvoiceRequest;
+use OwnerPro\Asaas\Invoice\Response\InvoiceResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 
 mutates(InvoiceResource::class);
@@ -45,17 +45,17 @@ it('creates an invoice from array', function (array $fixture): void {
     ]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(InvoiceDTO::class);
+    expect($result->data)->toBeInstanceOf(InvoiceResponse::class);
     expect($result->data->id)->toBe('inv_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices'
         && $request->method() === 'POST');
 })->with('invoice_fixture');
 
-it('creates an invoice from DTO', function (array $fixture): void {
+it('creates an invoice from request object', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = invoiceResource()->create(new CreateInvoiceData(
+    $result = invoiceResource()->create(new CreateInvoiceRequest(
         serviceDescription: 'Dev services',
         observations: 'Note',
         value: 1000.00,
@@ -109,10 +109,10 @@ it('updates an invoice from array', function (array $fixture): void {
         && $request->method() === 'PUT');
 })->with('invoice_fixture');
 
-it('updates an invoice from DTO', function (array $fixture): void {
+it('updates an invoice from request object', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = invoiceResource()->update('inv_123', new UpdateInvoiceData(value: 1500.00));
+    $result = invoiceResource()->update('inv_123', new UpdateInvoiceRequest(value: 1500.00));
 
     expect($result->success)->toBeTrue();
 
@@ -161,7 +161,7 @@ it('iterates all invoices lazily', function (array $page1): void {
     $items = iterator_to_array(invoiceResource()->all(['limit' => 10]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(InvoiceDTO::class);
+    expect($items[0])->toBeInstanceOf(InvoiceResponse::class);
     expect($items[2]->id)->toBe('inv_3');
 })->with('invoice_list_fixture');
 

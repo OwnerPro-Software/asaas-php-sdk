@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
-use OwnerPro\Asaas\CreditCard\CreditCardDTO;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
-use OwnerPro\Asaas\CreditCard\PreAuthConfigDTO;
-use OwnerPro\Asaas\CreditCard\SetPreAuthConfigData;
-use OwnerPro\Asaas\CreditCard\TokenizeCreditCardData;
+use OwnerPro\Asaas\CreditCard\Request\SetPreAuthConfigRequest;
+use OwnerPro\Asaas\CreditCard\Request\TokenizeCreditCardRequest;
+use OwnerPro\Asaas\CreditCard\Response\CreditCardResponse;
+use OwnerPro\Asaas\CreditCard\Response\PreAuthConfigResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 
 mutates(CreditCardResource::class);
@@ -35,19 +35,19 @@ it('tokenizes a credit card from array', function (): void {
     ]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(CreditCardDTO::class);
+    expect($result->data)->toBeInstanceOf(CreditCardResponse::class);
     expect($result->data->creditCardToken)->toBe('tok_abc');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/creditCard/tokenizeCreditCard'
         && $request->method() === 'POST');
 });
 
-it('tokenizes a credit card from DTO', function (): void {
+it('tokenizes a credit card from request object', function (): void {
     Http::fake(['*' => Http::response([
         'creditCardNumber' => '8829', 'creditCardBrand' => 'VISA', 'creditCardToken' => 'tok_abc',
     ], 200)]);
 
-    $result = creditCardResource()->tokenize(new TokenizeCreditCardData(
+    $result = creditCardResource()->tokenize(new TokenizeCreditCardRequest(
         customer: 'cus_1',
         creditCard: ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
         creditCardHolderInfo: ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '1199999'],
@@ -71,7 +71,7 @@ it('gets pre-authorization config', function (): void {
     $result = creditCardResource()->getPreAuthorizationConfig();
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PreAuthConfigDTO::class);
+    expect($result->data)->toBeInstanceOf(PreAuthConfigResponse::class);
     expect($result->data->daysToExpire)->toBe(5);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/creditCard/preAuthorization/config');
@@ -83,17 +83,17 @@ it('sets pre-authorization config from array', function (): void {
     $result = creditCardResource()->setPreAuthorizationConfig(['daysToExpire' => 7]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PreAuthConfigDTO::class);
+    expect($result->data)->toBeInstanceOf(PreAuthConfigResponse::class);
     expect($result->data->daysToExpire)->toBe(7);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/creditCard/preAuthorization/config'
         && $request->method() === 'POST');
 });
 
-it('sets pre-authorization config from DTO', function (): void {
+it('sets pre-authorization config from request object', function (): void {
     Http::fake(['*' => Http::response(['daysToExpire' => 7], 200)]);
 
-    $result = creditCardResource()->setPreAuthorizationConfig(new SetPreAuthConfigData(daysToExpire: 7));
+    $result = creditCardResource()->setPreAuthorizationConfig(new SetPreAuthConfigRequest(daysToExpire: 7));
 
     expect($result->success)->toBeTrue();
     expect($result->data->daysToExpire)->toBe(7);

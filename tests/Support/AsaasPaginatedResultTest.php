@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasRequestException;
-use OwnerPro\Asaas\Support\BaseDTO;
+use OwnerPro\Asaas\Support\BaseResponse;
 
 mutates(AsaasPaginatedResult::class);
 
-final class PaginatedTestDTO extends BaseDTO
+final class PaginatedTestResponse extends BaseResponse
 {
     public string $id;
 }
 
 it('creates a successful paginated result', function () {
-    $items = [new PaginatedTestDTO(['id' => 'a']), new PaginatedTestDTO(['id' => 'b'])];
+    $items = [new PaginatedTestResponse(['id' => 'a']), new PaginatedTestResponse(['id' => 'b'])];
 
     $result = AsaasPaginatedResult::success(
         data: $items,
@@ -52,7 +52,7 @@ it('creates a failed paginated result', function () {
 
 it('next() fetches the next page when hasMore is true', function () {
     $nextResult = AsaasPaginatedResult::success(
-        data: [new PaginatedTestDTO(['id' => 'c'])],
+        data: [new PaginatedTestResponse(['id' => 'c'])],
         totalCount: 10,
         hasMore: false,
         limit: 2,
@@ -62,7 +62,7 @@ it('next() fetches the next page when hasMore is true', function () {
     );
 
     $result = AsaasPaginatedResult::success(
-        data: [new PaginatedTestDTO(['id' => 'a']), new PaginatedTestDTO(['id' => 'b'])],
+        data: [new PaginatedTestResponse(['id' => 'a']), new PaginatedTestResponse(['id' => 'b'])],
         totalCount: 10,
         hasMore: true,
         limit: 2,
@@ -94,7 +94,7 @@ it('next() returns null when hasMore is false', function () {
 
 it('next() returns null when nextPageFetcher is null even with hasMore true', function () {
     $result = AsaasPaginatedResult::success(
-        data: [new PaginatedTestDTO(['id' => 'a'])],
+        data: [new PaginatedTestResponse(['id' => 'a'])],
         totalCount: 10,
         hasMore: true,
         limit: 1,
@@ -109,7 +109,7 @@ it('next() returns null when nextPageFetcher is null even with hasMore true', fu
 it('next() passes correct offset to fetcher', function () {
     $receivedOffset = null;
     $nextResult = AsaasPaginatedResult::success(
-        data: [new PaginatedTestDTO(['id' => 'c'])],
+        data: [new PaginatedTestResponse(['id' => 'c'])],
         totalCount: 10,
         hasMore: false,
         limit: 5,
@@ -119,7 +119,7 @@ it('next() passes correct offset to fetcher', function () {
     );
 
     $result = AsaasPaginatedResult::success(
-        data: [new PaginatedTestDTO(['id' => 'a'])],
+        data: [new PaginatedTestResponse(['id' => 'a'])],
         totalCount: 10,
         hasMore: true,
         limit: 5,

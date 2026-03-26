@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
-use OwnerPro\Asaas\PixTransaction\DecodedQrCodeDTO;
-use OwnerPro\Asaas\PixTransaction\PixTransactionDTO;
 use OwnerPro\Asaas\PixTransaction\PixTransactionResource;
+use OwnerPro\Asaas\PixTransaction\Response\DecodedQrCodeResponse;
+use OwnerPro\Asaas\PixTransaction\Response\PixTransactionResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 
 mutates(PixTransactionResource::class);
@@ -39,7 +39,7 @@ it('decodes a qr code', function (): void {
     $result = pixTxResource()->decodeQrCode(['payload' => '00020126...']);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(DecodedQrCodeDTO::class);
+    expect($result->data)->toBeInstanceOf(DecodedQrCodeResponse::class);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/decode'
         && $request->method() === 'POST');
@@ -51,7 +51,7 @@ it('pays a qr code', function (array $fixture): void {
     $result = pixTxResource()->payQrCode(['qrCode' => ['payload' => '00020126...'], 'value' => 50.00]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PixTransactionDTO::class);
+    expect($result->data)->toBeInstanceOf(PixTransactionResponse::class);
     expect($result->data->id)->toBe('tx_1');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/pay'
@@ -65,7 +65,7 @@ it('lists pix transactions', function (array $fixture): void {
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toHaveCount(2);
-    expect($result->data[0])->toBeInstanceOf(PixTransactionDTO::class);
+    expect($result->data[0])->toBeInstanceOf(PixTransactionResponse::class);
 
     Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api-sandbox.asaas.com/v3/pix/transactions'));
 })->with('pix_tx_list_fixture');
@@ -112,7 +112,7 @@ it('iterates all pix transactions lazily', function (array $page1): void {
     $items = iterator_to_array(pixTxResource()->all(['limit' => 10]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(PixTransactionDTO::class);
+    expect($items[0])->toBeInstanceOf(PixTransactionResponse::class);
     expect($items[2]->id)->toBe('tx_3');
 })->with('pix_tx_list_fixture');
 

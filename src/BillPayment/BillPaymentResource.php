@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\BillPayment;
 
 use Generator;
+use OwnerPro\Asaas\BillPayment\Request\CreateBillPaymentRequest;
+use OwnerPro\Asaas\BillPayment\Response\BillPaymentResponse;
+use OwnerPro\Asaas\BillPayment\Response\BillSimulationResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
@@ -13,42 +16,42 @@ final class BillPaymentResource
 {
     public function __construct(private readonly AsaasConnector $asaasConnector) {}
 
-    /** @param array<string, mixed>|CreateBillPaymentData $data */
-    public function create(array|CreateBillPaymentData $data): AsaasResult
+    /** @param array<string, mixed>|CreateBillPaymentRequest $data */
+    public function create(array|CreateBillPaymentRequest $data): AsaasResult
     {
-        $dto = $data instanceof CreateBillPaymentData ? $data : CreateBillPaymentData::fromArray($data);
+        $request = $data instanceof CreateBillPaymentRequest ? $data : CreateBillPaymentRequest::fromArray($data);
 
-        return $this->asaasConnector->post('/v3/bill', $dto->toArray(), BillPaymentDTO::class);
+        return $this->asaasConnector->post('/v3/bill', $request->toArray(), BillPaymentResponse::class);
     }
 
     /** @param array<string, mixed> $query */
     public function list(array $query = []): AsaasPaginatedResult
     {
-        return $this->asaasConnector->paginate('/v3/bill', $query, BillPaymentDTO::class);
+        return $this->asaasConnector->paginate('/v3/bill', $query, BillPaymentResponse::class);
     }
 
     public function find(string $id): AsaasResult
     {
-        return $this->asaasConnector->get('/v3/bill/'.$id, [], BillPaymentDTO::class);
+        return $this->asaasConnector->get('/v3/bill/'.$id, [], BillPaymentResponse::class);
     }
 
     /** @param array<string, mixed> $data */
     public function simulate(array $data = []): AsaasResult
     {
-        return $this->asaasConnector->post('/v3/bill/simulate', $data, BillSimulationDTO::class);
+        return $this->asaasConnector->post('/v3/bill/simulate', $data, BillSimulationResponse::class);
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->asaasConnector->post(sprintf('/v3/bill/%s/cancel', $id), [], BillPaymentDTO::class);
+        return $this->asaasConnector->post(sprintf('/v3/bill/%s/cancel', $id), [], BillPaymentResponse::class);
     }
 
     /**
      * @param  array<string, mixed>  $filters
-     * @return Generator<int, BillPaymentDTO>
+     * @return Generator<int, BillPaymentResponse>
      */
     public function all(array $filters = []): Generator
     {
-        return $this->asaasConnector->all('/v3/bill', $filters, BillPaymentDTO::class);
+        return $this->asaasConnector->all('/v3/bill', $filters, BillPaymentResponse::class);
     }
 }
