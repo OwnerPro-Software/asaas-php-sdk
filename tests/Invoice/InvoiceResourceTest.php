@@ -8,6 +8,7 @@ use OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest;
 use OwnerPro\Asaas\Invoice\Request\UpdateInvoiceRequest;
 use OwnerPro\Asaas\Invoice\Response\InvoiceResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\DTO\Taxes;
 
 mutates(InvoiceResource::class);
 
@@ -164,6 +165,44 @@ it('iterates all invoices lazily', function (array $page1): void {
     expect($items[0])->toBeInstanceOf(InvoiceResponse::class);
     expect($items[2]->id)->toBe('inv_3');
 })->with('invoice_list_fixture');
+
+it('creates invoice with typed Taxes DTO', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = invoiceResource()->create(new CreateInvoiceRequest(
+        serviceDescription: 'Service',
+        observations: 'Obs',
+        value: 100.00,
+        deductions: 0.00,
+        effectiveDate: '2026-03-26',
+        municipalServiceName: 'IT Services',
+        taxes: new Taxes(retainIss: true, iss: 2.0, pis: 0.65, cofins: 3.0, csll: 1.0, inss: 11.0, ir: 1.5),
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body['taxes'] === ['retainIss' => true, 'iss' => 2.0, 'pis' => 0.65, 'cofins' => 3.0, 'csll' => 1.0, 'inss' => 11.0, 'ir' => 1.5];
+    });
+})->with('invoice_fixture');
+
+it('updates invoice with typed Taxes DTO', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = invoiceResource()->update('inv_123', new UpdateInvoiceRequest(
+        taxes: new Taxes(retainIss: false, iss: 3.0, pis: 1.0, cofins: 2.0, csll: 0.5, inss: 5.0, ir: 1.0),
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body['taxes'] === ['retainIss' => false, 'iss' => 3.0, 'pis' => 1.0, 'cofins' => 2.0, 'csll' => 0.5, 'inss' => 5.0, 'ir' => 1.0];
+    });
+})->with('invoice_fixture');
 
 it('returns failure on API error', function (array $errorFixture): void {
     Http::fake(['*' => Http::response($errorFixture, 400)]);

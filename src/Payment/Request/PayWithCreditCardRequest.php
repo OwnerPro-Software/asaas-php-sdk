@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace OwnerPro\Asaas\CreditCard\Request;
+namespace OwnerPro\Asaas\Payment\Request;
 
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class TokenizeCreditCardRequest
+final class PayWithCreditCardRequest
 {
     use HasArrayFactory;
 
@@ -17,10 +17,8 @@ final class TokenizeCreditCardRequest
      * @param  array<string, mixed>|CreditCardHolderInfo  $creditCardHolderInfo
      */
     public function __construct(
-        public readonly string $customer,
         public readonly array|CreditCard $creditCard,
         public readonly array|CreditCardHolderInfo $creditCardHolderInfo,
-        public readonly string $remoteIp,
     ) {}
 
     /** @return array<string, mixed> */
@@ -43,6 +41,6 @@ final class TokenizeCreditCardRequest
     /** @return list<string> */
     protected static function requiredFields(): array
     {
-        return ['customer', 'creditCard', 'creditCardHolderInfo', 'remoteIp'];
+        return ['creditCard', 'creditCardHolderInfo'];
     }
 }

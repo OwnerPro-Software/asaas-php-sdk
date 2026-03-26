@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
+use OwnerPro\Asaas\Payment\Request\PayWithCreditCardRequest;
+use OwnerPro\Asaas\Payment\Request\ReceivePaymentInCashRequest;
+use OwnerPro\Asaas\Payment\Request\RefundPaymentRequest;
+use OwnerPro\Asaas\Payment\Request\SimulatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
 use OwnerPro\Asaas\Payment\Response\BillingInfoResponse;
 use OwnerPro\Asaas\Payment\Response\IdentificationFieldResponse;
@@ -17,6 +21,10 @@ use OwnerPro\Asaas\Payment\Response\ViewingInfoResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
+use OwnerPro\Asaas\Support\DTO\Callback;
+use OwnerPro\Asaas\Support\DTO\CreditCard;
+use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+use OwnerPro\Asaas\Support\DTO\Split;
 
 mutates(PaymentResource::class);
 
@@ -262,7 +270,10 @@ it('captures an authorized payment', function (array $fixture): void {
 it('pays with credit card', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
-    $result = paymentResource()->payWithCreditCard('pay_abc123', ['creditCardToken' => 'tok_123']);
+    $result = paymentResource()->payWithCreditCard('pay_abc123', [
+        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
+        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+    ]);
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toBeInstanceOf(PaymentResponse::class);
@@ -340,7 +351,7 @@ it('simulates a payment', function (): void {
         'netValue' => 96.51,
     ], 200)]);
 
-    $result = paymentResource()->simulate(['value' => 100.00, 'billingType' => 'PIX']);
+    $result = paymentResource()->simulate(['value' => 100.00, 'billingTypes' => ['PIX']]);
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toBeInstanceOf(PaymentSimulationResponse::class);
@@ -364,6 +375,115 @@ it('gets payment limits', function (): void {
     expect($result->data)->toBeInstanceOf(PaymentLimitsResponse::class);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/limits');
+});
+
+// --- typed DTOs ---
+
+it('creates a payment with typed split and callback DTOs', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = paymentResource()->create(new CreatePaymentRequest(
+        customer: 'cus_456',
+        billingType: 'CREDIT_CARD',
+        value: 150.00,
+        dueDate: '2026-04-01',
+        split: [new Split(walletId: 'wal_1', fixedValue: 10.00)],
+        callback: new Callback(successUrl: 'https://example.com'),
+        creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
+        creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body['split'] === [['walletId' => 'wal_1', 'fixedValue' => 10.00]]
+            && $body['callback'] === ['successUrl' => 'https://example.com']
+            && $body['creditCard'] === ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123']
+            && $body['creditCardHolderInfo'] === ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'];
+    });
+})->with('payment_fixture');
+
+it('refunds a payment from request object', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = paymentResource()->refund('pay_abc123', new RefundPaymentRequest(
+        value: 50.00,
+        description: 'Partial refund',
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/refund'
+        && $request->method() === 'POST'
+        && $request->data()['value'] === 50.00);
+})->with('payment_fixture');
+
+it('pays with credit card from request object', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = paymentResource()->payWithCreditCard('pay_abc123', new PayWithCreditCardRequest(
+        creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
+        creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/payWithCreditCard'
+        && $request->method() === 'POST'
+        && $request->data()['creditCard']['holderName'] === 'John');
+})->with('payment_fixture');
+
+it('receives in cash from request object', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = paymentResource()->receiveInCash('pay_abc123', new ReceivePaymentInCashRequest(
+        paymentDate: '2026-03-26',
+        value: 100.00,
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/receiveInCash'
+        && $request->method() === 'POST'
+        && $request->data()['paymentDate'] === '2026-03-26');
+})->with('payment_fixture');
+
+it('updates a payment with typed split DTOs', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = paymentResource()->update('pay_abc123', new UpdatePaymentRequest(
+        value: 200.00,
+        split: [new Split(walletId: 'wal_1', fixedValue: 15.00)],
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body['split'] === [['walletId' => 'wal_1', 'fixedValue' => 15.00]];
+    });
+})->with('payment_fixture');
+
+it('simulates a payment from request object', function (): void {
+    Http::fake(['*' => Http::response([
+        'value' => 100.00,
+        'netValue' => 96.51,
+    ], 200)]);
+
+    $result = paymentResource()->simulate(new SimulatePaymentRequest(
+        value: 100.00,
+        billingTypes: ['PIX'],
+    ));
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toBeInstanceOf(PaymentSimulationResponse::class);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/simulate'
+        && $request->method() === 'POST'
+        && $request->data()['billingTypes'] === ['PIX']);
 });
 
 // --- error handling ---

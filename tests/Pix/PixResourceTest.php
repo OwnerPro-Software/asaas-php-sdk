@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Pix\PixResource;
 use OwnerPro\Asaas\Pix\Request\CreatePixKeyRequest;
+use OwnerPro\Asaas\Pix\Request\CreateStaticQrCodeRequest;
 use OwnerPro\Asaas\Pix\Response\PixResponse;
 use OwnerPro\Asaas\Pix\Response\StaticQrCodeResponse;
 use OwnerPro\Asaas\Pix\Response\TokenBucketResponse;
@@ -172,6 +173,25 @@ it('iterates all pix keys lazily', function (array $page1): void {
     expect($items[0])->toBeInstanceOf(PixResponse::class);
     expect($items[2]->id)->toBe('pix_3');
 })->with('pix_key_list_fixture');
+
+// --- createStaticQrCode from request object ---
+
+it('creates static qr code from request object', function (): void {
+    Http::fake(['*' => Http::response([
+        'id' => 'qr_123', 'encodedImage' => 'base64...', 'payload' => '00020126...',
+    ], 200)]);
+
+    $result = pixResource()->createStaticQrCode(new CreateStaticQrCodeRequest(
+        addressKey: 'pix_key_123',
+        value: 50.00,
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/static'
+        && $request->method() === 'POST'
+        && $request->data()['addressKey'] === 'pix_key_123');
+});
 
 // --- error handling ---
 

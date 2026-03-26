@@ -6,6 +6,10 @@ namespace OwnerPro\Asaas\Payment;
 
 use Generator;
 use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
+use OwnerPro\Asaas\Payment\Request\PayWithCreditCardRequest;
+use OwnerPro\Asaas\Payment\Request\ReceivePaymentInCashRequest;
+use OwnerPro\Asaas\Payment\Request\RefundPaymentRequest;
+use OwnerPro\Asaas\Payment\Request\SimulatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
 use OwnerPro\Asaas\Payment\Response\BillingInfoResponse;
 use OwnerPro\Asaas\Payment\Response\IdentificationFieldResponse;
@@ -56,10 +60,12 @@ final class PaymentResource
         return $this->asaasConnector->delete('/v3/payments/'.$id, DeletedResponse::class);
     }
 
-    /** @param array<string, mixed> $data */
-    public function refund(string $id, array $data = []): AsaasResult
+    /** @param array<string, mixed>|RefundPaymentRequest $data */
+    public function refund(string $id, array|RefundPaymentRequest $data = []): AsaasResult
     {
-        return $this->asaasConnector->post(sprintf('/v3/payments/%s/refund', $id), $data, PaymentResponse::class);
+        $request = $data instanceof RefundPaymentRequest ? $data : RefundPaymentRequest::fromArray($data);
+
+        return $this->asaasConnector->post(sprintf('/v3/payments/%s/refund', $id), $request->toArray(), PaymentResponse::class);
     }
 
     public function restore(string $id): AsaasResult
@@ -72,16 +78,20 @@ final class PaymentResource
         return $this->asaasConnector->post(sprintf('/v3/payments/%s/captureAuthorizedPayment', $id), [], PaymentResponse::class);
     }
 
-    /** @param array<string, mixed> $data */
-    public function payWithCreditCard(string $id, array $data): AsaasResult
+    /** @param array<string, mixed>|PayWithCreditCardRequest $data */
+    public function payWithCreditCard(string $id, array|PayWithCreditCardRequest $data): AsaasResult
     {
-        return $this->asaasConnector->post(sprintf('/v3/payments/%s/payWithCreditCard', $id), $data, PaymentResponse::class);
+        $request = $data instanceof PayWithCreditCardRequest ? $data : PayWithCreditCardRequest::fromArray($data);
+
+        return $this->asaasConnector->post(sprintf('/v3/payments/%s/payWithCreditCard', $id), $request->toArray(), PaymentResponse::class);
     }
 
-    /** @param array<string, mixed> $data */
-    public function receiveInCash(string $id, array $data = []): AsaasResult
+    /** @param array<string, mixed>|ReceivePaymentInCashRequest $data */
+    public function receiveInCash(string $id, array|ReceivePaymentInCashRequest $data = []): AsaasResult
     {
-        return $this->asaasConnector->post(sprintf('/v3/payments/%s/receiveInCash', $id), $data, PaymentResponse::class);
+        $request = $data instanceof ReceivePaymentInCashRequest ? $data : ReceivePaymentInCashRequest::fromArray($data);
+
+        return $this->asaasConnector->post(sprintf('/v3/payments/%s/receiveInCash', $id), $request->toArray(), PaymentResponse::class);
     }
 
     public function undoReceivedInCash(string $id): AsaasResult
@@ -114,10 +124,12 @@ final class PaymentResource
         return $this->asaasConnector->get(sprintf('/v3/payments/%s/viewingInfo', $id), [], ViewingInfoResponse::class);
     }
 
-    /** @param array<string, mixed> $data */
-    public function simulate(array $data): AsaasResult
+    /** @param array<string, mixed>|SimulatePaymentRequest $data */
+    public function simulate(array|SimulatePaymentRequest $data): AsaasResult
     {
-        return $this->asaasConnector->post('/v3/payments/simulate', $data, PaymentSimulationResponse::class);
+        $request = $data instanceof SimulatePaymentRequest ? $data : SimulatePaymentRequest::fromArray($data);
+
+        return $this->asaasConnector->post('/v3/payments/simulate', $request->toArray(), PaymentSimulationResponse::class);
     }
 
     public function limits(): AsaasResult

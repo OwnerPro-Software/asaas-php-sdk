@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
 use OwnerPro\Asaas\BillPayment\Request\CreateBillPaymentRequest;
+use OwnerPro\Asaas\BillPayment\Request\SimulateBillPaymentRequest;
 use OwnerPro\Asaas\BillPayment\Response\BillPaymentResponse;
 use OwnerPro\Asaas\BillPayment\Response\BillSimulationResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -126,6 +127,23 @@ it('iterates all bill payments lazily', function (): void {
     expect($items)->toHaveCount(3);
     expect($items[0])->toBeInstanceOf(BillPaymentResponse::class);
     expect($items[2]->id)->toBe('bill_3');
+});
+
+it('simulates a bill payment from request object', function (): void {
+    Http::fake(['*' => Http::response([
+        'minimumScheduleDate' => '2026-03-26', 'fee' => 1.50,
+        'bankSlipInfo' => ['dueDate' => '2026-04-01', 'value' => 250.00],
+    ], 200)]);
+
+    $result = billPaymentResource()->simulate(new SimulateBillPaymentRequest(
+        identificationField: '12345...',
+    ));
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toBeInstanceOf(BillSimulationResponse::class);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/bill/simulate'
+        && $request->method() === 'POST');
 });
 
 it('returns failure on API error', function (): void {

@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OwnerPro\Asaas\Support\DTO;
+
+use OwnerPro\Asaas\Support\HasArrayFactory;
+
+final readonly class SplitRefund
+{
+    use HasArrayFactory;
+
+    public function __construct(
+        public string $id,
+        public float $value,
+    ) {}
+
+    /** @return list<string> */
+    protected static function requiredFields(): array
+    {
+        return ['id', 'value'];
+    }
+}

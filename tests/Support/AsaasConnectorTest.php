@@ -256,6 +256,29 @@ it('paginate uses defaults for missing pagination fields', function (): void {
     expect($result->data)->toHaveCount(1);
 });
 
+it('returns empty errors when error response has no errors array', function (): void {
+    Http::fake(['*' => Http::response('Internal Server Error', 500)]);
+
+    $connector = new AsaasConnector('key', 'sandbox', 30);
+    $result = $connector->post('/v3/payments', ['bad' => 'data'], ConnectorTestResponse::class);
+
+    expect($result->success)->toBeFalse();
+    expect($result->statusCode)->toBe(500);
+    expect($result->errors)->toBe([]);
+    expect($result->data)->toBeNull();
+});
+
+it('paginate returns empty errors when error response has no errors array', function (): void {
+    Http::fake(['*' => Http::response('Internal Server Error', 500)]);
+
+    $connector = new AsaasConnector('key', 'sandbox', 30);
+    $result = $connector->paginate('/v3/payments', [], ConnectorTestResponse::class);
+
+    expect($result->success)->toBeFalse();
+    expect($result->statusCode)->toBe(500);
+    expect($result->errors)->toBe([]);
+});
+
 it('paginate next page fetcher passes correct offset in URL', function (): void {
     $page1 = [
         'object' => 'list', 'hasMore' => true, 'totalCount' => 3, 'limit' => 2, 'offset' => 0,

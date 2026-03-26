@@ -147,6 +147,256 @@ Request objects can also be created from arrays via `fromArray()`:
 $data = CreatePaymentRequest::fromArray($request->validated());
 ```
 
+### Nested Value Objects
+
+Fields like `creditCard`, `creditCardHolderInfo`, `bankAccount`, `taxes`, `split`, `callback`, and `qrCode` accept either a plain array or a typed DTO from `OwnerPro\Asaas\Support\DTO`. Using typed DTOs gives you IDE autocompletion and construction-time validation.
+
+```php
+use OwnerPro\Asaas\Support\DTO\CreditCard;
+use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+
+// Raw array (still works)
+$result = Asaas::payments()->create([
+    'customer' => 'cus_abc123',
+    'billingType' => 'CREDIT_CARD',
+    'value' => 200.00,
+    'dueDate' => '2026-04-01',
+    'creditCard' => [
+        'holderName' => 'John Doe',
+        'number' => '4111111111111111',
+        'expiryMonth' => '06',
+        'expiryYear' => '2028',
+        'ccv' => '123',
+    ],
+    'creditCardHolderInfo' => [
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'cpfCnpj' => '12345678901',
+        'postalCode' => '01001000',
+        'addressNumber' => '100',
+        'phone' => '11999999999',
+    ],
+]);
+
+// Typed DTOs (IDE autocompletion + construction-time validation)
+$result = Asaas::payments()->create(new CreatePaymentRequest(
+    customer: 'cus_abc123',
+    billingType: 'CREDIT_CARD',
+    value: 200.00,
+    dueDate: '2026-04-01',
+    creditCard: new CreditCard(
+        holderName: 'John Doe',
+        number: '4111111111111111',
+        expiryMonth: '06',
+        expiryYear: '2028',
+        ccv: '123',
+    ),
+    creditCardHolderInfo: new CreditCardHolderInfo(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        postalCode: '01001000',
+        addressNumber: '100',
+        phone: '11999999999',
+    ),
+));
+```
+
+Available nested DTOs (`OwnerPro\Asaas\Support\DTO\*`):
+
+| DTO | Used in |
+|-----|---------|
+| `CreditCard` | `CreatePaymentRequest`, `TokenizeCreditCardRequest`, `PayWithCreditCardRequest` |
+| `CreditCardHolderInfo` | `CreatePaymentRequest`, `TokenizeCreditCardRequest`, `PayWithCreditCardRequest` |
+| `BankAccount` | `CreateTransferRequest` |
+| `Bank` | Nested inside `BankAccount` |
+| `Taxes` | `CreateInvoiceRequest`, `UpdateInvoiceRequest` |
+| `Split` | `CreatePaymentRequest`, `UpdatePaymentRequest` |
+| `SplitRefund` | `RefundPaymentRequest` |
+| `Callback` | `CreatePaymentRequest` |
+| `QrCodePayload` | `PayQrCodeRequest` |
+
+### New Request DTOs
+
+Beyond `create()` and `update()`, several action methods now accept typed request objects:
+
+**Payment actions:**
+
+```php
+use OwnerPro\Asaas\Payment\Request\SimulatePaymentRequest;
+use OwnerPro\Asaas\Payment\Request\RefundPaymentRequest;
+use OwnerPro\Asaas\Payment\Request\PayWithCreditCardRequest;
+use OwnerPro\Asaas\Payment\Request\ReceivePaymentInCashRequest;
+use OwnerPro\Asaas\Support\DTO\CreditCard;
+use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+use OwnerPro\Asaas\Support\DTO\SplitRefund;
+
+// Simulate payment
+Asaas::payments()->simulate(new SimulatePaymentRequest(
+    value: 500.00,
+    billingTypes: ['CREDIT_CARD', 'PIX'],
+    installmentCount: 3,
+));
+
+// Refund with split refunds
+Asaas::payments()->refund('pay_abc123', new RefundPaymentRequest(
+    value: 50.00,
+    description: 'Partial refund',
+    splitRefunds: [
+        new SplitRefund(id: 'split_abc', value: 25.00),
+        new SplitRefund(id: 'split_def', value: 25.00),
+    ],
+));
+
+// Pay with credit card
+Asaas::payments()->payWithCreditCard('pay_abc123', new PayWithCreditCardRequest(
+    creditCard: new CreditCard(
+        holderName: 'John Doe',
+        number: '4111111111111111',
+        expiryMonth: '06',
+        expiryYear: '2028',
+        ccv: '123',
+    ),
+    creditCardHolderInfo: new CreditCardHolderInfo(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        postalCode: '01001000',
+        addressNumber: '100',
+        phone: '11999999999',
+    ),
+));
+
+// Receive payment in cash
+Asaas::payments()->receiveInCash('pay_abc123', new ReceivePaymentInCashRequest(
+    paymentDate: '2026-03-26',
+    value: 100.00,
+    notifyCustomer: true,
+));
+```
+
+**Pix Transactions:**
+
+```php
+use OwnerPro\Asaas\PixTransaction\Request\DecodeQrCodeRequest;
+use OwnerPro\Asaas\PixTransaction\Request\PayQrCodeRequest;
+use OwnerPro\Asaas\Support\DTO\QrCodePayload;
+
+// Decode a QR code
+Asaas::pixTransactions()->decodeQrCode(new DecodeQrCodeRequest(
+    payload: '00020126580014br.gov.bcb.pix...',
+));
+
+// Pay a QR code with typed payload
+Asaas::pixTransactions()->payQrCode(new PayQrCodeRequest(
+    qrCode: new QrCodePayload(
+        payload: '00020126580014br.gov.bcb.pix...',
+        changeValue: 5.00,
+    ),
+    value: 150.00,
+    description: 'QR Code payment',
+));
+```
+
+**Pix:**
+
+```php
+use OwnerPro\Asaas\Pix\Request\CreateStaticQrCodeRequest;
+
+Asaas::pix()->createStaticQrCode(new CreateStaticQrCodeRequest(
+    addressKey: 'abc-uuid-key',
+    description: 'Store payment',
+    value: 49.90,
+    allowsMultiplePayments: true,
+));
+```
+
+**Bill Payments:**
+
+```php
+use OwnerPro\Asaas\BillPayment\Request\SimulateBillPaymentRequest;
+
+Asaas::billPayments()->simulate(new SimulateBillPaymentRequest(
+    identificationField: '23793.38128 60000.000003 00000.000400 1 84340000012345',
+));
+```
+
+### Updated Request DTOs with Nested DTO Support
+
+`CreatePaymentRequest`, `TokenizeCreditCardRequest`, `CreateInvoiceRequest`, and `CreateTransferRequest` now accept typed nested DTOs alongside plain arrays:
+
+```php
+use OwnerPro\Asaas\CreditCard\Request\TokenizeCreditCardRequest;
+use OwnerPro\Asaas\Support\DTO\CreditCard;
+use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+
+// Tokenize with typed DTOs
+Asaas::creditCards()->tokenize(new TokenizeCreditCardRequest(
+    customer: 'cus_abc123',
+    creditCard: new CreditCard(
+        holderName: 'John Doe',
+        number: '4111111111111111',
+        expiryMonth: '06',
+        expiryYear: '2028',
+        ccv: '123',
+    ),
+    creditCardHolderInfo: new CreditCardHolderInfo(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        postalCode: '01001000',
+        addressNumber: '100',
+        phone: '11999999999',
+    ),
+    remoteIp: '127.0.0.1',
+));
+```
+
+```php
+use OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest;
+use OwnerPro\Asaas\Support\DTO\Taxes;
+
+// Create invoice with typed Taxes
+Asaas::invoices()->create(new CreateInvoiceRequest(
+    serviceDescription: 'Consulting services',
+    observations: 'March 2026',
+    value: 5000.00,
+    deductions: 0.00,
+    effectiveDate: '2026-03-26',
+    municipalServiceName: 'Consultoria em TI',
+    taxes: new Taxes(
+        retainIss: false,
+        iss: 2.0,
+        pis: 0.65,
+        cofins: 3.0,
+        csll: 1.0,
+        inss: 0.0,
+        ir: 1.5,
+    ),
+));
+```
+
+```php
+use OwnerPro\Asaas\Transfer\Request\CreateTransferRequest;
+use OwnerPro\Asaas\Support\DTO\BankAccount;
+use OwnerPro\Asaas\Support\DTO\Bank;
+
+// Transfer with typed BankAccount
+Asaas::transfers()->create(new CreateTransferRequest(
+    value: 1000.00,
+    bankAccount: new BankAccount(
+        ownerName: 'Jane Doe',
+        cpfCnpj: '12345678901',
+        agency: '0001',
+        account: '123456',
+        accountDigit: '1',
+        bank: new Bank(code: '001'),
+        bankAccountType: 'CONTA_CORRENTE',
+    ),
+    operationType: 'TED',
+));
+```
+
 ## Pagination
 
 List methods return `AsaasPaginatedResult`:
@@ -189,18 +439,18 @@ Asaas::payments()->find(string $id): AsaasResult
 Asaas::payments()->list(array $query = []): AsaasPaginatedResult
 Asaas::payments()->update(string $id, array|UpdatePaymentRequest $data): AsaasResult
 Asaas::payments()->delete(string $id): AsaasResult
-Asaas::payments()->refund(string $id, array $data = []): AsaasResult
+Asaas::payments()->refund(string $id, array|RefundPaymentRequest $data = []): AsaasResult
 Asaas::payments()->restore(string $id): AsaasResult
 Asaas::payments()->captureAuthorized(string $id): AsaasResult
-Asaas::payments()->payWithCreditCard(string $id, array $data): AsaasResult
-Asaas::payments()->receiveInCash(string $id, array $data = []): AsaasResult
+Asaas::payments()->payWithCreditCard(string $id, array|PayWithCreditCardRequest $data): AsaasResult
+Asaas::payments()->receiveInCash(string $id, array|ReceivePaymentInCashRequest $data = []): AsaasResult
 Asaas::payments()->undoReceivedInCash(string $id): AsaasResult
 Asaas::payments()->status(string $id): AsaasResult
 Asaas::payments()->billingInfo(string $id): AsaasResult
 Asaas::payments()->pixQrCode(string $id): AsaasResult
 Asaas::payments()->identificationField(string $id): AsaasResult
 Asaas::payments()->viewingInfo(string $id): AsaasResult
-Asaas::payments()->simulate(array $data): AsaasResult
+Asaas::payments()->simulate(array|SimulatePaymentRequest $data): AsaasResult
 Asaas::payments()->limits(): AsaasResult
 Asaas::payments()->all(array $filters = []): Generator
 ```
@@ -212,7 +462,7 @@ Asaas::pix()->createKey(array|CreatePixKeyRequest $data): AsaasResult
 Asaas::pix()->findKey(string $id): AsaasResult
 Asaas::pix()->listKeys(array $query = []): AsaasPaginatedResult
 Asaas::pix()->deleteKey(string $id): AsaasResult
-Asaas::pix()->createStaticQrCode(array $data = []): AsaasResult
+Asaas::pix()->createStaticQrCode(array|CreateStaticQrCodeRequest $data = []): AsaasResult
 Asaas::pix()->deleteStaticQrCode(string $id): AsaasResult
 Asaas::pix()->tokenBucket(): AsaasResult
 Asaas::pix()->all(array $filters = []): Generator
@@ -221,8 +471,8 @@ Asaas::pix()->all(array $filters = []): Generator
 ### Pix Transactions (`pixTransactions()`)
 
 ```php
-Asaas::pixTransactions()->decodeQrCode(array $data): AsaasResult
-Asaas::pixTransactions()->payQrCode(array $data): AsaasResult
+Asaas::pixTransactions()->decodeQrCode(array|DecodeQrCodeRequest $data): AsaasResult
+Asaas::pixTransactions()->payQrCode(array|PayQrCodeRequest $data): AsaasResult
 Asaas::pixTransactions()->find(string $id): AsaasResult
 Asaas::pixTransactions()->list(array $query = []): AsaasPaginatedResult
 Asaas::pixTransactions()->cancel(string $id): AsaasResult
@@ -290,7 +540,7 @@ Asaas::creditCards()->setPreAuthorizationConfig(array|SetPreAuthConfigRequest $d
 Asaas::billPayments()->create(array|CreateBillPaymentRequest $data): AsaasResult
 Asaas::billPayments()->find(string $id): AsaasResult
 Asaas::billPayments()->list(array $query = []): AsaasPaginatedResult
-Asaas::billPayments()->simulate(array $data = []): AsaasResult
+Asaas::billPayments()->simulate(array|SimulateBillPaymentRequest $data = []): AsaasResult
 Asaas::billPayments()->cancel(string $id): AsaasResult
 Asaas::billPayments()->all(array $filters = []): Generator
 ```

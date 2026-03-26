@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+
+use OwnerPro\Asaas\Payment\Request\PayWithCreditCardRequest;
+use OwnerPro\Asaas\Support\DTO\CreditCard;
+use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+
+mutates(PayWithCreditCardRequest::class);
+
+it('creates from array', function (): void {
+    $request = PayWithCreditCardRequest::fromArray([
+        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
+        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+    ]);
+
+    expect($request->creditCard)->toBeArray();
+    expect($request->creditCardHolderInfo)->toBeArray();
+});
+
+it('throws when creditCard is missing', function (): void {
+    PayWithCreditCardRequest::fromArray([
+        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+    ]);
+})->throws(InvalidArgumentException::class, "Field 'creditCard' is required.");
+
+it('throws when creditCardHolderInfo is missing', function (): void {
+    PayWithCreditCardRequest::fromArray([
+        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
+    ]);
+})->throws(InvalidArgumentException::class, "Field 'creditCardHolderInfo' is required.");
+
+it('serializes nested CreditCard DTO in toArray', function (): void {
+    $request = new PayWithCreditCardRequest(
+        creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
+        creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
+    );
+
+    $array = $request->toArray();
+
+    expect($array['creditCard'])->toBe(['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123']);
+    expect($array['creditCardHolderInfo'])->toBe(['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999']);
+});
+
+it('passes arrays through as-is in toArray', function (): void {
+    $request = new PayWithCreditCardRequest(
+        creditCard: ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
+        creditCardHolderInfo: ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+    );
+
+    $array = $request->toArray();
+
+    expect($array['creditCard'])->toBe(['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123']);
+});

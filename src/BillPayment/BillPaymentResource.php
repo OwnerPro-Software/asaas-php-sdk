@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas\BillPayment;
 
 use Generator;
 use OwnerPro\Asaas\BillPayment\Request\CreateBillPaymentRequest;
+use OwnerPro\Asaas\BillPayment\Request\SimulateBillPaymentRequest;
 use OwnerPro\Asaas\BillPayment\Response\BillPaymentResponse;
 use OwnerPro\Asaas\BillPayment\Response\BillSimulationResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -35,10 +36,12 @@ final class BillPaymentResource
         return $this->asaasConnector->get('/v3/bill/'.$id, [], BillPaymentResponse::class);
     }
 
-    /** @param array<string, mixed> $data */
-    public function simulate(array $data = []): AsaasResult
+    /** @param array<string, mixed>|SimulateBillPaymentRequest $data */
+    public function simulate(array|SimulateBillPaymentRequest $data = []): AsaasResult
     {
-        return $this->asaasConnector->post('/v3/bill/simulate', $data, BillSimulationResponse::class);
+        $request = $data instanceof SimulateBillPaymentRequest ? $data : SimulateBillPaymentRequest::fromArray($data);
+
+        return $this->asaasConnector->post('/v3/bill/simulate', $request->toArray(), BillSimulationResponse::class);
     }
 
     public function cancel(string $id): AsaasResult

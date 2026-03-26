@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\DTO\Bank;
+use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Transfer\Request\CreateTransferRequest;
 use OwnerPro\Asaas\Transfer\Response\TransferResponse;
 use OwnerPro\Asaas\Transfer\TransferResource;
@@ -115,6 +117,31 @@ it('iterates all transfers lazily', function (array $page1): void {
     expect($items[0])->toBeInstanceOf(TransferResponse::class);
     expect($items[2]->id)->toBe('tr_3');
 })->with('transfer_list_fixture');
+
+it('creates transfer with typed BankAccount DTO', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = transferResource()->create(new CreateTransferRequest(
+        value: 500.00,
+        bankAccount: new BankAccount(
+            ownerName: 'John Doe',
+            cpfCnpj: '12345678901',
+            agency: '1234',
+            account: '56789',
+            accountDigit: '0',
+            bank: new Bank(code: '001'),
+        ),
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body['bankAccount']['ownerName'] === 'John Doe'
+            && $body['bankAccount']['bank'] === ['code' => '001'];
+    });
+})->with('transfer_fixture');
 
 it('returns failure on API error', function (array $errorFixture): void {
     Http::fake(['*' => Http::response($errorFixture, 400)]);

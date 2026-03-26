@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\PixTransaction;
 
 use Generator;
+use OwnerPro\Asaas\PixTransaction\Request\DecodeQrCodeRequest;
+use OwnerPro\Asaas\PixTransaction\Request\PayQrCodeRequest;
 use OwnerPro\Asaas\PixTransaction\Response\DecodedQrCodeResponse;
 use OwnerPro\Asaas\PixTransaction\Response\PixTransactionResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -15,16 +17,20 @@ final class PixTransactionResource
 {
     public function __construct(private readonly AsaasConnector $asaasConnector) {}
 
-    /** @param array<string, mixed> $data */
-    public function decodeQrCode(array $data): AsaasResult
+    /** @param array<string, mixed>|DecodeQrCodeRequest $data */
+    public function decodeQrCode(array|DecodeQrCodeRequest $data): AsaasResult
     {
-        return $this->asaasConnector->post('/v3/pix/qrCodes/decode', $data, DecodedQrCodeResponse::class);
+        $request = $data instanceof DecodeQrCodeRequest ? $data : DecodeQrCodeRequest::fromArray($data);
+
+        return $this->asaasConnector->post('/v3/pix/qrCodes/decode', $request->toArray(), DecodedQrCodeResponse::class);
     }
 
-    /** @param array<string, mixed> $data */
-    public function payQrCode(array $data): AsaasResult
+    /** @param array<string, mixed>|PayQrCodeRequest $data */
+    public function payQrCode(array|PayQrCodeRequest $data): AsaasResult
     {
-        return $this->asaasConnector->post('/v3/pix/qrCodes/pay', $data, PixTransactionResponse::class);
+        $request = $data instanceof PayQrCodeRequest ? $data : PayQrCodeRequest::fromArray($data);
+
+        return $this->asaasConnector->post('/v3/pix/qrCodes/pay', $request->toArray(), PixTransactionResponse::class);
     }
 
     /** @param array<string, mixed> $query */

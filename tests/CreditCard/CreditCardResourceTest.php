@@ -9,6 +9,8 @@ use OwnerPro\Asaas\CreditCard\Request\TokenizeCreditCardRequest;
 use OwnerPro\Asaas\CreditCard\Response\CreditCardResponse;
 use OwnerPro\Asaas\CreditCard\Response\PreAuthConfigResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\DTO\CreditCard;
+use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 
 mutates(CreditCardResource::class);
 
@@ -105,6 +107,25 @@ it('sets pre-authorization config from request object', function (): void {
 it('validates required fields for setPreAuthorizationConfig', function (): void {
     creditCardResource()->setPreAuthorizationConfig([]);
 })->throws(InvalidArgumentException::class, "Field 'daysToExpire' is required.");
+
+it('tokenizes with typed CreditCard DTOs', function (): void {
+    Http::fake(['*' => Http::response(['creditCardNumber' => '1111', 'creditCardBrand' => 'VISA', 'creditCardToken' => 'tok_123'], 200)]);
+
+    $result = creditCardResource()->tokenize(new TokenizeCreditCardRequest(
+        customer: 'cus_456',
+        creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
+        creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
+        remoteIp: '127.0.0.1',
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body['creditCard'] === ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'];
+    });
+});
 
 it('returns failure on API error', function (): void {
     Http::fake(['*' => Http::response(['errors' => [['description' => 'Invalid card data']]], 400)]);

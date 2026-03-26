@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas\Pix;
 
 use Generator;
 use OwnerPro\Asaas\Pix\Request\CreatePixKeyRequest;
+use OwnerPro\Asaas\Pix\Request\CreateStaticQrCodeRequest;
 use OwnerPro\Asaas\Pix\Response\PixResponse;
 use OwnerPro\Asaas\Pix\Response\StaticQrCodeResponse;
 use OwnerPro\Asaas\Pix\Response\TokenBucketResponse;
@@ -42,10 +43,12 @@ final class PixResource
         return $this->asaasConnector->delete('/v3/pix/addressKeys/'.$id, PixResponse::class);
     }
 
-    /** @param array<string, mixed> $data */
-    public function createStaticQrCode(array $data = []): AsaasResult
+    /** @param array<string, mixed>|CreateStaticQrCodeRequest $data */
+    public function createStaticQrCode(array|CreateStaticQrCodeRequest $data = []): AsaasResult
     {
-        return $this->asaasConnector->post('/v3/pix/qrCodes/static', $data, StaticQrCodeResponse::class);
+        $request = $data instanceof CreateStaticQrCodeRequest ? $data : CreateStaticQrCodeRequest::fromArray($data);
+
+        return $this->asaasConnector->post('/v3/pix/qrCodes/static', $request->toArray(), StaticQrCodeResponse::class);
     }
 
     public function deleteStaticQrCode(string $id): AsaasResult

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\PixTransaction\PixTransactionResource;
+use OwnerPro\Asaas\PixTransaction\Request\DecodeQrCodeRequest;
+use OwnerPro\Asaas\PixTransaction\Request\PayQrCodeRequest;
 use OwnerPro\Asaas\PixTransaction\Response\DecodedQrCodeResponse;
 use OwnerPro\Asaas\PixTransaction\Response\PixTransactionResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\DTO\QrCodePayload;
 
 mutates(PixTransactionResource::class);
 
@@ -115,6 +118,44 @@ it('iterates all pix transactions lazily', function (array $page1): void {
     expect($items[0])->toBeInstanceOf(PixTransactionResponse::class);
     expect($items[2]->id)->toBe('tx_3');
 })->with('pix_tx_list_fixture');
+
+it('decodes qr code from request object', function (): void {
+    Http::fake(['*' => Http::response([
+        'payload' => '00020126...', 'type' => 'STATIC',
+    ], 200)]);
+
+    $result = pixTxResource()->decodeQrCode(new DecodeQrCodeRequest(
+        payload: '00020126...',
+    ));
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toBeInstanceOf(DecodedQrCodeResponse::class);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/decode'
+        && $request->method() === 'POST'
+        && $request->data()['payload'] === '00020126...');
+});
+
+it('pays qr code from request object', function (): void {
+    Http::fake(['*' => Http::response([
+        'id' => 'pix_tx_123', 'status' => 'PENDING', 'value' => 100.00,
+    ], 200)]);
+
+    $result = pixTxResource()->payQrCode(new PayQrCodeRequest(
+        qrCode: new QrCodePayload(payload: '00020126...'),
+        value: 100.00,
+    ));
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/pay'
+            && $body['qrCode'] === ['payload' => '00020126...']
+            && $body['value'] === 100.00;
+    });
+});
 
 it('returns failure on API error', function (array $errorFixture): void {
     Http::fake(['*' => Http::response($errorFixture, 400)]);
