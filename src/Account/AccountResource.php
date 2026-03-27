@@ -21,9 +21,7 @@ final class AccountResource
     /** @param array<string, mixed>|AccountRequest $data */
     public function create(array|AccountRequest $data): AsaasResult
     {
-        $request = $data instanceof AccountRequest ? $data : AccountRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/accounts', $request->toArray(), AccountResponse::class);
+        return $this->asaasConnector->post('/v3/accounts', AccountRequest::resolveData($data), AccountResponse::class);
     }
 
     /** @param array<string, mixed> $query */
@@ -50,9 +48,7 @@ final class AccountResource
     /** @param array<string, mixed>|AccessTokenRequest $data */
     public function updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
     {
-        $request = $data instanceof AccessTokenRequest ? $data : AccessTokenRequest::fromArray($data);
-
-        return $this->asaasConnector->put(sprintf('/v3/accounts/%s/accessTokens/%s', $accountId, $tokenId), $request->toArray(), AccessTokenResponse::class);
+        return $this->asaasConnector->put(sprintf('/v3/accounts/%s/accessTokens/%s', $accountId, $tokenId), AccessTokenRequest::resolveData($data), AccessTokenResponse::class);
     }
 
     public function deleteAccessToken(string $accountId, string $tokenId): AsaasResult

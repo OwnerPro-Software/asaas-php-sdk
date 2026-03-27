@@ -21,9 +21,7 @@ final class WebhookResource
     /** @param array<string, mixed>|CreateWebhookRequest $data */
     public function create(array|CreateWebhookRequest $data): AsaasResult
     {
-        $request = $data instanceof CreateWebhookRequest ? $data : CreateWebhookRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/webhooks', $request->toArray(), WebhookResponse::class);
+        return $this->asaasConnector->post('/v3/webhooks', CreateWebhookRequest::resolveData($data), WebhookResponse::class);
     }
 
     /** @param array<string, mixed> $query */
@@ -40,9 +38,7 @@ final class WebhookResource
     /** @param array<string, mixed>|UpdateWebhookRequest $data */
     public function update(string $id, array|UpdateWebhookRequest $data): AsaasResult
     {
-        $request = $data instanceof UpdateWebhookRequest ? $data : UpdateWebhookRequest::fromArray($data);
-
-        return $this->asaasConnector->put('/v3/webhooks/'.$id, $request->toArray(), WebhookResponse::class);
+        return $this->asaasConnector->put('/v3/webhooks/'.$id, UpdateWebhookRequest::resolveData($data), WebhookResponse::class);
     }
 
     public function delete(string $id): AsaasResult

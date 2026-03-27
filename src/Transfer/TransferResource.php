@@ -18,9 +18,7 @@ final class TransferResource
     /** @param array<string, mixed>|TransferRequest $data */
     public function create(array|TransferRequest $data): AsaasResult
     {
-        $request = $data instanceof TransferRequest ? $data : TransferRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/transfers', $request->toArray(), TransferResponse::class);
+        return $this->asaasConnector->post('/v3/transfers', TransferRequest::resolveData($data), TransferResponse::class);
     }
 
     /** @param array<string, mixed> $query */

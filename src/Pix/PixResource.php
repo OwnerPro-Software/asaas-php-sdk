@@ -22,9 +22,7 @@ final class PixResource
     /** @param array<string, mixed>|PixKeyRequest $data */
     public function createKey(array|PixKeyRequest $data): AsaasResult
     {
-        $request = $data instanceof PixKeyRequest ? $data : PixKeyRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/pix/addressKeys', $request->toArray(), PixResponse::class);
+        return $this->asaasConnector->post('/v3/pix/addressKeys', PixKeyRequest::resolveData($data), PixResponse::class);
     }
 
     /** @param array<string, mixed> $query */
@@ -46,9 +44,7 @@ final class PixResource
     /** @param array<string, mixed>|StaticQrCodeRequest $data */
     public function createStaticQrCode(array|StaticQrCodeRequest $data = []): AsaasResult
     {
-        $request = $data instanceof StaticQrCodeRequest ? $data : StaticQrCodeRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/pix/qrCodes/static', $request->toArray(), StaticQrCodeResponse::class);
+        return $this->asaasConnector->post('/v3/pix/qrCodes/static', StaticQrCodeRequest::resolveData($data), StaticQrCodeResponse::class);
     }
 
     public function deleteStaticQrCode(string $id): AsaasResult

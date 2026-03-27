@@ -101,3 +101,29 @@ it('includes default values for skipped mid-constructor params', function (): vo
     expect($request->middle)->toBeNull();
     expect($request->email)->toBe('j@t.com');
 });
+
+// --- resolveData ---
+
+it('resolves an array into a validated array via resolveData', function (): void {
+    $result = FactoryTestRequest::resolveData(['name' => 'John', 'email' => 'j@t.com', 'phone' => '123']);
+
+    expect($result)->toBe(['name' => 'John', 'email' => 'j@t.com', 'phone' => '123']);
+});
+
+it('resolves a request object into an array via resolveData', function (): void {
+    $request = new FactoryTestRequest(name: 'John', email: 'j@t.com');
+
+    $result = FactoryTestRequest::resolveData($request);
+
+    expect($result)->toBe(['name' => 'John', 'email' => 'j@t.com']);
+});
+
+it('validates required fields when resolving from array', function (): void {
+    FactoryTestRequest::resolveData(['name' => 'John']);
+})->throws(InvalidArgumentException::class, "Field 'email' is required.");
+
+it('strips null values when resolving from array', function (): void {
+    $result = FactoryTestRequest::resolveData(['name' => 'John', 'email' => 'j@t.com']);
+
+    expect($result)->not->toHaveKey('phone');
+});

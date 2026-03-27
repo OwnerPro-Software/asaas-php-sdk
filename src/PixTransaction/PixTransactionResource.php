@@ -20,17 +20,13 @@ final class PixTransactionResource
     /** @param array<string, mixed>|DecodeQrCodeRequest $data */
     public function decodeQrCode(array|DecodeQrCodeRequest $data): AsaasResult
     {
-        $request = $data instanceof DecodeQrCodeRequest ? $data : DecodeQrCodeRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/pix/qrCodes/decode', $request->toArray(), DecodedQrCodeResponse::class);
+        return $this->asaasConnector->post('/v3/pix/qrCodes/decode', DecodeQrCodeRequest::resolveData($data), DecodedQrCodeResponse::class);
     }
 
     /** @param array<string, mixed>|PayQrCodeRequest $data */
     public function payQrCode(array|PayQrCodeRequest $data): AsaasResult
     {
-        $request = $data instanceof PayQrCodeRequest ? $data : PayQrCodeRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/pix/qrCodes/pay', $request->toArray(), PixTransactionResponse::class);
+        return $this->asaasConnector->post('/v3/pix/qrCodes/pay', PayQrCodeRequest::resolveData($data), PixTransactionResponse::class);
     }
 
     /** @param array<string, mixed> $query */

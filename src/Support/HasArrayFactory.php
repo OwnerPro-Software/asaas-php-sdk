@@ -39,6 +39,17 @@ trait HasArrayFactory
         return $reflectionClass->newInstanceArgs($args);
     }
 
+    /**
+     * @param  array<string, mixed>|static  $data
+     * @return array<string, mixed>
+     */
+    public static function resolveData(array|self $data): array
+    {
+        $request = is_array($data) ? static::fromArray($data) : $data;
+
+        return $request->toArray();
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {

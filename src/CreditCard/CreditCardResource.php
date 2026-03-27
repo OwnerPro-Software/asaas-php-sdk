@@ -18,9 +18,7 @@ final class CreditCardResource
     /** @param array<string, mixed>|CreditCardRequest $data */
     public function tokenize(array|CreditCardRequest $data): AsaasResult
     {
-        $request = $data instanceof CreditCardRequest ? $data : CreditCardRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/creditCard/tokenizeCreditCard', $request->toArray(), CreditCardResponse::class);
+        return $this->asaasConnector->post('/v3/creditCard/tokenizeCreditCard', CreditCardRequest::resolveData($data), CreditCardResponse::class);
     }
 
     public function getPreAuthorizationConfig(): AsaasResult
@@ -31,8 +29,6 @@ final class CreditCardResource
     /** @param array<string, mixed>|PreAuthConfigRequest $data */
     public function setPreAuthorizationConfig(array|PreAuthConfigRequest $data): AsaasResult
     {
-        $request = $data instanceof PreAuthConfigRequest ? $data : PreAuthConfigRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/creditCard/preAuthorization/config', $request->toArray(), PreAuthConfigResponse::class);
+        return $this->asaasConnector->post('/v3/creditCard/preAuthorization/config', PreAuthConfigRequest::resolveData($data), PreAuthConfigResponse::class);
     }
 }

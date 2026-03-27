@@ -20,9 +20,7 @@ final class BillPaymentResource
     /** @param array<string, mixed>|CreateBillPaymentRequest $data */
     public function create(array|CreateBillPaymentRequest $data): AsaasResult
     {
-        $request = $data instanceof CreateBillPaymentRequest ? $data : CreateBillPaymentRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/bill', $request->toArray(), BillPaymentResponse::class);
+        return $this->asaasConnector->post('/v3/bill', CreateBillPaymentRequest::resolveData($data), BillPaymentResponse::class);
     }
 
     /** @param array<string, mixed> $query */
@@ -39,9 +37,7 @@ final class BillPaymentResource
     /** @param array<string, mixed>|SimulateBillPaymentRequest $data */
     public function simulate(array|SimulateBillPaymentRequest $data = []): AsaasResult
     {
-        $request = $data instanceof SimulateBillPaymentRequest ? $data : SimulateBillPaymentRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/bill/simulate', $request->toArray(), BillSimulationResponse::class);
+        return $this->asaasConnector->post('/v3/bill/simulate', SimulateBillPaymentRequest::resolveData($data), BillSimulationResponse::class);
     }
 
     public function cancel(string $id): AsaasResult

@@ -19,9 +19,7 @@ final class InvoiceResource
     /** @param array<string, mixed>|CreateInvoiceRequest $data */
     public function create(array|CreateInvoiceRequest $data): AsaasResult
     {
-        $request = $data instanceof CreateInvoiceRequest ? $data : CreateInvoiceRequest::fromArray($data);
-
-        return $this->asaasConnector->post('/v3/invoices', $request->toArray(), InvoiceResponse::class);
+        return $this->asaasConnector->post('/v3/invoices', CreateInvoiceRequest::resolveData($data), InvoiceResponse::class);
     }
 
     /** @param array<string, mixed> $query */
@@ -38,9 +36,7 @@ final class InvoiceResource
     /** @param array<string, mixed>|UpdateInvoiceRequest $data */
     public function update(string $id, array|UpdateInvoiceRequest $data): AsaasResult
     {
-        $request = $data instanceof UpdateInvoiceRequest ? $data : UpdateInvoiceRequest::fromArray($data);
-
-        return $this->asaasConnector->put('/v3/invoices/'.$id, $request->toArray(), InvoiceResponse::class);
+        return $this->asaasConnector->put('/v3/invoices/'.$id, UpdateInvoiceRequest::resolveData($data), InvoiceResponse::class);
     }
 
     public function authorize(string $id): AsaasResult
