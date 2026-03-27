@@ -131,7 +131,7 @@ final class AsaasConnector
     public function all(string $path, array $filters, string $responseClass): Generator
     {
         $offset = 0;
-        $limit = is_int($filters['limit'] ?? null) ? $filters['limit'] : 100;
+        $limit = is_int($filters['limit'] ?? null) ? max(1, $filters['limit']) : 100;
 
         do {
             $result = $this->paginate(

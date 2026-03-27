@@ -376,6 +376,38 @@ it('all() sends correct offset and limit on each page', function (): void {
     expect($secondUrl)->toContain('limit=2');
 });
 
+it('all() enforces minimum limit of 1', function (): void {
+    $page = [
+        'object' => 'list', 'hasMore' => false, 'totalCount' => 1, 'limit' => 1, 'offset' => 0,
+        'data' => [['id' => 'pay_1', 'status' => 'DONE']],
+    ];
+
+    Http::fake(['*' => Http::response($page, 200)]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 0], ConnectorTestResponse::class));
+
+    expect($items)->toHaveCount(1);
+
+    Http::assertSent(fn ($request): bool => str_contains($request->url(), 'limit=1'));
+});
+
+it('all() enforces minimum limit of 1 for negative values', function (): void {
+    $page = [
+        'object' => 'list', 'hasMore' => false, 'totalCount' => 1, 'limit' => 1, 'offset' => 0,
+        'data' => [['id' => 'pay_1', 'status' => 'DONE']],
+    ];
+
+    Http::fake(['*' => Http::response($page, 200)]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => -5], ConnectorTestResponse::class));
+
+    expect($items)->toHaveCount(1);
+
+    Http::assertSent(fn ($request): bool => str_contains($request->url(), 'limit=1'));
+});
+
 it('all() throws on error during pagination', function (): void {
     $page1 = json_decode(file_get_contents(__DIR__.'/../Fixtures/payment_list.json'), true);
     $errorResponse = json_decode(file_get_contents(__DIR__.'/../Fixtures/error_400.json'), true);
