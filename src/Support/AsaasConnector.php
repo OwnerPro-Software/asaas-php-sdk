@@ -16,25 +16,12 @@ final class AsaasConnector
 
     public static function forStandalone(string $apiKey, string $environment, int $timeout): self
     {
-        $baseUrl = self::resolveBaseUrl($environment);
-
-        return new self(
-            (new PendingRequest)
-                ->baseUrl($baseUrl)
-                ->withHeader('access_token', $apiKey)
-                ->timeout($timeout)
-        );
+        return self::make(new PendingRequest, $apiKey, $environment, $timeout);
     }
 
     public static function forLaravel(string $apiKey, string $environment, int $timeout): self
     {
-        $baseUrl = self::resolveBaseUrl($environment);
-
-        return new self(
-            Http::baseUrl($baseUrl)
-                ->withHeader('access_token', $apiKey)
-                ->timeout($timeout)
-        );
+        return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout);
     }
 
     /**
@@ -151,6 +138,15 @@ final class AsaasConnector
 
             $offset += $limit;
         } while ($result->hasMore);
+    }
+
+    private static function make(PendingRequest $pendingRequest, string $apiKey, string $environment, int $timeout): self
+    {
+        return new self(
+            $pendingRequest->baseUrl(self::resolveBaseUrl($environment))
+                ->withHeader('access_token', $apiKey)
+                ->timeout($timeout)
+        );
     }
 
     private static function resolveBaseUrl(string $environment): string

@@ -6,6 +6,8 @@ namespace OwnerPro\Asaas\Support;
 
 final class AsaasResult
 {
+    use ThrowsOnFailure;
+
     /**
      * @param  ?list<array{code?: string, description?: string}>  $errors
      */
@@ -35,14 +37,5 @@ final class AsaasResult
             errors: $errors,
             statusCode: $statusCode,
         );
-    }
-
-    public function throw(): self
-    {
-        if (! $this->success) {
-            throw new AsaasRequestException($this->errors ?? [], $this->statusCode);
-        }
-
-        return $this;
     }
 }

@@ -8,6 +8,8 @@ use Closure;
 
 final class AsaasPaginatedResult
 {
+    use ThrowsOnFailure;
+
     /**
      * @param  list<BaseResponse>  $data
      * @param  ?list<array{code?: string, description?: string}>  $errors
@@ -74,14 +76,5 @@ final class AsaasPaginatedResult
         }
 
         return ($this->nextPageFetcher)($this->offset + $this->limit);
-    }
-
-    public function throw(): self
-    {
-        if (! $this->success) {
-            throw new AsaasRequestException($this->errors ?? [], $this->statusCode);
-        }
-
-        return $this;
     }
 }
