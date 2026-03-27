@@ -18,8 +18,6 @@ use OwnerPro\Asaas\Webhook\WebhookResource;
 
 final class AsaasClient
 {
-    private readonly AsaasConnector $asaasConnector;
-
     private ?PaymentResource $paymentResource = null;
 
     private ?PixResource $pixResource = null;
@@ -40,9 +38,14 @@ final class AsaasClient
 
     private ?StatementResource $statementResource = null;
 
-    public function __construct(string $apiKey, string $environment, int $timeout)
-    {
-        $this->asaasConnector = new AsaasConnector($apiKey, $environment, $timeout);
+    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+
+    public static function for(
+        string $apiKey,
+        string $environment = 'sandbox',
+        int $timeout = 30,
+    ): self {
+        return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout));
     }
 
     public function payments(): PaymentResource

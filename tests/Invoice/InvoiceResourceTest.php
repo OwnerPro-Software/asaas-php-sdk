@@ -14,7 +14,7 @@ mutates(InvoiceResource::class);
 
 function invoiceConnector(): AsaasConnector
 {
-    return new AsaasConnector('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
 }
 
 function invoiceResource(): InvoiceResource

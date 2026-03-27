@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
-use OwnerPro\Asaas\CreditCard\Request\PreAuthConfigRequest;
 use OwnerPro\Asaas\CreditCard\Request\CreditCardRequest;
+use OwnerPro\Asaas\CreditCard\Request\PreAuthConfigRequest;
 use OwnerPro\Asaas\CreditCard\Response\CreditCardResponse;
 use OwnerPro\Asaas\CreditCard\Response\PreAuthConfigResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -16,7 +16,7 @@ mutates(CreditCardResource::class);
 
 function ccConnector(): AsaasConnector
 {
-    return new AsaasConnector('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
 }
 
 function creditCardResource(): CreditCardResource

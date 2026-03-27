@@ -5,7 +5,9 @@ Clean PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API with 
 ## Requirements
 
 - PHP 8.1+
-- Laravel 10, 11, or 12
+- `illuminate/http` ^10.0|^11.0|^12.0
+
+Works with Laravel 10, 11, or 12 (auto-discovers ServiceProvider and Facade), and also works in any PHP project without Laravel.
 
 ## Installation
 
@@ -66,16 +68,48 @@ public function charge(): void
 
 ### Standalone (without Laravel)
 
+No Laravel framework needed — only `illuminate/http` as a Composer dependency:
+
 ```php
 use OwnerPro\Asaas\AsaasClient;
 
-$client = new AsaasClient(
+$client = AsaasClient::for(apiKey: 'your-api-key');
+$result = $client->payments()->find('pay_abc123');
+
+// Override defaults
+$client = AsaasClient::for(
     apiKey: 'your-api-key',
-    environment: 'sandbox',
-    timeout: 30,
+    environment: 'production',
+    timeout: 60,
+);
+```
+
+### Multi-Tenant
+
+For SaaS platforms where each tenant has their own Asaas API key:
+
+```php
+// In Laravel — inherits environment/timeout from config
+use OwnerPro\Asaas\Asaas;
+
+foreach ($tenants as $tenant) {
+    $client = Asaas::for(apiKey: $tenant->asaas_api_key);
+    $result = $client->payments()->list();
+}
+
+// Override per-tenant
+$client = Asaas::for(
+    apiKey: $tenant->asaas_api_key,
+    environment: 'production',
 );
 
-$result = $client->payments()->find('pay_abc123');
+// Standalone (without Laravel)
+use OwnerPro\Asaas\AsaasClient;
+
+foreach ($tenants as $tenant) {
+    $client = AsaasClient::for(apiKey: $tenant->asaas_api_key);
+    $result = $client->payments()->list();
+}
 ```
 
 ## Result Handling

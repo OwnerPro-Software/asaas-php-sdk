@@ -12,23 +12,29 @@ use InvalidArgumentException;
 
 final class AsaasConnector
 {
-    private readonly PendingRequest $pendingRequest;
+    public function __construct(private readonly PendingRequest $pendingRequest) {}
 
-    public function __construct(string $apiKey, string $environment, int $timeout)
+    public static function forStandalone(string $apiKey, string $environment, int $timeout): self
     {
-        if (! in_array($environment, ['sandbox', 'production'], true)) {
-            throw new InvalidArgumentException(
-                sprintf("Environment must be 'sandbox' or 'production', got '%s'.", $environment)
-            );
-        }
+        $baseUrl = self::resolveBaseUrl($environment);
 
-        $baseUrl = $environment === 'production'
-            ? 'https://api.asaas.com'
-            : 'https://api-sandbox.asaas.com';
+        return new self(
+            (new PendingRequest)
+                ->baseUrl($baseUrl)
+                ->withHeader('access_token', $apiKey)
+                ->timeout($timeout)
+        );
+    }
 
-        $this->pendingRequest = Http::baseUrl($baseUrl)
-            ->withHeader('access_token', $apiKey)
-            ->timeout($timeout);
+    public static function forLaravel(string $apiKey, string $environment, int $timeout): self
+    {
+        $baseUrl = self::resolveBaseUrl($environment);
+
+        return new self(
+            Http::baseUrl($baseUrl)
+                ->withHeader('access_token', $apiKey)
+                ->timeout($timeout)
+        );
     }
 
     /**
@@ -145,6 +151,19 @@ final class AsaasConnector
 
             $offset += $limit;
         } while ($result->hasMore);
+    }
+
+    private static function resolveBaseUrl(string $environment): string
+    {
+        if (! in_array($environment, ['sandbox', 'production'], true)) {
+            throw new InvalidArgumentException(
+                sprintf("Environment must be 'sandbox' or 'production', got '%s'.", $environment)
+            );
+        }
+
+        return $environment === 'production'
+            ? 'https://api.asaas.com'
+            : 'https://api-sandbox.asaas.com';
     }
 
     /** @param class-string<BaseResponse> $responseClass */

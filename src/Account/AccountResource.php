@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Account;
 
 use Generator;
-use OwnerPro\Asaas\Account\Request\AccountRequest;
 use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
+use OwnerPro\Asaas\Account\Request\AccountRequest;
 use OwnerPro\Asaas\Account\Response\AccessTokenResponse;
 use OwnerPro\Asaas\Account\Response\AccountResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;

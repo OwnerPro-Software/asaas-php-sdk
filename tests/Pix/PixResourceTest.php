@@ -16,7 +16,7 @@ mutates(PixResource::class);
 
 function pixConnector(): AsaasConnector
 {
-    return new AsaasConnector('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
 }
 
 function pixResource(): PixResource

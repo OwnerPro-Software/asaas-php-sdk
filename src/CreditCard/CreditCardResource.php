@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\CreditCard;
 
-use OwnerPro\Asaas\CreditCard\Request\PreAuthConfigRequest;
 use OwnerPro\Asaas\CreditCard\Request\CreditCardRequest;
+use OwnerPro\Asaas\CreditCard\Request\PreAuthConfigRequest;
 use OwnerPro\Asaas\CreditCard\Response\CreditCardResponse;
 use OwnerPro\Asaas\CreditCard\Response\PreAuthConfigResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;

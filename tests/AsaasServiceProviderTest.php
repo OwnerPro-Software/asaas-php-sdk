@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
 use OwnerPro\Asaas\Asaas;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\AsaasServiceProvider;
+use OwnerPro\Asaas\Support\AsaasConnector;
 
 mutates(AsaasServiceProvider::class, Asaas::class);
 
@@ -68,4 +70,30 @@ it('loads the correct config file', function () {
 
     $configData = require $configPath;
     expect($configData)->toHaveKeys(['api_key', 'environment', 'timeout']);
+});
+
+it('Asaas::for() returns AsaasClient with config defaults', function () {
+    $client = Asaas::for(apiKey: 'tenant-key');
+
+    expect($client)->toBeInstanceOf(AsaasClient::class);
+});
+
+it('Asaas::for() overrides environment', function () {
+    Http::fake(['https://api.asaas.com/*' => Http::response(['id' => 'test_123'], 200)]);
+
+    $client = Asaas::for(apiKey: 'tenant-key', environment: 'production');
+    $client->payments()->find('test_123');
+
+    Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api.asaas.com/'));
+});
+
+it('Asaas::for() overrides timeout', function () {
+    Http::fake();
+
+    $client = Asaas::for(apiKey: 'tenant-key', timeout: 60);
+    $connector = (new ReflectionProperty(AsaasClient::class, 'asaasConnector'))->getValue($client);
+    $pendingRequest = (new ReflectionProperty(AsaasConnector::class, 'pendingRequest'))->getValue($connector);
+    $options = (new ReflectionProperty($pendingRequest::class, 'options'))->getValue($pendingRequest);
+
+    expect($options['timeout'])->toBe(60);
 });

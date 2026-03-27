@@ -15,7 +15,7 @@ mutates(WebhookResource::class);
 
 function webhookConnector(): AsaasConnector
 {
-    return new AsaasConnector('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
 }
 
 function webhookResource(): WebhookResource

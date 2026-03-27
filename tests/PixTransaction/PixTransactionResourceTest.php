@@ -15,7 +15,7 @@ mutates(PixTransactionResource::class);
 
 function pixTxConnector(): AsaasConnector
 {
-    return new AsaasConnector('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
 }
 
 function pixTxResource(): PixTransactionResource

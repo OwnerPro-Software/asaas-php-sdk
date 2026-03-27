@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Account\AccountResource;
-use OwnerPro\Asaas\Account\Request\AccountRequest;
 use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
+use OwnerPro\Asaas\Account\Request\AccountRequest;
 use OwnerPro\Asaas\Account\Response\AccessTokenResponse;
 use OwnerPro\Asaas\Account\Response\AccountResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -15,7 +15,7 @@ mutates(AccountResource::class);
 
 function accountConnector(): AsaasConnector
 {
-    return new AsaasConnector('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
 }
 
 function accountResource(): AccountResource

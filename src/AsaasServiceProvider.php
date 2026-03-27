@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas;
 
 use Illuminate\Support\ServiceProvider;
+use OwnerPro\Asaas\Support\AsaasConnector;
 
 final class AsaasServiceProvider extends ServiceProvider
 {
@@ -17,9 +18,11 @@ final class AsaasServiceProvider extends ServiceProvider
             $config = config('asaas');
 
             return new AsaasClient(
-                apiKey: $config['api_key'],
-                environment: $config['environment'],
-                timeout: $config['timeout'],
+                AsaasConnector::forLaravel(
+                    apiKey: $config['api_key'],
+                    environment: $config['environment'],
+                    timeout: $config['timeout'],
+                )
             );
         });
     }
