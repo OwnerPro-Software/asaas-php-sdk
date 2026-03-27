@@ -457,3 +457,28 @@ it('paginate next page fetcher passes correct offset in URL', function (): void 
     $secondUrl = $recorded[1][0]->url();
     expect($secondUrl)->toContain('offset=2');
 });
+
+it('returns success with empty response on 2xx with no JSON body', function (): void {
+    Http::fake(['*' => Http::response('', 200)]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $result = $connector->get('/v3/payments/x', [], ConnectorTestResponse::class);
+
+    expect($result->success)->toBeTrue();
+    expect($result->statusCode)->toBe(200);
+});
+
+it('standalone handles 2xx with no JSON body', function (): void {
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response('', 200)]);
+
+    $connector = new AsaasConnector($pendingRequest);
+    $result = $connector->get('/v3/payments/x', [], ConnectorTestResponse::class);
+
+    expect($result->success)->toBeTrue();
+    expect($result->statusCode)->toBe(200);
+});

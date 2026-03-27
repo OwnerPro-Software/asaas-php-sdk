@@ -177,7 +177,7 @@ final class AsaasConnector
         }
 
         /** @var array<string, mixed> $json */
-        $json = $response->json();
+        $json = $response->json() ?? [];
 
         return AsaasResult::success(new $responseClass($json), $response->status());
     }

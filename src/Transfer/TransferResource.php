@@ -34,7 +34,7 @@ final class TransferResource
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->asaasConnector->delete(sprintf('/v3/transfers/%s/cancel', $id), TransferResponse::class);
+        return $this->asaasConnector->post(sprintf('/v3/transfers/%s/cancel', $id), [], TransferResponse::class);
     }
 
     /**

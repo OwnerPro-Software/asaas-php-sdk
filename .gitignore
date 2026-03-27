@@ -6,5 +6,6 @@ coverage/
 .php-cs-fixer.cache
 .idea/
 .DS_Store
+.env
 *.swp
 .worktrees/

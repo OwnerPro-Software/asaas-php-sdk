@@ -72,3 +72,17 @@ it('Asaas::for() overrides timeout', function () {
 
     expect($options['timeout'])->toBe(60);
 });
+
+it('throws RuntimeException when api_key is not configured', function () {
+    $this->app['config']->set('asaas.api_key', null);
+    $this->app->forgetInstance(AsaasClient::class);
+
+    app(AsaasClient::class);
+})->throws(RuntimeException::class, 'The asaas.api_key config value is required.');
+
+it('throws RuntimeException when api_key is empty string', function () {
+    $this->app['config']->set('asaas.api_key', '');
+    $this->app->forgetInstance(AsaasClient::class);
+
+    app(AsaasClient::class);
+})->throws(RuntimeException::class, 'The asaas.api_key config value is required.');

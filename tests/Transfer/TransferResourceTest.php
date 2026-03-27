@@ -94,7 +94,7 @@ it('cancels a transfer', function (array $fixture): void {
     expect($result->data->status)->toBe('CANCELLED');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/transfers/tr_123/cancel'
-        && $request->method() === 'DELETE');
+        && $request->method() === 'POST');
 })->with('transfer_fixture');
 
 it('iterates all transfers lazily', function (array $page1): void {
