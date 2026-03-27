@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Invoice\Response;
 
 use OwnerPro\Asaas\Support\BaseResponse;
+use OwnerPro\Asaas\Support\DTO\Taxes;
 
 final class InvoiceResponse extends BaseResponse
 {
@@ -46,8 +47,7 @@ final class InvoiceResponse extends BaseResponse
 
     public ?string $externalReference = null;
 
-    /** @var array<string, mixed>|null */
-    public ?array $taxes = null;
+    public ?Taxes $taxes = null;
 
     public ?string $municipalServiceId = null;
 

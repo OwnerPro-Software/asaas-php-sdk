@@ -27,7 +27,7 @@ dataset('invoice_fixture', [fn (): array => [
     'serviceDescription' => 'Dev services', 'value' => 1000.00,
     'deductions' => 0, 'effectiveDate' => '2026-04-01',
     'observations' => 'Note', 'municipalServiceName' => 'IT Services',
-    'taxes' => ['iss' => 5.0],
+    'taxes' => ['retainIss' => true, 'iss' => 5.0, 'pis' => 0.65, 'cofins' => 3.0, 'csll' => 1.0, 'inss' => 11.0, 'ir' => 1.5],
 ]]);
 
 dataset('invoice_list_fixture', [fn (): array => [
@@ -203,6 +203,24 @@ it('updates invoice with typed Taxes DTO', function (array $fixture): void {
         return $body['taxes'] === ['retainIss' => false, 'iss' => 3.0, 'pis' => 1.0, 'cofins' => 2.0, 'csll' => 0.5, 'inss' => 5.0, 'ir' => 1.0];
     });
 })->with('invoice_fixture');
+
+it('hydrates taxes as Taxes DTO in response', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = invoiceResource()->find('inv_123');
+
+    expect($result->data->taxes)->toBeInstanceOf(Taxes::class);
+    expect($result->data->taxes->iss)->toBe(5.0);
+    expect($result->data->taxes->retainIss)->toBeTrue();
+})->with('invoice_fixture');
+
+it('returns null taxes when absent in response', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'inv_123', 'status' => 'SCHEDULED'], 200)]);
+
+    $result = invoiceResource()->find('inv_123');
+
+    expect($result->data->taxes)->toBeNull();
+});
 
 it('returns failure on API error', function (array $errorFixture): void {
     Http::fake(['*' => Http::response($errorFixture, 400)]);
