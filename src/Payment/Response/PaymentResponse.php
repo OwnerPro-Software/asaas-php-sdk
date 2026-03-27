@@ -8,7 +8,7 @@ use OwnerPro\Asaas\Support\BaseResponse;
 
 final class PaymentResponse extends BaseResponse
 {
-    public string $id;
+    public ?string $id = null;
 
     public ?string $dateCreated = null;
 
