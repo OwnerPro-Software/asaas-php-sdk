@@ -14,9 +14,9 @@ use OwnerPro\Asaas\Webhook\Request\UpdateWebhookRequest;
 use OwnerPro\Asaas\Webhook\Response\RemoveBackoffResponse;
 use OwnerPro\Asaas\Webhook\Response\WebhookResponse;
 
-final class WebhookResource
+final readonly class WebhookResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed>|CreateWebhookRequest $data */
     public function create(array|CreateWebhookRequest $data): AsaasResult

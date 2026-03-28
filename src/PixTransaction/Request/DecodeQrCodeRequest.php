@@ -6,14 +6,14 @@ namespace OwnerPro\Asaas\PixTransaction\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class DecodeQrCodeRequest
+final readonly class DecodeQrCodeRequest
 {
     use HasArrayFactory;
 
     public function __construct(
-        public readonly string $payload,
-        public readonly ?float $changeValue = null,
-        public readonly ?string $expectedPaymentDate = null,
+        public string $payload,
+        public ?float $changeValue = null,
+        public ?string $expectedPaymentDate = null,
     ) {}
 
     /** @return list<string> */

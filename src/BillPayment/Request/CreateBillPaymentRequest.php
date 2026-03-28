@@ -6,19 +6,19 @@ namespace OwnerPro\Asaas\BillPayment\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class CreateBillPaymentRequest
+final readonly class CreateBillPaymentRequest
 {
     use HasArrayFactory;
 
     public function __construct(
-        public readonly string $identificationField,
-        public readonly ?string $scheduleDate = null,
-        public readonly ?string $description = null,
-        public readonly ?float $discount = null,
-        public readonly ?float $interest = null,
-        public readonly ?float $fine = null,
-        public readonly ?string $dueDate = null,
-        public readonly ?string $externalReference = null,
+        public string $identificationField,
+        public ?string $scheduleDate = null,
+        public ?string $description = null,
+        public ?float $discount = null,
+        public ?float $interest = null,
+        public ?float $fine = null,
+        public ?string $dueDate = null,
+        public ?string $externalReference = null,
     ) {}
 
     /** @return list<string> */

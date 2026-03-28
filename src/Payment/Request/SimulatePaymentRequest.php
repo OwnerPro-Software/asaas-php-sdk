@@ -6,15 +6,15 @@ namespace OwnerPro\Asaas\Payment\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class SimulatePaymentRequest
+final readonly class SimulatePaymentRequest
 {
     use HasArrayFactory;
 
     /** @param list<string> $billingTypes */
     public function __construct(
-        public readonly float $value,
-        public readonly array $billingTypes,
-        public readonly ?int $installmentCount = null,
+        public float $value,
+        public array $billingTypes,
+        public ?int $installmentCount = null,
     ) {}
 
     /** @return list<string> */

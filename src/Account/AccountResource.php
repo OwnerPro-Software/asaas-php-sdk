@@ -14,9 +14,9 @@ use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\DeletedResponse;
 
-final class AccountResource
+final readonly class AccountResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed>|AccountRequest $data */
     public function create(array|AccountRequest $data): AsaasResult

@@ -13,9 +13,9 @@ use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 
-final class BillPaymentResource
+final readonly class BillPaymentResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed>|CreateBillPaymentRequest $data */
     public function create(array|CreateBillPaymentRequest $data): AsaasResult

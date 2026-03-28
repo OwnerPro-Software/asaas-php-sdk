@@ -10,9 +10,9 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
 
-final class AsaasConnector
+final readonly class AsaasConnector
 {
-    public function __construct(private readonly PendingRequest $pendingRequest) {}
+    public function __construct(private PendingRequest $pendingRequest) {}
 
     public static function forStandalone(string $apiKey, string $environment, int $timeout): self
     {

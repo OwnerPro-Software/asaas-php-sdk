@@ -6,12 +6,12 @@ namespace OwnerPro\Asaas\CreditCard\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class PreAuthConfigRequest
+final readonly class PreAuthConfigRequest
 {
     use HasArrayFactory;
 
     public function __construct(
-        public readonly int $daysToExpire,
+        public int $daysToExpire,
     ) {}
 
     /** @return list<string> */

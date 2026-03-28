@@ -13,9 +13,9 @@ use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 
-final class PixTransactionResource
+final readonly class PixTransactionResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed>|DecodeQrCodeRequest $data */
     public function decodeQrCode(array|DecodeQrCodeRequest $data): AsaasResult

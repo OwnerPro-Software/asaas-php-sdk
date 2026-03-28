@@ -6,7 +6,7 @@ namespace OwnerPro\Asaas\Support;
 
 use Closure;
 
-final class AsaasPaginatedResult
+final readonly class AsaasPaginatedResult
 {
     use ThrowsOnFailure;
 
@@ -16,15 +16,15 @@ final class AsaasPaginatedResult
      * @param  ?(Closure(int): self)  $nextPageFetcher
      */
     public function __construct(
-        public readonly bool $success,
-        public readonly array $data,
-        public readonly int $totalCount,
-        public readonly bool $hasMore,
-        public readonly int $limit,
-        public readonly int $offset,
-        public readonly ?array $errors,
-        public readonly int $statusCode,
-        private readonly ?Closure $nextPageFetcher,
+        public bool $success,
+        public array $data,
+        public int $totalCount,
+        public bool $hasMore,
+        public int $limit,
+        public int $offset,
+        public ?array $errors,
+        public int $statusCode,
+        private ?Closure $nextPageFetcher,
     ) {}
 
     /**

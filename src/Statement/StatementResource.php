@@ -9,9 +9,9 @@ use OwnerPro\Asaas\Statement\Response\StatementResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 
-final class StatementResource
+final readonly class StatementResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed> $query */
     public function list(array $query = []): AsaasPaginatedResult

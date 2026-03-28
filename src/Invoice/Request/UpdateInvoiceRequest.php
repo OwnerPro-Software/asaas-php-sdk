@@ -7,20 +7,20 @@ namespace OwnerPro\Asaas\Invoice\Request;
 use OwnerPro\Asaas\Support\DTO\Taxes;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class UpdateInvoiceRequest
+final readonly class UpdateInvoiceRequest
 {
     use HasArrayFactory;
 
     /** @param array<string, mixed>|Taxes|null $taxes */
     public function __construct(
-        public readonly ?string $serviceDescription = null,
-        public readonly ?string $observations = null,
-        public readonly ?float $value = null,
-        public readonly ?float $deductions = null,
-        public readonly ?string $effectiveDate = null,
-        public readonly ?string $municipalServiceName = null,
-        public readonly array|Taxes|null $taxes = null,
-        public readonly ?string $externalReference = null,
+        public ?string $serviceDescription = null,
+        public ?string $observations = null,
+        public ?float $value = null,
+        public ?float $deductions = null,
+        public ?string $effectiveDate = null,
+        public ?string $municipalServiceName = null,
+        public array|Taxes|null $taxes = null,
+        public ?string $externalReference = null,
     ) {}
 
     /** @return array<string, mixed> */

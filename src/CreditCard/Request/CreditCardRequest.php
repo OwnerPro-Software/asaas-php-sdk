@@ -8,7 +8,7 @@ use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class CreditCardRequest
+final readonly class CreditCardRequest
 {
     use HasArrayFactory;
 
@@ -17,10 +17,10 @@ final class CreditCardRequest
      * @param  array<string, mixed>|CreditCardHolderInfo  $creditCardHolderInfo
      */
     public function __construct(
-        public readonly string $customer,
-        public readonly array|CreditCard $creditCard,
-        public readonly array|CreditCardHolderInfo $creditCardHolderInfo,
-        public readonly string $remoteIp,
+        public string $customer,
+        public array|CreditCard $creditCard,
+        public array|CreditCardHolderInfo $creditCardHolderInfo,
+        public string $remoteIp,
     ) {}
 
     /** @return array<string, mixed> */

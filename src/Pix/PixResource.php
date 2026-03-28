@@ -15,9 +15,9 @@ use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\DeletedResponse;
 
-final class PixResource
+final readonly class PixResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed>|PixKeyRequest $data */
     public function createKey(array|PixKeyRequest $data): AsaasResult

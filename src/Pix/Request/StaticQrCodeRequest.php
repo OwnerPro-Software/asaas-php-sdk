@@ -6,19 +6,19 @@ namespace OwnerPro\Asaas\Pix\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class StaticQrCodeRequest
+final readonly class StaticQrCodeRequest
 {
     use HasArrayFactory;
 
     public function __construct(
-        public readonly ?string $addressKey = null,
-        public readonly ?string $description = null,
-        public readonly ?float $value = null,
-        public readonly ?string $format = null,
-        public readonly ?string $expirationDate = null,
-        public readonly ?int $expirationSeconds = null,
-        public readonly ?bool $allowsMultiplePayments = null,
-        public readonly ?string $externalReference = null,
+        public ?string $addressKey = null,
+        public ?string $description = null,
+        public ?float $value = null,
+        public ?string $format = null,
+        public ?string $expirationDate = null,
+        public ?int $expirationSeconds = null,
+        public ?bool $allowsMultiplePayments = null,
+        public ?string $externalReference = null,
     ) {}
 
     /** @return list<string> */

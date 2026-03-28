@@ -24,9 +24,9 @@ use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\DeletedResponse;
 
-final class PaymentResource
+final readonly class PaymentResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed>|CreatePaymentRequest $data */
     public function create(array|CreatePaymentRequest $data): AsaasResult

@@ -11,9 +11,9 @@ use OwnerPro\Asaas\CreditCard\Response\PreAuthConfigResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasResult;
 
-final class CreditCardResource
+final readonly class CreditCardResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed>|CreditCardRequest $data */
     public function tokenize(array|CreditCardRequest $data): AsaasResult

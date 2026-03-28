@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support;
 
-final class AsaasResult
+final readonly class AsaasResult
 {
     use ThrowsOnFailure;
 
@@ -12,10 +12,10 @@ final class AsaasResult
      * @param  ?list<array{code?: string, description?: string}>  $errors
      */
     public function __construct(
-        public readonly bool $success,
-        public readonly ?BaseResponse $data,
-        public readonly ?array $errors,
-        public readonly int $statusCode,
+        public bool $success,
+        public ?BaseResponse $data,
+        public ?array $errors,
+        public int $statusCode,
     ) {}
 
     public static function success(BaseResponse $baseResponse, int $statusCode): self

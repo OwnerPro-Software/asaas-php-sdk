@@ -6,20 +6,20 @@ namespace OwnerPro\Asaas\Webhook\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class CreateWebhookRequest
+final readonly class CreateWebhookRequest
 {
     use HasArrayFactory;
 
     /** @param list<string>|null $events */
     public function __construct(
-        public readonly string $url,
-        public readonly string $email,
-        public readonly ?string $name = null,
-        public readonly ?bool $enabled = null,
-        public readonly ?int $apiVersion = null,
-        public readonly ?string $sendType = null,
-        public readonly ?string $authToken = null,
-        public readonly ?array $events = null,
+        public string $url,
+        public string $email,
+        public ?string $name = null,
+        public ?bool $enabled = null,
+        public ?int $apiVersion = null,
+        public ?string $sendType = null,
+        public ?string $authToken = null,
+        public ?array $events = null,
     ) {}
 
     /** @return list<string> */

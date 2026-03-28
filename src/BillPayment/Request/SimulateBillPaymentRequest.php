@@ -6,13 +6,13 @@ namespace OwnerPro\Asaas\BillPayment\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class SimulateBillPaymentRequest
+final readonly class SimulateBillPaymentRequest
 {
     use HasArrayFactory;
 
     public function __construct(
-        public readonly ?string $identificationField = null,
-        public readonly ?string $barCode = null,
+        public ?string $identificationField = null,
+        public ?string $barCode = null,
     ) {}
 
     /** @return list<string> */

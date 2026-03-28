@@ -6,12 +6,12 @@ namespace OwnerPro\Asaas\Pix\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class PixKeyRequest
+final readonly class PixKeyRequest
 {
     use HasArrayFactory;
 
     public function __construct(
-        public readonly string $type,
+        public string $type,
     ) {}
 
     /** @return list<string> */

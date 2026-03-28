@@ -6,14 +6,14 @@ namespace OwnerPro\Asaas\Payment\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class ReceivePaymentInCashRequest
+final readonly class ReceivePaymentInCashRequest
 {
     use HasArrayFactory;
 
     public function __construct(
-        public readonly ?string $paymentDate = null,
-        public readonly ?float $value = null,
-        public readonly ?bool $notifyCustomer = null,
+        public ?string $paymentDate = null,
+        public ?float $value = null,
+        public ?bool $notifyCustomer = null,
     ) {}
 
     /** @return list<string> */

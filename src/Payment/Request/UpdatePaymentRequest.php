@@ -7,22 +7,22 @@ namespace OwnerPro\Asaas\Payment\Request;
 use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class UpdatePaymentRequest
+final readonly class UpdatePaymentRequest
 {
     use HasArrayFactory;
 
     /** @param list<array<string, mixed>|Split>|null $split */
     public function __construct(
-        public readonly ?string $billingType = null,
-        public readonly ?float $value = null,
-        public readonly ?string $dueDate = null,
-        public readonly ?string $description = null,
-        public readonly ?string $externalReference = null,
-        public readonly ?float $discount = null,
-        public readonly ?float $interest = null,
-        public readonly ?float $fine = null,
-        public readonly ?bool $postalService = null,
-        public readonly ?array $split = null,
+        public ?string $billingType = null,
+        public ?float $value = null,
+        public ?string $dueDate = null,
+        public ?string $description = null,
+        public ?string $externalReference = null,
+        public ?float $discount = null,
+        public ?float $interest = null,
+        public ?float $fine = null,
+        public ?bool $postalService = null,
+        public ?array $split = null,
     ) {}
 
     /** @return array<string, mixed> */

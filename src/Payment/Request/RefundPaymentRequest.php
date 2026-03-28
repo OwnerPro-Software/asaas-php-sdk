@@ -7,15 +7,15 @@ namespace OwnerPro\Asaas\Payment\Request;
 use OwnerPro\Asaas\Support\DTO\SplitRefund;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class RefundPaymentRequest
+final readonly class RefundPaymentRequest
 {
     use HasArrayFactory;
 
     /** @param list<array<string, mixed>|SplitRefund>|null $splitRefunds */
     public function __construct(
-        public readonly ?float $value = null,
-        public readonly ?string $description = null,
-        public readonly ?array $splitRefunds = null,
+        public ?float $value = null,
+        public ?string $description = null,
+        public ?array $splitRefunds = null,
     ) {}
 
     /** @return array<string, mixed> */

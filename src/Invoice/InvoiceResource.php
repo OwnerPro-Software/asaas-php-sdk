@@ -12,9 +12,9 @@ use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 
-final class InvoiceResource
+final readonly class InvoiceResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed>|CreateInvoiceRequest $data */
     public function create(array|CreateInvoiceRequest $data): AsaasResult

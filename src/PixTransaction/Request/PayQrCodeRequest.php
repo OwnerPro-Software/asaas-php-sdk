@@ -7,16 +7,16 @@ namespace OwnerPro\Asaas\PixTransaction\Request;
 use OwnerPro\Asaas\Support\DTO\QrCodePayload;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class PayQrCodeRequest
+final readonly class PayQrCodeRequest
 {
     use HasArrayFactory;
 
     /** @param array<string, mixed>|QrCodePayload $qrCode */
     public function __construct(
-        public readonly array|QrCodePayload $qrCode,
-        public readonly float $value,
-        public readonly ?string $description = null,
-        public readonly ?string $scheduleDate = null,
+        public array|QrCodePayload $qrCode,
+        public float $value,
+        public ?string $description = null,
+        public ?string $scheduleDate = null,
     ) {}
 
     /** @return array<string, mixed> */

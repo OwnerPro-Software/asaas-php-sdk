@@ -11,9 +11,9 @@ use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Transfer\Request\TransferRequest;
 use OwnerPro\Asaas\Transfer\Response\TransferResponse;
 
-final class TransferResource
+final readonly class TransferResource
 {
-    public function __construct(private readonly AsaasConnector $asaasConnector) {}
+    public function __construct(private AsaasConnector $asaasConnector) {}
 
     /** @param array<string, mixed>|TransferRequest $data */
     public function create(array|TransferRequest $data): AsaasResult

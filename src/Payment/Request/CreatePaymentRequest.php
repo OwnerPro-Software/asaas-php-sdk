@@ -10,7 +10,7 @@ use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class CreatePaymentRequest
+final readonly class CreatePaymentRequest
 {
     use HasArrayFactory;
 
@@ -21,21 +21,21 @@ final class CreatePaymentRequest
      * @param  array<string, mixed>|CreditCardHolderInfo|null  $creditCardHolderInfo
      */
     public function __construct(
-        public readonly string $customer,
-        public readonly string $billingType,
-        public readonly float $value,
-        public readonly string $dueDate,
-        public readonly ?string $description = null,
-        public readonly ?string $externalReference = null,
-        public readonly ?float $discount = null,
-        public readonly ?float $interest = null,
-        public readonly ?float $fine = null,
-        public readonly ?bool $postalService = null,
-        public readonly ?array $split = null,
-        public readonly array|Callback|null $callback = null,
-        public readonly array|CreditCard|null $creditCard = null,
-        public readonly array|CreditCardHolderInfo|null $creditCardHolderInfo = null,
-        public readonly ?string $remoteIp = null,
+        public string $customer,
+        public string $billingType,
+        public float $value,
+        public string $dueDate,
+        public ?string $description = null,
+        public ?string $externalReference = null,
+        public ?float $discount = null,
+        public ?float $interest = null,
+        public ?float $fine = null,
+        public ?bool $postalService = null,
+        public ?array $split = null,
+        public array|Callback|null $callback = null,
+        public array|CreditCard|null $creditCard = null,
+        public array|CreditCardHolderInfo|null $creditCardHolderInfo = null,
+        public ?string $remoteIp = null,
     ) {}
 
     /** @return array<string, mixed> */

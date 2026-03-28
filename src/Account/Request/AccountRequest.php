@@ -6,26 +6,26 @@ namespace OwnerPro\Asaas\Account\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final class AccountRequest
+final readonly class AccountRequest
 {
     use HasArrayFactory;
 
     public function __construct(
-        public readonly string $name,
-        public readonly string $email,
-        public readonly string $cpfCnpj,
-        public readonly string $mobilePhone,
-        public readonly float $incomeValue,
-        public readonly string $address,
-        public readonly string $addressNumber,
-        public readonly string $province,
-        public readonly string $postalCode,
-        public readonly ?string $birthDate = null,
-        public readonly ?string $companyType = null,
-        public readonly ?string $phone = null,
-        public readonly ?string $complement = null,
-        public readonly ?string $tradingName = null,
-        public readonly ?string $site = null,
+        public string $name,
+        public string $email,
+        public string $cpfCnpj,
+        public string $mobilePhone,
+        public float $incomeValue,
+        public string $address,
+        public string $addressNumber,
+        public string $province,
+        public string $postalCode,
+        public ?string $birthDate = null,
+        public ?string $companyType = null,
+        public ?string $phone = null,
+        public ?string $complement = null,
+        public ?string $tradingName = null,
+        public ?string $site = null,
     ) {}
 
     /** @return list<string> */
