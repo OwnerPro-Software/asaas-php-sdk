@@ -11,7 +11,7 @@ use OwnerPro\Asaas\Support\AsaasConnector;
 final class Asaas extends Facade
 {
     public static function for(
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         ?string $environment = null,
         ?int $timeout = null,
     ): AsaasClient {

@@ -14,12 +14,12 @@ final readonly class AsaasConnector
 {
     public function __construct(private PendingRequest $pendingRequest) {}
 
-    public static function forStandalone(string $apiKey, string $environment, int $timeout): self
+    public static function forStandalone(#[\SensitiveParameter] string $apiKey, string $environment, int $timeout): self
     {
         return self::make(new PendingRequest, $apiKey, $environment, $timeout);
     }
 
-    public static function forLaravel(string $apiKey, string $environment, int $timeout): self
+    public static function forLaravel(#[\SensitiveParameter] string $apiKey, string $environment, int $timeout): self
     {
         return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout);
     }
@@ -144,7 +144,7 @@ final readonly class AsaasConnector
         } while ($result->hasMore);
     }
 
-    private static function make(PendingRequest $pendingRequest, string $apiKey, string $environment, int $timeout): self
+    private static function make(PendingRequest $pendingRequest, #[\SensitiveParameter] string $apiKey, string $environment, int $timeout): self
     {
         return new self(
             $pendingRequest->baseUrl(self::resolveBaseUrl($environment))

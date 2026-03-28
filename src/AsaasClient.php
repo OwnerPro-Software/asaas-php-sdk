@@ -41,7 +41,7 @@ final class AsaasClient
     public function __construct(private readonly AsaasConnector $asaasConnector) {}
 
     public static function for(
-        string $apiKey,
+        #[\SensitiveParameter] string $apiKey,
         string $environment = 'sandbox',
         int $timeout = 30,
     ): self {
