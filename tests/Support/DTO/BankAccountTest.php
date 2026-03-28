@@ -77,6 +77,43 @@ it('passes array bank through as-is in toArray', function (): void {
     expect($account->toArray())->toMatchArray(['bank' => ['code' => '001']]);
 });
 
+it('masks sensitive data in debug info', function (): void {
+    $account = new BankAccount(
+        ownerName: 'John Doe',
+        cpfCnpj: '12345678901',
+        agency: '1234',
+        account: '56789',
+        accountDigit: '0',
+        accountName: 'Main Account',
+        ownerBirthDate: '1990-01-01',
+    );
+
+    $debug = $account->__debugInfo();
+
+    expect($debug['ownerName'])->toBe('John Doe');
+    expect($debug['cpfCnpj'])->toBe('********901');
+    expect($debug['agency'])->toBe('1234');
+    expect($debug['account'])->toBe('***89');
+    expect($debug['accountDigit'])->toBe('*');
+    expect($debug['bank'])->toBeNull();
+    expect($debug['accountName'])->toBe('Main Account');
+    expect($debug['ownerBirthDate'])->toBe('***');
+});
+
+it('masks sensitive data in debug info with null optionals', function (): void {
+    $account = new BankAccount(
+        ownerName: 'John Doe',
+        cpfCnpj: '12345678901',
+        agency: '1234',
+        account: '56789',
+        accountDigit: '0',
+    );
+
+    $debug = $account->__debugInfo();
+
+    expect($debug['ownerBirthDate'])->toBeNull();
+});
+
 it('throws when required field is missing', function (string $missingField): void {
     $data = [
         'ownerName' => 'John Doe',
