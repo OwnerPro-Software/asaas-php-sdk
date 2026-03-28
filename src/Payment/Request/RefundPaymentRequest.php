@@ -18,22 +18,6 @@ final readonly class RefundPaymentRequest
         public ?array $splitRefunds = null,
     ) {}
 
-    /** @return array<string, mixed> */
-    public function toArray(): array
-    {
-        /** @var array<string, mixed> $data */
-        $data = array_filter(get_object_vars($this), fn (mixed $v): bool => $v !== null);
-
-        if (is_array($this->splitRefunds)) {
-            $data['splitRefunds'] = array_map(
-                fn (array|SplitRefund $item): array => $item instanceof SplitRefund ? $item->toArray() : $item,
-                $this->splitRefunds,
-            );
-        }
-
-        return $data;
-    }
-
     /** @return list<string> */
     protected static function requiredFields(): array
     {

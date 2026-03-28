@@ -54,9 +54,22 @@ trait HasArrayFactory
     public function toArray(): array
     {
         /** @var array<string, mixed> $vars */
-        $vars = get_object_vars($this);
+        $vars = array_filter(get_object_vars($this), fn (mixed $v): bool => $v !== null);
 
-        return array_filter($vars, fn (mixed $v): bool => $v !== null);
+        return array_map(function (mixed $value): mixed {
+            if (is_object($value) && method_exists($value, 'toArray')) {
+                return $value->toArray();
+            }
+
+            if (is_array($value)) {
+                return array_map(
+                    fn (mixed $item): mixed => is_object($item) && method_exists($item, 'toArray') ? $item->toArray() : $item,
+                    $value,
+                );
+            }
+
+            return $value;
+        }, $vars);
     }
 
     /** @return list<string> */

@@ -38,34 +38,6 @@ final readonly class CreatePaymentRequest
         public ?string $remoteIp = null,
     ) {}
 
-    /** @return array<string, mixed> */
-    public function toArray(): array
-    {
-        /** @var array<string, mixed> $data */
-        $data = array_filter(get_object_vars($this), fn (mixed $v): bool => $v !== null);
-
-        if (is_array($this->split)) {
-            $data['split'] = array_map(
-                fn (array|Split $item): array => $item instanceof Split ? $item->toArray() : $item,
-                $this->split,
-            );
-        }
-
-        if ($this->callback instanceof Callback) {
-            $data['callback'] = $this->callback->toArray();
-        }
-
-        if ($this->creditCard instanceof CreditCard) {
-            $data['creditCard'] = $this->creditCard->toArray();
-        }
-
-        if ($this->creditCardHolderInfo instanceof CreditCardHolderInfo) {
-            $data['creditCardHolderInfo'] = $this->creditCardHolderInfo->toArray();
-        }
-
-        return $data;
-    }
-
     /** @return list<string> */
     protected static function requiredFields(): array
     {

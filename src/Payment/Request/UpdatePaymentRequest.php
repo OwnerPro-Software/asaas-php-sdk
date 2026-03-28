@@ -25,22 +25,6 @@ final readonly class UpdatePaymentRequest
         public ?array $split = null,
     ) {}
 
-    /** @return array<string, mixed> */
-    public function toArray(): array
-    {
-        /** @var array<string, mixed> $data */
-        $data = array_filter(get_object_vars($this), fn (mixed $v): bool => $v !== null);
-
-        if (is_array($this->split)) {
-            $data['split'] = array_map(
-                fn (array|Split $item): array => $item instanceof Split ? $item->toArray() : $item,
-                $this->split,
-            );
-        }
-
-        return $data;
-    }
-
     /** @return list<string> */
     protected static function requiredFields(): array
     {
