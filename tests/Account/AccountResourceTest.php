@@ -192,6 +192,42 @@ it('iterates all accounts lazily', function (): void {
     expect($items[2]->id)->toBe('acc_3');
 });
 
+it('masks sensitive data in AccountResponse debug info', function (): void {
+    $response = new AccountResponse([
+        'id' => 'acc_123',
+        'name' => 'Sub Account',
+        'apiKey' => 'ak_secret_key_123',
+        'accessToken' => 'at_secret_token_456',
+        'cpfCnpj' => '12345678901',
+        'accountNumber' => '123456',
+    ]);
+
+    $debug = $response->__debugInfo();
+
+    expect($debug['id'])->toBe('acc_123');
+    expect($debug['name'])->toBe('Sub Account');
+    expect($debug['apiKey'])->toBe('***');
+    expect($debug['accessToken'])->toBe('***');
+    expect($debug['cpfCnpj'])->toBe('********901');
+    expect($debug['accountNumber'])->toBe('****56');
+});
+
+it('masks sensitive data in AccessTokenResponse debug info', function (): void {
+    $response = new AccessTokenResponse([
+        'id' => 'tok_1',
+        'name' => 'Main Token',
+        'apiKey' => 'ak_secret_key_789',
+        'enabled' => true,
+    ]);
+
+    $debug = $response->__debugInfo();
+
+    expect($debug['id'])->toBe('tok_1');
+    expect($debug['name'])->toBe('Main Token');
+    expect($debug['apiKey'])->toBe('***');
+    expect($debug['enabled'])->toBeTrue();
+});
+
 it('returns failure on API error', function (): void {
     Http::fake(['*' => Http::response(['errors' => [['description' => 'Unauthorized']]], 401)]);
 

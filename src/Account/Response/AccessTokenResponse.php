@@ -17,4 +17,16 @@ final class AccessTokenResponse extends BaseResponse
     public ?string $apiKey = null;
 
     public ?string $expirationDate = null;
+
+    /** @return array<string, mixed> */
+    public function __debugInfo(): array
+    {
+        $attributes = $this->toArray();
+
+        if (isset($attributes['apiKey']) && is_string($attributes['apiKey'])) {
+            $attributes['apiKey'] = '***';
+        }
+
+        return $attributes;
+    }
 }
