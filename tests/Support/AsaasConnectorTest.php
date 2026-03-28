@@ -408,6 +408,22 @@ it('all() enforces minimum limit of 1 for negative values', function (): void {
     Http::assertSent(fn ($request): bool => str_contains($request->url(), 'limit=1'));
 });
 
+it('all() stops when API returns hasMore true with empty data', function (): void {
+    $emptyPage = [
+        'object' => 'list', 'hasMore' => true, 'totalCount' => 10, 'limit' => 10, 'offset' => 0,
+        'data' => [],
+    ];
+
+    Http::fake(['*' => Http::response($emptyPage, 200)]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $items = iterator_to_array($connector->all('/v3/payments', [], ConnectorTestResponse::class));
+
+    expect($items)->toBeEmpty();
+
+    Http::assertSentCount(1);
+});
+
 it('all() throws on error during pagination', function (): void {
     $page1 = json_decode(file_get_contents(__DIR__.'/../Fixtures/payment_list.json'), true);
     $errorResponse = json_decode(file_get_contents(__DIR__.'/../Fixtures/error_400.json'), true);

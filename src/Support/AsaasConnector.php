@@ -136,6 +136,10 @@ final class AsaasConnector
                 yield $item;
             }
 
+            if ($data === []) {
+                break;
+            }
+
             $offset += $limit;
         } while ($result->hasMore);
     }
