@@ -43,6 +43,42 @@ it('converts to array filtering nulls', function (): void {
     ]);
 });
 
+it('masks sensitive data in debug info', function (): void {
+    $info = new CreditCardHolderInfo(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        postalCode: '01001000',
+        addressNumber: '123',
+        phone: '1199999999',
+        mobilePhone: '11999999999',
+    );
+
+    $debug = $info->__debugInfo();
+
+    expect($debug['name'])->toBe('John Doe');
+    expect($debug['email'])->toBe('***');
+    expect($debug['cpfCnpj'])->toBe('********901');
+    expect($debug['postalCode'])->toBe('01001000');
+    expect($debug['addressNumber'])->toBe('123');
+    expect($debug['phone'])->toBe('***');
+    expect($debug['addressComplement'])->toBeNull();
+    expect($debug['mobilePhone'])->toBe('***');
+});
+
+it('masks sensitive data in debug info with null mobilePhone', function (): void {
+    $info = new CreditCardHolderInfo(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        postalCode: '01001000',
+        addressNumber: '123',
+        phone: '1199999999',
+    );
+
+    expect($info->__debugInfo()['mobilePhone'])->toBeNull();
+});
+
 it('throws when required field is missing', function (string $missingField): void {
     $data = [
         'name' => 'John Doe',
