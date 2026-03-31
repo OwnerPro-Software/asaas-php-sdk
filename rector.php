@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\TypeDeclaration\Rector\ClassMethod\AddReturnArrayDocblockBasedOnArrayMapRector;
 use RectorLaravel\Rector\MethodCall\ContainerBindConcreteWithClosureOnlyRector;
 use RectorLaravel\Set\LaravelSetProvider;
 
@@ -17,6 +18,9 @@ return RectorConfig::configure()
     ->withSkip([
         ContainerBindConcreteWithClosureOnlyRector::class => [
             __DIR__.'/src/AsaasServiceProvider.php',
+        ],
+        AddReturnArrayDocblockBasedOnArrayMapRector::class => [
+            __DIR__.'/src/Support/HasArrayFactory.php',
         ],
     ])
     ->withPreparedSets(

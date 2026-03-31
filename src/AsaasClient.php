@@ -15,6 +15,7 @@ use OwnerPro\Asaas\Statement\StatementResource;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Transfer\TransferResource;
 use OwnerPro\Asaas\Webhook\WebhookResource;
+use SensitiveParameter;
 
 final class AsaasClient
 {
@@ -41,7 +42,7 @@ final class AsaasClient
     public function __construct(private readonly AsaasConnector $asaasConnector) {}
 
     public static function for(
-        #[\SensitiveParameter] string $apiKey,
+        #[SensitiveParameter] string $apiKey,
         string $environment = 'sandbox',
         int $timeout = 30,
     ): self {

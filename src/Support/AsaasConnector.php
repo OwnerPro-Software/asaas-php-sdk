@@ -4,22 +4,25 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support;
 
+use Closure;
 use Generator;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
+use SensitiveParameter;
 
 final readonly class AsaasConnector
 {
     public function __construct(private PendingRequest $pendingRequest) {}
 
-    public static function forStandalone(#[\SensitiveParameter] string $apiKey, string $environment, int $timeout): self
+    public static function forStandalone(#[SensitiveParameter] string $apiKey, string $environment, int $timeout): self
     {
         return self::make(new PendingRequest, $apiKey, $environment, $timeout);
     }
 
-    public static function forLaravel(#[\SensitiveParameter] string $apiKey, string $environment, int $timeout): self
+    public static function forLaravel(#[SensitiveParameter] string $apiKey, string $environment, int $timeout): self
     {
         return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout);
     }
@@ -30,9 +33,10 @@ final readonly class AsaasConnector
      */
     public function get(string $path, array $query, string $responseClass): AsaasResult
     {
-        $response = $this->pendingRequest->get($path, $query);
-
-        return $this->toResult($response, $responseClass);
+        return $this->sendRequest(
+            fn (): Response => $this->pendingRequest->get($path, $query),
+            $responseClass,
+        );
     }
 
     /**
@@ -41,9 +45,10 @@ final readonly class AsaasConnector
      */
     public function post(string $path, array $data, string $responseClass): AsaasResult
     {
-        $response = $this->pendingRequest->post($path, $data);
-
-        return $this->toResult($response, $responseClass);
+        return $this->sendRequest(
+            fn (): Response => $this->pendingRequest->post($path, $data),
+            $responseClass,
+        );
     }
 
     /**
@@ -52,17 +57,19 @@ final readonly class AsaasConnector
      */
     public function put(string $path, array $data, string $responseClass): AsaasResult
     {
-        $response = $this->pendingRequest->put($path, $data);
-
-        return $this->toResult($response, $responseClass);
+        return $this->sendRequest(
+            fn (): Response => $this->pendingRequest->put($path, $data),
+            $responseClass,
+        );
     }
 
     /** @param class-string<BaseResponse> $responseClass */
     public function delete(string $path, string $responseClass): AsaasResult
     {
-        $response = $this->pendingRequest->delete($path);
-
-        return $this->toResult($response, $responseClass);
+        return $this->sendRequest(
+            fn (): Response => $this->pendingRequest->delete($path),
+            $responseClass,
+        );
     }
 
     /**
@@ -71,7 +78,14 @@ final readonly class AsaasConnector
      */
     public function paginate(string $path, array $query, string $responseClass): AsaasPaginatedResult
     {
-        $response = $this->pendingRequest->get($path, $query);
+        try {
+            $response = $this->pendingRequest->get($path, $query);
+        } catch (ConnectionException $connectionException) {
+            return AsaasPaginatedResult::failure(
+                [['code' => 'CONNECTION_ERROR', 'description' => $connectionException->getMessage()]],
+                0,
+            );
+        }
 
         if ($response->failed()) {
             return AsaasPaginatedResult::failure(
@@ -144,7 +158,7 @@ final readonly class AsaasConnector
         } while ($result->hasMore);
     }
 
-    private static function make(PendingRequest $pendingRequest, #[\SensitiveParameter] string $apiKey, string $environment, int $timeout): self
+    private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, string $environment, int $timeout): self
     {
         return new self(
             $pendingRequest->baseUrl(self::resolveBaseUrl($environment))
@@ -164,6 +178,22 @@ final readonly class AsaasConnector
         return $environment === 'production'
             ? 'https://api.asaas.com'
             : 'https://api-sandbox.asaas.com';
+    }
+
+    /** @param class-string<BaseResponse> $responseClass */
+    private function sendRequest(Closure $httpCall, string $responseClass): AsaasResult
+    {
+        try {
+            /** @var Response $response */
+            $response = $httpCall();
+        } catch (ConnectionException $connectionException) {
+            return AsaasResult::failure(
+                [['code' => 'CONNECTION_ERROR', 'description' => $connectionException->getMessage()]],
+                0,
+            );
+        }
+
+        return $this->toResult($response, $responseClass);
     }
 
     /** @param class-string<BaseResponse> $responseClass */

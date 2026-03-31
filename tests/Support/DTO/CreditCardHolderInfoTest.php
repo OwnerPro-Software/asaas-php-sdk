@@ -79,6 +79,19 @@ it('masks sensitive data in debug info with null mobilePhone', function (): void
     expect($info->__debugInfo()['mobilePhone'])->toBeNull();
 });
 
+it('masks short cpfCnpj without negative repeat', function (): void {
+    $info = new CreditCardHolderInfo(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '01',
+        postalCode: '01001000',
+        addressNumber: '123',
+        phone: '1199999999',
+    );
+
+    expect($info->__debugInfo()['cpfCnpj'])->toBe('01');
+});
+
 it('throws when required field is missing', function (string $missingField): void {
     $data = [
         'name' => 'John Doe',

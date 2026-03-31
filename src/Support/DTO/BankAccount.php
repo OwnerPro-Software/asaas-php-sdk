@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Support\DTO;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use SensitiveParameter;
 
 final readonly class BankAccount
 {
@@ -13,16 +14,16 @@ final readonly class BankAccount
     /** @param array<string, mixed>|Bank|null $bank */
     public function __construct(
         public string $ownerName,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public string $cpfCnpj,
         public string $agency,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public string $account,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public string $accountDigit,
         public array|Bank|null $bank = null,
         public ?string $accountName = null,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public ?string $ownerBirthDate = null,
         public ?string $bankAccountType = null,
         public ?string $ispb = null,

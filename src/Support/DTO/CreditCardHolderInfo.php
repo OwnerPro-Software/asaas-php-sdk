@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Support\DTO;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use SensitiveParameter;
 
 final readonly class CreditCardHolderInfo
 {
@@ -12,16 +13,16 @@ final readonly class CreditCardHolderInfo
 
     public function __construct(
         public string $name,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public string $email,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public string $cpfCnpj,
         public string $postalCode,
         public string $addressNumber,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public string $phone,
         public ?string $addressComplement = null,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public ?string $mobilePhone = null,
     ) {}
 

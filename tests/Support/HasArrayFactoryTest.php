@@ -2,7 +2,22 @@
 
 declare(strict_types=1);
 
+use OwnerPro\Asaas\CreditCard\Request\CreditCardRequest;
+use OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest;
+use OwnerPro\Asaas\Invoice\Request\UpdateInvoiceRequest;
+use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
+use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
+use OwnerPro\Asaas\PixTransaction\Request\PayQrCodeRequest;
+use OwnerPro\Asaas\Support\DTO\Bank;
+use OwnerPro\Asaas\Support\DTO\BankAccount;
+use OwnerPro\Asaas\Support\DTO\Callback;
+use OwnerPro\Asaas\Support\DTO\CreditCard;
+use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+use OwnerPro\Asaas\Support\DTO\QrCodePayload;
+use OwnerPro\Asaas\Support\DTO\Split;
+use OwnerPro\Asaas\Support\DTO\Taxes;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Transfer\Request\TransferRequest;
 
 mutates(HasArrayFactory::class);
 
@@ -131,15 +146,15 @@ it('strips null values when resolving from array', function (): void {
 // --- Recursive toArray() regression tests (one per previously-overriding class) ---
 
 it('CreatePaymentRequest: serializes nested Split DTOs, Callback, CreditCard, CreditCardHolderInfo', function (): void {
-    $request = new OwnerPro\Asaas\Payment\Request\CreatePaymentRequest(
+    $request = new CreatePaymentRequest(
         customer: 'cus_1',
         billingType: 'CREDIT_CARD',
         value: 100.00,
         dueDate: '2026-01-01',
-        split: [new OwnerPro\Asaas\Support\DTO\Split(walletId: 'wal_1', fixedValue: 10.00)],
-        callback: new OwnerPro\Asaas\Support\DTO\Callback(successUrl: 'https://ok.com'),
-        creditCard: new OwnerPro\Asaas\Support\DTO\CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
-        creditCardHolderInfo: new OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
+        split: [new Split(walletId: 'wal_1', fixedValue: 10.00)],
+        callback: new Callback(successUrl: 'https://ok.com'),
+        creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
+        creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
     );
 
     $array = $request->toArray();
@@ -151,7 +166,7 @@ it('CreatePaymentRequest: serializes nested Split DTOs, Callback, CreditCard, Cr
 });
 
 it('CreatePaymentRequest: passes raw arrays through as-is', function (): void {
-    $request = new OwnerPro\Asaas\Payment\Request\CreatePaymentRequest(
+    $request = new CreatePaymentRequest(
         customer: 'cus_1',
         billingType: 'PIX',
         value: 100.00,
@@ -169,9 +184,9 @@ it('CreatePaymentRequest: passes raw arrays through as-is', function (): void {
 });
 
 it('UpdatePaymentRequest: serializes nested Split DTOs', function (): void {
-    $request = new OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest(
+    $request = new UpdatePaymentRequest(
         value: 200.00,
-        split: [new OwnerPro\Asaas\Support\DTO\Split(walletId: 'wal_1', fixedValue: 20.00)],
+        split: [new Split(walletId: 'wal_1', fixedValue: 20.00)],
     );
 
     expect($request->toArray())->toBe([
@@ -181,14 +196,14 @@ it('UpdatePaymentRequest: serializes nested Split DTOs', function (): void {
 });
 
 it('CreateInvoiceRequest: serializes nested Taxes DTO', function (): void {
-    $request = new OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest(
+    $request = new CreateInvoiceRequest(
         serviceDescription: 'Service',
         observations: 'Obs',
         value: 500.00,
         deductions: 0.0,
         effectiveDate: '2026-01-01',
         municipalServiceName: 'Consulting',
-        taxes: new OwnerPro\Asaas\Support\DTO\Taxes(retainIss: true, iss: 5.0, pis: 0.65, cofins: 3.0, csll: 1.0, inss: 0.0, ir: 1.5),
+        taxes: new Taxes(retainIss: true, iss: 5.0, pis: 0.65, cofins: 3.0, csll: 1.0, inss: 0.0, ir: 1.5),
     );
 
     $array = $request->toArray();
@@ -197,7 +212,7 @@ it('CreateInvoiceRequest: serializes nested Taxes DTO', function (): void {
 });
 
 it('CreateInvoiceRequest: passes raw array taxes through as-is', function (): void {
-    $request = new OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest(
+    $request = new CreateInvoiceRequest(
         serviceDescription: 'Service',
         observations: 'Obs',
         value: 500.00,
@@ -213,9 +228,9 @@ it('CreateInvoiceRequest: passes raw array taxes through as-is', function (): vo
 });
 
 it('UpdateInvoiceRequest: serializes nested Taxes DTO', function (): void {
-    $request = new OwnerPro\Asaas\Invoice\Request\UpdateInvoiceRequest(
+    $request = new UpdateInvoiceRequest(
         value: 600.00,
-        taxes: new OwnerPro\Asaas\Support\DTO\Taxes(retainIss: false, iss: 3.0, pis: 0.65, cofins: 3.0, csll: 1.0, inss: 0.0, ir: 1.5),
+        taxes: new Taxes(retainIss: false, iss: 3.0, pis: 0.65, cofins: 3.0, csll: 1.0, inss: 0.0, ir: 1.5),
     );
 
     $array = $request->toArray();
@@ -225,9 +240,9 @@ it('UpdateInvoiceRequest: serializes nested Taxes DTO', function (): void {
 });
 
 it('TransferRequest: serializes nested BankAccount DTO', function (): void {
-    $request = new OwnerPro\Asaas\Transfer\Request\TransferRequest(
+    $request = new TransferRequest(
         value: 1000.00,
-        bankAccount: new OwnerPro\Asaas\Support\DTO\BankAccount(
+        bankAccount: new BankAccount(
             ownerName: 'John',
             cpfCnpj: '12345678901',
             agency: '1234',
@@ -248,7 +263,7 @@ it('TransferRequest: serializes nested BankAccount DTO', function (): void {
 });
 
 it('TransferRequest: passes raw array bankAccount through as-is', function (): void {
-    $request = new OwnerPro\Asaas\Transfer\Request\TransferRequest(
+    $request = new TransferRequest(
         value: 1000.00,
         bankAccount: ['ownerName' => 'John', 'cpfCnpj' => '12345678901', 'agency' => '1234', 'account' => '56789', 'accountDigit' => '0'],
     );
@@ -259,10 +274,10 @@ it('TransferRequest: passes raw array bankAccount through as-is', function (): v
 });
 
 it('CreditCardRequest: serializes nested CreditCard and CreditCardHolderInfo DTOs', function (): void {
-    $request = new OwnerPro\Asaas\CreditCard\Request\CreditCardRequest(
+    $request = new CreditCardRequest(
         customer: 'cus_1',
-        creditCard: new OwnerPro\Asaas\Support\DTO\CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
-        creditCardHolderInfo: new OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
+        creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
+        creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
         remoteIp: '127.0.0.1',
     );
 
@@ -273,13 +288,13 @@ it('CreditCardRequest: serializes nested CreditCard and CreditCardHolderInfo DTO
 });
 
 it('BankAccount: serializes nested Bank DTO via recursive toArray', function (): void {
-    $account = new OwnerPro\Asaas\Support\DTO\BankAccount(
+    $account = new BankAccount(
         ownerName: 'John',
         cpfCnpj: '12345678901',
         agency: '1234',
         account: '56789',
         accountDigit: '0',
-        bank: new OwnerPro\Asaas\Support\DTO\Bank(code: '001'),
+        bank: new Bank(code: '001'),
     );
 
     expect($account->toArray())->toBe([
@@ -293,8 +308,8 @@ it('BankAccount: serializes nested Bank DTO via recursive toArray', function ():
 });
 
 it('PayQrCodeRequest: serializes nested QrCodePayload DTO via recursive toArray', function (): void {
-    $request = new OwnerPro\Asaas\PixTransaction\Request\PayQrCodeRequest(
-        qrCode: new OwnerPro\Asaas\Support\DTO\QrCodePayload(payload: '00020126...'),
+    $request = new PayQrCodeRequest(
+        qrCode: new QrCodePayload(payload: '00020126...'),
         value: 100.00,
     );
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Request;
@@ -194,6 +195,42 @@ it('standalone returns empty errors when error response has no errors array', fu
     expect($result->statusCode)->toBe(500);
     expect($result->errors)->toBe([]);
     expect($result->data)->toBeNull();
+});
+
+it('standalone get returns failure result on connection exception', function (): void {
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
+
+    $connector = new AsaasConnector($pendingRequest);
+    $result = $connector->get('/v3/payments/pay_123', [], ConnectorTestResponse::class);
+
+    expect($result)->toBeInstanceOf(AsaasResult::class);
+    expect($result->success)->toBeFalse();
+    expect($result->statusCode)->toBe(0);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 28: Connection timed out']]);
+    expect($result->data)->toBeNull();
+});
+
+it('standalone paginate returns failure result on connection exception', function (): void {
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options): never => throw new ConnectionException('cURL error 7: Failed to connect')]);
+
+    $connector = new AsaasConnector($pendingRequest);
+    $result = $connector->paginate('/v3/payments', [], ConnectorTestResponse::class);
+
+    expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
+    expect($result->success)->toBeFalse();
+    expect($result->statusCode)->toBe(0);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 7: Failed to connect']]);
+    expect($result->data)->toBe([]);
 });
 
 // --- Laravel HTTP behavior (existing tests adapted to forLaravel) ---
@@ -530,3 +567,99 @@ it('standalone handles 2xx with no JSON body', function (): void {
     expect($result->success)->toBeTrue();
     expect($result->statusCode)->toBe(200);
 });
+
+// --- ConnectionException handling (Laravel mode) ---
+
+it('get returns failure result on connection exception', function (): void {
+    Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $result = $connector->get('/v3/payments/pay_123', [], ConnectorTestResponse::class);
+
+    expect($result)->toBeInstanceOf(AsaasResult::class);
+    expect($result->success)->toBeFalse();
+    expect($result->statusCode)->toBe(0);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 28: Connection timed out']]);
+    expect($result->data)->toBeNull();
+});
+
+it('post returns failure result on connection exception', function (): void {
+    Http::fake(['*' => fn (): never => throw new ConnectionException('Connection refused')]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $result = $connector->post('/v3/payments', ['value' => 100], ConnectorTestResponse::class);
+
+    expect($result)->toBeInstanceOf(AsaasResult::class);
+    expect($result->success)->toBeFalse();
+    expect($result->statusCode)->toBe(0);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Connection refused']]);
+    expect($result->data)->toBeNull();
+});
+
+it('put returns failure result on connection exception', function (): void {
+    Http::fake(['*' => fn (): never => throw new ConnectionException('DNS resolution failed')]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $result = $connector->put('/v3/payments/pay_123', ['value' => 200], ConnectorTestResponse::class);
+
+    expect($result)->toBeInstanceOf(AsaasResult::class);
+    expect($result->success)->toBeFalse();
+    expect($result->statusCode)->toBe(0);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'DNS resolution failed']]);
+    expect($result->data)->toBeNull();
+});
+
+it('delete returns failure result on connection exception', function (): void {
+    Http::fake(['*' => fn (): never => throw new ConnectionException('Connection reset by peer')]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $result = $connector->delete('/v3/payments/pay_123', ConnectorTestResponse::class);
+
+    expect($result)->toBeInstanceOf(AsaasResult::class);
+    expect($result->success)->toBeFalse();
+    expect($result->statusCode)->toBe(0);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Connection reset by peer']]);
+    expect($result->data)->toBeNull();
+});
+
+it('paginate returns failure result on connection exception', function (): void {
+    Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 7: Failed to connect')]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $result = $connector->paginate('/v3/payments', [], ConnectorTestResponse::class);
+
+    expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
+    expect($result->success)->toBeFalse();
+    expect($result->statusCode)->toBe(0);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 7: Failed to connect']]);
+    expect($result->data)->toBe([]);
+});
+
+it('all() throws AsaasRequestException on connection exception', function (): void {
+    Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    iterator_to_array($connector->all('/v3/payments', [], ConnectorTestResponse::class));
+})->throws(AsaasRequestException::class, 'cURL error 28: Connection timed out');
+
+it('all() throws AsaasRequestException on connection exception mid-pagination', function (): void {
+    $page1 = json_decode(file_get_contents(__DIR__.'/../Fixtures/payment_list.json'), true);
+
+    Http::fakeSequence()
+        ->push($page1, 200)
+        ->whenEmpty(fn (): never => throw new ConnectionException('cURL error 28: Connection timed out'));
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    iterator_to_array($connector->all('/v3/payments', ['limit' => 10], ConnectorTestResponse::class));
+})->throws(AsaasRequestException::class, 'cURL error 28: Connection timed out');
+
+it('throw() on connection failure result throws AsaasRequestException with status 0', function (): void {
+    Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
+
+    $connector = AsaasConnector::forLaravel('key', 'sandbox', 30);
+    $result = $connector->get('/v3/payments/pay_123', [], ConnectorTestResponse::class);
+
+    expect($result->success)->toBeFalse();
+
+    $result->throw();
+})->throws(AsaasRequestException::class, 'cURL error 28: Connection timed out');

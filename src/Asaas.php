@@ -6,12 +6,13 @@ namespace OwnerPro\Asaas;
 
 use Illuminate\Support\Facades\Facade;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use SensitiveParameter;
 
 /** @mixin AsaasClient */
 final class Asaas extends Facade
 {
     public static function for(
-        #[\SensitiveParameter] string $apiKey,
+        #[SensitiveParameter] string $apiKey,
         ?string $environment = null,
         ?int $timeout = null,
     ): AsaasClient {

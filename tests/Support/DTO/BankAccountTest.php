@@ -84,20 +84,25 @@ it('masks sensitive data in debug info', function (): void {
         agency: '1234',
         account: '56789',
         accountDigit: '0',
+        bank: ['code' => '001'],
         accountName: 'Main Account',
         ownerBirthDate: '1990-01-01',
+        bankAccountType: 'CONTA_CORRENTE',
+        ispb: '00000000',
     );
 
-    $debug = $account->__debugInfo();
-
-    expect($debug['ownerName'])->toBe('John Doe');
-    expect($debug['cpfCnpj'])->toBe('********901');
-    expect($debug['agency'])->toBe('1234');
-    expect($debug['account'])->toBe('***89');
-    expect($debug['accountDigit'])->toBe('*');
-    expect($debug['bank'])->toBeNull();
-    expect($debug['accountName'])->toBe('Main Account');
-    expect($debug['ownerBirthDate'])->toBe('***');
+    expect($account->__debugInfo())->toBe([
+        'ownerName' => 'John Doe',
+        'cpfCnpj' => '********901',
+        'agency' => '1234',
+        'account' => '***89',
+        'accountDigit' => '*',
+        'bank' => ['code' => '001'],
+        'accountName' => 'Main Account',
+        'ownerBirthDate' => '***',
+        'bankAccountType' => 'CONTA_CORRENTE',
+        'ispb' => '00000000',
+    ]);
 });
 
 it('masks sensitive data in debug info with null optionals', function (): void {
@@ -109,9 +114,33 @@ it('masks sensitive data in debug info with null optionals', function (): void {
         accountDigit: '0',
     );
 
+    expect($account->__debugInfo())->toBe([
+        'ownerName' => 'John Doe',
+        'cpfCnpj' => '********901',
+        'agency' => '1234',
+        'account' => '***89',
+        'accountDigit' => '*',
+        'bank' => null,
+        'accountName' => null,
+        'ownerBirthDate' => null,
+        'bankAccountType' => null,
+        'ispb' => null,
+    ]);
+});
+
+it('masks short cpfCnpj and account without negative repeat', function (): void {
+    $account = new BankAccount(
+        ownerName: 'John Doe',
+        cpfCnpj: '01',
+        agency: '1234',
+        account: '9',
+        accountDigit: '0',
+    );
+
     $debug = $account->__debugInfo();
 
-    expect($debug['ownerBirthDate'])->toBeNull();
+    expect($debug['cpfCnpj'])->toBe('01');
+    expect($debug['account'])->toBe('9');
 });
 
 it('throws when required field is missing', function (string $missingField): void {
