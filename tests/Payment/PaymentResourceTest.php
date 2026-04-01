@@ -25,12 +25,13 @@ use OwnerPro\Asaas\Support\DTO\Callback;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\DTO\Split;
+use OwnerPro\Asaas\Support\Environment;
 
 mutates(PaymentResource::class);
 
 function paymentConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function paymentResource(): PaymentResource

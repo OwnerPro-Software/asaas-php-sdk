@@ -11,12 +11,13 @@ use OwnerPro\Asaas\CreditCard\Response\PreAuthConfigResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+use OwnerPro\Asaas\Support\Environment;
 
 mutates(CreditCardResource::class);
 
 function ccConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function creditCardResource(): CreditCardResource

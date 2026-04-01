@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\DTO\Bank;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
+use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Transfer\Request\TransferRequest;
 use OwnerPro\Asaas\Transfer\Response\TransferResponse;
 use OwnerPro\Asaas\Transfer\TransferResource;
@@ -14,7 +15,7 @@ mutates(TransferResource::class);
 
 function transferConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function transferResource(): TransferResource

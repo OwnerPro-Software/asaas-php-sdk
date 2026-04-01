@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\DeletedResponse;
+use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest;
 use OwnerPro\Asaas\Webhook\Request\UpdateWebhookRequest;
 use OwnerPro\Asaas\Webhook\Response\RemoveBackoffResponse;
@@ -15,7 +16,7 @@ mutates(WebhookResource::class);
 
 function webhookConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function webhookResource(): WebhookResource

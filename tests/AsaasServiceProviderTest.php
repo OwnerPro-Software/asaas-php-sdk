@@ -8,6 +8,7 @@ use OwnerPro\Asaas\Asaas;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\AsaasServiceProvider;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\Environment;
 
 mutates(AsaasServiceProvider::class, Asaas::class);
 
@@ -53,7 +54,16 @@ it('Asaas::for() returns AsaasClient with config defaults', function () {
     expect($client)->toBeInstanceOf(AsaasClient::class);
 });
 
-it('Asaas::for() overrides environment', function () {
+it('Asaas::for() overrides environment with enum', function () {
+    Http::fake(['https://api.asaas.com/*' => Http::response(['id' => 'test_123'], 200)]);
+
+    $client = Asaas::for(apiKey: 'tenant-key', environment: Environment::Production);
+    $client->payments()->find('test_123');
+
+    Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api.asaas.com/'));
+});
+
+it('Asaas::for() overrides environment with string', function () {
     Http::fake(['https://api.asaas.com/*' => Http::response(['id' => 'test_123'], 200)]);
 
     $client = Asaas::for(apiKey: 'tenant-key', environment: 'production');
@@ -61,6 +71,10 @@ it('Asaas::for() overrides environment', function () {
 
     Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api.asaas.com/'));
 });
+
+it('Asaas::for() throws ValueError for invalid environment string', function () {
+    Asaas::for(apiKey: 'tenant-key', environment: 'staging');
+})->throws(ValueError::class);
 
 it('Asaas::for() overrides timeout', function () {
     Http::fake();
@@ -72,6 +86,13 @@ it('Asaas::for() overrides timeout', function () {
 
     expect($options['timeout'])->toBe(60);
 });
+
+it('throws ValueError when environment config is invalid', function () {
+    $this->app['config']->set('asaas.environment', 'staging');
+    $this->app->forgetInstance(AsaasClient::class);
+
+    app(AsaasClient::class);
+})->throws(ValueError::class);
 
 it('throws RuntimeException when api_key is not configured', function () {
     $this->app['config']->set('asaas.api_key', null);

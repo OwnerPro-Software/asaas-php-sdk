@@ -6,12 +6,13 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Statement\Response\StatementResponse;
 use OwnerPro\Asaas\Statement\StatementResource;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\Environment;
 
 mutates(StatementResource::class);
 
 function statementConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function statementResource(): StatementResource

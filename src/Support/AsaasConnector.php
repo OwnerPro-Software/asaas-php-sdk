@@ -10,19 +10,18 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use InvalidArgumentException;
 use SensitiveParameter;
 
 final readonly class AsaasConnector
 {
     public function __construct(private PendingRequest $pendingRequest) {}
 
-    public static function forStandalone(#[SensitiveParameter] string $apiKey, string $environment, int $timeout): self
+    public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout): self
     {
         return self::make(new PendingRequest, $apiKey, $environment, $timeout);
     }
 
-    public static function forLaravel(#[SensitiveParameter] string $apiKey, string $environment, int $timeout): self
+    public static function forLaravel(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout): self
     {
         return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout);
     }
@@ -158,26 +157,15 @@ final readonly class AsaasConnector
         } while ($result->hasMore);
     }
 
-    private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, string $environment, int $timeout): self
+    private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout): self
     {
+        $environment = $environment instanceof Environment ? $environment : Environment::from($environment);
+
         return new self(
-            $pendingRequest->baseUrl(self::resolveBaseUrl($environment))
+            $pendingRequest->baseUrl($environment->baseUrl())
                 ->withHeader('access_token', $apiKey)
                 ->timeout($timeout)
         );
-    }
-
-    private static function resolveBaseUrl(string $environment): string
-    {
-        if (! in_array($environment, ['sandbox', 'production'], true)) {
-            throw new InvalidArgumentException(
-                sprintf("Environment must be 'sandbox' or 'production', got '%s'.", $environment)
-            );
-        }
-
-        return $environment === 'production'
-            ? 'https://api.asaas.com'
-            : 'https://api-sandbox.asaas.com';
     }
 
     /** @param class-string<BaseResponse> $responseClass */

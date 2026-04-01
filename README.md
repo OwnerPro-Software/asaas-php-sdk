@@ -72,6 +72,7 @@ No Laravel framework needed — only `illuminate/http` as a Composer dependency:
 
 ```php
 use OwnerPro\Asaas\AsaasClient;
+use OwnerPro\Asaas\Support\Environment;
 
 $client = AsaasClient::for(apiKey: 'your-api-key');
 $result = $client->payments()->find('pay_abc123');
@@ -79,7 +80,7 @@ $result = $client->payments()->find('pay_abc123');
 // Override defaults
 $client = AsaasClient::for(
     apiKey: 'your-api-key',
-    environment: 'production',
+    environment: Environment::Production,
     timeout: 60,
 );
 ```
@@ -91,6 +92,7 @@ For SaaS platforms where each tenant has their own Asaas API key:
 ```php
 // In Laravel — inherits environment/timeout from config
 use OwnerPro\Asaas\Asaas;
+use OwnerPro\Asaas\Support\Environment;
 
 foreach ($tenants as $tenant) {
     $client = Asaas::for(apiKey: $tenant->asaas_api_key);
@@ -100,7 +102,7 @@ foreach ($tenants as $tenant) {
 // Override per-tenant
 $client = Asaas::for(
     apiKey: $tenant->asaas_api_key,
-    environment: 'production',
+    environment: Environment::Production,
 );
 
 // Standalone (without Laravel)

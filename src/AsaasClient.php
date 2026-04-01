@@ -13,6 +13,7 @@ use OwnerPro\Asaas\Pix\PixResource;
 use OwnerPro\Asaas\PixTransaction\PixTransactionResource;
 use OwnerPro\Asaas\Statement\StatementResource;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Transfer\TransferResource;
 use OwnerPro\Asaas\Webhook\WebhookResource;
 use SensitiveParameter;
@@ -43,7 +44,7 @@ final class AsaasClient
 
     public static function for(
         #[SensitiveParameter] string $apiKey,
-        string $environment = 'sandbox',
+        Environment|string $environment = Environment::Sandbox,
         int $timeout = 30,
     ): self {
         return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout));

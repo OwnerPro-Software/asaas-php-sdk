@@ -10,12 +10,13 @@ use OwnerPro\Asaas\Account\Response\AccessTokenResponse;
 use OwnerPro\Asaas\Account\Response\AccountResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasResult;
+use OwnerPro\Asaas\Support\Environment;
 
 mutates(AccountResource::class);
 
 function accountConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function accountResource(): AccountResource

@@ -10,12 +10,13 @@ use OwnerPro\Asaas\PixTransaction\Response\DecodedQrCodeResponse;
 use OwnerPro\Asaas\PixTransaction\Response\PixTransactionResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\DTO\QrCodePayload;
+use OwnerPro\Asaas\Support\Environment;
 
 mutates(PixTransactionResource::class);
 
 function pixTxConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function pixTxResource(): PixTransactionResource

@@ -9,12 +9,13 @@ use OwnerPro\Asaas\Invoice\Request\UpdateInvoiceRequest;
 use OwnerPro\Asaas\Invoice\Response\InvoiceResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\DTO\Taxes;
+use OwnerPro\Asaas\Support\Environment;
 
 mutates(InvoiceResource::class);
 
 function invoiceConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function invoiceResource(): InvoiceResource

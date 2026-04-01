@@ -11,12 +11,13 @@ use OwnerPro\Asaas\Pix\Response\StaticQrCodeResponse;
 use OwnerPro\Asaas\Pix\Response\TokenBucketResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\DeletedResponse;
+use OwnerPro\Asaas\Support\Environment;
 
 mutates(PixResource::class);
 
 function pixConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function pixResource(): PixResource

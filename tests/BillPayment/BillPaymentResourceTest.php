@@ -9,12 +9,13 @@ use OwnerPro\Asaas\BillPayment\Request\SimulateBillPaymentRequest;
 use OwnerPro\Asaas\BillPayment\Response\BillPaymentResponse;
 use OwnerPro\Asaas\BillPayment\Response\BillSimulationResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\Environment;
 
 mutates(BillPaymentResource::class);
 
 function billConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('test-key', 'sandbox', 30);
+    return AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
 }
 
 function billPaymentResource(): BillPaymentResource
