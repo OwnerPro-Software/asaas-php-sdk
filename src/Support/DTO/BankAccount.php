@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use OwnerPro\Asaas\Support\Enums\BankAccountType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use SensitiveParameter;
 
@@ -25,11 +26,11 @@ final readonly class BankAccount
         public ?string $accountName = null,
         #[SensitiveParameter]
         public ?string $ownerBirthDate = null,
-        public ?string $bankAccountType = null,
+        public BankAccountType|string|null $bankAccountType = null,
         public ?string $ispb = null,
     ) {}
 
-    /** @return array{ownerName: string, cpfCnpj: string, agency: string, account: string, accountDigit: string, bank: array<string, mixed>|Bank|null, accountName: ?string, ownerBirthDate: ?string, bankAccountType: ?string, ispb: ?string} */
+    /** @return array{ownerName: string, cpfCnpj: string, agency: string, account: string, accountDigit: string, bank: array<string, mixed>|Bank|null, accountName: ?string, ownerBirthDate: ?string, bankAccountType: BankAccountType|string|null, ispb: ?string} */
     public function __debugInfo(): array
     {
         return [

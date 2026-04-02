@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Pix\Request;
 
+use OwnerPro\Asaas\Pix\QrCodeFormat;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
 final readonly class StaticQrCodeRequest
@@ -14,7 +15,7 @@ final readonly class StaticQrCodeRequest
         public ?string $addressKey = null,
         public ?string $description = null,
         public ?float $value = null,
-        public ?string $format = null,
+        public QrCodeFormat|string|null $format = null,
         public ?string $expirationDate = null,
         public ?int $expirationSeconds = null,
         public ?bool $allowsMultiplePayments = null,

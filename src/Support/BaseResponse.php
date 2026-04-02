@@ -22,7 +22,7 @@ abstract class BaseResponse
     {
         foreach ((new ReflectionClass(static::class))->getProperties(ReflectionProperty::IS_PUBLIC) as $reflectionProperty) {
             unset($this->{$reflectionProperty->getName()});
-            $this->registerDtoType($reflectionProperty);
+            $this->registerPropertyType($reflectionProperty);
         }
     }
 
@@ -53,7 +53,7 @@ abstract class BaseResponse
         return $this->attributes;
     }
 
-    private function registerDtoType(ReflectionProperty $reflectionProperty): void
+    private function registerPropertyType(ReflectionProperty $reflectionProperty): void
     {
         $type = $reflectionProperty->getType();
 

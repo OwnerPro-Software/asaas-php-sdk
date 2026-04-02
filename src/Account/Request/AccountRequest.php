@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Account\Request;
 
+use OwnerPro\Asaas\Account\CompanyType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
 final readonly class AccountRequest
@@ -21,7 +22,7 @@ final readonly class AccountRequest
         public string $province,
         public string $postalCode,
         public ?string $birthDate = null,
-        public ?string $companyType = null,
+        public CompanyType|string|null $companyType = null,
         public ?string $phone = null,
         public ?string $complement = null,
         public ?string $tradingName = null,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Payment\Request;
 
+use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Support\DTO\Callback;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
@@ -22,7 +23,7 @@ final readonly class CreatePaymentRequest
      */
     public function __construct(
         public string $customer,
-        public string $billingType,
+        public BillingType|string $billingType,
         public float $value,
         public string $dueDate,
         public ?string $description = null,

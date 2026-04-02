@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support;
 
+use BackedEnum;
 use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionMethod;
@@ -57,13 +58,21 @@ trait HasArrayFactory
         $vars = array_filter(get_object_vars($this), fn (mixed $v): bool => $v !== null);
 
         return array_map(function (mixed $value): mixed {
+            if ($value instanceof BackedEnum) {
+                return $value->value;
+            }
+
             if (is_object($value) && method_exists($value, 'toArray')) {
                 return $value->toArray();
             }
 
             if (is_array($value)) {
                 return array_map(
-                    fn (mixed $item): mixed => is_object($item) && method_exists($item, 'toArray') ? $item->toArray() : $item,
+                    fn (mixed $item): mixed => match (true) {
+                        $item instanceof BackedEnum => $item->value,
+                        is_object($item) && method_exists($item, 'toArray') => $item->toArray(),
+                        default => $item,
+                    },
                     $value,
                 );
             }

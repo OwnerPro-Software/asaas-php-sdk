@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Payment\Request;
 
+use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
 final readonly class SimulatePaymentRequest
 {
     use HasArrayFactory;
 
-    /** @param list<string> $billingTypes */
+    /** @param list<BillingType|string> $billingTypes */
     public function __construct(
         public float $value,
         public array $billingTypes,

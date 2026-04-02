@@ -5,6 +5,7 @@ declare(strict_types=1);
 use OwnerPro\Asaas\CreditCard\Request\CreditCardRequest;
 use OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest;
 use OwnerPro\Asaas\Invoice\Request\UpdateInvoiceRequest;
+use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
 use OwnerPro\Asaas\PixTransaction\Request\PayQrCodeRequest;
@@ -18,6 +19,8 @@ use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\DTO\Taxes;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Transfer\Request\TransferRequest;
+use OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest;
+use OwnerPro\Asaas\Webhook\WebhookEvent;
 
 mutates(HasArrayFactory::class);
 
@@ -317,4 +320,41 @@ it('PayQrCodeRequest: serializes nested QrCodePayload DTO via recursive toArray'
         'qrCode' => ['payload' => '00020126...'],
         'value' => 100.00,
     ]);
+});
+
+it('serializes BackedEnum properties to their string value in toArray', function (): void {
+    $request = new CreatePaymentRequest(
+        customer: 'cus_1',
+        billingType: BillingType::Pix,
+        value: 100.00,
+        dueDate: '2026-01-01',
+    );
+
+    $array = $request->toArray();
+
+    expect($array['billingType'])->toBe('PIX');
+});
+
+it('serializes BackedEnum items in arrays to their string value in toArray', function (): void {
+    $request = CreateWebhookRequest::fromArray([
+        'url' => 'https://example.com',
+        'email' => 'test@test.com',
+        'events' => [WebhookEvent::PaymentCreated, WebhookEvent::PaymentReceived],
+    ]);
+
+    $array = $request->toArray();
+
+    expect($array['events'])->toBe(['PAYMENT_CREATED', 'PAYMENT_RECEIVED']);
+});
+
+it('serializes mixed enum and string items in arrays', function (): void {
+    $request = CreateWebhookRequest::fromArray([
+        'url' => 'https://example.com',
+        'email' => 'test@test.com',
+        'events' => [WebhookEvent::PaymentCreated, 'PAYMENT_UPDATED'],
+    ]);
+
+    $array = $request->toArray();
+
+    expect($array['events'])->toBe(['PAYMENT_CREATED', 'PAYMENT_UPDATED']);
 });

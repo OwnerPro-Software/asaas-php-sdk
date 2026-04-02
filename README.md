@@ -153,6 +153,60 @@ try {
 }
 ```
 
+## Enums
+
+The SDK provides backed string enums for all domain values. Request DTOs accept both enum instances and plain strings (backward compatible). Responses return raw strings — use `EnumType::from()` when you need a typed enum.
+
+```php
+use OwnerPro\Asaas\Payment\BillingType;
+use OwnerPro\Asaas\Payment\PaymentStatus;
+
+// Using enums in requests (IDE autocompletion + typo prevention)
+$result = Asaas::payments()->create(new CreatePaymentRequest(
+    customer: 'cus_abc123',
+    billingType: BillingType::Pix,
+    value: 150.00,
+    dueDate: '2026-04-01',
+));
+
+// Plain strings still work
+$result = Asaas::payments()->create([
+    'customer' => 'cus_abc123',
+    'billingType' => 'PIX',
+    'value' => 150.00,
+    'dueDate' => '2026-04-01',
+]);
+
+// Responses return strings — hydrate to enums when needed
+$payment = $result->data;
+$payment->status;                          // 'PENDING'
+PaymentStatus::from($payment->status);     // PaymentStatus::Pending
+```
+
+### Available Enums
+
+| Enum | Values |
+|------|--------|
+| `Payment\BillingType` | `Undefined`, `Boleto`, `CreditCard`, `DebitCard`, `Transfer`, `Deposit`, `Pix` |
+| `Payment\PaymentStatus` | `Pending`, `Received`, `Confirmed`, `Overdue`, `Refunded`, `ReceivedInCash`, `RefundRequested`, `RefundInProgress`, `ChargebackRequested`, `ChargebackDispute`, `AwaitingChargebackReversal`, `DunningRequested`, `DunningReceived`, `AwaitingRiskAnalysis` |
+| `Pix\PixAddressKeyType` | `Cpf`, `Cnpj`, `Email`, `Phone`, `Evp` |
+| `Pix\PixAddressKeyStatus` | `AwaitingActivation`, `Active`, `AwaitingDeletion`, `AwaitingAccountDeletion`, `Deleted`, `Error` |
+| `Pix\QrCodeFormat` | `All`, `Image`, `Payload` |
+| `PixTransaction\PixTransactionType` | `Debit`, `Credit`, `CreditRefund`, `DebitRefund`, `DebitRefundCancellation` |
+| `PixTransaction\PixTransactionStatus` | `AwaitingBalanceValidation`, `AwaitingInstantPaymentAccountBalance`, `AwaitingCriticalActionAuthorization`, `AwaitingCheckoutRiskAnalysisRequest`, `AwaitingCashInRiskAnalysisRequest`, `Scheduled`, `AwaitingRequest`, `Requested`, `Done`, `Refused`, `Cancelled` |
+| `PixTransaction\PixQrCodeType` | `Static`, `Dynamic`, `DynamicWithAsaasAddressKey`, `Composite` |
+| `Transfer\TransferOperationType` | `Pix`, `Ted`, `Internal` |
+| `Transfer\TransferStatus` | `Pending`, `BankProcessing`, `Done`, `Cancelled`, `Failed` |
+| `Invoice\InvoiceStatus` | `Scheduled`, `Authorized`, `ProcessingCancellation`, `Canceled`, `CancellationDenied`, `Error` |
+| `BillPayment\BillPaymentStatus` | `Pending`, `BankProcessing`, `Paid`, `Failed`, `Cancelled`, `Refunded`, `AwaitingCheckoutRiskAnalysisRequest` |
+| `Account\CompanyType` | `Mei`, `Limited`, `Individual`, `Association` |
+| `Account\PersonType` | `Fisica`, `Juridica` |
+| `CreditCard\CreditCardBrand` | `Visa`, `Mastercard`, `Elo`, `Diners`, `Discover`, `Amex`, `Cabal`, `Banescard`, `Credz`, `Sorocred`, `Credsystem`, `Jcb`, `Unknown` |
+| `Webhook\WebhookSendType` | `Sequentially`, `NonSequentially` |
+| `Webhook\WebhookEvent` | 111 event types (`PaymentCreated`, `PaymentReceived`, `TransferDone`, etc.) |
+| `Statement\FinancialTransactionType` | 129 transaction types (`PaymentReceived`, `Transfer`, `BillPayment`, etc.) |
+| `Support\Enums\BankAccountType` | `ContaCorrente`, `ContaPoupanca` |
+
 ## Input: Arrays or Request Objects
 
 Every `create()` and `update()` method accepts either a plain array or a typed request object:
@@ -167,11 +221,12 @@ $result = Asaas::payments()->create([
 ]);
 
 // Request object (validated at construction)
+use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
 
 $result = Asaas::payments()->create(new CreatePaymentRequest(
     customer: 'cus_abc123',
-    billingType: 'PIX',
+    billingType: BillingType::Pix,
     value: 100.00,
     dueDate: '2026-04-01',
 ));
@@ -268,9 +323,11 @@ use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\DTO\SplitRefund;
 
 // Simulate payment
+use OwnerPro\Asaas\Payment\BillingType;
+
 Asaas::payments()->simulate(new SimulatePaymentRequest(
     value: 500.00,
-    billingTypes: ['CREDIT_CARD', 'PIX'],
+    billingTypes: [BillingType::CreditCard, BillingType::Pix],
     installmentCount: 3,
 ));
 
@@ -414,8 +471,10 @@ Asaas::invoices()->create(new CreateInvoiceRequest(
 
 ```php
 use OwnerPro\Asaas\Transfer\Request\TransferRequest;
+use OwnerPro\Asaas\Transfer\TransferOperationType;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\DTO\Bank;
+use OwnerPro\Asaas\Support\Enums\BankAccountType;
 
 // Transfer with typed BankAccount
 Asaas::transfers()->create(new TransferRequest(
@@ -427,9 +486,9 @@ Asaas::transfers()->create(new TransferRequest(
         account: '123456',
         accountDigit: '1',
         bank: new Bank(code: '001'),
-        bankAccountType: 'CONTA_CORRENTE',
+        bankAccountType: BankAccountType::ContaCorrente,
     ),
-    operationType: 'TED',
+    operationType: TransferOperationType::Ted,
 ));
 ```
 
