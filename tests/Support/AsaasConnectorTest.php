@@ -113,7 +113,7 @@ it('standalone get returns success result', function (): void {
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
     expect($result->data->id)->toBe('pay_123');
-    expect($result->statusCode)->toBe(200);
+    expect($result->response->status())->toBe(200);
 });
 
 it('standalone post returns success result', function (): void {
@@ -175,7 +175,7 @@ it('standalone returns failure result on error response', function (): void {
     $result = $connector->post('/v3/payments', ['bad' => 'data'], ConnectorTestResponse::class);
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(400);
+    expect($result->response->status())->toBe(400);
     expect($result->errors[0]['description'])->toBe('The value field is required');
     expect($result->data)->toBeNull();
 });
@@ -214,7 +214,7 @@ it('standalone returns fallback error when error response has no errors array', 
     $result = $connector->post('/v3/payments', ['bad' => 'data'], ConnectorTestResponse::class);
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(500);
+    expect($result->response->status())->toBe(500);
     expect($result->errors)->toBe([['code' => 'UNKNOWN_ERROR', 'description' => 'Internal Server Error']]);
     expect($result->data)->toBeNull();
 });
@@ -232,7 +232,7 @@ it('standalone get returns failure result on connection exception', function ():
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(0);
+    expect($result->response)->toBeNull();
     expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 28: Connection timed out']]);
     expect($result->data)->toBeNull();
 });
@@ -250,7 +250,7 @@ it('standalone paginate returns failure result on connection exception', functio
 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(0);
+    expect($result->response)->toBeNull();
     expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 7: Failed to connect']]);
     expect($result->data)->toBe([]);
 });
@@ -269,7 +269,7 @@ it('returns AsaasResult with response on successful GET', function (): void {
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
     expect($result->data->id)->toBe('pay_123');
-    expect($result->statusCode)->toBe(200);
+    expect($result->response->status())->toBe(200);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_123'
         && $request->method() === 'GET');
@@ -323,7 +323,7 @@ it('returns failure result on error response', function (): void {
     $result = $connector->post('/v3/payments', ['bad' => 'data'], ConnectorTestResponse::class);
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(400);
+    expect($result->response->status())->toBe(400);
     expect($result->errors[0]['description'])->toBe('The value field is required');
     expect($result->data)->toBeNull();
 
@@ -362,7 +362,7 @@ it('paginate returns failure on error', function (): void {
     $result = $connector->paginate('/v3/payments', [], ConnectorTestResponse::class);
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(400);
+    expect($result->response->status())->toBe(400);
 
     Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api-sandbox.asaas.com/v3/payments'));
 });
@@ -516,7 +516,7 @@ it('returns fallback error when error response has no errors array', function ()
     $result = $connector->post('/v3/payments', ['bad' => 'data'], ConnectorTestResponse::class);
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(500);
+    expect($result->response->status())->toBe(500);
     expect($result->errors)->toBe([['code' => 'UNKNOWN_ERROR', 'description' => 'Internal Server Error']]);
     expect($result->data)->toBeNull();
 });
@@ -528,7 +528,7 @@ it('paginate returns fallback error when error response has no errors array', fu
     $result = $connector->paginate('/v3/payments', [], ConnectorTestResponse::class);
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(500);
+    expect($result->response->status())->toBe(500);
     expect($result->errors)->toBe([['code' => 'UNKNOWN_ERROR', 'description' => 'Internal Server Error']]);
 });
 
@@ -572,7 +572,7 @@ it('returns success with empty response on 2xx with no JSON body', function (): 
     $result = $connector->get('/v3/payments/x', [], ConnectorTestResponse::class);
 
     expect($result->success)->toBeTrue();
-    expect($result->statusCode)->toBe(200);
+    expect($result->response->status())->toBe(200);
 });
 
 it('standalone handles 2xx with no JSON body', function (): void {
@@ -587,7 +587,7 @@ it('standalone handles 2xx with no JSON body', function (): void {
     $result = $connector->get('/v3/payments/x', [], ConnectorTestResponse::class);
 
     expect($result->success)->toBeTrue();
-    expect($result->statusCode)->toBe(200);
+    expect($result->response->status())->toBe(200);
 });
 
 // --- ConnectionException handling (Laravel mode) ---
@@ -600,7 +600,7 @@ it('get returns failure result on connection exception', function (): void {
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(0);
+    expect($result->response)->toBeNull();
     expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 28: Connection timed out']]);
     expect($result->data)->toBeNull();
 });
@@ -613,7 +613,7 @@ it('post returns failure result on connection exception', function (): void {
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(0);
+    expect($result->response)->toBeNull();
     expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Connection refused']]);
     expect($result->data)->toBeNull();
 });
@@ -626,7 +626,7 @@ it('put returns failure result on connection exception', function (): void {
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(0);
+    expect($result->response)->toBeNull();
     expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'DNS resolution failed']]);
     expect($result->data)->toBeNull();
 });
@@ -639,7 +639,7 @@ it('delete returns failure result on connection exception', function (): void {
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(0);
+    expect($result->response)->toBeNull();
     expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Connection reset by peer']]);
     expect($result->data)->toBeNull();
 });
@@ -652,7 +652,7 @@ it('paginate returns failure result on connection exception', function (): void 
 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(0);
+    expect($result->response)->toBeNull();
     expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 7: Failed to connect']]);
     expect($result->data)->toBe([]);
 });

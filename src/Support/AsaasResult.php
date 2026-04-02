@@ -15,27 +15,27 @@ final readonly class AsaasResult
         public bool $success,
         public ?BaseResponse $data,
         public ?array $errors,
-        public int $statusCode,
+        public ?RawResponse $response,
     ) {}
 
-    public static function success(BaseResponse $baseResponse, int $statusCode): self
+    public static function success(BaseResponse $baseResponse, RawResponse $rawResponse): self
     {
         return new self(
             success: true,
             data: $baseResponse,
             errors: null,
-            statusCode: $statusCode,
+            response: $rawResponse,
         );
     }
 
     /** @param list<array{code?: string, description?: string}> $errors */
-    public static function failure(array $errors, int $statusCode): self
+    public static function failure(array $errors, ?RawResponse $rawResponse = null): self
     {
         return new self(
             success: false,
             data: null,
             errors: $errors,
-            statusCode: $statusCode,
+            response: $rawResponse,
         );
     }
 }

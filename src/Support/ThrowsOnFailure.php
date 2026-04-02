@@ -9,7 +9,7 @@ trait ThrowsOnFailure
     public function throw(): self
     {
         if (! $this->success) {
-            throw new AsaasRequestException($this->errors ?? [], $this->statusCode);
+            throw new AsaasRequestException($this->errors ?? [], $this->response);
         }
 
         return $this;

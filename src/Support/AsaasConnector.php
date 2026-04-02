@@ -82,14 +82,13 @@ final readonly class AsaasConnector implements Connector
         } catch (ConnectionException $connectionException) {
             return AsaasPaginatedResult::failure(
                 [['code' => 'CONNECTION_ERROR', 'description' => $connectionException->getMessage()]],
-                0,
             );
         }
 
         if ($response->failed()) {
             return AsaasPaginatedResult::failure(
                 $this->extractErrors($response),
-                $response->status(),
+                new RawResponse($response),
             );
         }
 
@@ -114,7 +113,7 @@ final readonly class AsaasConnector implements Connector
             hasMore: $json['hasMore'] ?? false,
             limit: $json['limit'] ?? 0,
             offset: $json['offset'] ?? 0,
-            statusCode: $response->status(),
+            rawResponse: new RawResponse($response),
             nextPageFetcher: $nextPageFetcher,
         );
     }
@@ -177,7 +176,6 @@ final readonly class AsaasConnector implements Connector
         } catch (ConnectionException $connectionException) {
             return AsaasResult::failure(
                 [['code' => 'CONNECTION_ERROR', 'description' => $connectionException->getMessage()]],
-                0,
             );
         }
 
@@ -187,17 +185,19 @@ final readonly class AsaasConnector implements Connector
     /** @param class-string<BaseResponse> $responseClass */
     private function toResult(Response $response, string $responseClass): AsaasResult
     {
+        $rawResponse = new RawResponse($response);
+
         if ($response->failed()) {
             return AsaasResult::failure(
                 $this->extractErrors($response),
-                $response->status(),
+                $rawResponse,
             );
         }
 
         /** @var array<string, mixed> $json */
         $json = $response->json() ?? [];
 
-        return AsaasResult::success(new $responseClass($json), $response->status());
+        return AsaasResult::success(new $responseClass($json), $rawResponse);
     }
 
     /** @return list<array{code?: string, description?: string}> */

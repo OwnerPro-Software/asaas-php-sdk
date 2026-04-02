@@ -5,6 +5,7 @@ declare(strict_types=1);
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasRequestException;
 use OwnerPro\Asaas\Support\BaseResponse;
+use OwnerPro\Asaas\Support\RawResponse;
 
 mutates(AsaasPaginatedResult::class);
 
@@ -13,8 +14,9 @@ final class PaginatedTestResponse extends BaseResponse
     public string $id;
 }
 
-it('creates a successful paginated result', function () {
+it('creates a successful paginated result', function (): void {
     $items = [new PaginatedTestResponse(['id' => 'a']), new PaginatedTestResponse(['id' => 'b'])];
+    $response = RawResponse::fake(200);
 
     $result = AsaasPaginatedResult::success(
         data: $items,
@@ -22,7 +24,7 @@ it('creates a successful paginated result', function () {
         hasMore: true,
         limit: 2,
         offset: 0,
-        statusCode: 200,
+        rawResponse: $response,
         nextPageFetcher: fn (int $offset) => null,
     );
 
@@ -33,31 +35,42 @@ it('creates a successful paginated result', function () {
     expect($result->hasMore)->toBeTrue();
     expect($result->limit)->toBe(2);
     expect($result->offset)->toBe(0);
+    expect($result->response)->toBe($response);
     expect($result->errors)->toBeNull();
 });
 
-it('creates a failed paginated result', function () {
+it('creates a failed paginated result with response', function (): void {
     $errors = [['description' => 'Unauthorized']];
-    $result = AsaasPaginatedResult::failure($errors, 401);
+    $response = RawResponse::fake(401);
+    $result = AsaasPaginatedResult::failure($errors, $response);
 
     expect($result->success)->toBeFalse();
     expect($result->data)->toBe([]);
     expect($result->errors)->toBe($errors);
-    expect($result->statusCode)->toBe(401);
+    expect($result->response)->toBe($response);
+    expect($result->response->status())->toBe(401);
     expect($result->totalCount)->toBe(0);
     expect($result->hasMore)->toBeFalse();
     expect($result->limit)->toBe(0);
     expect($result->offset)->toBe(0);
 });
 
-it('next() fetches the next page when hasMore is true', function () {
+it('creates a failed paginated result with null response on connection error', function (): void {
+    $errors = [['code' => 'CONNECTION_ERROR', 'description' => 'Timed out']];
+    $result = AsaasPaginatedResult::failure($errors);
+
+    expect($result->success)->toBeFalse();
+    expect($result->response)->toBeNull();
+});
+
+it('next() fetches the next page when hasMore is true', function (): void {
     $nextResult = AsaasPaginatedResult::success(
         data: [new PaginatedTestResponse(['id' => 'c'])],
         totalCount: 10,
         hasMore: false,
         limit: 2,
         offset: 2,
-        statusCode: 200,
+        rawResponse: RawResponse::fake(200),
         nextPageFetcher: fn (int $offset) => null,
     );
 
@@ -67,7 +80,7 @@ it('next() fetches the next page when hasMore is true', function () {
         hasMore: true,
         limit: 2,
         offset: 0,
-        statusCode: 200,
+        rawResponse: RawResponse::fake(200),
         nextPageFetcher: fn (int $offset) => $nextResult,
     );
 
@@ -78,35 +91,35 @@ it('next() fetches the next page when hasMore is true', function () {
     expect($next->offset)->toBe(2);
 });
 
-it('next() returns null when hasMore is false', function () {
+it('next() returns null when hasMore is false', function (): void {
     $result = AsaasPaginatedResult::success(
         data: [],
         totalCount: 0,
         hasMore: false,
         limit: 10,
         offset: 0,
-        statusCode: 200,
+        rawResponse: RawResponse::fake(200),
         nextPageFetcher: null,
     );
 
     expect($result->next())->toBeNull();
 });
 
-it('next() returns null when nextPageFetcher is null even with hasMore true', function () {
+it('next() returns null when nextPageFetcher is null even with hasMore true', function (): void {
     $result = AsaasPaginatedResult::success(
         data: [new PaginatedTestResponse(['id' => 'a'])],
         totalCount: 10,
         hasMore: true,
         limit: 1,
         offset: 0,
-        statusCode: 200,
+        rawResponse: RawResponse::fake(200),
         nextPageFetcher: null,
     );
 
     expect($result->next())->toBeNull();
 });
 
-it('next() passes correct offset to fetcher', function () {
+it('next() passes correct offset to fetcher', function (): void {
     $receivedOffset = null;
     $nextResult = AsaasPaginatedResult::success(
         data: [new PaginatedTestResponse(['id' => 'c'])],
@@ -114,7 +127,7 @@ it('next() passes correct offset to fetcher', function () {
         hasMore: false,
         limit: 5,
         offset: 5,
-        statusCode: 200,
+        rawResponse: RawResponse::fake(200),
         nextPageFetcher: null,
     );
 
@@ -124,7 +137,7 @@ it('next() passes correct offset to fetcher', function () {
         hasMore: true,
         limit: 5,
         offset: 0,
-        statusCode: 200,
+        rawResponse: RawResponse::fake(200),
         nextPageFetcher: function (int $offset) use (&$receivedOffset, $nextResult): AsaasPaginatedResult {
             $receivedOffset = $offset;
 
@@ -138,8 +151,9 @@ it('next() passes correct offset to fetcher', function () {
     expect($receivedOffset)->toBe(5);
 });
 
-it('throw() throws on failure', function () {
-    $result = AsaasPaginatedResult::failure([['description' => 'Forbidden']], 403);
+it('throw() throws on failure', function (): void {
+    $response = RawResponse::fake(403);
+    $result = AsaasPaginatedResult::failure([['description' => 'Forbidden']], $response);
 
     try {
         $result->throw();
@@ -147,6 +161,7 @@ it('throw() throws on failure', function () {
         expect($e->getMessage())->toBe('Forbidden');
         expect($e->getCode())->toBe(403);
         expect($e->statusCode)->toBe(403);
+        expect($e->response)->toBe($response);
 
         return;
     }
@@ -154,14 +169,14 @@ it('throw() throws on failure', function () {
     test()->fail('Expected AsaasRequestException was not thrown');
 });
 
-it('throw() returns self on success', function () {
+it('throw() returns self on success', function (): void {
     $result = AsaasPaginatedResult::success(
         data: [],
         totalCount: 0,
         hasMore: false,
         limit: 10,
         offset: 0,
-        statusCode: 200,
+        rawResponse: RawResponse::fake(200),
         nextPageFetcher: null,
     );
 

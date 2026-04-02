@@ -23,7 +23,7 @@ final readonly class AsaasPaginatedResult
         public int $limit,
         public int $offset,
         public ?array $errors,
-        public int $statusCode,
+        public ?RawResponse $response,
         private ?Closure $nextPageFetcher,
     ) {}
 
@@ -37,7 +37,7 @@ final readonly class AsaasPaginatedResult
         bool $hasMore,
         int $limit,
         int $offset,
-        int $statusCode,
+        RawResponse $rawResponse,
         ?Closure $nextPageFetcher,
     ): self {
         return new self(
@@ -48,13 +48,13 @@ final readonly class AsaasPaginatedResult
             limit: $limit,
             offset: $offset,
             errors: null,
-            statusCode: $statusCode,
+            response: $rawResponse,
             nextPageFetcher: $nextPageFetcher,
         );
     }
 
     /** @param list<array{code?: string, description?: string}> $errors */
-    public static function failure(array $errors, int $statusCode): self
+    public static function failure(array $errors, ?RawResponse $rawResponse = null): self
     {
         return new self(
             success: false,
@@ -64,7 +64,7 @@ final readonly class AsaasPaginatedResult
             limit: 0,
             offset: 0,
             errors: $errors,
-            statusCode: $statusCode,
+            response: $rawResponse,
             nextPageFetcher: null,
         );
     }

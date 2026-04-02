@@ -139,5 +139,5 @@ it('returns failure on API error', function (): void {
     ]);
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(400);
+    expect($result->response->status())->toBe(400);
 });

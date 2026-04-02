@@ -500,6 +500,6 @@ it('returns failure on API error', function (array $errorFixture): void {
     ]);
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(400);
+    expect($result->response->status())->toBe(400);
     expect($result->errors[0]['description'])->toBe('The value field is required');
 })->with('error_fixture');

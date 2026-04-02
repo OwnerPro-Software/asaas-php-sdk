@@ -153,5 +153,5 @@ it('returns failure on API error', function (): void {
     $result = billPaymentResource()->create(['identificationField' => 'invalid']);
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(400);
+    expect($result->response->status())->toBe(400);
 });

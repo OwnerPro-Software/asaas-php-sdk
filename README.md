@@ -127,7 +127,6 @@ if ($result->success) {
     echo $payment->status;
 } else {
     $errors = $result->errors;      // array of error details
-    $code = $result->statusCode;    // HTTP status code
 }
 ```
 
@@ -148,10 +147,30 @@ try {
     Asaas::payments()->find('pay_invalid')->throw();
 } catch (AsaasRequestException $e) {
     $e->getMessage();    // First error description
-    $e->statusCode;      // HTTP status code
+    $e->statusCode;      // HTTP status code (0 for connection errors)
     $e->errors;          // Full error array from API
+    $e->response;        // ?RawResponse — null for connection errors
 }
 ```
+
+### Raw Response Access
+
+Every `AsaasResult` and `AsaasPaginatedResult` carries the underlying HTTP response for debugging, rate limit tracking, and Asaas support tickets:
+
+```php
+$result = Asaas::payments()->find('pay_abc123');
+
+$result->response->status();                   // HTTP status code
+$result->response->headers();                  // All response headers
+$result->response->header('X-Request-Id');     // Single header (null if absent)
+$result->response->body();                     // Raw response body
+$result->response->toUnderlying();             // Illuminate\Http\Client\Response
+
+// Connection errors have no HTTP response
+$result->response;  // null when connection failed
+```
+
+The `RawResponse` wrapper keeps your code decoupled from the underlying HTTP client. Use `toUnderlying()` only when you need full access for debugging.
 
 ## Enums
 

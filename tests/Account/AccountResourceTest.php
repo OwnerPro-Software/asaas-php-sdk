@@ -235,5 +235,5 @@ it('returns failure on API error', function (): void {
     $result = accountResource()->find('acc_invalid');
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(401);
+    expect($result->response->status())->toBe(401);
 });

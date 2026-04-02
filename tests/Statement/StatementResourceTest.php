@@ -71,5 +71,5 @@ it('returns failure on error', function (): void {
     $result = statementResource()->list();
 
     expect($result->success)->toBeFalse();
-    expect($result->statusCode)->toBe(401);
+    expect($result->response->status())->toBe(401);
 });
