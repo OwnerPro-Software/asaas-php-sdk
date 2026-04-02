@@ -69,6 +69,58 @@ final class FactoryTestNoConstructorRequest
     }
 }
 
+final class PlainObject
+{
+    public function __construct(public readonly string $value) {}
+}
+
+final class FactoryTestUnionWithoutFromArray
+{
+    use HasArrayFactory;
+
+    public function __construct(
+        public readonly string $name,
+        public readonly array|PlainObject|null $meta = null,
+    ) {}
+
+    /** @return list<string> */
+    protected static function requiredFields(): array
+    {
+        return ['name'];
+    }
+}
+
+final class FactoryTestNestedDTO
+{
+    use HasArrayFactory;
+
+    public function __construct(
+        public readonly string $code,
+    ) {}
+
+    /** @return list<string> */
+    protected static function requiredFields(): array
+    {
+        return ['code'];
+    }
+}
+
+final class FactoryTestWithUnionDTO
+{
+    use HasArrayFactory;
+
+    public function __construct(
+        public readonly string $name,
+        public readonly array|FactoryTestNestedDTO|null $nested = null,
+    ) {}
+
+    /** @return list<string> */
+    protected static function requiredFields(): array
+    {
+        return ['name'];
+    }
+}
+
 it('creates from array with required fields and applies defaults', function (): void {
     $request = FactoryTestRequest::fromArray(['name' => 'John', 'email' => 'j@t.com']);
 
@@ -345,6 +397,77 @@ it('serializes BackedEnum items in arrays to their string value in toArray', fun
     $array = $request->toArray();
 
     expect($array['events'])->toBe(['PAYMENT_CREATED', 'PAYMENT_RECEIVED']);
+});
+
+it('fromArray hydrates nested array into DTO when union type includes a DTO class', function (): void {
+    $request = CreatePaymentRequest::fromArray([
+        'customer' => 'cus_1',
+        'billingType' => 'PIX',
+        'value' => 100.00,
+        'dueDate' => '2026-01-01',
+        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
+        'callback' => ['successUrl' => 'https://ok.com'],
+    ]);
+
+    expect($request->creditCard)->toBeInstanceOf(CreditCard::class);
+    expect($request->creditCard->holderName)->toBe('John');
+    expect($request->callback)->toBeInstanceOf(Callback::class);
+    expect($request->callback->successUrl)->toBe('https://ok.com');
+});
+
+it('fromArray throws when nested array is missing required DTO fields', function (): void {
+    CreatePaymentRequest::fromArray([
+        'customer' => 'cus_1',
+        'billingType' => 'PIX',
+        'value' => 100.00,
+        'dueDate' => '2026-01-01',
+        'creditCard' => ['holderName' => 'John'],
+    ]);
+})->throws(InvalidArgumentException::class, "Field 'number' is required.");
+
+it('fromArray passes plain array through when parameter type is not a union', function (): void {
+    $request = FactoryTestRequest::fromArray(['name' => 'John', 'email' => 'j@t.com']);
+
+    expect($request->name)->toBe('John');
+});
+
+it('fromArray passes array through when union type class has no fromArray method', function (): void {
+    $request = FactoryTestUnionWithoutFromArray::fromArray([
+        'name' => 'John',
+        'meta' => ['key' => 'value'],
+    ]);
+
+    expect($request->meta)->toBe(['key' => 'value']);
+});
+
+it('fromArray hydrates nested array into DTO via union type', function (): void {
+    $request = FactoryTestWithUnionDTO::fromArray([
+        'name' => 'John',
+        'nested' => ['code' => 'ABC'],
+    ]);
+
+    expect($request->nested)->toBeInstanceOf(FactoryTestNestedDTO::class);
+    expect($request->nested->code)->toBe('ABC');
+});
+
+it('fromArray leaves non-array value unchanged for union type parameter', function (): void {
+    $dto = new FactoryTestNestedDTO(code: 'ABC');
+
+    $request = FactoryTestWithUnionDTO::fromArray([
+        'name' => 'John',
+        'nested' => $dto,
+    ]);
+
+    expect($request->nested)->toBe($dto);
+});
+
+it('fromArray leaves null unchanged for union type parameter', function (): void {
+    $request = FactoryTestWithUnionDTO::fromArray([
+        'name' => 'John',
+        'nested' => null,
+    ]);
+
+    expect($request->nested)->toBeNull();
 });
 
 it('serializes mixed enum and string items in arrays', function (): void {

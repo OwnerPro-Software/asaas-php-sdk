@@ -15,7 +15,8 @@ it('creates from array with all fields', function (): void {
         'scheduleDate' => '2026-04-01',
     ]);
 
-    expect($request->qrCode)->toBe(['payload' => '00020126...']);
+    expect($request->qrCode)->toBeInstanceOf(QrCodePayload::class);
+    expect($request->qrCode->payload)->toBe('00020126...');
     expect($request->value)->toBe(100.00);
     expect($request->description)->toBe('QR payment');
 });

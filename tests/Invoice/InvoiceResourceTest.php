@@ -43,7 +43,7 @@ it('creates an invoice from array', function (array $fixture): void {
     $result = invoiceResource()->create([
         'serviceDescription' => 'Dev services', 'observations' => 'Note',
         'value' => 1000.00, 'deductions' => 0, 'effectiveDate' => '2026-04-01',
-        'municipalServiceName' => 'IT Services', 'taxes' => ['iss' => 5.0],
+        'municipalServiceName' => 'IT Services', 'taxes' => ['retainIss' => true, 'iss' => 5.0, 'pis' => 0.65, 'cofins' => 3.0, 'csll' => 1.0, 'inss' => 11.0, 'ir' => 1.5],
     ]);
 
     expect($result->success)->toBeTrue();
@@ -64,7 +64,7 @@ it('creates an invoice from request object', function (array $fixture): void {
         deductions: 0,
         effectiveDate: '2026-04-01',
         municipalServiceName: 'IT Services',
-        taxes: ['iss' => 5.0],
+        taxes: ['retainIss' => true, 'iss' => 5.0, 'pis' => 0.65, 'cofins' => 3.0, 'csll' => 1.0, 'inss' => 11.0, 'ir' => 1.5],
     ));
 
     expect($result->success)->toBeTrue();
@@ -229,7 +229,7 @@ it('returns failure on API error', function (array $errorFixture): void {
     $result = invoiceResource()->create([
         'serviceDescription' => 'x', 'observations' => 'x',
         'value' => 0, 'deductions' => 0, 'effectiveDate' => '2026-04-01',
-        'municipalServiceName' => 'x', 'taxes' => [],
+        'municipalServiceName' => 'x', 'taxes' => ['retainIss' => false, 'iss' => 0.0, 'pis' => 0.0, 'cofins' => 0.0, 'csll' => 0.0, 'inss' => 0.0, 'ir' => 0.0],
     ]);
 
     expect($result->success)->toBeFalse();

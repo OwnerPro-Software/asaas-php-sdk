@@ -8,6 +8,9 @@ use BackedEnum;
 use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionParameter;
+use ReflectionUnionType;
 
 trait HasArrayFactory
 {
@@ -31,7 +34,7 @@ trait HasArrayFactory
         foreach ($constructor->getParameters() as $reflectionParameter) {
             $name = $reflectionParameter->getName();
             if (array_key_exists($name, $data)) {
-                $args[] = $data[$name];
+                $args[] = self::hydrateParameter($data[$name], $reflectionParameter);
             } elseif ($reflectionParameter->isDefaultValueAvailable()) {
                 $args[] = $reflectionParameter->getDefaultValue();
             }
@@ -83,4 +86,40 @@ trait HasArrayFactory
 
     /** @return list<string> */
     abstract protected static function requiredFields(): array;
+
+    private static function hydrateParameter(mixed $value, ReflectionParameter $reflectionParameter): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        $type = $reflectionParameter->getType();
+
+        if (! $type instanceof ReflectionUnionType) {
+            return $value;
+        }
+
+        $dtoClass = self::findDtoClass($type);
+
+        if ($dtoClass === null) {
+            return $value;
+        }
+
+        /** @var array<string, mixed> $arrayValue */
+        $arrayValue = $value;
+
+        return $dtoClass::fromArray($arrayValue);
+    }
+
+    private static function findDtoClass(ReflectionUnionType $reflectionUnionType): ?string
+    {
+        foreach ($reflectionUnionType->getTypes() as $namedType) {
+            /** @var ReflectionNamedType $namedType */
+            if (! $namedType->isBuiltin() && method_exists($namedType->getName(), 'fromArray')) {
+                return $namedType->getName();
+            }
+        }
+
+        return null;
+    }
 }

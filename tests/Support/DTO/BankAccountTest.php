@@ -22,7 +22,8 @@ it('creates from array with all fields', function (): void {
     ]);
 
     expect($account->ownerName)->toBe('John Doe');
-    expect($account->bank)->toBe(['code' => '001']);
+    expect($account->bank)->toBeInstanceOf(Bank::class);
+    expect($account->bank->code)->toBe('001');
     expect($account->bankAccountType)->toBe('CONTA_CORRENTE');
 });
 

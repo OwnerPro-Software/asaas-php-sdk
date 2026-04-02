@@ -14,8 +14,8 @@ it('creates from array', function (): void {
         'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
     ]);
 
-    expect($request->creditCard)->toBeArray();
-    expect($request->creditCardHolderInfo)->toBeArray();
+    expect($request->creditCard)->toBeInstanceOf(CreditCard::class);
+    expect($request->creditCardHolderInfo)->toBeInstanceOf(CreditCardHolderInfo::class);
 });
 
 it('throws when creditCard is missing', function (): void {
