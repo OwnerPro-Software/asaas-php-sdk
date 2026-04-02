@@ -28,7 +28,7 @@ it('creates client via for() with defaults', function (): void {
 it('for() uses default timeout of 30', function (): void {
     $client = AsaasClient::for(apiKey: 'test-key');
 
-    $connector = (new ReflectionProperty(AsaasClient::class, 'asaasConnector'))->getValue($client);
+    $connector = (new ReflectionProperty(AsaasClient::class, 'connector'))->getValue($client);
     $pendingRequest = (new ReflectionProperty(AsaasConnector::class, 'pendingRequest'))->getValue($connector);
     $options = (new ReflectionProperty($pendingRequest::class, 'options'))->getValue($pendingRequest);
 

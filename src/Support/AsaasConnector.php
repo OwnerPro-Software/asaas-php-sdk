@@ -12,7 +12,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use SensitiveParameter;
 
-final readonly class AsaasConnector
+final readonly class AsaasConnector implements Connector
 {
     public function __construct(private PendingRequest $pendingRequest) {}
 

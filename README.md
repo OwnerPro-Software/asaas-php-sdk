@@ -664,6 +664,23 @@ $payment->someNewField;  // mixed (returns null if not present)
 
 Response objects are immutable. Attempting to modify a property throws `LogicException`.
 
+## Custom Connector
+
+All resources depend on the `Connector` interface (`OwnerPro\Asaas\Support\Connector`) rather than the concrete `AsaasConnector`. You can provide your own implementation for testing, logging, caching, or any custom behavior:
+
+```php
+use OwnerPro\Asaas\AsaasClient;
+use OwnerPro\Asaas\Support\Connector;
+
+// Use a custom connector implementation
+$client = new AsaasClient(new MyLoggingConnector($realConnector));
+
+// Or a fake for tests
+$client = new AsaasClient(new FakeConnector());
+```
+
+The `Connector` interface defines six methods: `get`, `post`, `put`, `delete`, `paginate`, and `all`.
+
 ## License
 
 MIT

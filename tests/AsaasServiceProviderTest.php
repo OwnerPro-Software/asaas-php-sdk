@@ -80,7 +80,7 @@ it('Asaas::for() overrides timeout', function () {
     Http::fake();
 
     $client = Asaas::for(apiKey: 'tenant-key', timeout: 60);
-    $connector = (new ReflectionProperty(AsaasClient::class, 'asaasConnector'))->getValue($client);
+    $connector = (new ReflectionProperty(AsaasClient::class, 'connector'))->getValue($client);
     $pendingRequest = (new ReflectionProperty(AsaasConnector::class, 'pendingRequest'))->getValue($connector);
     $options = (new ReflectionProperty($pendingRequest::class, 'options'))->getValue($pendingRequest);
 

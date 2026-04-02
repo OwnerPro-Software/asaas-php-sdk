@@ -6,17 +6,17 @@ namespace OwnerPro\Asaas\Statement;
 
 use Generator;
 use OwnerPro\Asaas\Statement\Response\StatementResponse;
-use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
+use OwnerPro\Asaas\Support\Connector;
 
 final readonly class StatementResource
 {
-    public function __construct(private AsaasConnector $asaasConnector) {}
+    public function __construct(private Connector $connector) {}
 
     /** @param array<string, mixed> $query */
     public function list(array $query = []): AsaasPaginatedResult
     {
-        return $this->asaasConnector->paginate('/v3/financialTransactions', $query, StatementResponse::class);
+        return $this->connector->paginate('/v3/financialTransactions', $query, StatementResponse::class);
     }
 
     /**
@@ -25,6 +25,6 @@ final readonly class StatementResource
      */
     public function all(array $filters = []): Generator
     {
-        return $this->asaasConnector->all('/v3/financialTransactions', $filters, StatementResponse::class);
+        return $this->connector->all('/v3/financialTransactions', $filters, StatementResponse::class);
     }
 }

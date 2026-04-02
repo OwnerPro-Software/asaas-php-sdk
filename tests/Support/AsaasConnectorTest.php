@@ -13,6 +13,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasRequestException;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\BaseResponse;
+use OwnerPro\Asaas\Support\Connector;
 use OwnerPro\Asaas\Support\Environment;
 
 mutates(AsaasConnector::class);
@@ -23,6 +24,10 @@ final class ConnectorTestResponse extends BaseResponse
 
     public ?string $status;
 }
+
+it('implements Connector interface', function (): void {
+    expect(AsaasConnector::class)->toImplement(Connector::class);
+});
 
 // --- forLaravel factory ---
 
