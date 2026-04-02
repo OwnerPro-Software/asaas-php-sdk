@@ -202,7 +202,7 @@ it('standalone paginate returns paginated result', function (): void {
     expect($result->hasMore)->toBeTrue();
 });
 
-it('standalone returns empty errors when error response has no errors array', function (): void {
+it('standalone returns fallback error when error response has no errors array', function (): void {
     $pendingRequest = (new PendingRequest)
         ->baseUrl('https://api-sandbox.asaas.com')
         ->withHeader('access_token', 'test-key')
@@ -215,7 +215,7 @@ it('standalone returns empty errors when error response has no errors array', fu
 
     expect($result->success)->toBeFalse();
     expect($result->statusCode)->toBe(500);
-    expect($result->errors)->toBe([]);
+    expect($result->errors)->toBe([['code' => 'UNKNOWN_ERROR', 'description' => 'Internal Server Error']]);
     expect($result->data)->toBeNull();
 });
 
@@ -509,7 +509,7 @@ it('paginate uses defaults for missing pagination fields', function (): void {
     expect($result->data)->toHaveCount(1);
 });
 
-it('returns empty errors when error response has no errors array', function (): void {
+it('returns fallback error when error response has no errors array', function (): void {
     Http::fake(['*' => Http::response('Internal Server Error', 500)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
@@ -517,11 +517,11 @@ it('returns empty errors when error response has no errors array', function (): 
 
     expect($result->success)->toBeFalse();
     expect($result->statusCode)->toBe(500);
-    expect($result->errors)->toBe([]);
+    expect($result->errors)->toBe([['code' => 'UNKNOWN_ERROR', 'description' => 'Internal Server Error']]);
     expect($result->data)->toBeNull();
 });
 
-it('paginate returns empty errors when error response has no errors array', function (): void {
+it('paginate returns fallback error when error response has no errors array', function (): void {
     Http::fake(['*' => Http::response('Internal Server Error', 500)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
@@ -529,7 +529,7 @@ it('paginate returns empty errors when error response has no errors array', func
 
     expect($result->success)->toBeFalse();
     expect($result->statusCode)->toBe(500);
-    expect($result->errors)->toBe([]);
+    expect($result->errors)->toBe([['code' => 'UNKNOWN_ERROR', 'description' => 'Internal Server Error']]);
 });
 
 it('paginate next page fetcher passes correct offset in URL', function (): void {

@@ -206,7 +206,7 @@ final readonly class AsaasConnector implements Connector
         $errors = $response->json('errors');
 
         if (! is_array($errors)) {
-            return [];
+            return [['code' => 'UNKNOWN_ERROR', 'description' => $response->body()]];
         }
 
         /** @var list<array{code?: string, description?: string}> $errors */
