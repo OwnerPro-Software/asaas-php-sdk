@@ -60,36 +60,32 @@ final readonly class AsaasConnector implements Connector
     /** @param array<string, mixed> $query */
     public function paginate(string $path, array $query): AsaasPaginatedResult
     {
-        try {
-            $response = $this->pendingRequest->get($path, $query);
-        } catch (ConnectionException $connectionException) {
-            return AsaasPaginatedResult::failure(
-                [['code' => 'CONNECTION_ERROR', 'description' => $connectionException->getMessage()]],
-            );
+        $asaasResult = $this->sendRequest(
+            fn (): Response => $this->pendingRequest->get($path, $query),
+        );
+
+        if (! $asaasResult->success) {
+            return AsaasPaginatedResult::failure($asaasResult->errors ?? [], $asaasResult->response);
         }
 
-        if ($response->failed()) {
-            return AsaasPaginatedResult::failure(
-                $this->extractErrors($response),
-                new RawResponse($response),
-            );
-        }
-
-        /** @var array{data?: list<array<string, mixed>>, totalCount?: int, hasMore?: bool, limit?: int, offset?: int} $json */
-        $json = $response->json();
+        /** @var array{data?: list<array<string, mixed>>, totalCount?: int, hasMore?: bool, limit?: int, offset?: int} $data */
+        $data = $asaasResult->data ?? [];
 
         $nextPageFetcher = fn (int $offset): AsaasPaginatedResult => $this->paginate(
             $path,
             array_merge($query, ['offset' => $offset]),
         );
 
+        /** @var RawResponse $rawResponse */
+        $rawResponse = $asaasResult->response;
+
         return AsaasPaginatedResult::success(
-            data: $json['data'] ?? [],
-            totalCount: $json['totalCount'] ?? 0,
-            hasMore: $json['hasMore'] ?? false,
-            limit: $json['limit'] ?? 0,
-            offset: $json['offset'] ?? 0,
-            rawResponse: new RawResponse($response),
+            data: $data['data'] ?? [],
+            totalCount: $data['totalCount'] ?? 0,
+            hasMore: $data['hasMore'] ?? false,
+            limit: $data['limit'] ?? 0,
+            offset: $data['offset'] ?? 0,
+            rawResponse: $rawResponse,
             nextPageFetcher: $nextPageFetcher,
         );
     }
