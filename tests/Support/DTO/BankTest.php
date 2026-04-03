@@ -20,4 +20,4 @@ it('converts to array', function (): void {
 
 it('throws when code is missing', function (): void {
     Bank::fromArray([]);
-})->throws(InvalidArgumentException::class, "Field 'code' is required.");
+})->throws(TypeError::class);

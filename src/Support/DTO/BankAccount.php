@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\Support\DTO;
 use OwnerPro\Asaas\Support\Enums\BankAccountType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use SensitiveParameter;
+use TypeError;
 
 final readonly class BankAccount
 {
@@ -47,9 +48,20 @@ final readonly class BankAccount
         ];
     }
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['ownerName', 'cpfCnpj', 'agency', 'account', 'accountDigit'];
+        return new self(
+            ownerName: $data['ownerName'] ?? throw new TypeError('ownerName is required'),
+            cpfCnpj: $data['cpfCnpj'] ?? throw new TypeError('cpfCnpj is required'),
+            agency: $data['agency'] ?? throw new TypeError('agency is required'),
+            account: $data['account'] ?? throw new TypeError('account is required'),
+            accountDigit: $data['accountDigit'] ?? throw new TypeError('accountDigit is required'),
+            bank: isset($data['bank']) ? Bank::fromArray($data['bank']) : null,
+            accountName: $data['accountName'] ?? null,
+            ownerBirthDate: $data['ownerBirthDate'] ?? null,
+            bankAccountType: $data['bankAccountType'] ?? null,
+            ispb: $data['ispb'] ?? null,
+        );
     }
 }

@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\CreditCard\Request;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class CreditCardRequest
 {
@@ -23,9 +24,14 @@ final readonly class CreditCardRequest
         public string $remoteIp,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{customer?: string, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['customer', 'creditCard', 'creditCardHolderInfo', 'remoteIp'];
+        return new self(
+            customer: $data['customer'] ?? throw new TypeError('customer is required'),
+            creditCard: CreditCard::fromArray($data['creditCard'] ?? []),
+            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? []),
+            remoteIp: $data['remoteIp'] ?? throw new TypeError('remoteIp is required'),
+        );
     }
 }

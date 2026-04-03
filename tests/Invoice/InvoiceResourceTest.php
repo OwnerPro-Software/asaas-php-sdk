@@ -75,7 +75,7 @@ it('creates an invoice from request object', function (array $fixture): void {
 
 it('validates required fields', function (): void {
     invoiceResource()->create(['serviceDescription' => 'x']);
-})->throws(InvalidArgumentException::class, "Field 'observations' is required.");
+})->throws(TypeError::class);
 
 it('lists invoices', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Support\DTO;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class QrCodePayload
 {
@@ -15,9 +16,12 @@ final readonly class QrCodePayload
         public ?float $changeValue = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{payload?: string, changeValue?: float} $data */
+    public static function fromArray(array $data): static
     {
-        return ['payload'];
+        return new self(
+            payload: $data['payload'] ?? throw new TypeError('payload is required'),
+            changeValue: $data['changeValue'] ?? null,
+        );
     }
 }

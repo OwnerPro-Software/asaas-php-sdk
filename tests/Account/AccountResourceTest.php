@@ -73,7 +73,7 @@ it('creates a subaccount from request object', function (array $fixture): void {
 
 it('validates required fields', function (): void {
     accountResource()->create(['name' => 'x']);
-})->throws(InvalidArgumentException::class, "Field 'email' is required.");
+})->throws(TypeError::class);
 
 it('lists subaccounts', function (): void {
     Http::fake(['*' => Http::response([

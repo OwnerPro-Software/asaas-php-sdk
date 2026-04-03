@@ -26,9 +26,20 @@ final readonly class UpdatePaymentRequest
         public ?array $split = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array<string, mixed>>} $data */
+    public static function fromArray(array $data): static
     {
-        return [];
+        return new self(
+            billingType: $data['billingType'] ?? null,
+            value: $data['value'] ?? null,
+            dueDate: $data['dueDate'] ?? null,
+            description: $data['description'] ?? null,
+            externalReference: $data['externalReference'] ?? null,
+            discount: $data['discount'] ?? null,
+            interest: $data['interest'] ?? null,
+            fine: $data['fine'] ?? null,
+            postalService: $data['postalService'] ?? null,
+            split: $data['split'] ?? null,
+        );
     }
 }

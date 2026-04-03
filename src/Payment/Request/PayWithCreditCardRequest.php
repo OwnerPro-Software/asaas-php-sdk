@@ -21,9 +21,12 @@ final readonly class PayWithCreditCardRequest
         public array|CreditCardHolderInfo $creditCardHolderInfo,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}} $data */
+    public static function fromArray(array $data): static
     {
-        return ['creditCard', 'creditCardHolderInfo'];
+        return new self(
+            creditCard: CreditCard::fromArray($data['creditCard'] ?? []),
+            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? []),
+        );
     }
 }

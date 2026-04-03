@@ -8,6 +8,7 @@ use OwnerPro\Asaas\Pix\PixAddressKeyType;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Transfer\TransferOperationType;
+use TypeError;
 
 final readonly class TransferRequest
 {
@@ -26,9 +27,19 @@ final readonly class TransferRequest
         public ?string $externalReference = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{value?: float, pixAddressKey?: string, pixAddressKeyType?: PixAddressKeyType|string, bankAccount?: array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: string, ispb?: string}, walletId?: string, operationType?: TransferOperationType|string, description?: string, scheduleDate?: string, externalReference?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['value'];
+        return new self(
+            value: $data['value'] ?? throw new TypeError('value is required'),
+            pixAddressKey: $data['pixAddressKey'] ?? null,
+            pixAddressKeyType: $data['pixAddressKeyType'] ?? null,
+            bankAccount: isset($data['bankAccount']) ? BankAccount::fromArray($data['bankAccount']) : null,
+            walletId: $data['walletId'] ?? null,
+            operationType: $data['operationType'] ?? null,
+            description: $data['description'] ?? null,
+            scheduleDate: $data['scheduleDate'] ?? null,
+            externalReference: $data['externalReference'] ?? null,
+        );
     }
 }

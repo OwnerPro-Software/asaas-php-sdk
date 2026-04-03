@@ -15,9 +15,12 @@ final readonly class SimulateBillPaymentRequest
         public ?string $barCode = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{identificationField?: string, barCode?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return [];
+        return new self(
+            identificationField: $data['identificationField'] ?? null,
+            barCode: $data['barCode'] ?? null,
+        );
     }
 }

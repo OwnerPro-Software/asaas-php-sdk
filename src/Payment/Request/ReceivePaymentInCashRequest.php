@@ -16,9 +16,13 @@ final readonly class ReceivePaymentInCashRequest
         public ?bool $notifyCustomer = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{paymentDate?: string, value?: float, notifyCustomer?: bool} $data */
+    public static function fromArray(array $data): static
     {
-        return [];
+        return new self(
+            paymentDate: $data['paymentDate'] ?? null,
+            value: $data['value'] ?? null,
+            notifyCustomer: $data['notifyCustomer'] ?? null,
+        );
     }
 }

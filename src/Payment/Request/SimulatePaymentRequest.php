@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas\Payment\Request;
 
 use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class SimulatePaymentRequest
 {
@@ -18,9 +19,13 @@ final readonly class SimulatePaymentRequest
         public ?int $installmentCount = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{value?: float, billingTypes?: list<BillingType|string>, installmentCount?: int} $data */
+    public static function fromArray(array $data): static
     {
-        return ['value', 'billingTypes'];
+        return new self(
+            value: $data['value'] ?? throw new TypeError('value is required'),
+            billingTypes: $data['billingTypes'] ?? throw new TypeError('billingTypes is required'),
+            installmentCount: $data['installmentCount'] ?? null,
+        );
     }
 }

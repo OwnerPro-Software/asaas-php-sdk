@@ -18,9 +18,13 @@ final readonly class RefundPaymentRequest
         public ?array $splitRefunds = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{value?: float, description?: string, splitRefunds?: list<array<string, mixed>>} $data */
+    public static function fromArray(array $data): static
     {
-        return [];
+        return new self(
+            value: $data['value'] ?? null,
+            description: $data['description'] ?? null,
+            splitRefunds: $data['splitRefunds'] ?? null,
+        );
     }
 }

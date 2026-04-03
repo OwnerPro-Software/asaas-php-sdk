@@ -24,7 +24,10 @@ it('creates from array with all fields', function (): void {
     expect($account->ownerName)->toBe('John Doe');
     expect($account->bank)->toBeInstanceOf(Bank::class);
     expect($account->bank->code)->toBe('001');
+    expect($account->accountName)->toBe('Main Account');
+    expect($account->ownerBirthDate)->toBe('1990-01-01');
     expect($account->bankAccountType)->toBe('CONTA_CORRENTE');
+    expect($account->ispb)->toBe('00000000');
 });
 
 it('converts to array filtering nulls', function (): void {
@@ -156,7 +159,7 @@ it('throws when required field is missing', function (string $missingField): voi
     unset($data[$missingField]);
 
     BankAccount::fromArray($data);
-})->throws(InvalidArgumentException::class)->with([
+})->throws(TypeError::class)->with([
     'ownerName',
     'cpfCnpj',
     'agency',

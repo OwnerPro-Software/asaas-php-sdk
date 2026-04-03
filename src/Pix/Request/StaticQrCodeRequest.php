@@ -22,9 +22,18 @@ final readonly class StaticQrCodeRequest
         public ?string $externalReference = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{addressKey?: string, description?: string, value?: float, format?: QrCodeFormat|string, expirationDate?: string, expirationSeconds?: int, allowsMultiplePayments?: bool, externalReference?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return [];
+        return new self(
+            addressKey: $data['addressKey'] ?? null,
+            description: $data['description'] ?? null,
+            value: $data['value'] ?? null,
+            format: $data['format'] ?? null,
+            expirationDate: $data['expirationDate'] ?? null,
+            expirationSeconds: $data['expirationSeconds'] ?? null,
+            allowsMultiplePayments: $data['allowsMultiplePayments'] ?? null,
+            externalReference: $data['externalReference'] ?? null,
+        );
     }
 }

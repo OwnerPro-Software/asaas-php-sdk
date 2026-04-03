@@ -64,7 +64,7 @@ it('tokenizes a credit card from request object', function (): void {
 
 it('validates required fields for tokenize', function (): void {
     creditCardResource()->tokenize(['customer' => 'cus_1']);
-})->throws(InvalidArgumentException::class, "Field 'creditCard' is required.");
+})->throws(TypeError::class);
 
 it('gets pre-authorization config', function (): void {
     Http::fake(['*' => Http::response(['daysToExpire' => 5], 200)]);
@@ -105,7 +105,7 @@ it('sets pre-authorization config from request object', function (): void {
 
 it('validates required fields for setPreAuthorizationConfig', function (): void {
     creditCardResource()->setPreAuthorizationConfig([]);
-})->throws(InvalidArgumentException::class, "Field 'daysToExpire' is required.");
+})->throws(TypeError::class);
 
 it('tokenizes with typed CreditCard DTOs', function (): void {
     Http::fake(['*' => Http::response(['creditCardNumber' => '1111', 'creditCardBrand' => 'VISA', 'creditCardToken' => 'tok_123'], 200)]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Support\DTO;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class Split
 {
@@ -19,9 +20,16 @@ final readonly class Split
         public ?string $description = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['walletId'];
+        return new self(
+            walletId: $data['walletId'] ?? throw new TypeError('walletId is required'),
+            fixedValue: $data['fixedValue'] ?? null,
+            percentualValue: $data['percentualValue'] ?? null,
+            totalFixedValue: $data['totalFixedValue'] ?? null,
+            externalReference: $data['externalReference'] ?? null,
+            description: $data['description'] ?? null,
+        );
     }
 }

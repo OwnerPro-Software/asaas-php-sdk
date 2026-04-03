@@ -54,7 +54,7 @@ it('creates a bill payment from request object', function (array $fixture): void
 
 it('validates identificationField is required', function (): void {
     billPaymentResource()->create([]);
-})->throws(InvalidArgumentException::class, "Field 'identificationField' is required.");
+})->throws(TypeError::class);
 
 it('lists bill payments', function (): void {
     Http::fake(['*' => Http::response([

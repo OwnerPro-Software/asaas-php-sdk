@@ -23,9 +23,18 @@ final readonly class UpdateInvoiceRequest
         public ?string $externalReference = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{serviceDescription?: string, observations?: string, value?: float, deductions?: float, effectiveDate?: string, municipalServiceName?: string, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}, externalReference?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return [];
+        return new self(
+            serviceDescription: $data['serviceDescription'] ?? null,
+            observations: $data['observations'] ?? null,
+            value: $data['value'] ?? null,
+            deductions: $data['deductions'] ?? null,
+            effectiveDate: $data['effectiveDate'] ?? null,
+            municipalServiceName: $data['municipalServiceName'] ?? null,
+            taxes: isset($data['taxes']) ? Taxes::fromArray($data['taxes']) : null,
+            externalReference: $data['externalReference'] ?? null,
+        );
     }
 }

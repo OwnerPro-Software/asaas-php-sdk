@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Support\DTO;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class Callback
 {
@@ -15,9 +16,12 @@ final readonly class Callback
         public ?bool $autoRedirect = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{successUrl?: string, autoRedirect?: bool} $data */
+    public static function fromArray(array $data): static
     {
-        return ['successUrl'];
+        return new self(
+            successUrl: $data['successUrl'] ?? throw new TypeError('successUrl is required'),
+            autoRedirect: $data['autoRedirect'] ?? null,
+        );
     }
 }

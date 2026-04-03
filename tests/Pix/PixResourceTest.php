@@ -63,7 +63,7 @@ it('creates a pix key from request object', function (array $fixture): void {
 
 it('validates required type field', function (): void {
     pixResource()->createKey([]);
-})->throws(InvalidArgumentException::class, "Field 'type' is required.");
+})->throws(TypeError::class);
 
 // --- listKeys ---
 

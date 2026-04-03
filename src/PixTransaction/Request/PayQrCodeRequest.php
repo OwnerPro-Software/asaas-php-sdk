@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas\PixTransaction\Request;
 
 use OwnerPro\Asaas\Support\DTO\QrCodePayload;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class PayQrCodeRequest
 {
@@ -19,9 +20,14 @@ final readonly class PayQrCodeRequest
         public ?string $scheduleDate = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{qrCode?: array{payload?: string, changeValue?: float}, value?: float, description?: string, scheduleDate?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['qrCode', 'value'];
+        return new self(
+            qrCode: QrCodePayload::fromArray($data['qrCode'] ?? []),
+            value: $data['value'] ?? throw new TypeError('value is required'),
+            description: $data['description'] ?? null,
+            scheduleDate: $data['scheduleDate'] ?? null,
+        );
     }
 }

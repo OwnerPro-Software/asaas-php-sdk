@@ -26,8 +26,8 @@ it('converts to array filtering nulls', function (): void {
 
 it('throws when value is missing', function (): void {
     SimulatePaymentRequest::fromArray(['billingTypes' => ['PIX']]);
-})->throws(InvalidArgumentException::class, "Field 'value' is required.");
+})->throws(TypeError::class);
 
 it('throws when billingTypes is missing', function (): void {
     SimulatePaymentRequest::fromArray(['value' => 1000.00]);
-})->throws(InvalidArgumentException::class, "Field 'billingTypes' is required.");
+})->throws(TypeError::class);

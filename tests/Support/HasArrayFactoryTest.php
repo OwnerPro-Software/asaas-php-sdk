@@ -34,90 +34,14 @@ final class FactoryTestRequest
         public readonly ?string $phone = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array<string, mixed> $data */
+    public static function fromArray(array $data): static
     {
-        return ['name', 'email'];
-    }
-}
-
-final class FactoryTestMidDefaultRequest
-{
-    use HasArrayFactory;
-
-    public function __construct(
-        public readonly string $name,
-        public readonly ?string $middle = null,
-        public readonly string $email = 'default@test.com',
-    ) {}
-
-    /** @return list<string> */
-    protected static function requiredFields(): array
-    {
-        return ['name'];
-    }
-}
-
-final class FactoryTestNoConstructorRequest
-{
-    use HasArrayFactory;
-
-    /** @return list<string> */
-    protected static function requiredFields(): array
-    {
-        return [];
-    }
-}
-
-final class PlainObject
-{
-    public function __construct(public readonly string $value) {}
-}
-
-final class FactoryTestUnionWithoutFromArray
-{
-    use HasArrayFactory;
-
-    public function __construct(
-        public readonly string $name,
-        public readonly array|PlainObject|null $meta = null,
-    ) {}
-
-    /** @return list<string> */
-    protected static function requiredFields(): array
-    {
-        return ['name'];
-    }
-}
-
-final class FactoryTestNestedDTO
-{
-    use HasArrayFactory;
-
-    public function __construct(
-        public readonly string $code,
-    ) {}
-
-    /** @return list<string> */
-    protected static function requiredFields(): array
-    {
-        return ['code'];
-    }
-}
-
-final class FactoryTestWithUnionDTO
-{
-    use HasArrayFactory;
-
-    public function __construct(
-        public readonly string $name,
-        public readonly array|FactoryTestNestedDTO|null $nested = null,
-    ) {}
-
-    /** @return list<string> */
-    protected static function requiredFields(): array
-    {
-        return ['name'];
+        return new self(
+            name: $data['name'] ?? null,
+            email: $data['email'] ?? null,
+            phone: $data['phone'] ?? null,
+        );
     }
 }
 
@@ -144,7 +68,7 @@ it('ignores extra keys not in constructor', function (): void {
 
 it('throws when required field is missing', function (): void {
     FactoryTestRequest::fromArray(['name' => 'John']);
-})->throws(InvalidArgumentException::class, "Field 'email' is required.");
+})->throws(TypeError::class);
 
 it('converts to array without null values', function (): void {
     $request = FactoryTestRequest::fromArray(['name' => 'John', 'email' => 'j@t.com']);
@@ -156,20 +80,6 @@ it('keeps falsy values in toArray', function (): void {
     $request = FactoryTestRequest::fromArray(['name' => '', 'email' => 'j@t.com', 'phone' => '']);
 
     expect($request->toArray())->toBe(['name' => '', 'email' => 'j@t.com', 'phone' => '']);
-});
-
-it('throws when class has no constructor', function (): void {
-    FactoryTestNoConstructorRequest::fromArray(['name' => 'John']);
-})->throws(InvalidArgumentException::class, 'must have a constructor');
-
-it('includes default values for skipped mid-constructor params', function (): void {
-    // Only provide 'name' and 'email' but not 'middle'
-    // The elseif branch must include the default for 'middle' so positional args are correct
-    $request = FactoryTestMidDefaultRequest::fromArray(['name' => 'John', 'email' => 'j@t.com']);
-
-    expect($request->name)->toBe('John');
-    expect($request->middle)->toBeNull();
-    expect($request->email)->toBe('j@t.com');
 });
 
 // --- resolveData ---
@@ -190,7 +100,7 @@ it('resolves a request object into an array via resolveData', function (): void 
 
 it('validates required fields when resolving from array', function (): void {
     FactoryTestRequest::resolveData(['name' => 'John']);
-})->throws(InvalidArgumentException::class, "Field 'email' is required.");
+})->throws(TypeError::class);
 
 it('strips null values when resolving from array', function (): void {
     $result = FactoryTestRequest::resolveData(['name' => 'John', 'email' => 'j@t.com']);
@@ -423,52 +333,7 @@ it('fromArray throws when nested array is missing required DTO fields', function
         'dueDate' => '2026-01-01',
         'creditCard' => ['holderName' => 'John'],
     ]);
-})->throws(InvalidArgumentException::class, "Field 'number' is required.");
-
-it('fromArray passes plain array through when parameter type is not a union', function (): void {
-    $request = FactoryTestRequest::fromArray(['name' => 'John', 'email' => 'j@t.com']);
-
-    expect($request->name)->toBe('John');
-});
-
-it('fromArray passes array through when union type class has no fromArray method', function (): void {
-    $request = FactoryTestUnionWithoutFromArray::fromArray([
-        'name' => 'John',
-        'meta' => ['key' => 'value'],
-    ]);
-
-    expect($request->meta)->toBe(['key' => 'value']);
-});
-
-it('fromArray hydrates nested array into DTO via union type', function (): void {
-    $request = FactoryTestWithUnionDTO::fromArray([
-        'name' => 'John',
-        'nested' => ['code' => 'ABC'],
-    ]);
-
-    expect($request->nested)->toBeInstanceOf(FactoryTestNestedDTO::class);
-    expect($request->nested->code)->toBe('ABC');
-});
-
-it('fromArray leaves non-array value unchanged for union type parameter', function (): void {
-    $dto = new FactoryTestNestedDTO(code: 'ABC');
-
-    $request = FactoryTestWithUnionDTO::fromArray([
-        'name' => 'John',
-        'nested' => $dto,
-    ]);
-
-    expect($request->nested)->toBe($dto);
-});
-
-it('fromArray leaves null unchanged for union type parameter', function (): void {
-    $request = FactoryTestWithUnionDTO::fromArray([
-        'name' => 'John',
-        'nested' => null,
-    ]);
-
-    expect($request->nested)->toBeNull();
-});
+})->throws(TypeError::class);
 
 it('serializes mixed enum and string items in arrays', function (): void {
     $request = CreateWebhookRequest::fromArray([

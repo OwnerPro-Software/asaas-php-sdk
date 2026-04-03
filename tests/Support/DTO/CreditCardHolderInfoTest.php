@@ -105,7 +105,7 @@ it('throws when required field is missing', function (string $missingField): voi
     unset($data[$missingField]);
 
     CreditCardHolderInfo::fromArray($data);
-})->throws(InvalidArgumentException::class)->with([
+})->throws(TypeError::class)->with([
     'name',
     'email',
     'cpfCnpj',

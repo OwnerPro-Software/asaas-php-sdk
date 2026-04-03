@@ -25,7 +25,7 @@ it('throws when required field is missing', function (string $missingField): voi
     unset($data[$missingField]);
 
     SplitRefund::fromArray($data);
-})->throws(InvalidArgumentException::class)->with([
+})->throws(TypeError::class)->with([
     'id',
     'value',
 ]);

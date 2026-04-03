@@ -22,13 +22,13 @@ it('throws when creditCard is missing', function (): void {
     PayWithCreditCardRequest::fromArray([
         'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
     ]);
-})->throws(InvalidArgumentException::class, "Field 'creditCard' is required.");
+})->throws(TypeError::class);
 
 it('throws when creditCardHolderInfo is missing', function (): void {
     PayWithCreditCardRequest::fromArray([
         'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
     ]);
-})->throws(InvalidArgumentException::class, "Field 'creditCardHolderInfo' is required.");
+})->throws(TypeError::class);
 
 it('serializes nested CreditCard DTO in toArray', function (): void {
     $request = new PayWithCreditCardRequest(

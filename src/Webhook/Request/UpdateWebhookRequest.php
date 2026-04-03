@@ -24,9 +24,18 @@ final readonly class UpdateWebhookRequest
         public ?array $events = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{url?: string, email?: string, name?: string, enabled?: bool, apiVersion?: int, sendType?: WebhookSendType|string, authToken?: string, events?: list<WebhookEvent|string>} $data */
+    public static function fromArray(array $data): static
     {
-        return [];
+        return new self(
+            url: $data['url'] ?? null,
+            email: $data['email'] ?? null,
+            name: $data['name'] ?? null,
+            enabled: $data['enabled'] ?? null,
+            apiVersion: $data['apiVersion'] ?? null,
+            sendType: $data['sendType'] ?? null,
+            authToken: $data['authToken'] ?? null,
+            events: $data['events'] ?? null,
+        );
     }
 }

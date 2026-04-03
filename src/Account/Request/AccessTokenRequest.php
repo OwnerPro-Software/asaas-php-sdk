@@ -16,9 +16,13 @@ final readonly class AccessTokenRequest
         public ?string $expirationDate = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{name?: string, enabled?: bool, expirationDate?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return [];
+        return new self(
+            name: $data['name'] ?? null,
+            enabled: $data['enabled'] ?? null,
+            expirationDate: $data['expirationDate'] ?? null,
+        );
     }
 }

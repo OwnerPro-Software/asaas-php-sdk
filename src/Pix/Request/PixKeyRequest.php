@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas\Pix\Request;
 
 use OwnerPro\Asaas\Pix\PixAddressKeyType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class PixKeyRequest
 {
@@ -15,9 +16,11 @@ final readonly class PixKeyRequest
         public PixAddressKeyType|string $type,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{type?: PixAddressKeyType|string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['type'];
+        return new self(
+            type: $data['type'] ?? throw new TypeError('type is required'),
+        );
     }
 }

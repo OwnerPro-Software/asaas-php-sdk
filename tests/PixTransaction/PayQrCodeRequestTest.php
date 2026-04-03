@@ -19,6 +19,7 @@ it('creates from array with all fields', function (): void {
     expect($request->qrCode->payload)->toBe('00020126...');
     expect($request->value)->toBe(100.00);
     expect($request->description)->toBe('QR payment');
+    expect($request->scheduleDate)->toBe('2026-04-01');
 });
 
 it('converts to array filtering nulls', function (): void {
@@ -47,8 +48,8 @@ it('serializes nested QrCodePayload DTO in toArray', function (): void {
 
 it('throws when qrCode is missing', function (): void {
     PayQrCodeRequest::fromArray(['value' => 100.00]);
-})->throws(InvalidArgumentException::class, "Field 'qrCode' is required.");
+})->throws(TypeError::class);
 
 it('throws when value is missing', function (): void {
     PayQrCodeRequest::fromArray(['qrCode' => ['payload' => '00020126...']]);
-})->throws(InvalidArgumentException::class, "Field 'value' is required.");
+})->throws(TypeError::class);

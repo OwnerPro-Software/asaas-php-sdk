@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas\Support\DTO;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use SensitiveParameter;
+use TypeError;
 
 final readonly class CreditCardHolderInfo
 {
@@ -41,9 +42,18 @@ final readonly class CreditCardHolderInfo
         ];
     }
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['name', 'email', 'cpfCnpj', 'postalCode', 'addressNumber', 'phone'];
+        return new self(
+            name: $data['name'] ?? throw new TypeError('name is required'),
+            email: $data['email'] ?? throw new TypeError('email is required'),
+            cpfCnpj: $data['cpfCnpj'] ?? throw new TypeError('cpfCnpj is required'),
+            postalCode: $data['postalCode'] ?? throw new TypeError('postalCode is required'),
+            addressNumber: $data['addressNumber'] ?? throw new TypeError('addressNumber is required'),
+            phone: $data['phone'] ?? throw new TypeError('phone is required'),
+            addressComplement: $data['addressComplement'] ?? null,
+            mobilePhone: $data['mobilePhone'] ?? null,
+        );
     }
 }

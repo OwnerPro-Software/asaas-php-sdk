@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Support\DTO;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class Taxes
 {
@@ -26,9 +27,23 @@ final readonly class Taxes
         public ?string $pisCofinsTaxStatus = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['retainIss', 'iss', 'pis', 'cofins', 'csll', 'inss', 'ir'];
+        return new self(
+            retainIss: $data['retainIss'] ?? throw new TypeError('retainIss is required'),
+            iss: $data['iss'] ?? throw new TypeError('iss is required'),
+            pis: $data['pis'] ?? throw new TypeError('pis is required'),
+            cofins: $data['cofins'] ?? throw new TypeError('cofins is required'),
+            csll: $data['csll'] ?? throw new TypeError('csll is required'),
+            inss: $data['inss'] ?? throw new TypeError('inss is required'),
+            ir: $data['ir'] ?? throw new TypeError('ir is required'),
+            nbsCode: $data['nbsCode'] ?? null,
+            taxSituationCode: $data['taxSituationCode'] ?? null,
+            taxClassificationCode: $data['taxClassificationCode'] ?? null,
+            operationIndicatorCode: $data['operationIndicatorCode'] ?? null,
+            pisCofinsRetentionType: $data['pisCofinsRetentionType'] ?? null,
+            pisCofinsTaxStatus: $data['pisCofinsTaxStatus'] ?? null,
+        );
     }
 }

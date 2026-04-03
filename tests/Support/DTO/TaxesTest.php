@@ -26,6 +26,11 @@ it('creates from array with all fields', function (): void {
     expect($taxes->retainIss)->toBeTrue();
     expect($taxes->iss)->toBe(2.0);
     expect($taxes->nbsCode)->toBe('1.0101');
+    expect($taxes->taxSituationCode)->toBe('01');
+    expect($taxes->taxClassificationCode)->toBe('1401');
+    expect($taxes->operationIndicatorCode)->toBe('01');
+    expect($taxes->pisCofinsRetentionType)->toBe('RETAINED');
+    expect($taxes->pisCofinsTaxStatus)->toBe('01');
 });
 
 it('converts to array filtering nulls', function (): void {
@@ -78,7 +83,7 @@ it('throws when required field is missing', function (string $missingField): voi
     unset($data[$missingField]);
 
     Taxes::fromArray($data);
-})->throws(InvalidArgumentException::class)->with([
+})->throws(TypeError::class)->with([
     'retainIss',
     'iss',
     'pis',

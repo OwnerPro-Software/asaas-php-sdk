@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\PixTransaction\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class DecodeQrCodeRequest
 {
@@ -16,9 +17,13 @@ final readonly class DecodeQrCodeRequest
         public ?string $expectedPaymentDate = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{payload?: string, changeValue?: float, expectedPaymentDate?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['payload'];
+        return new self(
+            payload: $data['payload'] ?? throw new TypeError('payload is required'),
+            changeValue: $data['changeValue'] ?? null,
+            expectedPaymentDate: $data['expectedPaymentDate'] ?? null,
+        );
     }
 }

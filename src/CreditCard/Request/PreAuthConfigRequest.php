@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\CreditCard\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class PreAuthConfigRequest
 {
@@ -14,9 +15,11 @@ final readonly class PreAuthConfigRequest
         public int $daysToExpire,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{daysToExpire?: int} $data */
+    public static function fromArray(array $data): static
     {
-        return ['daysToExpire'];
+        return new self(
+            daysToExpire: $data['daysToExpire'] ?? throw new TypeError('daysToExpire is required'),
+        );
     }
 }

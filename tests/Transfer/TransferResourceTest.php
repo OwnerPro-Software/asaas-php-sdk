@@ -60,7 +60,7 @@ it('creates a transfer from request object', function (array $fixture): void {
 
 it('validates value is required', function (): void {
     transferResource()->create([]);
-})->throws(InvalidArgumentException::class, "Field 'value' is required.");
+})->throws(TypeError::class);
 
 it('lists transfers', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);

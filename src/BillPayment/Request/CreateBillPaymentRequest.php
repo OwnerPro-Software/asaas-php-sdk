@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\BillPayment\Request;
 
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class CreateBillPaymentRequest
 {
@@ -21,9 +22,18 @@ final readonly class CreateBillPaymentRequest
         public ?string $externalReference = null,
     ) {}
 
-    /** @return list<string> */
-    protected static function requiredFields(): array
+    /** @param array{identificationField?: string, scheduleDate?: string, description?: string, discount?: float, interest?: float, fine?: float, dueDate?: string, externalReference?: string} $data */
+    public static function fromArray(array $data): static
     {
-        return ['identificationField'];
+        return new self(
+            identificationField: $data['identificationField'] ?? throw new TypeError('identificationField is required'),
+            scheduleDate: $data['scheduleDate'] ?? null,
+            description: $data['description'] ?? null,
+            discount: $data['discount'] ?? null,
+            interest: $data['interest'] ?? null,
+            fine: $data['fine'] ?? null,
+            dueDate: $data['dueDate'] ?? null,
+            externalReference: $data['externalReference'] ?? null,
+        );
     }
 }
