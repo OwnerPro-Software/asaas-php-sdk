@@ -10,14 +10,6 @@ use OwnerPro\Asaas\Payment\Request\ReceivePaymentInCashRequest;
 use OwnerPro\Asaas\Payment\Request\RefundPaymentRequest;
 use OwnerPro\Asaas\Payment\Request\SimulatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
-use OwnerPro\Asaas\Payment\Response\BillingInfoResponse;
-use OwnerPro\Asaas\Payment\Response\IdentificationFieldResponse;
-use OwnerPro\Asaas\Payment\Response\PaymentLimitsResponse;
-use OwnerPro\Asaas\Payment\Response\PaymentResponse;
-use OwnerPro\Asaas\Payment\Response\PaymentSimulationResponse;
-use OwnerPro\Asaas\Payment\Response\PaymentStatusResponse;
-use OwnerPro\Asaas\Payment\Response\PixQrCodeResponse;
-use OwnerPro\Asaas\Payment\Response\ViewingInfoResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
@@ -56,8 +48,8 @@ it('creates a payment from array', function (array $fixture): void {
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentResponse::class);
-    expect($result->data->id)->toBe('pay_abc123');
+    expect($result->data)->toBeArray();
+    expect($result->data['id'])->toBe('pay_abc123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments'
         && $request->method() === 'POST');
@@ -74,7 +66,7 @@ it('creates a payment from request object', function (array $fixture): void {
     ));
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('pay_abc123');
+    expect($result->data['id'])->toBe('pay_abc123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments'
         && $request->method() === 'POST');
@@ -92,8 +84,8 @@ it('finds a payment by id', function (array $fixture): void {
     $result = paymentResource()->find('pay_abc123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('pay_abc123');
-    expect($result->data->billingType)->toBe('PIX');
+    expect($result->data['id'])->toBe('pay_abc123');
+    expect($result->data['billingType'])->toBe('PIX');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123');
 })->with('payment_fixture');
@@ -108,7 +100,7 @@ it('lists payments with pagination', function (array $fixture): void {
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeTrue();
     expect($result->data)->toHaveCount(2);
-    expect($result->data[0])->toBeInstanceOf(PaymentResponse::class);
+    expect($result->data[0])->toBeArray();
     expect($result->totalCount)->toBe(50);
     expect($result->hasMore)->toBeTrue();
 
@@ -123,7 +115,7 @@ it('updates a payment from array', function (array $fixture): void {
     $result = paymentResource()->update('pay_abc123', ['value' => 200.00]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123'
         && $request->method() === 'PUT');
@@ -161,7 +153,7 @@ it('refunds a payment', function (array $fixture): void {
     $result = paymentResource()->refund('pay_abc123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/refund'
         && $request->method() === 'POST');
@@ -188,8 +180,8 @@ it('gets payment status', function (): void {
     $result = paymentResource()->status('pay_abc123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentStatusResponse::class);
-    expect($result->data->status)->toBe('CONFIRMED');
+    expect($result->data)->toBeArray();
+    expect($result->data['status'])->toBe('CONFIRMED');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/status');
 });
@@ -206,8 +198,8 @@ it('gets pix qr code for payment', function (): void {
     $result = paymentResource()->pixQrCode('pay_abc123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PixQrCodeResponse::class);
-    expect($result->data->payload)->toBe('00020126...');
+    expect($result->data)->toBeArray();
+    expect($result->data['payload'])->toBe('00020126...');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/pixQrCode');
 });
@@ -224,7 +216,7 @@ it('gets bank slip identification field', function (): void {
     $result = paymentResource()->identificationField('pay_abc123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(IdentificationFieldResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/identificationField');
 });
@@ -248,8 +240,8 @@ it('iterates all payments lazily', function (array $page1): void {
     $items = iterator_to_array(paymentResource()->all(['limit' => 10]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(PaymentResponse::class);
-    expect($items[2]->id)->toBe('pay_3');
+    expect($items[0])->toBeArray();
+    expect($items[2]['id'])->toBe('pay_3');
 })->with('payment_list_fixture');
 
 // --- captureAuthorized ---
@@ -260,7 +252,7 @@ it('captures an authorized payment', function (array $fixture): void {
     $result = paymentResource()->captureAuthorized('pay_abc123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/captureAuthorizedPayment'
         && $request->method() === 'POST');
@@ -277,7 +269,7 @@ it('pays with credit card', function (array $fixture): void {
     ]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/payWithCreditCard'
         && $request->method() === 'POST');
@@ -291,7 +283,7 @@ it('marks payment as received in cash', function (array $fixture): void {
     $result = paymentResource()->receiveInCash('pay_abc123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/receiveInCash'
         && $request->method() === 'POST');
@@ -321,8 +313,8 @@ it('gets billing info for payment', function (): void {
     $result = paymentResource()->billingInfo('pay_abc123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(BillingInfoResponse::class);
-    expect($result->data->bankSlipUrl)->toBe('https://example.com/slip');
+    expect($result->data)->toBeArray();
+    expect($result->data['bankSlipUrl'])->toBe('https://example.com/slip');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/billingInfo');
 });
@@ -338,8 +330,8 @@ it('gets viewing info for payment', function (): void {
     $result = paymentResource()->viewingInfo('pay_abc123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(ViewingInfoResponse::class);
-    expect($result->data->viewed)->toBeTrue();
+    expect($result->data)->toBeArray();
+    expect($result->data['viewed'])->toBeTrue();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/viewingInfo');
 });
@@ -355,8 +347,8 @@ it('simulates a payment', function (): void {
     $result = paymentResource()->simulate(['value' => 100.00, 'billingTypes' => ['PIX']]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentSimulationResponse::class);
-    expect($result->data->netValue)->toBe(96.51);
+    expect($result->data)->toBeArray();
+    expect($result->data['netValue'])->toBe(96.51);
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/simulate'
         && $request->method() === 'POST');
@@ -373,7 +365,7 @@ it('gets payment limits', function (): void {
     $result = paymentResource()->limits();
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentLimitsResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/limits');
 });
@@ -480,7 +472,7 @@ it('simulates a payment from request object', function (): void {
     ));
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PaymentSimulationResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/simulate'
         && $request->method() === 'POST'

@@ -4,24 +4,17 @@ declare(strict_types=1);
 
 use OwnerPro\Asaas\Support\AsaasRequestException;
 use OwnerPro\Asaas\Support\AsaasResult;
-use OwnerPro\Asaas\Support\BaseResponse;
 use OwnerPro\Asaas\Support\RawResponse;
 
 mutates(AsaasResult::class);
 
-// Concrete test response
-final class ResultTestResponse extends BaseResponse
-{
-    public string $id;
-}
-
 it('creates a successful result with data', function (): void {
-    $dto = new ResultTestResponse(['id' => 'abc']);
+    $data = ['id' => 'abc'];
     $response = RawResponse::fake(200);
-    $result = AsaasResult::success($dto, $response);
+    $result = AsaasResult::success($data, $response);
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('abc');
+    expect($result->data)->toBe(['id' => 'abc']);
     expect($result->response)->toBe($response);
     expect($result->response->status())->toBe(200);
     expect($result->errors)->toBeNull();
@@ -49,8 +42,7 @@ it('creates a failed result with null response on connection error', function ()
 });
 
 it('throw() returns self on success', function (): void {
-    $dto = new ResultTestResponse(['id' => 'abc']);
-    $result = AsaasResult::success($dto, RawResponse::fake(200));
+    $result = AsaasResult::success(['id' => 'abc'], RawResponse::fake(200));
 
     expect($result->throw())->toBe($result);
 });

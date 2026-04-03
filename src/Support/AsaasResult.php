@@ -9,20 +9,22 @@ final readonly class AsaasResult
     use ThrowsOnFailure;
 
     /**
+     * @param  ?array<string, mixed>  $data
      * @param  ?list<array{code?: string, description?: string}>  $errors
      */
     public function __construct(
         public bool $success,
-        public ?BaseResponse $data,
+        public ?array $data,
         public ?array $errors,
         public ?RawResponse $response,
     ) {}
 
-    public static function success(BaseResponse $baseResponse, RawResponse $rawResponse): self
+    /** @param array<string, mixed> $data */
+    public static function success(array $data, RawResponse $rawResponse): self
     {
         return new self(
             success: true,
-            data: $baseResponse,
+            data: $data,
             errors: null,
             response: $rawResponse,
         );

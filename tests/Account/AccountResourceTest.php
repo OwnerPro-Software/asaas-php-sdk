@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Account\AccountResource;
 use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Request\AccountRequest;
-use OwnerPro\Asaas\Account\Response\AccessTokenResponse;
-use OwnerPro\Asaas\Account\Response\AccountResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Environment;
@@ -44,8 +42,8 @@ it('creates a subaccount', function (array $fixture, array $payload): void {
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccountResponse::class);
-    expect($result->data->id)->toBe('acc_123');
+    expect($result->data)->toBeArray();
+    expect($result->data['id'])->toBe('acc_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts'
         && $request->method() === 'POST');
@@ -67,7 +65,7 @@ it('creates a subaccount from request object', function (array $fixture): void {
     ));
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('acc_123');
+    expect($result->data['id'])->toBe('acc_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts'
         && $request->method() === 'POST');
@@ -97,7 +95,7 @@ it('finds a subaccount', function (array $fixture): void {
     $result = accountResource()->find('acc_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('acc_123');
+    expect($result->data['id'])->toBe('acc_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123');
 })->with('account_fixture');
@@ -110,7 +108,7 @@ it('lists access tokens', function (): void {
     $result = accountResource()->listAccessTokens('acc_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccessTokenResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens');
 });
@@ -123,7 +121,7 @@ it('creates an access token', function (): void {
     $result = accountResource()->createAccessToken('acc_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccessTokenResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens'
         && $request->method() === 'POST');
@@ -139,7 +137,7 @@ it('updates an access token from array', function (): void {
     ]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccessTokenResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens/tok_1'
         && $request->method() === 'PUT');
@@ -157,7 +155,7 @@ it('updates an access token from request object', function (): void {
     ));
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(AccessTokenResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens/tok_1'
         && $request->method() === 'PUT');
@@ -189,44 +187,8 @@ it('iterates all accounts lazily', function (): void {
     $items = iterator_to_array(accountResource()->all(['limit' => 2]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(AccountResponse::class);
-    expect($items[2]->id)->toBe('acc_3');
-});
-
-it('masks sensitive data in AccountResponse debug info', function (): void {
-    $response = new AccountResponse([
-        'id' => 'acc_123',
-        'name' => 'Sub Account',
-        'apiKey' => 'ak_secret_key_123',
-        'accessToken' => 'at_secret_token_456',
-        'cpfCnpj' => '12345678901',
-        'accountNumber' => '123456',
-    ]);
-
-    $debug = $response->__debugInfo();
-
-    expect($debug['id'])->toBe('acc_123');
-    expect($debug['name'])->toBe('Sub Account');
-    expect($debug['apiKey'])->toBe('***');
-    expect($debug['accessToken'])->toBe('***');
-    expect($debug['cpfCnpj'])->toBe('********901');
-    expect($debug['accountNumber'])->toBe('****56');
-});
-
-it('masks sensitive data in AccessTokenResponse debug info', function (): void {
-    $response = new AccessTokenResponse([
-        'id' => 'tok_1',
-        'name' => 'Main Token',
-        'apiKey' => 'ak_secret_key_789',
-        'enabled' => true,
-    ]);
-
-    $debug = $response->__debugInfo();
-
-    expect($debug['id'])->toBe('tok_1');
-    expect($debug['name'])->toBe('Main Token');
-    expect($debug['apiKey'])->toBe('***');
-    expect($debug['enabled'])->toBeTrue();
+    expect($items[0])->toBeArray();
+    expect($items[2]['id'])->toBe('acc_3');
 });
 
 it('returns failure on API error', function (): void {

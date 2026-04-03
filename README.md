@@ -1,6 +1,6 @@
 # Asaas PHP SDK
 
-Clean PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API with typed resources, tolerant responses, and result-based error handling.
+Clean PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API with typed request DTOs and result-based error handling.
 
 ## Requirements
 
@@ -122,9 +122,9 @@ All resource methods return `AsaasResult` or `AsaasPaginatedResult`.
 $result = Asaas::payments()->create([...]);
 
 if ($result->success) {
-    $payment = $result->data;       // PaymentResponse
-    echo $payment->id;
-    echo $payment->status;
+    $payment = $result->data;       // array<string, mixed>
+    echo $payment['id'];
+    echo $payment['status'];
 } else {
     $errors = $result->errors;      // array of error details
 }
@@ -198,8 +198,8 @@ $result = Asaas::payments()->create([
 
 // Responses return strings — hydrate to enums when needed
 $payment = $result->data;
-$payment->status;                          // 'PENDING'
-PaymentStatus::from($payment->status);     // PaymentStatus::Pending
+$payment['status'];                          // 'PENDING'
+PaymentStatus::from($payment['status']);     // PaymentStatus::Pending
 ```
 
 ### Available Enums
@@ -518,7 +518,7 @@ List methods return `AsaasPaginatedResult`:
 ```php
 $result = Asaas::payments()->list(['limit' => 10]);
 
-$result->data;        // array of PaymentResponse
+$result->data;        // list of arrays (each array is a raw API response)
 $result->totalCount;  // total items available
 $result->hasMore;     // more pages available?
 $result->limit;
@@ -534,7 +534,7 @@ The `all()` method returns a Generator that auto-paginates:
 
 ```php
 foreach (Asaas::payments()->all(['limit' => 100]) as $payment) {
-    echo $payment->id;
+    echo $payment['id'];
 }
 
 // Or collect all at once
@@ -665,23 +665,6 @@ Asaas::billPayments()->all(array $filters = []): Generator
 Asaas::statements()->list(array $query = []): AsaasPaginatedResult
 Asaas::statements()->all(array $filters = []): Generator
 ```
-
-## Tolerant Responses
-
-Response objects use a tolerant reader pattern. Known fields are typed, but unknown fields from the API are also accessible:
-
-```php
-$payment = $result->data;
-
-// Typed properties
-$payment->id;        // string
-$payment->status;    // ?string
-
-// Unknown fields (API may add new fields anytime)
-$payment->someNewField;  // mixed (returns null if not present)
-```
-
-Response objects are immutable. Attempting to modify a property throws `LogicException`.
 
 ## Custom Connector
 

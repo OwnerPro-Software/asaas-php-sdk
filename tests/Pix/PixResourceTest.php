@@ -6,11 +6,7 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Pix\PixResource;
 use OwnerPro\Asaas\Pix\Request\PixKeyRequest;
 use OwnerPro\Asaas\Pix\Request\StaticQrCodeRequest;
-use OwnerPro\Asaas\Pix\Response\PixResponse;
-use OwnerPro\Asaas\Pix\Response\StaticQrCodeResponse;
-use OwnerPro\Asaas\Pix\Response\TokenBucketResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
-use OwnerPro\Asaas\Support\DeletedResponse;
 use OwnerPro\Asaas\Support\Environment;
 
 mutates(PixResource::class);
@@ -45,9 +41,9 @@ it('creates a pix key from array', function (array $fixture): void {
     $result = pixResource()->createKey(['type' => 'EVP']);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PixResponse::class);
-    expect($result->data->id)->toBe('pix_123');
-    expect($result->data->type)->toBe('EVP');
+    expect($result->data)->toBeArray();
+    expect($result->data['id'])->toBe('pix_123');
+    expect($result->data['type'])->toBe('EVP');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/addressKeys'
         && $request->method() === 'POST');
@@ -59,7 +55,7 @@ it('creates a pix key from request object', function (array $fixture): void {
     $result = pixResource()->createKey(new PixKeyRequest(type: 'EVP'));
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('pix_123');
+    expect($result->data['id'])->toBe('pix_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/addressKeys'
         && $request->method() === 'POST');
@@ -90,7 +86,7 @@ it('finds a pix key', function (array $fixture): void {
     $result = pixResource()->findKey('pix_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('pix_123');
+    expect($result->data['id'])->toBe('pix_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/addressKeys/pix_123');
 })->with('pix_key_fixture');
@@ -103,7 +99,7 @@ it('deletes a pix key', function (): void {
     $result = pixResource()->deleteKey('pix_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PixResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/addressKeys/pix_123'
         && $request->method() === 'DELETE');
@@ -119,7 +115,7 @@ it('creates a static qr code', function (): void {
     $result = pixResource()->createStaticQrCode(['description' => 'Test']);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(StaticQrCodeResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/static'
         && $request->method() === 'POST');
@@ -133,7 +129,7 @@ it('deletes a static qr code', function (): void {
     $result = pixResource()->deleteStaticQrCode('qr_1');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(DeletedResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/static/qr_1'
         && $request->method() === 'DELETE');
@@ -147,7 +143,7 @@ it('checks token bucket', function (): void {
     $result = pixResource()->tokenBucket();
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(TokenBucketResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/tokenBucket/addressKey');
 });
@@ -171,8 +167,8 @@ it('iterates all pix keys lazily', function (array $page1): void {
     $items = iterator_to_array(pixResource()->all(['limit' => 10]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(PixResponse::class);
-    expect($items[2]->id)->toBe('pix_3');
+    expect($items[0])->toBeArray();
+    expect($items[2]['id'])->toBe('pix_3');
 })->with('pix_key_list_fixture');
 
 // --- createStaticQrCode from request object ---

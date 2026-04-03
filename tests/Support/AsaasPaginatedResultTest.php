@@ -4,18 +4,12 @@ declare(strict_types=1);
 
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasRequestException;
-use OwnerPro\Asaas\Support\BaseResponse;
 use OwnerPro\Asaas\Support\RawResponse;
 
 mutates(AsaasPaginatedResult::class);
 
-final class PaginatedTestResponse extends BaseResponse
-{
-    public string $id;
-}
-
 it('creates a successful paginated result', function (): void {
-    $items = [new PaginatedTestResponse(['id' => 'a']), new PaginatedTestResponse(['id' => 'b'])];
+    $items = [['id' => 'a'], ['id' => 'b']];
     $response = RawResponse::fake(200);
 
     $result = AsaasPaginatedResult::success(
@@ -30,7 +24,7 @@ it('creates a successful paginated result', function (): void {
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toHaveCount(2);
-    expect($result->data[0]->id)->toBe('a');
+    expect($result->data[0]['id'])->toBe('a');
     expect($result->totalCount)->toBe(10);
     expect($result->hasMore)->toBeTrue();
     expect($result->limit)->toBe(2);
@@ -65,7 +59,7 @@ it('creates a failed paginated result with null response on connection error', f
 
 it('next() fetches the next page when hasMore is true', function (): void {
     $nextResult = AsaasPaginatedResult::success(
-        data: [new PaginatedTestResponse(['id' => 'c'])],
+        data: [['id' => 'c']],
         totalCount: 10,
         hasMore: false,
         limit: 2,
@@ -75,7 +69,7 @@ it('next() fetches the next page when hasMore is true', function (): void {
     );
 
     $result = AsaasPaginatedResult::success(
-        data: [new PaginatedTestResponse(['id' => 'a']), new PaginatedTestResponse(['id' => 'b'])],
+        data: [['id' => 'a'], ['id' => 'b']],
         totalCount: 10,
         hasMore: true,
         limit: 2,
@@ -87,7 +81,7 @@ it('next() fetches the next page when hasMore is true', function (): void {
     $next = $result->next();
 
     expect($next)->not->toBeNull();
-    expect($next->data[0]->id)->toBe('c');
+    expect($next->data[0]['id'])->toBe('c');
     expect($next->offset)->toBe(2);
 });
 
@@ -107,7 +101,7 @@ it('next() returns null when hasMore is false', function (): void {
 
 it('next() returns null when nextPageFetcher is null even with hasMore true', function (): void {
     $result = AsaasPaginatedResult::success(
-        data: [new PaginatedTestResponse(['id' => 'a'])],
+        data: [['id' => 'a']],
         totalCount: 10,
         hasMore: true,
         limit: 1,
@@ -122,7 +116,7 @@ it('next() returns null when nextPageFetcher is null even with hasMore true', fu
 it('next() passes correct offset to fetcher', function (): void {
     $receivedOffset = null;
     $nextResult = AsaasPaginatedResult::success(
-        data: [new PaginatedTestResponse(['id' => 'c'])],
+        data: [['id' => 'c']],
         totalCount: 10,
         hasMore: false,
         limit: 5,
@@ -132,7 +126,7 @@ it('next() passes correct offset to fetcher', function (): void {
     );
 
     $result = AsaasPaginatedResult::success(
-        data: [new PaginatedTestResponse(['id' => 'a'])],
+        data: [['id' => 'a']],
         totalCount: 10,
         hasMore: true,
         limit: 5,

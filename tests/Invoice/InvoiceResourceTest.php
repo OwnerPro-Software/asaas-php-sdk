@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
 use OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest;
 use OwnerPro\Asaas\Invoice\Request\UpdateInvoiceRequest;
-use OwnerPro\Asaas\Invoice\Response\InvoiceResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\DTO\Taxes;
 use OwnerPro\Asaas\Support\Environment;
@@ -47,8 +46,8 @@ it('creates an invoice from array', function (array $fixture): void {
     ]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(InvoiceResponse::class);
-    expect($result->data->id)->toBe('inv_123');
+    expect($result->data)->toBeArray();
+    expect($result->data['id'])->toBe('inv_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices'
         && $request->method() === 'POST');
@@ -68,7 +67,7 @@ it('creates an invoice from request object', function (array $fixture): void {
     ));
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('inv_123');
+    expect($result->data['id'])->toBe('inv_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices'
         && $request->method() === 'POST');
@@ -95,7 +94,7 @@ it('finds an invoice', function (array $fixture): void {
     $result = invoiceResource()->find('inv_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('inv_123');
+    expect($result->data['id'])->toBe('inv_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices/inv_123');
 })->with('invoice_fixture');
@@ -163,8 +162,8 @@ it('iterates all invoices lazily', function (array $page1): void {
     $items = iterator_to_array(invoiceResource()->all(['limit' => 10]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(InvoiceResponse::class);
-    expect($items[2]->id)->toBe('inv_3');
+    expect($items[0])->toBeArray();
+    expect($items[2]['id'])->toBe('inv_3');
 })->with('invoice_list_fixture');
 
 it('creates invoice with typed Taxes DTO', function (array $fixture): void {
@@ -204,24 +203,6 @@ it('updates invoice with typed Taxes DTO', function (array $fixture): void {
         return $body['taxes'] === ['retainIss' => false, 'iss' => 3.0, 'pis' => 1.0, 'cofins' => 2.0, 'csll' => 0.5, 'inss' => 5.0, 'ir' => 1.0];
     });
 })->with('invoice_fixture');
-
-it('hydrates taxes as Taxes DTO in response', function (array $fixture): void {
-    Http::fake(['*' => Http::response($fixture, 200)]);
-
-    $result = invoiceResource()->find('inv_123');
-
-    expect($result->data->taxes)->toBeInstanceOf(Taxes::class);
-    expect($result->data->taxes->iss)->toBe(5.0);
-    expect($result->data->taxes->retainIss)->toBeTrue();
-})->with('invoice_fixture');
-
-it('returns null taxes when absent in response', function (): void {
-    Http::fake(['*' => Http::response(['id' => 'inv_123', 'status' => 'SCHEDULED'], 200)]);
-
-    $result = invoiceResource()->find('inv_123');
-
-    expect($result->data->taxes)->toBeNull();
-});
 
 it('returns failure on API error', function (array $errorFixture): void {
     Http::fake(['*' => Http::response($errorFixture, 400)]);

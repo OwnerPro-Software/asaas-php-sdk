@@ -8,7 +8,6 @@ use OwnerPro\Asaas\Support\DTO\Bank;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Transfer\Request\TransferRequest;
-use OwnerPro\Asaas\Transfer\Response\TransferResponse;
 use OwnerPro\Asaas\Transfer\TransferResource;
 
 mutates(TransferResource::class);
@@ -41,8 +40,8 @@ it('creates a transfer from array', function (array $fixture): void {
     $result = transferResource()->create(['value' => 100.00, 'pixAddressKey' => 'email@test.com']);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(TransferResponse::class);
-    expect($result->data->id)->toBe('tr_123');
+    expect($result->data)->toBeArray();
+    expect($result->data['id'])->toBe('tr_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/transfers'
         && $request->method() === 'POST');
@@ -80,7 +79,7 @@ it('finds a transfer', function (array $fixture): void {
     $result = transferResource()->find('tr_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('tr_123');
+    expect($result->data['id'])->toBe('tr_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/transfers/tr_123');
 })->with('transfer_fixture');
@@ -92,7 +91,7 @@ it('cancels a transfer', function (array $fixture): void {
     $result = transferResource()->cancel('tr_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data->status)->toBe('CANCELLED');
+    expect($result->data['status'])->toBe('CANCELLED');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/transfers/tr_123/cancel'
         && $request->method() === 'POST');
@@ -115,8 +114,8 @@ it('iterates all transfers lazily', function (array $page1): void {
     $items = iterator_to_array(transferResource()->all(['limit' => 10]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(TransferResponse::class);
-    expect($items[2]->id)->toBe('tr_3');
+    expect($items[0])->toBeArray();
+    expect($items[2]['id'])->toBe('tr_3');
 })->with('transfer_list_fixture');
 
 it('creates transfer with typed BankAccount DTO', function (array $fixture): void {

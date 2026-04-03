@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\PixTransaction\PixTransactionResource;
 use OwnerPro\Asaas\PixTransaction\Request\DecodeQrCodeRequest;
 use OwnerPro\Asaas\PixTransaction\Request\PayQrCodeRequest;
-use OwnerPro\Asaas\PixTransaction\Response\DecodedQrCodeResponse;
-use OwnerPro\Asaas\PixTransaction\Response\PixTransactionResponse;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\DTO\QrCodePayload;
 use OwnerPro\Asaas\Support\Environment;
@@ -43,7 +41,7 @@ it('decodes a qr code', function (): void {
     $result = pixTxResource()->decodeQrCode(['payload' => '00020126...']);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(DecodedQrCodeResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/decode'
         && $request->method() === 'POST');
@@ -55,8 +53,8 @@ it('pays a qr code', function (array $fixture): void {
     $result = pixTxResource()->payQrCode(['qrCode' => ['payload' => '00020126...'], 'value' => 50.00]);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(PixTransactionResponse::class);
-    expect($result->data->id)->toBe('tx_1');
+    expect($result->data)->toBeArray();
+    expect($result->data['id'])->toBe('tx_1');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/pay'
         && $request->method() === 'POST');
@@ -69,7 +67,7 @@ it('lists pix transactions', function (array $fixture): void {
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toHaveCount(2);
-    expect($result->data[0])->toBeInstanceOf(PixTransactionResponse::class);
+    expect($result->data[0])->toBeArray();
 
     Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api-sandbox.asaas.com/v3/pix/transactions'));
 })->with('pix_tx_list_fixture');
@@ -80,7 +78,7 @@ it('finds a pix transaction', function (array $fixture): void {
     $result = pixTxResource()->find('tx_1');
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('tx_1');
+    expect($result->data['id'])->toBe('tx_1');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/transactions/tx_1');
 })->with('pix_tx_fixture');
@@ -93,7 +91,7 @@ it('cancels a pix transaction', function (): void {
     $result = pixTxResource()->cancel('tx_1');
 
     expect($result->success)->toBeTrue();
-    expect($result->data->status)->toBe('CANCELLED');
+    expect($result->data['status'])->toBe('CANCELLED');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/transactions/tx_1/cancel'
         && $request->method() === 'POST');
@@ -116,8 +114,8 @@ it('iterates all pix transactions lazily', function (array $page1): void {
     $items = iterator_to_array(pixTxResource()->all(['limit' => 10]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(PixTransactionResponse::class);
-    expect($items[2]->id)->toBe('tx_3');
+    expect($items[0])->toBeArray();
+    expect($items[2]['id'])->toBe('tx_3');
 })->with('pix_tx_list_fixture');
 
 it('decodes qr code from request object', function (): void {
@@ -130,7 +128,7 @@ it('decodes qr code from request object', function (): void {
     ));
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(DecodedQrCodeResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/qrCodes/decode'
         && $request->method() === 'POST'

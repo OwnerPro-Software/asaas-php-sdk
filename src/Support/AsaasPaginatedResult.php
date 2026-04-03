@@ -11,7 +11,7 @@ final readonly class AsaasPaginatedResult
     use ThrowsOnFailure;
 
     /**
-     * @param  list<BaseResponse>  $data
+     * @param  list<array<string, mixed>>  $data
      * @param  ?list<array{code?: string, description?: string}>  $errors
      * @param  ?(Closure(int): self)  $nextPageFetcher
      */
@@ -28,7 +28,7 @@ final readonly class AsaasPaginatedResult
     ) {}
 
     /**
-     * @param  list<BaseResponse>  $data
+     * @param  list<array<string, mixed>>  $data
      * @param  ?Closure(int): self  $nextPageFetcher
      */
     public static function success(

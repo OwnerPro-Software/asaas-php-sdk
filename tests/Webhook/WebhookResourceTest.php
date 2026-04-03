@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
-use OwnerPro\Asaas\Support\DeletedResponse;
 use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest;
 use OwnerPro\Asaas\Webhook\Request\UpdateWebhookRequest;
-use OwnerPro\Asaas\Webhook\Response\RemoveBackoffResponse;
-use OwnerPro\Asaas\Webhook\Response\WebhookResponse;
 use OwnerPro\Asaas\Webhook\WebhookResource;
 
 mutates(WebhookResource::class);
@@ -43,8 +40,8 @@ it('creates a webhook', function (array $fixture): void {
     $result = webhookResource()->create(['url' => 'https://example.com/hook', 'email' => 'dev@test.com']);
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(WebhookResponse::class);
-    expect($result->data->id)->toBe('wh_123');
+    expect($result->data)->toBeArray();
+    expect($result->data['id'])->toBe('wh_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/webhooks'
         && $request->method() === 'POST');
@@ -56,7 +53,7 @@ it('creates a webhook from request object', function (array $fixture): void {
     $result = webhookResource()->create(new CreateWebhookRequest(url: 'https://example.com/hook', email: 'dev@test.com'));
 
     expect($result->success)->toBeTrue();
-    expect($result->data->id)->toBe('wh_123');
+    expect($result->data['id'])->toBe('wh_123');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/webhooks'
         && $request->method() === 'POST');
@@ -83,7 +80,7 @@ it('finds a webhook', function (array $fixture): void {
     $result = webhookResource()->find('wh_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data->url)->toBe('https://example.com/hook');
+    expect($result->data['url'])->toBe('https://example.com/hook');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/webhooks/wh_123');
 })->with('webhook_fixture');
@@ -116,7 +113,7 @@ it('deletes a webhook', function (): void {
     $result = webhookResource()->delete('wh_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(DeletedResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/webhooks/wh_123'
         && $request->method() === 'DELETE');
@@ -128,7 +125,7 @@ it('removes backoff penalty', function (): void {
     $result = webhookResource()->removeBackoff('wh_123');
 
     expect($result->success)->toBeTrue();
-    expect($result->data)->toBeInstanceOf(RemoveBackoffResponse::class);
+    expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/webhooks/wh_123/removeBackoff'
         && $request->method() === 'POST');
@@ -151,8 +148,8 @@ it('iterates all webhooks lazily', function (array $page1): void {
     $items = iterator_to_array(webhookResource()->all(['limit' => 10]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(WebhookResponse::class);
-    expect($items[2]->id)->toBe('wh_3');
+    expect($items[0])->toBeArray();
+    expect($items[2]['id'])->toBe('wh_3');
 })->with('webhook_list_fixture');
 
 it('returns failure on API error', function (array $errorFixture): void {

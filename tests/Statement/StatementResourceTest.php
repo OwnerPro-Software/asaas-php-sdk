@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
-use OwnerPro\Asaas\Statement\Response\StatementResponse;
 use OwnerPro\Asaas\Statement\StatementResource;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Environment;
@@ -33,8 +32,8 @@ it('lists financial transactions', function (): void {
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toHaveCount(2);
-    expect($result->data[0])->toBeInstanceOf(StatementResponse::class);
-    expect($result->data[0]->type)->toBe('PAYMENT_RECEIVED');
+    expect($result->data[0])->toBeArray();
+    expect($result->data[0]['type'])->toBe('PAYMENT_RECEIVED');
     expect($result->totalCount)->toBe(100);
     expect($result->hasMore)->toBeTrue();
 
@@ -61,8 +60,8 @@ it('iterates all transactions lazily', function (): void {
     $items = iterator_to_array(statementResource()->all(['limit' => 2]));
 
     expect($items)->toHaveCount(3);
-    expect($items[0])->toBeInstanceOf(StatementResponse::class);
-    expect($items[2]->id)->toBe('ft_3');
+    expect($items[0])->toBeArray();
+    expect($items[2]['id'])->toBe('ft_3');
 });
 
 it('returns failure on error', function (): void {

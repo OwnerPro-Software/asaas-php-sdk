@@ -26,56 +26,39 @@ final readonly class AsaasConnector implements Connector
         return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout);
     }
 
-    /**
-     * @param  array<string, mixed>  $query
-     * @param  class-string<BaseResponse>  $responseClass
-     */
-    public function get(string $path, array $query, string $responseClass): AsaasResult
+    /** @param array<string, mixed> $query */
+    public function get(string $path, array $query): AsaasResult
     {
         return $this->sendRequest(
             fn (): Response => $this->pendingRequest->get($path, $query),
-            $responseClass,
         );
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     * @param  class-string<BaseResponse>  $responseClass
-     */
-    public function post(string $path, array $data, string $responseClass): AsaasResult
+    /** @param array<string, mixed> $data */
+    public function post(string $path, array $data): AsaasResult
     {
         return $this->sendRequest(
             fn (): Response => $this->pendingRequest->post($path, $data),
-            $responseClass,
         );
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     * @param  class-string<BaseResponse>  $responseClass
-     */
-    public function put(string $path, array $data, string $responseClass): AsaasResult
+    /** @param array<string, mixed> $data */
+    public function put(string $path, array $data): AsaasResult
     {
         return $this->sendRequest(
             fn (): Response => $this->pendingRequest->put($path, $data),
-            $responseClass,
         );
     }
 
-    /** @param class-string<BaseResponse> $responseClass */
-    public function delete(string $path, string $responseClass): AsaasResult
+    public function delete(string $path): AsaasResult
     {
         return $this->sendRequest(
             fn (): Response => $this->pendingRequest->delete($path),
-            $responseClass,
         );
     }
 
-    /**
-     * @param  array<string, mixed>  $query
-     * @param  class-string<BaseResponse>  $responseClass
-     */
-    public function paginate(string $path, array $query, string $responseClass): AsaasPaginatedResult
+    /** @param array<string, mixed> $query */
+    public function paginate(string $path, array $query): AsaasPaginatedResult
     {
         try {
             $response = $this->pendingRequest->get($path, $query);
@@ -95,20 +78,13 @@ final readonly class AsaasConnector implements Connector
         /** @var array{data?: list<array<string, mixed>>, totalCount?: int, hasMore?: bool, limit?: int, offset?: int} $json */
         $json = $response->json();
 
-        /** @var list<BaseResponse> $data */
-        $data = array_map(
-            fn (array $item): BaseResponse => new $responseClass($item),
-            $json['data'] ?? [],
-        );
-
         $nextPageFetcher = fn (int $offset): AsaasPaginatedResult => $this->paginate(
             $path,
             array_merge($query, ['offset' => $offset]),
-            $responseClass,
         );
 
         return AsaasPaginatedResult::success(
-            data: $data,
+            data: $json['data'] ?? [],
             totalCount: $json['totalCount'] ?? 0,
             hasMore: $json['hasMore'] ?? false,
             limit: $json['limit'] ?? 0,
@@ -121,13 +97,10 @@ final readonly class AsaasConnector implements Connector
     /**
      * Lazy iterator that auto-paginates through all pages.
      *
-     * @template T of BaseResponse
-     *
      * @param  array<string, mixed>  $filters
-     * @param  class-string<T>  $responseClass
-     * @return Generator<int, T>
+     * @return Generator<int, array<string, mixed>>
      */
-    public function all(string $path, array $filters, string $responseClass): Generator
+    public function all(string $path, array $filters): Generator
     {
         $offset = 0;
         $limit = is_int($filters['limit'] ?? null) ? max(1, $filters['limit']) : 100;
@@ -136,19 +109,15 @@ final readonly class AsaasConnector implements Connector
             $result = $this->paginate(
                 $path,
                 array_merge($filters, ['offset' => $offset, 'limit' => $limit]),
-                $responseClass,
             );
 
             $result->throw();
 
-            /** @var list<T> $data */
-            $data = $result->data;
-
-            foreach ($data as $item) {
+            foreach ($result->data as $item) {
                 yield $item;
             }
 
-            if ($data === []) {
+            if ($result->data === []) {
                 break;
             }
 
@@ -167,8 +136,7 @@ final readonly class AsaasConnector implements Connector
         );
     }
 
-    /** @param class-string<BaseResponse> $responseClass */
-    private function sendRequest(Closure $httpCall, string $responseClass): AsaasResult
+    private function sendRequest(Closure $httpCall): AsaasResult
     {
         try {
             /** @var Response $response */
@@ -179,11 +147,10 @@ final readonly class AsaasConnector implements Connector
             );
         }
 
-        return $this->toResult($response, $responseClass);
+        return $this->toResult($response);
     }
 
-    /** @param class-string<BaseResponse> $responseClass */
-    private function toResult(Response $response, string $responseClass): AsaasResult
+    private function toResult(Response $response): AsaasResult
     {
         $rawResponse = new RawResponse($response);
 
@@ -197,7 +164,7 @@ final readonly class AsaasConnector implements Connector
         /** @var array<string, mixed> $json */
         $json = $response->json() ?? [];
 
-        return AsaasResult::success(new $responseClass($json), $rawResponse);
+        return AsaasResult::success($json, $rawResponse);
     }
 
     /** @return list<array{code?: string, description?: string}> */
