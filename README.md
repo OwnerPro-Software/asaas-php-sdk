@@ -534,6 +534,12 @@ The `all()` method returns a Generator that auto-paginates:
 
 ```php
 foreach (Asaas::payments()->all(['limit' => 100]) as $payment) {
+    if ($payment instanceof \OwnerPro\Asaas\Support\AsaasPaginatedError) {
+        // Handle error — iteration stops after this
+        Log::error('Pagination failed at offset '.$payment->offset, $payment->errors);
+        break;
+    }
+
     echo $payment['id'];
 }
 
@@ -541,7 +547,23 @@ foreach (Asaas::payments()->all(['limit' => 100]) as $payment) {
 $allPayments = iterator_to_array(Asaas::payments()->all());
 ```
 
-Unlike other methods that return result objects, `all()` throws `AsaasRequestException` if an API error occurs during pagination.
+If an API error occurs during pagination, the Generator yields an `AsaasPaginatedError` instead of throwing. This object carries:
+- `errors` — the error list from the API
+- `response` — the raw HTTP response (null for connection errors)
+- `offset` — the page offset that failed
+- `limit` — the page size
+
+You can opt-in to exceptions by calling `throw()` on the error object:
+
+```php
+foreach (Asaas::payments()->all() as $payment) {
+    if ($payment instanceof \OwnerPro\Asaas\Support\AsaasPaginatedError) {
+        $payment->throw(); // throws AsaasRequestException
+    }
+
+    processPayment($payment);
+}
+```
 
 ## Resources
 
@@ -566,7 +588,7 @@ Asaas::payments()->identificationField(string $id): AsaasResult
 Asaas::payments()->viewingInfo(string $id): AsaasResult
 Asaas::payments()->simulate(array|SimulatePaymentRequest $data): AsaasResult
 Asaas::payments()->limits(): AsaasResult
-Asaas::payments()->all(array $filters = []): Generator
+Asaas::payments()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ### Pix Keys (`pix()`)
@@ -579,7 +601,7 @@ Asaas::pix()->deleteKey(string $id): AsaasResult
 Asaas::pix()->createStaticQrCode(array|StaticQrCodeRequest $data = []): AsaasResult
 Asaas::pix()->deleteStaticQrCode(string $id): AsaasResult
 Asaas::pix()->tokenBucket(): AsaasResult
-Asaas::pix()->all(array $filters = []): Generator
+Asaas::pix()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ### Pix Transactions (`pixTransactions()`)
@@ -590,7 +612,7 @@ Asaas::pixTransactions()->payQrCode(array|PayQrCodeRequest $data): AsaasResult
 Asaas::pixTransactions()->find(string $id): AsaasResult
 Asaas::pixTransactions()->list(array $query = []): AsaasPaginatedResult
 Asaas::pixTransactions()->cancel(string $id): AsaasResult
-Asaas::pixTransactions()->all(array $filters = []): Generator
+Asaas::pixTransactions()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ### Transfers (`transfers()`)
@@ -600,7 +622,7 @@ Asaas::transfers()->create(array|TransferRequest $data): AsaasResult
 Asaas::transfers()->find(string $id): AsaasResult
 Asaas::transfers()->list(array $query = []): AsaasPaginatedResult
 Asaas::transfers()->cancel(string $id): AsaasResult
-Asaas::transfers()->all(array $filters = []): Generator
+Asaas::transfers()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ### Webhooks (`webhooks()`)
@@ -612,7 +634,7 @@ Asaas::webhooks()->list(array $query = []): AsaasPaginatedResult
 Asaas::webhooks()->update(string $id, array|UpdateWebhookRequest $data): AsaasResult
 Asaas::webhooks()->delete(string $id): AsaasResult
 Asaas::webhooks()->removeBackoff(string $id): AsaasResult
-Asaas::webhooks()->all(array $filters = []): Generator
+Asaas::webhooks()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ### Invoices (`invoices()`)
@@ -624,7 +646,7 @@ Asaas::invoices()->list(array $query = []): AsaasPaginatedResult
 Asaas::invoices()->update(string $id, array|UpdateInvoiceRequest $data): AsaasResult
 Asaas::invoices()->authorize(string $id): AsaasResult
 Asaas::invoices()->cancel(string $id): AsaasResult
-Asaas::invoices()->all(array $filters = []): Generator
+Asaas::invoices()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ### Accounts (`accounts()`)
@@ -637,7 +659,7 @@ Asaas::accounts()->listAccessTokens(string $accountId): AsaasResult
 Asaas::accounts()->createAccessToken(string $accountId): AsaasResult
 Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
 Asaas::accounts()->deleteAccessToken(string $accountId, string $tokenId): AsaasResult
-Asaas::accounts()->all(array $filters = []): Generator
+Asaas::accounts()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ### Credit Cards (`creditCards()`)
@@ -656,14 +678,14 @@ Asaas::billPayments()->find(string $id): AsaasResult
 Asaas::billPayments()->list(array $query = []): AsaasPaginatedResult
 Asaas::billPayments()->simulate(array|SimulateBillPaymentRequest $data = []): AsaasResult
 Asaas::billPayments()->cancel(string $id): AsaasResult
-Asaas::billPayments()->all(array $filters = []): Generator
+Asaas::billPayments()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ### Statements (`statements()`)
 
 ```php
 Asaas::statements()->list(array $query = []): AsaasPaginatedResult
-Asaas::statements()->all(array $filters = []): Generator
+Asaas::statements()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ## Custom Connector

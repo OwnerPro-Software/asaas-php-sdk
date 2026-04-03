@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\Account;
 use Generator;
 use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Request\AccountRequest;
+use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
@@ -55,7 +56,7 @@ final readonly class AccountResource
 
     /**
      * @param  array<string, mixed>  $filters
-     * @return Generator<int, array<string, mixed>>
+     * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
      */
     public function all(array $filters = []): Generator
     {

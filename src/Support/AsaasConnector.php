@@ -94,7 +94,7 @@ final readonly class AsaasConnector implements Connector
      * Lazy iterator that auto-paginates through all pages.
      *
      * @param  array<string, mixed>  $filters
-     * @return Generator<int, array<string, mixed>>
+     * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
      */
     public function all(string $path, array $filters): Generator
     {
@@ -107,7 +107,16 @@ final readonly class AsaasConnector implements Connector
                 array_merge($filters, ['offset' => $offset, 'limit' => $limit]),
             );
 
-            $result->throw();
+            if (! $result->success) {
+                yield new AsaasPaginatedError(
+                    $result->errors ?? [],
+                    $result->response,
+                    $offset,
+                    $limit,
+                );
+
+                return;
+            }
 
             foreach ($result->data as $item) {
                 yield $item;

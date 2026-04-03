@@ -11,6 +11,7 @@ use OwnerPro\Asaas\Payment\Request\ReceivePaymentInCashRequest;
 use OwnerPro\Asaas\Payment\Request\RefundPaymentRequest;
 use OwnerPro\Asaas\Payment\Request\SimulatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
+use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
@@ -118,7 +119,7 @@ final readonly class PaymentResource
 
     /**
      * @param  array<string, mixed>  $filters
-     * @return Generator<int, array<string, mixed>>
+     * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
      */
     public function all(array $filters = []): Generator
     {

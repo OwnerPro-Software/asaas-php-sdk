@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\PixTransaction;
 use Generator;
 use OwnerPro\Asaas\PixTransaction\Request\DecodeQrCodeRequest;
 use OwnerPro\Asaas\PixTransaction\Request\PayQrCodeRequest;
+use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
@@ -45,7 +46,7 @@ final readonly class PixTransactionResource
 
     /**
      * @param  array<string, mixed>  $filters
-     * @return Generator<int, array<string, mixed>>
+     * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
      */
     public function all(array $filters = []): Generator
     {

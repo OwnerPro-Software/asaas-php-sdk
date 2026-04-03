@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\Pix;
 use Generator;
 use OwnerPro\Asaas\Pix\Request\PixKeyRequest;
 use OwnerPro\Asaas\Pix\Request\StaticQrCodeRequest;
+use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
@@ -55,7 +56,7 @@ final readonly class PixResource
 
     /**
      * @param  array<string, mixed>  $filters
-     * @return Generator<int, array<string, mixed>>
+     * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
      */
     public function all(array $filters = []): Generator
     {

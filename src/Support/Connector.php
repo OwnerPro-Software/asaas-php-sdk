@@ -26,7 +26,7 @@ interface Connector
      * Lazy iterator that auto-paginates through all pages.
      *
      * @param  array<string, mixed>  $filters
-     * @return Generator<int, array<string, mixed>>
+     * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
      */
     public function all(string $path, array $filters): Generator;
 }

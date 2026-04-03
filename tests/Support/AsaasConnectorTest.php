@@ -9,6 +9,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasRequestException;
 use OwnerPro\Asaas\Support\AsaasResult;
@@ -475,15 +476,25 @@ it('all() stops when API returns hasMore true with empty data', function (): voi
     Http::assertSentCount(1);
 });
 
-it('all() throws on error during pagination', function (): void {
+it('all() yields AsaasPaginatedError on error during pagination', function (): void {
     $page1 = json_decode(file_get_contents(__DIR__.'/../Fixtures/payment_list.json'), true);
     $errorResponse = json_decode(file_get_contents(__DIR__.'/../Fixtures/error_400.json'), true);
 
     Http::fakeSequence()->push($page1, 200)->push($errorResponse, 400);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    iterator_to_array($connector->all('/v3/payments', ['limit' => 10]));
-})->throws(AsaasRequestException::class, 'The value field is required');
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 10]));
+
+    expect($items)->toHaveCount(3);
+    expect($items[0]['id'])->toBe('pay_1');
+    expect($items[1]['id'])->toBe('pay_2');
+    expect($items[2])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[2]->errors[0]['description'])->toBe('The value field is required');
+    expect($items[2]->response)->not->toBeNull();
+    expect($items[2]->response->status())->toBe(400);
+    expect($items[2]->offset)->toBe(10);
+    expect($items[2]->limit)->toBe(10);
+});
 
 it('paginate uses defaults for missing pagination fields', function (): void {
     Http::fake(['*' => Http::response([
@@ -649,14 +660,21 @@ it('paginate returns failure result on connection exception', function (): void 
     expect($result->data)->toBe([]);
 });
 
-it('all() throws AsaasRequestException on connection exception', function (): void {
+it('all() yields AsaasPaginatedError on connection exception', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    iterator_to_array($connector->all('/v3/payments', []));
-})->throws(AsaasRequestException::class, 'cURL error 28: Connection timed out');
+    $items = iterator_to_array($connector->all('/v3/payments', []));
 
-it('all() throws AsaasRequestException on connection exception mid-pagination', function (): void {
+    expect($items)->toHaveCount(1);
+    expect($items[0])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[0]->errors[0]['description'])->toBe('cURL error 28: Connection timed out');
+    expect($items[0]->response)->toBeNull();
+    expect($items[0]->offset)->toBe(0);
+    expect($items[0]->limit)->toBe(100);
+});
+
+it('all() yields AsaasPaginatedError on connection exception mid-pagination', function (): void {
     $page1 = json_decode(file_get_contents(__DIR__.'/../Fixtures/payment_list.json'), true);
 
     Http::fakeSequence()
@@ -664,8 +682,17 @@ it('all() throws AsaasRequestException on connection exception mid-pagination', 
         ->whenEmpty(fn (): never => throw new ConnectionException('cURL error 28: Connection timed out'));
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    iterator_to_array($connector->all('/v3/payments', ['limit' => 10]));
-})->throws(AsaasRequestException::class, 'cURL error 28: Connection timed out');
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 10]));
+
+    expect($items)->toHaveCount(3);
+    expect($items[0]['id'])->toBe('pay_1');
+    expect($items[1]['id'])->toBe('pay_2');
+    expect($items[2])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[2]->errors[0]['description'])->toBe('cURL error 28: Connection timed out');
+    expect($items[2]->response)->toBeNull();
+    expect($items[2]->offset)->toBe(10);
+    expect($items[2]->limit)->toBe(10);
+});
 
 it('throw() on connection failure result throws AsaasRequestException with status 0', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
