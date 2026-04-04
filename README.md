@@ -690,20 +690,44 @@ Asaas::statements()->all(array $filters = []): Generator (yields array|AsaasPagi
 
 ## Custom Connector
 
-All resources depend on the `Connector` interface (`OwnerPro\Asaas\Support\Connector`) rather than the concrete `AsaasConnector`. You can provide your own implementation for testing, logging, caching, or any custom behavior:
+All resources depend on the `Connector` interface (`OwnerPro\Asaas\Support\Connector`) rather than the concrete `AsaasConnector`. You can provide your own implementation for testing, logging, caching, or any custom behavior.
+
+The `Connector` interface extends `HttpConnector`, which defines the four HTTP methods (`get`, `post`, `put`, `delete`). `Connector` adds `paginate` and `all`.
+
+The `PaginatesResults` trait provides default implementations of `paginate()` and `all()` built on top of `get()`, so you only need to implement the four HTTP methods:
 
 ```php
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\PaginatesResults;
 
-// Use a custom connector implementation
-$client = new AsaasClient(new MyLoggingConnector($realConnector));
+class MyLoggingConnector implements Connector
+{
+    use PaginatesResults;
 
-// Or a fake for tests
-$client = new AsaasClient(new FakeConnector());
+    public function get(string $path, array $query): AsaasResult { /* ... */ }
+    public function post(string $path, array $data): AsaasResult { /* ... */ }
+    public function put(string $path, array $data): AsaasResult { /* ... */ }
+    public function delete(string $path): AsaasResult { /* ... */ }
+    // paginate() and all() are provided by the trait
+}
+
+$client = new AsaasClient(new MyLoggingConnector());
 ```
 
-The `Connector` interface defines six methods: `get`, `post`, `put`, `delete`, `paginate`, and `all`.
+If you only need HTTP access without pagination, implement `HttpConnector` directly:
+
+```php
+use OwnerPro\Asaas\Support\HttpConnector;
+
+class SimpleConnector implements HttpConnector
+{
+    public function get(string $path, array $query): AsaasResult { /* ... */ }
+    public function post(string $path, array $data): AsaasResult { /* ... */ }
+    public function put(string $path, array $data): AsaasResult { /* ... */ }
+    public function delete(string $path): AsaasResult { /* ... */ }
+}
+```
 
 ## License
 
