@@ -35,7 +35,7 @@ it('exposes null response for connection errors', function (): void {
     expect($error->response)->toBeNull();
 });
 
-it('throw() throws AsaasRequestException with errors and response', function (): void {
+it('orFail() throws AsaasRequestException with errors and response', function (): void {
     $rawResponse = RawResponse::fake(status: 422);
 
     $error = new AsaasPaginatedError(
@@ -45,10 +45,10 @@ it('throw() throws AsaasRequestException with errors and response', function ():
         limit: 10,
     );
 
-    $error->throw();
+    $error->orFail();
 })->throws(AsaasRequestException::class, 'Field required');
 
-it('throw() throws AsaasRequestException with null response', function (): void {
+it('orFail() throws AsaasRequestException with null response', function (): void {
     $error = new AsaasPaginatedError(
         errors: [['code' => 'CONNECTION_ERROR', 'description' => 'Timeout']],
         response: null,
@@ -56,5 +56,5 @@ it('throw() throws AsaasRequestException with null response', function (): void 
         limit: 100,
     );
 
-    $error->throw();
+    $error->orFail();
 })->throws(AsaasRequestException::class, 'Timeout');

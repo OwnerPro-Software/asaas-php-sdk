@@ -695,7 +695,7 @@ it('all() yields AsaasPaginatedError on connection exception mid-pagination', fu
     expect($items[2]->limit)->toBe(10);
 });
 
-it('throw() on connection failure result throws AsaasRequestException with status 0', function (): void {
+it('orFail() on connection failure result throws AsaasRequestException with status 0', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
@@ -703,5 +703,5 @@ it('throw() on connection failure result throws AsaasRequestException with statu
 
     expect($result->success)->toBeFalse();
 
-    $result->throw();
+    $result->orFail();
 })->throws(AsaasRequestException::class, 'cURL error 28: Connection timed out');

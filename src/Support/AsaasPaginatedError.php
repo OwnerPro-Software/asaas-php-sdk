@@ -16,7 +16,7 @@ final readonly class AsaasPaginatedError
         public int $limit,
     ) {}
 
-    public function throw(): never
+    public function orFail(): never
     {
         throw new AsaasRequestException($this->errors, $this->response);
     }

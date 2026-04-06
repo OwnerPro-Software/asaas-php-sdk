@@ -145,12 +145,12 @@ it('next() passes correct offset to fetcher', function (): void {
     expect($receivedOffset)->toBe(5);
 });
 
-it('throw() throws on failure', function (): void {
+it('orFail() throws on failure', function (): void {
     $response = RawResponse::fake(403);
     $result = AsaasPaginatedResult::failure([['description' => 'Forbidden']], $response);
 
     try {
-        $result->throw();
+        $result->orFail();
     } catch (AsaasRequestException $e) {
         expect($e->getMessage())->toBe('Forbidden');
         expect($e->getCode())->toBe(403);
@@ -163,7 +163,7 @@ it('throw() throws on failure', function (): void {
     test()->fail('Expected AsaasRequestException was not thrown');
 });
 
-it('throw() returns self on success', function (): void {
+it('orFail() returns self on success', function (): void {
     $result = AsaasPaginatedResult::success(
         data: [],
         totalCount: 0,
@@ -174,5 +174,5 @@ it('throw() returns self on success', function (): void {
         nextPageFetcher: null,
     );
 
-    expect($result->throw())->toBe($result);
+    expect($result->orFail())->toBe($result);
 });

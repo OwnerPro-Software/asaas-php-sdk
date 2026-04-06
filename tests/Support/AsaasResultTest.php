@@ -41,19 +41,19 @@ it('creates a failed result with null response on connection error', function ()
     expect($result->errors)->toBe($errors);
 });
 
-it('throw() returns self on success', function (): void {
+it('orFail() returns self on success', function (): void {
     $result = AsaasResult::success(['id' => 'abc'], RawResponse::fake(200));
 
-    expect($result->throw())->toBe($result);
+    expect($result->orFail())->toBe($result);
 });
 
-it('throw() throws AsaasRequestException on failure', function (): void {
+it('orFail() throws AsaasRequestException on failure', function (): void {
     $errors = [['description' => 'Not found']];
     $response = RawResponse::fake(404);
     $result = AsaasResult::failure($errors, $response);
 
     try {
-        $result->throw();
+        $result->orFail();
     } catch (AsaasRequestException $e) {
         expect($e->getMessage())->toBe('Not found');
         expect($e->getCode())->toBe(404);
@@ -67,12 +67,12 @@ it('throw() throws AsaasRequestException on failure', function (): void {
     test()->fail('Expected AsaasRequestException was not thrown');
 });
 
-it('throw() throws with null response on connection error', function (): void {
+it('orFail() throws with null response on connection error', function (): void {
     $errors = [['code' => 'CONNECTION_ERROR', 'description' => 'Timed out']];
     $result = AsaasResult::failure($errors);
 
     try {
-        $result->throw();
+        $result->orFail();
     } catch (AsaasRequestException $e) {
         expect($e->statusCode)->toBe(0);
         expect($e->response)->toBeNull();

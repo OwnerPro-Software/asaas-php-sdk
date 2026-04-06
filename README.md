@@ -134,7 +134,7 @@ if ($result->success) {
 
 ```php
 // Throws AsaasRequestException on failure, returns self on success
-$result = Asaas::payments()->find('pay_abc123')->throw();
+$result = Asaas::payments()->find('pay_abc123')->orFail();
 $payment = $result->data;
 ```
 
@@ -144,7 +144,7 @@ $payment = $result->data;
 use OwnerPro\Asaas\Support\AsaasRequestException;
 
 try {
-    Asaas::payments()->find('pay_invalid')->throw();
+    Asaas::payments()->find('pay_invalid')->orFail();
 } catch (AsaasRequestException $e) {
     $e->getMessage();    // First error description
     $e->statusCode;      // HTTP status code (0 for connection errors)
@@ -558,7 +558,7 @@ You can opt-in to exceptions by calling `throw()` on the error object:
 ```php
 foreach (Asaas::payments()->all() as $payment) {
     if ($payment instanceof \OwnerPro\Asaas\Support\AsaasPaginatedError) {
-        $payment->throw(); // throws AsaasRequestException
+        $payment->orFail(); // throws AsaasRequestException
     }
 
     processPayment($payment);

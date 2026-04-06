@@ -6,7 +6,7 @@ namespace OwnerPro\Asaas\Support;
 
 trait ThrowsOnFailure
 {
-    public function throw(): self
+    public function orFail(): self
     {
         if (! $this->success) {
             throw new AsaasRequestException($this->errors ?? [], $this->response);
