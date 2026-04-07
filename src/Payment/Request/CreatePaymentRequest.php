@@ -17,7 +17,7 @@ final readonly class CreatePaymentRequest
     use HasArrayFactory;
 
     /**
-     * @param  list<array<string, mixed>|Split>|null  $split
+     * @param  list<Split>|null  $split
      * @param  array<string, mixed>|Callback|null  $callback
      * @param  array<string, mixed>|CreditCard|null  $creditCard
      * @param  array<string, mixed>|CreditCardHolderInfo|null  $creditCardHolderInfo
@@ -40,7 +40,7 @@ final readonly class CreatePaymentRequest
         public ?string $remoteIp = null,
     ) {}
 
-    /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array<string, mixed>>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */
+    /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -54,7 +54,10 @@ final readonly class CreatePaymentRequest
             interest: $data['interest'] ?? null,
             fine: $data['fine'] ?? null,
             postalService: $data['postalService'] ?? null,
-            split: $data['split'] ?? null,
+            split: isset($data['split']) ? array_map(
+                Split::fromArray(...),
+                $data['split'],
+            ) : null,
             callback: isset($data['callback']) ? Callback::fromArray($data['callback']) : null,
             creditCard: isset($data['creditCard']) ? CreditCard::fromArray($data['creditCard']) : null,
             creditCardHolderInfo: isset($data['creditCardHolderInfo']) ? CreditCardHolderInfo::fromArray($data['creditCardHolderInfo']) : null,

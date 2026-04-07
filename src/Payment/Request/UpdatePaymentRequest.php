@@ -12,7 +12,7 @@ final readonly class UpdatePaymentRequest
 {
     use HasArrayFactory;
 
-    /** @param list<array<string, mixed>|Split>|null $split */
+    /** @param list<Split>|null $split */
     public function __construct(
         public BillingType|string|null $billingType = null,
         public ?float $value = null,
@@ -26,7 +26,7 @@ final readonly class UpdatePaymentRequest
         public ?array $split = null,
     ) {}
 
-    /** @param array{billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array<string, mixed>>} $data */
+    /** @param array{billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -39,7 +39,10 @@ final readonly class UpdatePaymentRequest
             interest: $data['interest'] ?? null,
             fine: $data['fine'] ?? null,
             postalService: $data['postalService'] ?? null,
-            split: $data['split'] ?? null,
+            split: isset($data['split']) ? array_map(
+                Split::fromArray(...),
+                $data['split'],
+            ) : null,
         );
     }
 }
