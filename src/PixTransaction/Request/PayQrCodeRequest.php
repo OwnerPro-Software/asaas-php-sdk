@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\PixTransaction\Request;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\DTO\QrCodePayload;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class PayQrCodeRequest
 {
@@ -24,8 +24,8 @@ final readonly class PayQrCodeRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            qrCode: QrCodePayload::fromArray($data['qrCode'] ?? []),
-            value: $data['value'] ?? throw new TypeError('value is required'),
+            qrCode: QrCodePayload::fromArray($data['qrCode'] ?? throw new InvalidArgumentException('qrCode is required')),
+            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
             description: $data['description'] ?? null,
             scheduleDate: $data['scheduleDate'] ?? null,
         );

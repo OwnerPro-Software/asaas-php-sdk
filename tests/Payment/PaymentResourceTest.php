@@ -74,7 +74,7 @@ it('creates a payment from request object', function (array $fixture): void {
 
 it('validates required fields when creating from array', function (): void {
     paymentResource()->create(['customer' => 'cus_456']);
-})->throws(TypeError::class);
+})->throws(InvalidArgumentException::class);
 
 // --- find ---
 

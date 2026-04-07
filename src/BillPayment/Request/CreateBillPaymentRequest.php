@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\BillPayment\Request;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class CreateBillPaymentRequest
 {
@@ -26,7 +26,7 @@ final readonly class CreateBillPaymentRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            identificationField: $data['identificationField'] ?? throw new TypeError('identificationField is required'),
+            identificationField: $data['identificationField'] ?? throw new InvalidArgumentException('identificationField is required'),
             scheduleDate: $data['scheduleDate'] ?? null,
             description: $data['description'] ?? null,
             discount: $data['discount'] ?? null,

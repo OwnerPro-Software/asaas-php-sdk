@@ -177,7 +177,7 @@ it('throws when required field is missing', function (string $missingField): voi
     unset($data[$missingField]);
 
     BankAccount::fromArray($data);
-})->throws(TypeError::class)->with([
+})->throws(InvalidArgumentException::class)->with([
     'ownerName',
     'cpfCnpj',
     'agency',

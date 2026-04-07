@@ -26,4 +26,4 @@ it('converts to array filtering nulls', function (): void {
 
 it('throws when payload is missing', function (): void {
     DecodeQrCodeRequest::fromArray([]);
-})->throws(TypeError::class);
+})->throws(InvalidArgumentException::class);

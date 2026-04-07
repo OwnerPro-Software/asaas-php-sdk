@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class Split
 {
@@ -24,7 +24,7 @@ final readonly class Split
     public static function fromArray(array $data): static
     {
         return new self(
-            walletId: $data['walletId'] ?? throw new TypeError('walletId is required'),
+            walletId: $data['walletId'] ?? throw new InvalidArgumentException('walletId is required'),
             fixedValue: $data['fixedValue'] ?? null,
             percentualValue: $data['percentualValue'] ?? null,
             totalFixedValue: $data['totalFixedValue'] ?? null,

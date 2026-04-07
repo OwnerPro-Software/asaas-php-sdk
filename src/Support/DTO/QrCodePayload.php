@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class QrCodePayload
 {
@@ -20,7 +20,7 @@ final readonly class QrCodePayload
     public static function fromArray(array $data): static
     {
         return new self(
-            payload: $data['payload'] ?? throw new TypeError('payload is required'),
+            payload: $data['payload'] ?? throw new InvalidArgumentException('payload is required'),
             changeValue: $data['changeValue'] ?? null,
         );
     }

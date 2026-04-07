@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Transfer\Request;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Pix\PixAddressKeyType;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Transfer\TransferOperationType;
-use TypeError;
 
 final readonly class TransferRequest
 {
@@ -31,7 +31,7 @@ final readonly class TransferRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            value: $data['value'] ?? throw new TypeError('value is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
             pixAddressKey: $data['pixAddressKey'] ?? null,
             pixAddressKeyType: $data['pixAddressKeyType'] ?? null,
             bankAccount: isset($data['bankAccount']) ? BankAccount::fromArray($data['bankAccount']) : null,

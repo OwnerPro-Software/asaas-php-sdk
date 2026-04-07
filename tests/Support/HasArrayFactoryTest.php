@@ -333,7 +333,7 @@ it('fromArray throws when nested array is missing required DTO fields', function
         'dueDate' => '2026-01-01',
         'creditCard' => ['holderName' => 'John'],
     ]);
-})->throws(TypeError::class);
+})->throws(InvalidArgumentException::class);
 
 it('serializes mixed enum and string items in arrays', function (): void {
     $request = CreateWebhookRequest::fromArray([

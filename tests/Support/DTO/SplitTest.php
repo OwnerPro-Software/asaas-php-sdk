@@ -32,4 +32,4 @@ it('converts to array filtering nulls', function (): void {
 
 it('throws when walletId is missing', function (): void {
     Split::fromArray([]);
-})->throws(TypeError::class);
+})->throws(InvalidArgumentException::class);

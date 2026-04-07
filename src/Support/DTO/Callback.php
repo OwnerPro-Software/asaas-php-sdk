@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class Callback
 {
@@ -20,7 +20,7 @@ final readonly class Callback
     public static function fromArray(array $data): static
     {
         return new self(
-            successUrl: $data['successUrl'] ?? throw new TypeError('successUrl is required'),
+            successUrl: $data['successUrl'] ?? throw new InvalidArgumentException('successUrl is required'),
             autoRedirect: $data['autoRedirect'] ?? null,
         );
     }

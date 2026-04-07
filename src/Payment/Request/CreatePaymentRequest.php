@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Payment\Request;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Support\DTO\Callback;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class CreatePaymentRequest
 {
@@ -44,10 +44,10 @@ final readonly class CreatePaymentRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            customer: $data['customer'] ?? throw new TypeError('customer is required'),
-            billingType: $data['billingType'] ?? throw new TypeError('billingType is required'),
-            value: $data['value'] ?? throw new TypeError('value is required'),
-            dueDate: $data['dueDate'] ?? throw new TypeError('dueDate is required'),
+            customer: $data['customer'] ?? throw new InvalidArgumentException('customer is required'),
+            billingType: $data['billingType'] ?? throw new InvalidArgumentException('billingType is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
+            dueDate: $data['dueDate'] ?? throw new InvalidArgumentException('dueDate is required'),
             description: $data['description'] ?? null,
             externalReference: $data['externalReference'] ?? null,
             discount: $data['discount'] ?? null,

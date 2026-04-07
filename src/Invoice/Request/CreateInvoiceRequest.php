@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Invoice\Request;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\DTO\Taxes;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class CreateInvoiceRequest
 {
@@ -33,13 +33,13 @@ final readonly class CreateInvoiceRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            serviceDescription: $data['serviceDescription'] ?? throw new TypeError('serviceDescription is required'),
-            observations: $data['observations'] ?? throw new TypeError('observations is required'),
-            value: $data['value'] ?? throw new TypeError('value is required'),
-            deductions: $data['deductions'] ?? throw new TypeError('deductions is required'),
-            effectiveDate: $data['effectiveDate'] ?? throw new TypeError('effectiveDate is required'),
-            municipalServiceName: $data['municipalServiceName'] ?? throw new TypeError('municipalServiceName is required'),
-            taxes: Taxes::fromArray($data['taxes'] ?? throw new TypeError('taxes is required')),
+            serviceDescription: $data['serviceDescription'] ?? throw new InvalidArgumentException('serviceDescription is required'),
+            observations: $data['observations'] ?? throw new InvalidArgumentException('observations is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
+            deductions: $data['deductions'] ?? throw new InvalidArgumentException('deductions is required'),
+            effectiveDate: $data['effectiveDate'] ?? throw new InvalidArgumentException('effectiveDate is required'),
+            municipalServiceName: $data['municipalServiceName'] ?? throw new InvalidArgumentException('municipalServiceName is required'),
+            taxes: Taxes::fromArray($data['taxes'] ?? throw new InvalidArgumentException('taxes is required')),
             payment: $data['payment'] ?? null,
             installment: $data['installment'] ?? null,
             customer: $data['customer'] ?? null,

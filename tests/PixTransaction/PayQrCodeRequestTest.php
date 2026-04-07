@@ -48,8 +48,8 @@ it('serializes nested QrCodePayload DTO in toArray', function (): void {
 
 it('throws when qrCode is missing', function (): void {
     PayQrCodeRequest::fromArray(['value' => 100.00]);
-})->throws(TypeError::class);
+})->throws(InvalidArgumentException::class);
 
 it('throws when value is missing', function (): void {
     PayQrCodeRequest::fromArray(['qrCode' => ['payload' => '00020126...']]);
-})->throws(TypeError::class);
+})->throws(InvalidArgumentException::class);

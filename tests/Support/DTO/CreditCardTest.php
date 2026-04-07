@@ -100,7 +100,7 @@ it('throws when required field is missing', function (string $missingField): voi
     unset($data[$missingField]);
 
     CreditCard::fromArray($data);
-})->throws(TypeError::class)->with([
+})->throws(InvalidArgumentException::class)->with([
     'holderName',
     'number',
     'expiryMonth',

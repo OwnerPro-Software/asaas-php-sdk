@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Pix\Request;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Pix\PixAddressKeyType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class PixKeyRequest
 {
@@ -20,7 +20,7 @@ final readonly class PixKeyRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            type: $data['type'] ?? throw new TypeError('type is required'),
+            type: $data['type'] ?? throw new InvalidArgumentException('type is required'),
         );
     }
 }

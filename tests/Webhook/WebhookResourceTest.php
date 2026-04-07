@@ -61,7 +61,7 @@ it('creates a webhook from request object', function (array $fixture): void {
 
 it('validates required fields', function (): void {
     webhookResource()->create(['url' => 'https://example.com']);
-})->throws(TypeError::class);
+})->throws(InvalidArgumentException::class);
 
 it('lists webhooks', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);

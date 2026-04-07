@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Account\Request;
 
+use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Account\CompanyType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use SensitiveParameter;
-use TypeError;
 
 final readonly class AccountRequest implements JsonSerializable
 {
@@ -68,15 +68,15 @@ final readonly class AccountRequest implements JsonSerializable
     public static function fromArray(array $data): static
     {
         return new self(
-            name: $data['name'] ?? throw new TypeError('name is required'),
-            email: $data['email'] ?? throw new TypeError('email is required'),
-            cpfCnpj: $data['cpfCnpj'] ?? throw new TypeError('cpfCnpj is required'),
-            mobilePhone: $data['mobilePhone'] ?? throw new TypeError('mobilePhone is required'),
-            incomeValue: $data['incomeValue'] ?? throw new TypeError('incomeValue is required'),
-            address: $data['address'] ?? throw new TypeError('address is required'),
-            addressNumber: $data['addressNumber'] ?? throw new TypeError('addressNumber is required'),
-            province: $data['province'] ?? throw new TypeError('province is required'),
-            postalCode: $data['postalCode'] ?? throw new TypeError('postalCode is required'),
+            name: $data['name'] ?? throw new InvalidArgumentException('name is required'),
+            email: $data['email'] ?? throw new InvalidArgumentException('email is required'),
+            cpfCnpj: $data['cpfCnpj'] ?? throw new InvalidArgumentException('cpfCnpj is required'),
+            mobilePhone: $data['mobilePhone'] ?? throw new InvalidArgumentException('mobilePhone is required'),
+            incomeValue: $data['incomeValue'] ?? throw new InvalidArgumentException('incomeValue is required'),
+            address: $data['address'] ?? throw new InvalidArgumentException('address is required'),
+            addressNumber: $data['addressNumber'] ?? throw new InvalidArgumentException('addressNumber is required'),
+            province: $data['province'] ?? throw new InvalidArgumentException('province is required'),
+            postalCode: $data['postalCode'] ?? throw new InvalidArgumentException('postalCode is required'),
             birthDate: $data['birthDate'] ?? null,
             companyType: $data['companyType'] ?? null,
             phone: $data['phone'] ?? null,

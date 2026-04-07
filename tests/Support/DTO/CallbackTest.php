@@ -21,4 +21,4 @@ it('converts to array filtering nulls', function (): void {
 
 it('throws when successUrl is missing', function (): void {
     Callback::fromArray([]);
-})->throws(TypeError::class);
+})->throws(InvalidArgumentException::class);

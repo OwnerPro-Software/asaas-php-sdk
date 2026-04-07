@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use SensitiveParameter;
-use TypeError;
 
 final readonly class CreditCardHolderInfo implements JsonSerializable
 {
@@ -52,12 +52,12 @@ final readonly class CreditCardHolderInfo implements JsonSerializable
     public static function fromArray(array $data): static
     {
         return new self(
-            name: $data['name'] ?? throw new TypeError('name is required'),
-            email: $data['email'] ?? throw new TypeError('email is required'),
-            cpfCnpj: $data['cpfCnpj'] ?? throw new TypeError('cpfCnpj is required'),
-            postalCode: $data['postalCode'] ?? throw new TypeError('postalCode is required'),
-            addressNumber: $data['addressNumber'] ?? throw new TypeError('addressNumber is required'),
-            phone: $data['phone'] ?? throw new TypeError('phone is required'),
+            name: $data['name'] ?? throw new InvalidArgumentException('name is required'),
+            email: $data['email'] ?? throw new InvalidArgumentException('email is required'),
+            cpfCnpj: $data['cpfCnpj'] ?? throw new InvalidArgumentException('cpfCnpj is required'),
+            postalCode: $data['postalCode'] ?? throw new InvalidArgumentException('postalCode is required'),
+            addressNumber: $data['addressNumber'] ?? throw new InvalidArgumentException('addressNumber is required'),
+            phone: $data['phone'] ?? throw new InvalidArgumentException('phone is required'),
             addressComplement: $data['addressComplement'] ?? null,
             mobilePhone: $data['mobilePhone'] ?? null,
         );

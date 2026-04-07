@@ -176,7 +176,7 @@ it('throws when required field is missing', function (string $missingField): voi
     unset($data[$missingField]);
 
     AccountRequest::fromArray($data);
-})->throws(TypeError::class)->with([
+})->throws(InvalidArgumentException::class)->with([
     'name',
     'email',
     'cpfCnpj',

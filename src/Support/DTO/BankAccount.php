@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Support\Enums\BankAccountType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use SensitiveParameter;
-use TypeError;
 
 final readonly class BankAccount implements JsonSerializable
 {
@@ -58,11 +58,11 @@ final readonly class BankAccount implements JsonSerializable
     public static function fromArray(array $data): static
     {
         return new self(
-            ownerName: $data['ownerName'] ?? throw new TypeError('ownerName is required'),
-            cpfCnpj: $data['cpfCnpj'] ?? throw new TypeError('cpfCnpj is required'),
-            agency: $data['agency'] ?? throw new TypeError('agency is required'),
-            account: $data['account'] ?? throw new TypeError('account is required'),
-            accountDigit: $data['accountDigit'] ?? throw new TypeError('accountDigit is required'),
+            ownerName: $data['ownerName'] ?? throw new InvalidArgumentException('ownerName is required'),
+            cpfCnpj: $data['cpfCnpj'] ?? throw new InvalidArgumentException('cpfCnpj is required'),
+            agency: $data['agency'] ?? throw new InvalidArgumentException('agency is required'),
+            account: $data['account'] ?? throw new InvalidArgumentException('account is required'),
+            accountDigit: $data['accountDigit'] ?? throw new InvalidArgumentException('accountDigit is required'),
             bank: isset($data['bank']) ? Bank::fromArray($data['bank']) : null,
             accountName: $data['accountName'] ?? null,
             ownerBirthDate: $data['ownerBirthDate'] ?? null,

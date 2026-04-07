@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class SplitRefund
 {
@@ -20,8 +20,8 @@ final readonly class SplitRefund
     public static function fromArray(array $data): static
     {
         return new self(
-            id: $data['id'] ?? throw new TypeError('id is required'),
-            value: $data['value'] ?? throw new TypeError('value is required'),
+            id: $data['id'] ?? throw new InvalidArgumentException('id is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
         );
     }
 }

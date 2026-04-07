@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class Taxes
 {
@@ -31,13 +31,13 @@ final readonly class Taxes
     public static function fromArray(array $data): static
     {
         return new self(
-            retainIss: $data['retainIss'] ?? throw new TypeError('retainIss is required'),
-            iss: $data['iss'] ?? throw new TypeError('iss is required'),
-            pis: $data['pis'] ?? throw new TypeError('pis is required'),
-            cofins: $data['cofins'] ?? throw new TypeError('cofins is required'),
-            csll: $data['csll'] ?? throw new TypeError('csll is required'),
-            inss: $data['inss'] ?? throw new TypeError('inss is required'),
-            ir: $data['ir'] ?? throw new TypeError('ir is required'),
+            retainIss: $data['retainIss'] ?? throw new InvalidArgumentException('retainIss is required'),
+            iss: $data['iss'] ?? throw new InvalidArgumentException('iss is required'),
+            pis: $data['pis'] ?? throw new InvalidArgumentException('pis is required'),
+            cofins: $data['cofins'] ?? throw new InvalidArgumentException('cofins is required'),
+            csll: $data['csll'] ?? throw new InvalidArgumentException('csll is required'),
+            inss: $data['inss'] ?? throw new InvalidArgumentException('inss is required'),
+            ir: $data['ir'] ?? throw new InvalidArgumentException('ir is required'),
             nbsCode: $data['nbsCode'] ?? null,
             taxSituationCode: $data['taxSituationCode'] ?? null,
             taxClassificationCode: $data['taxClassificationCode'] ?? null,

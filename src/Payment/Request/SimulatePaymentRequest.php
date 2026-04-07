@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Payment\Request;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class SimulatePaymentRequest
 {
@@ -23,8 +23,8 @@ final readonly class SimulatePaymentRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            value: $data['value'] ?? throw new TypeError('value is required'),
-            billingTypes: $data['billingTypes'] ?? throw new TypeError('billingTypes is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
+            billingTypes: $data['billingTypes'] ?? throw new InvalidArgumentException('billingTypes is required'),
             installmentCount: $data['installmentCount'] ?? null,
         );
     }

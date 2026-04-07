@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Webhook\Request;
 
+use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Webhook\WebhookEvent;
 use OwnerPro\Asaas\Webhook\WebhookSendType;
 use SensitiveParameter;
-use TypeError;
 
 final readonly class CreateWebhookRequest implements JsonSerializable
 {
@@ -52,8 +52,8 @@ final readonly class CreateWebhookRequest implements JsonSerializable
     public static function fromArray(array $data): static
     {
         return new self(
-            url: $data['url'] ?? throw new TypeError('url is required'),
-            email: $data['email'] ?? throw new TypeError('email is required'),
+            url: $data['url'] ?? throw new InvalidArgumentException('url is required'),
+            email: $data['email'] ?? throw new InvalidArgumentException('email is required'),
             name: $data['name'] ?? null,
             enabled: $data['enabled'] ?? null,
             apiVersion: $data['apiVersion'] ?? null,

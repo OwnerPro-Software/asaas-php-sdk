@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\HasArrayFactory;
-use TypeError;
 
 final readonly class Bank
 {
@@ -19,7 +19,7 @@ final readonly class Bank
     public static function fromArray(array $data): static
     {
         return new self(
-            code: $data['code'] ?? throw new TypeError('code is required'),
+            code: $data['code'] ?? throw new InvalidArgumentException('code is required'),
         );
     }
 }
