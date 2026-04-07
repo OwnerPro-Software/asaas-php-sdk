@@ -7,11 +7,13 @@ namespace OwnerPro\Asaas\Support\DTO;
 use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\MasksSensitiveData;
 use SensitiveParameter;
 
 final readonly class CreditCardHolderInfo implements JsonSerializable
 {
     use HasArrayFactory;
+    use MasksSensitiveData;
 
     public function __construct(
         public string $name,
@@ -41,11 +43,6 @@ final readonly class CreditCardHolderInfo implements JsonSerializable
             'addressComplement' => $this->addressComplement,
             'mobilePhone' => $this->mobilePhone !== null ? '***' : null,
         ];
-    }
-
-    public function jsonSerialize(): mixed
-    {
-        return $this->__debugInfo();
     }
 
     /** @param array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string} $data */

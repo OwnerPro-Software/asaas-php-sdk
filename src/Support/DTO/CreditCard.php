@@ -7,11 +7,13 @@ namespace OwnerPro\Asaas\Support\DTO;
 use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\MasksSensitiveData;
 use SensitiveParameter;
 
 final readonly class CreditCard implements JsonSerializable
 {
     use HasArrayFactory;
+    use MasksSensitiveData;
 
     public function __construct(
         public string $holderName,
@@ -33,11 +35,6 @@ final readonly class CreditCard implements JsonSerializable
             'expiryYear' => $this->expiryYear,
             'ccv' => '***',
         ];
-    }
-
-    public function jsonSerialize(): mixed
-    {
-        return $this->__debugInfo();
     }
 
     /** @param array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string} $data */

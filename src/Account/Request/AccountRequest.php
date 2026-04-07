@@ -8,11 +8,13 @@ use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Account\CompanyType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\MasksSensitiveData;
 use SensitiveParameter;
 
 final readonly class AccountRequest implements JsonSerializable
 {
     use HasArrayFactory;
+    use MasksSensitiveData;
 
     public function __construct(
         public string $name,
@@ -57,11 +59,6 @@ final readonly class AccountRequest implements JsonSerializable
             'tradingName' => $this->tradingName,
             'site' => $this->site,
         ];
-    }
-
-    public function jsonSerialize(): mixed
-    {
-        return $this->__debugInfo();
     }
 
     /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, incomeValue?: float, address?: string, addressNumber?: string, province?: string, postalCode?: string, birthDate?: string, companyType?: CompanyType|string, phone?: string, complement?: string, tradingName?: string, site?: string} $data */

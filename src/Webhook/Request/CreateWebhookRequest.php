@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\Webhook\Request;
 use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Webhook\WebhookEvent;
 use OwnerPro\Asaas\Webhook\WebhookSendType;
 use SensitiveParameter;
@@ -14,6 +15,7 @@ use SensitiveParameter;
 final readonly class CreateWebhookRequest implements JsonSerializable
 {
     use HasArrayFactory;
+    use MasksSensitiveData;
 
     /** @param list<WebhookEvent|string>|null $events */
     public function __construct(
@@ -41,11 +43,6 @@ final readonly class CreateWebhookRequest implements JsonSerializable
             'authToken' => $this->authToken !== null ? '***' : null,
             'events' => $this->events,
         ];
-    }
-
-    public function jsonSerialize(): mixed
-    {
-        return $this->__debugInfo();
     }
 
     /** @param array{url?: string, email?: string, name?: string, enabled?: bool, apiVersion?: int, sendType?: WebhookSendType|string, authToken?: string, events?: list<WebhookEvent|string>} $data */
