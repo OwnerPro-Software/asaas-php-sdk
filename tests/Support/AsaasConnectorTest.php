@@ -303,7 +303,7 @@ it('standalone get returns failure result on connection exception', function ():
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
     expect($result->response)->toBeNull();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 28: Connection timed out']]);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
     expect($result->data)->toBeNull();
 });
 
@@ -321,7 +321,7 @@ it('standalone paginate returns failure result on connection exception', functio
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeFalse();
     expect($result->response)->toBeNull();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 7: Failed to connect']]);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
     expect($result->data)->toBe([]);
 });
 
@@ -681,7 +681,7 @@ it('get returns failure result on connection exception', function (): void {
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
     expect($result->response)->toBeNull();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 28: Connection timed out']]);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
     expect($result->data)->toBeNull();
 });
 
@@ -694,7 +694,7 @@ it('post returns failure result on connection exception', function (): void {
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
     expect($result->response)->toBeNull();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Connection refused']]);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
     expect($result->data)->toBeNull();
 });
 
@@ -707,7 +707,7 @@ it('put returns failure result on connection exception', function (): void {
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
     expect($result->response)->toBeNull();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'DNS resolution failed']]);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
     expect($result->data)->toBeNull();
 });
 
@@ -720,7 +720,7 @@ it('delete returns failure result on connection exception', function (): void {
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
     expect($result->response)->toBeNull();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Connection reset by peer']]);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
     expect($result->data)->toBeNull();
 });
 
@@ -733,7 +733,7 @@ it('paginate returns failure result on connection exception', function (): void 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeFalse();
     expect($result->response)->toBeNull();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'cURL error 7: Failed to connect']]);
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
     expect($result->data)->toBe([]);
 });
 
@@ -745,7 +745,7 @@ it('all() yields AsaasPaginatedError on connection exception', function (): void
 
     expect($items)->toHaveCount(1);
     expect($items[0])->toBeInstanceOf(AsaasPaginatedError::class);
-    expect($items[0]->errors[0]['description'])->toBe('cURL error 28: Connection timed out');
+    expect($items[0]->errors[0]['description'])->toBe('Unable to connect to the Asaas API.');
     expect($items[0]->response)->toBeNull();
     expect($items[0]->offset)->toBe(0);
     expect($items[0]->limit)->toBe(100);
@@ -765,7 +765,7 @@ it('all() yields AsaasPaginatedError on connection exception mid-pagination', fu
     expect($items[0]['id'])->toBe('pay_1');
     expect($items[1]['id'])->toBe('pay_2');
     expect($items[2])->toBeInstanceOf(AsaasPaginatedError::class);
-    expect($items[2]->errors[0]['description'])->toBe('cURL error 28: Connection timed out');
+    expect($items[2]->errors[0]['description'])->toBe('Unable to connect to the Asaas API.');
     expect($items[2]->response)->toBeNull();
     expect($items[2]->offset)->toBe(10);
     expect($items[2]->limit)->toBe(10);
@@ -780,4 +780,4 @@ it('orFail() on connection failure result throws AsaasRequestException with stat
     expect($result->success)->toBeFalse();
 
     $result->orFail();
-})->throws(AsaasRequestException::class, 'cURL error 28: Connection timed out');
+})->throws(AsaasRequestException::class, 'Unable to connect to the Asaas API.');

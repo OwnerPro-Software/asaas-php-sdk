@@ -80,9 +80,9 @@ final readonly class AsaasConnector implements Connector
         try {
             /** @var Response $response */
             $response = $httpCall();
-        } catch (ConnectionException $connectionException) {
+        } catch (ConnectionException) {
             return AsaasResult::failure(
-                [['code' => 'CONNECTION_ERROR', 'description' => $connectionException->getMessage()]],
+                [['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']],
             );
         }
 
