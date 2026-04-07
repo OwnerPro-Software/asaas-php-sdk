@@ -29,8 +29,8 @@ final readonly class CreditCardRequest
     {
         return new self(
             customer: $data['customer'] ?? throw new TypeError('customer is required'),
-            creditCard: CreditCard::fromArray($data['creditCard'] ?? []),
-            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? []),
+            creditCard: CreditCard::fromArray($data['creditCard'] ?? throw new TypeError('creditCard is required')),
+            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? throw new TypeError('creditCardHolderInfo is required')),
             remoteIp: $data['remoteIp'] ?? throw new TypeError('remoteIp is required'),
         );
     }

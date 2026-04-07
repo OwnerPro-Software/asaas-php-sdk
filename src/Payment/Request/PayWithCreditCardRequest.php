@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\Payment\Request;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use TypeError;
 
 final readonly class PayWithCreditCardRequest
 {
@@ -25,8 +26,8 @@ final readonly class PayWithCreditCardRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            creditCard: CreditCard::fromArray($data['creditCard'] ?? []),
-            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? []),
+            creditCard: CreditCard::fromArray($data['creditCard'] ?? throw new TypeError('creditCard is required')),
+            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? throw new TypeError('creditCardHolderInfo is required')),
         );
     }
 }

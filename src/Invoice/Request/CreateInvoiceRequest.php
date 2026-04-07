@@ -39,7 +39,7 @@ final readonly class CreateInvoiceRequest
             deductions: $data['deductions'] ?? throw new TypeError('deductions is required'),
             effectiveDate: $data['effectiveDate'] ?? throw new TypeError('effectiveDate is required'),
             municipalServiceName: $data['municipalServiceName'] ?? throw new TypeError('municipalServiceName is required'),
-            taxes: Taxes::fromArray($data['taxes'] ?? []),
+            taxes: Taxes::fromArray($data['taxes'] ?? throw new TypeError('taxes is required')),
             payment: $data['payment'] ?? null,
             installment: $data['installment'] ?? null,
             customer: $data['customer'] ?? null,
