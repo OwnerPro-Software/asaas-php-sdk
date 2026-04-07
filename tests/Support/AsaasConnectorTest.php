@@ -213,6 +213,27 @@ it('standalone returns fallback error when error response has no errors array', 
     expect($result->data)->toBeNull();
 });
 
+it('strips HTML tags and truncates long non-JSON error bodies', function (): void {
+    $htmlBody = '<html><head><title>502 Bad Gateway</title></head><body><h1>502 Bad Gateway</h1><p>nginx/1.24.0</p>'.str_repeat('<p>extra</p>', 200).'</body></html>';
+
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response($htmlBody, 502)]);
+
+    $connector = new AsaasConnector($pendingRequest);
+    $result = $connector->get('/v3/payments/pay_123', []);
+
+    expect($result->success)->toBeFalse();
+    $description = $result->errors[0]['description'];
+    expect($description)->not->toContain('<html>');
+    expect($description)->not->toContain('<p>');
+    expect(mb_strlen($description))->toBe(350);
+    expect($description)->toStartWith('502 Bad Gateway');
+});
+
 it('standalone get returns failure result on connection exception', function (): void {
     $pendingRequest = (new PendingRequest)
         ->baseUrl('https://api-sandbox.asaas.com')
