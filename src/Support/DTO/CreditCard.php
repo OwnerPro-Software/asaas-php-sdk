@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use JsonSerializable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use SensitiveParameter;
 use TypeError;
 
-final readonly class CreditCard
+final readonly class CreditCard implements JsonSerializable
 {
     use HasArrayFactory;
 
@@ -32,6 +33,11 @@ final readonly class CreditCard
             'expiryYear' => $this->expiryYear,
             'ccv' => '***',
         ];
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return $this->__debugInfo();
     }
 
     /** @param array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string} $data */

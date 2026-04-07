@@ -70,6 +70,24 @@ it('masks short card number in debug info', function (): void {
     expect($card->__debugInfo()['number'])->toBe('12');
 });
 
+it('masks sensitive data in json serialization', function (): void {
+    $card = new CreditCard(
+        holderName: 'John Doe',
+        number: '4111111111111111',
+        expiryMonth: '12',
+        expiryYear: '2030',
+        ccv: '123',
+    );
+
+    $json = json_decode(json_encode($card), true);
+
+    expect($json['holderName'])->toBe('John Doe');
+    expect($json['number'])->toBe('************1111');
+    expect($json['expiryMonth'])->toBe('12');
+    expect($json['expiryYear'])->toBe('2030');
+    expect($json['ccv'])->toBe('***');
+});
+
 it('throws when required field is missing', function (string $missingField): void {
     $data = [
         'holderName' => 'John Doe',

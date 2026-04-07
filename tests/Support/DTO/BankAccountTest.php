@@ -147,6 +147,24 @@ it('masks short cpfCnpj and account without negative repeat', function (): void 
     expect($debug['account'])->toBe('9');
 });
 
+it('masks sensitive data in json serialization', function (): void {
+    $account = new BankAccount(
+        ownerName: 'John Doe',
+        cpfCnpj: '12345678901',
+        agency: '1234',
+        account: '56789',
+        accountDigit: '0',
+        ownerBirthDate: '1990-01-01',
+    );
+
+    $json = json_decode(json_encode($account), true);
+
+    expect($json['cpfCnpj'])->toBe('********901');
+    expect($json['account'])->toBe('***89');
+    expect($json['accountDigit'])->toBe('*');
+    expect($json['ownerBirthDate'])->toBe('***');
+});
+
 it('throws when required field is missing', function (string $missingField): void {
     $data = [
         'ownerName' => 'John Doe',

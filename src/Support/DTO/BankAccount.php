@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use JsonSerializable;
 use OwnerPro\Asaas\Support\Enums\BankAccountType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use SensitiveParameter;
 use TypeError;
 
-final readonly class BankAccount
+final readonly class BankAccount implements JsonSerializable
 {
     use HasArrayFactory;
 
@@ -46,6 +47,11 @@ final readonly class BankAccount
             'bankAccountType' => $this->bankAccountType,
             'ispb' => $this->ispb,
         ];
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return $this->__debugInfo();
     }
 
     /** @param array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string} $data */

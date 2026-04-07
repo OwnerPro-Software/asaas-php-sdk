@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support\DTO;
 
+use JsonSerializable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use SensitiveParameter;
 use TypeError;
 
-final readonly class CreditCardHolderInfo
+final readonly class CreditCardHolderInfo implements JsonSerializable
 {
     use HasArrayFactory;
 
@@ -40,6 +41,11 @@ final readonly class CreditCardHolderInfo
             'addressComplement' => $this->addressComplement,
             'mobilePhone' => $this->mobilePhone !== null ? '***' : null,
         ];
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return $this->__debugInfo();
     }
 
     /** @param array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string} $data */

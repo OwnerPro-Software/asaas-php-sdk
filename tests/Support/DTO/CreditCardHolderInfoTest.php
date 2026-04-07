@@ -92,6 +92,26 @@ it('masks short cpfCnpj without negative repeat', function (): void {
     expect($info->__debugInfo()['cpfCnpj'])->toBe('01');
 });
 
+it('masks sensitive data in json serialization', function (): void {
+    $info = new CreditCardHolderInfo(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        postalCode: '01001000',
+        addressNumber: '123',
+        phone: '1199999999',
+        mobilePhone: '11999999999',
+    );
+
+    $json = json_decode(json_encode($info), true);
+
+    expect($json['name'])->toBe('John Doe');
+    expect($json['email'])->toBe('***');
+    expect($json['cpfCnpj'])->toBe('********901');
+    expect($json['phone'])->toBe('***');
+    expect($json['mobilePhone'])->toBe('***');
+});
+
 it('throws when required field is missing', function (string $missingField): void {
     $data = [
         'name' => 'John Doe',
