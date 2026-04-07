@@ -11,6 +11,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\IdGuard;
 
 final readonly class PixTransactionResource
 {
@@ -36,12 +37,12 @@ final readonly class PixTransactionResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get('/v3/pix/transactions/'.$id, []);
+        return $this->connector->get(sprintf('/v3/pix/transactions/%s', IdGuard::validate($id)), []);
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/pix/transactions/%s/cancel', $id), []);
+        return $this->connector->post(sprintf('/v3/pix/transactions/%s/cancel', IdGuard::validate($id)), []);
     }
 
     /**

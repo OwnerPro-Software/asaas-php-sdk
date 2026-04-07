@@ -11,6 +11,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\IdGuard;
 
 final readonly class InvoiceResource
 {
@@ -30,23 +31,23 @@ final readonly class InvoiceResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get('/v3/invoices/'.$id, []);
+        return $this->connector->get(sprintf('/v3/invoices/%s', IdGuard::validate($id)), []);
     }
 
     /** @param array<string, mixed>|UpdateInvoiceRequest $data */
     public function update(string $id, array|UpdateInvoiceRequest $data): AsaasResult
     {
-        return $this->connector->put('/v3/invoices/'.$id, UpdateInvoiceRequest::resolveData($data));
+        return $this->connector->put(sprintf('/v3/invoices/%s', IdGuard::validate($id)), UpdateInvoiceRequest::resolveData($data));
     }
 
     public function authorize(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/invoices/%s/authorize', $id), []);
+        return $this->connector->post(sprintf('/v3/invoices/%s/authorize', IdGuard::validate($id)), []);
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/invoices/%s/cancel', $id), []);
+        return $this->connector->post(sprintf('/v3/invoices/%s/cancel', IdGuard::validate($id)), []);
     }
 
     /**

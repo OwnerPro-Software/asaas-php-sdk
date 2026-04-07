@@ -15,6 +15,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\IdGuard;
 
 final readonly class PaymentResource
 {
@@ -28,7 +29,7 @@ final readonly class PaymentResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get('/v3/payments/'.$id, []);
+        return $this->connector->get(sprintf('/v3/payments/%s', IdGuard::validate($id)), []);
     }
 
     /** @param array<string, mixed> $query */
@@ -40,70 +41,70 @@ final readonly class PaymentResource
     /** @param array<string, mixed>|UpdatePaymentRequest $data */
     public function update(string $id, array|UpdatePaymentRequest $data): AsaasResult
     {
-        return $this->connector->put('/v3/payments/'.$id, UpdatePaymentRequest::resolveData($data));
+        return $this->connector->put(sprintf('/v3/payments/%s', IdGuard::validate($id)), UpdatePaymentRequest::resolveData($data));
     }
 
     public function delete(string $id): AsaasResult
     {
-        return $this->connector->delete('/v3/payments/'.$id);
+        return $this->connector->delete(sprintf('/v3/payments/%s', IdGuard::validate($id)));
     }
 
     /** @param array<string, mixed>|RefundPaymentRequest $data */
     public function refund(string $id, array|RefundPaymentRequest $data = []): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/payments/%s/refund', $id), RefundPaymentRequest::resolveData($data));
+        return $this->connector->post(sprintf('/v3/payments/%s/refund', IdGuard::validate($id)), RefundPaymentRequest::resolveData($data));
     }
 
     public function restore(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/payments/%s/restore', $id), []);
+        return $this->connector->post(sprintf('/v3/payments/%s/restore', IdGuard::validate($id)), []);
     }
 
     public function captureAuthorized(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/payments/%s/captureAuthorizedPayment', $id), []);
+        return $this->connector->post(sprintf('/v3/payments/%s/captureAuthorizedPayment', IdGuard::validate($id)), []);
     }
 
     /** @param array<string, mixed>|PayWithCreditCardRequest $data */
     public function payWithCreditCard(string $id, array|PayWithCreditCardRequest $data): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/payments/%s/payWithCreditCard', $id), PayWithCreditCardRequest::resolveData($data));
+        return $this->connector->post(sprintf('/v3/payments/%s/payWithCreditCard', IdGuard::validate($id)), PayWithCreditCardRequest::resolveData($data));
     }
 
     /** @param array<string, mixed>|ReceivePaymentInCashRequest $data */
     public function receiveInCash(string $id, array|ReceivePaymentInCashRequest $data = []): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/payments/%s/receiveInCash', $id), ReceivePaymentInCashRequest::resolveData($data));
+        return $this->connector->post(sprintf('/v3/payments/%s/receiveInCash', IdGuard::validate($id)), ReceivePaymentInCashRequest::resolveData($data));
     }
 
     public function undoReceivedInCash(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/payments/%s/undoReceivedInCash', $id), []);
+        return $this->connector->post(sprintf('/v3/payments/%s/undoReceivedInCash', IdGuard::validate($id)), []);
     }
 
     public function status(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/payments/%s/status', $id), []);
+        return $this->connector->get(sprintf('/v3/payments/%s/status', IdGuard::validate($id)), []);
     }
 
     public function billingInfo(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/payments/%s/billingInfo', $id), []);
+        return $this->connector->get(sprintf('/v3/payments/%s/billingInfo', IdGuard::validate($id)), []);
     }
 
     public function pixQrCode(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/payments/%s/pixQrCode', $id), []);
+        return $this->connector->get(sprintf('/v3/payments/%s/pixQrCode', IdGuard::validate($id)), []);
     }
 
     public function identificationField(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/payments/%s/identificationField', $id), []);
+        return $this->connector->get(sprintf('/v3/payments/%s/identificationField', IdGuard::validate($id)), []);
     }
 
     public function viewingInfo(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/payments/%s/viewingInfo', $id), []);
+        return $this->connector->get(sprintf('/v3/payments/%s/viewingInfo', IdGuard::validate($id)), []);
     }
 
     /** @param array<string, mixed>|SimulatePaymentRequest $data */

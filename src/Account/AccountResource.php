@@ -11,6 +11,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\IdGuard;
 
 final readonly class AccountResource
 {
@@ -30,28 +31,28 @@ final readonly class AccountResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get('/v3/accounts/'.$id, []);
+        return $this->connector->get(sprintf('/v3/accounts/%s', IdGuard::validate($id)), []);
     }
 
     public function listAccessTokens(string $accountId): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/accounts/%s/accessTokens', $accountId), []);
+        return $this->connector->get(sprintf('/v3/accounts/%s/accessTokens', IdGuard::validate($accountId)), []);
     }
 
     public function createAccessToken(string $accountId): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/accounts/%s/accessTokens', $accountId), []);
+        return $this->connector->post(sprintf('/v3/accounts/%s/accessTokens', IdGuard::validate($accountId)), []);
     }
 
     /** @param array<string, mixed>|AccessTokenRequest $data */
     public function updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
     {
-        return $this->connector->put(sprintf('/v3/accounts/%s/accessTokens/%s', $accountId, $tokenId), AccessTokenRequest::resolveData($data));
+        return $this->connector->put(sprintf('/v3/accounts/%s/accessTokens/%s', IdGuard::validate($accountId), IdGuard::validate($tokenId)), AccessTokenRequest::resolveData($data));
     }
 
     public function deleteAccessToken(string $accountId, string $tokenId): AsaasResult
     {
-        return $this->connector->delete(sprintf('/v3/accounts/%s/accessTokens/%s', $accountId, $tokenId));
+        return $this->connector->delete(sprintf('/v3/accounts/%s/accessTokens/%s', IdGuard::validate($accountId), IdGuard::validate($tokenId)));
     }
 
     /**

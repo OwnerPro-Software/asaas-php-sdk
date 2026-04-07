@@ -9,6 +9,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\IdGuard;
 use OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest;
 use OwnerPro\Asaas\Webhook\Request\UpdateWebhookRequest;
 
@@ -30,23 +31,23 @@ final readonly class WebhookResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get('/v3/webhooks/'.$id, []);
+        return $this->connector->get(sprintf('/v3/webhooks/%s', IdGuard::validate($id)), []);
     }
 
     /** @param array<string, mixed>|UpdateWebhookRequest $data */
     public function update(string $id, array|UpdateWebhookRequest $data): AsaasResult
     {
-        return $this->connector->put('/v3/webhooks/'.$id, UpdateWebhookRequest::resolveData($data));
+        return $this->connector->put(sprintf('/v3/webhooks/%s', IdGuard::validate($id)), UpdateWebhookRequest::resolveData($data));
     }
 
     public function delete(string $id): AsaasResult
     {
-        return $this->connector->delete('/v3/webhooks/'.$id);
+        return $this->connector->delete(sprintf('/v3/webhooks/%s', IdGuard::validate($id)));
     }
 
     public function removeBackoff(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/webhooks/%s/removeBackoff', $id), []);
+        return $this->connector->post(sprintf('/v3/webhooks/%s/removeBackoff', IdGuard::validate($id)), []);
     }
 
     /**

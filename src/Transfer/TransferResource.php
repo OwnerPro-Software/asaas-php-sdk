@@ -9,6 +9,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\IdGuard;
 use OwnerPro\Asaas\Transfer\Request\TransferRequest;
 
 final readonly class TransferResource
@@ -29,12 +30,12 @@ final readonly class TransferResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get('/v3/transfers/'.$id, []);
+        return $this->connector->get(sprintf('/v3/transfers/%s', IdGuard::validate($id)), []);
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/transfers/%s/cancel', $id), []);
+        return $this->connector->post(sprintf('/v3/transfers/%s/cancel', IdGuard::validate($id)), []);
     }
 
     /**

@@ -11,6 +11,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\IdGuard;
 
 final readonly class BillPaymentResource
 {
@@ -30,7 +31,7 @@ final readonly class BillPaymentResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get('/v3/bill/'.$id, []);
+        return $this->connector->get(sprintf('/v3/bill/%s', IdGuard::validate($id)), []);
     }
 
     /** @param array<string, mixed>|SimulateBillPaymentRequest $data */
@@ -41,7 +42,7 @@ final readonly class BillPaymentResource
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/bill/%s/cancel', $id), []);
+        return $this->connector->post(sprintf('/v3/bill/%s/cancel', IdGuard::validate($id)), []);
     }
 
     /**

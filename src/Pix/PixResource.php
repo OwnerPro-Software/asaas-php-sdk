@@ -11,6 +11,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\IdGuard;
 
 final readonly class PixResource
 {
@@ -30,12 +31,12 @@ final readonly class PixResource
 
     public function findKey(string $id): AsaasResult
     {
-        return $this->connector->get('/v3/pix/addressKeys/'.$id, []);
+        return $this->connector->get(sprintf('/v3/pix/addressKeys/%s', IdGuard::validate($id)), []);
     }
 
     public function deleteKey(string $id): AsaasResult
     {
-        return $this->connector->delete('/v3/pix/addressKeys/'.$id);
+        return $this->connector->delete(sprintf('/v3/pix/addressKeys/%s', IdGuard::validate($id)));
     }
 
     /** @param array<string, mixed>|StaticQrCodeRequest $data */
@@ -46,7 +47,7 @@ final readonly class PixResource
 
     public function deleteStaticQrCode(string $id): AsaasResult
     {
-        return $this->connector->delete('/v3/pix/qrCodes/static/'.$id);
+        return $this->connector->delete(sprintf('/v3/pix/qrCodes/static/%s', IdGuard::validate($id)));
     }
 
     public function tokenBucket(): AsaasResult
