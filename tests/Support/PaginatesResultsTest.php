@@ -80,6 +80,20 @@ it('paginate returns failure when get fails', function (): void {
     expect($result->success)->toBeFalse();
     expect($result->errors[0]['description'])->toBe('Something broke');
     expect($result->response->status())->toBe(500);
+    expect($result->offset)->toBe(0);
+    expect($result->limit)->toBe(0);
+});
+
+it('paginate failure casts string offset and limit to int', function (): void {
+    $connector = fakeConnector(fn (): AsaasResult => AsaasResult::failure(
+        [['code' => 'ERROR', 'description' => 'fail']],
+        RawResponse::fake(status: 500),
+    ));
+
+    $result = $connector->paginate('/v3/payments', ['offset' => '30', 'limit' => '15']);
+
+    expect($result->offset)->toBe(30);
+    expect($result->limit)->toBe(15);
 });
 
 it('paginate defaults missing fields to zero/empty/false', function (): void {
@@ -214,6 +228,77 @@ it('all accepts string limit', function (): void {
     iterator_to_array($connector->all('/v3/payments', ['limit' => '10']));
 
     expect($capturedQuery['limit'])->toBe(10);
+});
+
+it('paginate failure preserves offset and limit from query', function (): void {
+    $connector = fakeConnector(fn (): AsaasResult => AsaasResult::failure(
+        [['code' => 'ERROR', 'description' => 'fail']],
+        RawResponse::fake(status: 500),
+    ));
+
+    $result = $connector->paginate('/v3/payments', ['offset' => 50, 'limit' => 25]);
+
+    expect($result->success)->toBeFalse();
+    expect($result->offset)->toBe(50);
+    expect($result->limit)->toBe(25);
+});
+
+it('all uses API-returned limit for offset calculation', function (): void {
+    $capturedQueries = [];
+    $callCount = 0;
+    $connector = fakeConnector(function (string $path, array $query) use (&$callCount, &$capturedQueries): AsaasResult {
+        $callCount++;
+        $capturedQueries[] = $query;
+
+        if ($callCount === 1) {
+            return AsaasResult::success(
+                ['data' => [['id' => 'p1'], ['id' => 'p2']], 'totalCount' => 3, 'hasMore' => true, 'limit' => 2, 'offset' => 0],
+                RawResponse::fake(),
+            );
+        }
+
+        return AsaasResult::success(
+            ['data' => [['id' => 'p3']], 'totalCount' => 3, 'hasMore' => false, 'limit' => 2, 'offset' => 2],
+            RawResponse::fake(),
+        );
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 200]));
+
+    expect($items)->toHaveCount(3);
+    expect($capturedQueries[0]['offset'])->toBe(0);
+    expect($capturedQueries[0]['limit'])->toBe(200);
+    expect($capturedQueries[1]['offset'])->toBe(2);
+    expect($capturedQueries[1]['limit'])->toBe(200);
+});
+
+it('all yields error with correct offset on mid-pagination failure', function (): void {
+    $callCount = 0;
+    $connector = fakeConnector(function () use (&$callCount): AsaasResult {
+        $callCount++;
+
+        if ($callCount === 1) {
+            return AsaasResult::success(
+                ['data' => [['id' => 'p1'], ['id' => 'p2']], 'totalCount' => 5, 'hasMore' => true, 'limit' => 2, 'offset' => 0],
+                RawResponse::fake(),
+            );
+        }
+
+        return AsaasResult::failure(
+            [['code' => 'ERROR', 'description' => 'Page 2 failed']],
+            RawResponse::fake(status: 500),
+        );
+    });
+
+    // Request limit=100 but API caps to 2 — error should report offset=2
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 100]));
+
+    expect($items)->toHaveCount(3);
+    expect($items[0]['id'])->toBe('p1');
+    expect($items[1]['id'])->toBe('p2');
+    expect($items[2])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[2]->offset)->toBe(2);
+    expect($items[2]->limit)->toBe(100);
 });
 
 it('all stops when data is empty', function (): void {

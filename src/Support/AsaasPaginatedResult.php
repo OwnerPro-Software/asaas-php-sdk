@@ -54,15 +54,15 @@ final readonly class AsaasPaginatedResult
     }
 
     /** @param list<array{code?: string, description?: string}> $errors */
-    public static function failure(array $errors, ?RawResponse $rawResponse = null): self
+    public static function failure(array $errors, ?RawResponse $rawResponse = null, int $offset = 0, int $limit = 0): self
     {
         return new self(
             success: false,
             data: [],
             totalCount: 0,
             hasMore: false,
-            limit: 0,
-            offset: 0,
+            limit: $limit,
+            offset: $offset,
             errors: $errors,
             response: $rawResponse,
             nextPageFetcher: null,

@@ -17,7 +17,12 @@ trait PaginatesResults
         $asaasResult = $this->get($path, $query);
 
         if (! $asaasResult->success) {
-            return AsaasPaginatedResult::failure($asaasResult->errors ?? [], $asaasResult->response);
+            return AsaasPaginatedResult::failure(
+                $asaasResult->errors ?? [],
+                $asaasResult->response,
+                offset: isset($query['offset']) && is_numeric($query['offset']) ? (int) $query['offset'] : 0,
+                limit: isset($query['limit']) && is_numeric($query['limit']) ? (int) $query['limit'] : 0,
+            );
         }
 
         /** @var array{data?: list<array<string, mixed>>, totalCount?: int, hasMore?: bool, limit?: int, offset?: int} $data */
@@ -50,37 +55,36 @@ trait PaginatesResults
      */
     public function all(string $path, array $filters): Generator
     {
-        $offset = 0;
         /** @var int|string|null $rawLimit */
         $rawLimit = $filters['limit'] ?? null;
         $limit = $rawLimit !== null ? max(1, (int) $rawLimit) : 100;
 
-        do {
-            $result = $this->paginate(
-                $path,
-                array_merge($filters, ['offset' => $offset, 'limit' => $limit]),
-            );
+        $result = $this->paginate(
+            $path,
+            array_merge($filters, ['offset' => 0, 'limit' => $limit]),
+        );
 
+        do {
             if (! $result->success) {
                 yield new AsaasPaginatedError(
                     $result->errors ?? [],
                     $result->response,
-                    $offset,
-                    $limit,
+                    $result->offset,
+                    $result->limit,
                 );
 
                 return;
-            }
-
-            foreach ($result->data as $item) {
-                yield $item;
             }
 
             if ($result->data === []) {
                 break;
             }
 
-            $offset += $limit;
-        } while ($result->hasMore);
+            foreach ($result->data as $item) {
+                yield $item;
+            }
+
+            $result = $result->next();
+        } while ($result !== null);
     }
 }
