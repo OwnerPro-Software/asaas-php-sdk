@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\Support;
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Http\Client\Response;
 
+/** @internal The underlying Response is intentionally not exposed to prevent API key leakage via request headers. */
 final readonly class RawResponse
 {
     public function __construct(private Response $response) {}
@@ -33,11 +34,6 @@ final readonly class RawResponse
     public function body(): string
     {
         return $this->response->body();
-    }
-
-    public function toUnderlying(): Response
-    {
-        return $this->response;
     }
 
     /** @param array<string, string> $headers */

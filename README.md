@@ -164,13 +164,12 @@ $result->response->status();                   // HTTP status code
 $result->response->headers();                  // All response headers
 $result->response->header('X-Request-Id');     // Single header (null if absent)
 $result->response->body();                     // Raw response body
-$result->response->toUnderlying();             // Illuminate\Http\Client\Response
 
 // Connection errors have no HTTP response
 $result->response;  // null when connection failed
 ```
 
-The `RawResponse` wrapper keeps your code decoupled from the underlying HTTP client. Use `toUnderlying()` only when you need full access for debugging.
+The `RawResponse` wrapper keeps your code decoupled from the underlying HTTP client.
 
 ## Enums
 

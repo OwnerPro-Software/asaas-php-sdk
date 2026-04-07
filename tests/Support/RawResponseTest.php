@@ -46,13 +46,6 @@ it('returns the raw response body', function (): void {
     expect($rawResponse->body())->toBe('{"id":"pay_123"}');
 });
 
-it('returns the underlying Laravel response', function (): void {
-    $laravelResponse = new Response(new Psr7Response(200));
-    $rawResponse = new RawResponse($laravelResponse);
-
-    expect($rawResponse->toUnderlying())->toBe($laravelResponse);
-});
-
 it('creates a fake response from primitives', function (): void {
     $rawResponse = RawResponse::fake(
         status: 429,
@@ -63,7 +56,6 @@ it('creates a fake response from primitives', function (): void {
     expect($rawResponse->status())->toBe(429);
     expect($rawResponse->header('X-Rate-Limit-Remaining'))->toBe('0');
     expect($rawResponse->body())->toBe('{"error":"rate limited"}');
-    expect($rawResponse->toUnderlying())->toBeInstanceOf(Response::class);
 });
 
 it('creates a fake response with defaults', function (): void {
