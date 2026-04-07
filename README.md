@@ -636,6 +636,28 @@ Asaas::webhooks()->removeBackoff(string $id): AsaasResult
 Asaas::webhooks()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
+### Webhook Verification
+
+When you create a webhook with an `authToken`, Asaas sends that token in the `asaas-access-token` header on every delivery. Use `WebhookVerifier` to validate incoming requests with a timing-safe comparison:
+
+```php
+use OwnerPro\Asaas\Webhook\WebhookVerifier;
+
+$verifier = new WebhookVerifier(authToken: 'your-webhook-auth-token');
+
+// Verify the token (timing-safe via hash_equals)
+if (! $verifier->verify($request->header('asaas-access-token', ''))) {
+    abort(401);
+}
+
+// Optional: verify the request came from a known Asaas IP
+if (! $verifier->isFromAsaas($request->ip())) {
+    abort(403);
+}
+```
+
+The known Asaas IPs are `52.67.12.206`, `18.230.8.159`, `54.94.136.112`, and `54.94.183.101`.
+
 ### Invoices (`invoices()`)
 
 ```php
