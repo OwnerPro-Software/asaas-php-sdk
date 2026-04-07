@@ -35,6 +35,26 @@ it('for() uses default timeout of 30', function (): void {
     expect($options['timeout'])->toBe(30);
 });
 
+it('for() uses default connect timeout of 10', function (): void {
+    $client = AsaasClient::for(apiKey: 'test-key');
+
+    $connector = (new ReflectionProperty(AsaasClient::class, 'connector'))->getValue($client);
+    $pendingRequest = (new ReflectionProperty(AsaasConnector::class, 'pendingRequest'))->getValue($connector);
+    $options = (new ReflectionProperty($pendingRequest::class, 'options'))->getValue($pendingRequest);
+
+    expect($options['connect_timeout'])->toBe(10);
+});
+
+it('for() accepts custom connect timeout', function (): void {
+    $client = AsaasClient::for(apiKey: 'test-key', connectTimeout: 5);
+
+    $connector = (new ReflectionProperty(AsaasClient::class, 'connector'))->getValue($client);
+    $pendingRequest = (new ReflectionProperty(AsaasConnector::class, 'pendingRequest'))->getValue($connector);
+    $options = (new ReflectionProperty($pendingRequest::class, 'options'))->getValue($pendingRequest);
+
+    expect($options['connect_timeout'])->toBe(5);
+});
+
 it('creates client via for() with overrides', function (): void {
     $client = AsaasClient::for(apiKey: 'test-key', environment: Environment::Production, timeout: 60);
 

@@ -87,6 +87,28 @@ it('Asaas::for() overrides timeout', function () {
     expect($options['timeout'])->toBe(60);
 });
 
+it('Asaas::for() uses default connect timeout from config', function () {
+    Http::fake();
+
+    $client = Asaas::for(apiKey: 'tenant-key');
+    $connector = (new ReflectionProperty(AsaasClient::class, 'connector'))->getValue($client);
+    $pendingRequest = (new ReflectionProperty(AsaasConnector::class, 'pendingRequest'))->getValue($connector);
+    $options = (new ReflectionProperty($pendingRequest::class, 'options'))->getValue($pendingRequest);
+
+    expect($options['connect_timeout'])->toBe(10);
+});
+
+it('Asaas::for() overrides connect timeout', function () {
+    Http::fake();
+
+    $client = Asaas::for(apiKey: 'tenant-key', connectTimeout: 5);
+    $connector = (new ReflectionProperty(AsaasClient::class, 'connector'))->getValue($client);
+    $pendingRequest = (new ReflectionProperty(AsaasConnector::class, 'pendingRequest'))->getValue($connector);
+    $options = (new ReflectionProperty($pendingRequest::class, 'options'))->getValue($pendingRequest);
+
+    expect($options['connect_timeout'])->toBe(5);
+});
+
 it('throws ValueError when environment config is invalid', function () {
     $this->app['config']->set('asaas.environment', 'staging');
     $this->app->forgetInstance(AsaasClient::class);

@@ -16,8 +16,9 @@ final class Asaas extends Facade
         #[SensitiveParameter] string $apiKey,
         Environment|string|null $environment = null,
         ?int $timeout = null,
+        ?int $connectTimeout = null,
     ): AsaasClient {
-        /** @var array{environment: string, timeout: int} $config */
+        /** @var array{environment: string, timeout: int, connect_timeout: int} $config */
         $config = config('asaas');
 
         return new AsaasClient(
@@ -25,6 +26,7 @@ final class Asaas extends Facade
                 apiKey: $apiKey,
                 environment: $environment ?? $config['environment'],
                 timeout: $timeout ?? $config['timeout'],
+                connectTimeout: $connectTimeout ?? $config['connect_timeout'],
             )
         );
     }

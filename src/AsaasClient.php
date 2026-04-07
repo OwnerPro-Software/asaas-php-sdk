@@ -47,8 +47,9 @@ final class AsaasClient
         #[SensitiveParameter] string $apiKey,
         Environment|string $environment = Environment::Sandbox,
         int $timeout = 30,
+        int $connectTimeout = 10,
     ): self {
-        return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout));
+        return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout, $connectTimeout));
     }
 
     public function payments(): PaymentResource

@@ -17,14 +17,14 @@ final readonly class AsaasConnector implements Connector
 
     public function __construct(private PendingRequest $pendingRequest) {}
 
-    public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout): self
+    public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10): self
     {
-        return self::make(new PendingRequest, $apiKey, $environment, $timeout);
+        return self::make(new PendingRequest, $apiKey, $environment, $timeout, $connectTimeout);
     }
 
-    public static function forLaravel(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout): self
+    public static function forLaravel(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10): self
     {
-        return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout);
+        return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout, $connectTimeout);
     }
 
     /** @param array<string, mixed> $query */
@@ -58,13 +58,14 @@ final readonly class AsaasConnector implements Connector
         );
     }
 
-    private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout): self
+    private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout): self
     {
         $environment = $environment instanceof Environment ? $environment : Environment::from($environment);
 
         return new self(
             $pendingRequest->baseUrl($environment->baseUrl())
                 ->withHeader('access_token', $apiKey)
+                ->connectTimeout($connectTimeout)
                 ->timeout($timeout)
         );
     }

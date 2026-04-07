@@ -91,6 +91,37 @@ it('forStandalone creates connector for production', function (): void {
     expect($connector)->toBeInstanceOf(AsaasConnector::class);
 });
 
+it('forLaravel configures default connect timeout', function (): void {
+    Http::fake();
+    $connector = AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
+
+    $reflection = new ReflectionClass($connector);
+    $property = $reflection->getProperty('pendingRequest');
+    $pendingRequest = $property->getValue($connector);
+
+    expect($pendingRequest->getOptions()['connect_timeout'])->toBe(10);
+});
+
+it('forStandalone configures default connect timeout', function (): void {
+    $connector = AsaasConnector::forStandalone('test-key', Environment::Sandbox, 30);
+
+    $reflection = new ReflectionClass($connector);
+    $property = $reflection->getProperty('pendingRequest');
+    $pendingRequest = $property->getValue($connector);
+
+    expect($pendingRequest->getOptions()['connect_timeout'])->toBe(10);
+});
+
+it('forStandalone accepts custom connect timeout', function (): void {
+    $connector = AsaasConnector::forStandalone('test-key', Environment::Sandbox, 30, 5);
+
+    $reflection = new ReflectionClass($connector);
+    $property = $reflection->getProperty('pendingRequest');
+    $pendingRequest = $property->getValue($connector);
+
+    expect($pendingRequest->getOptions()['connect_timeout'])->toBe(5);
+});
+
 // --- Standalone HTTP behavior via DI constructor with stubbed PendingRequest ---
 
 it('standalone get returns success result', function (): void {
