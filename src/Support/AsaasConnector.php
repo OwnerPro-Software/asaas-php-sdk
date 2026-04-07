@@ -9,6 +9,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use InvalidArgumentException;
 use SensitiveParameter;
 
 final readonly class AsaasConnector implements Connector
@@ -60,6 +61,10 @@ final readonly class AsaasConnector implements Connector
 
     private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout): self
     {
+        if ($apiKey === '') {
+            throw new InvalidArgumentException('The API key must not be empty.');
+        }
+
         $environment = $environment instanceof Environment ? $environment : Environment::from($environment);
 
         return new self(

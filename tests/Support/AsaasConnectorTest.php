@@ -35,6 +35,10 @@ it('forLaravel accepts string environment', function (): void {
     Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api.asaas.com/'));
 });
 
+it('forLaravel throws on empty api key', function (): void {
+    AsaasConnector::forLaravel('', 'sandbox', 30);
+})->throws(InvalidArgumentException::class, 'The API key must not be empty.');
+
 it('forLaravel throws on invalid environment string', function (): void {
     AsaasConnector::forLaravel('key', 'invalid', 30);
 })->throws(ValueError::class);
@@ -74,6 +78,10 @@ it('forStandalone accepts string environment', function (): void {
 
     expect($connector)->toBeInstanceOf(AsaasConnector::class);
 });
+
+it('forStandalone throws on empty api key', function (): void {
+    AsaasConnector::forStandalone('', 'sandbox', 30);
+})->throws(InvalidArgumentException::class, 'The API key must not be empty.');
 
 it('forStandalone throws on invalid environment string', function (): void {
     AsaasConnector::forStandalone('key', 'invalid', 30);

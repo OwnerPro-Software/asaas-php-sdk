@@ -71,7 +71,7 @@ final readonly class AsaasPaginatedResult
 
     public function next(): ?self
     {
-        if (! $this->hasMore || ! $this->nextPageFetcher instanceof Closure) {
+        if (! $this->hasMore || $this->limit < 1 || ! $this->nextPageFetcher instanceof Closure) {
             return null;
         }
 

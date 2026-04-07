@@ -113,6 +113,30 @@ it('next() returns null when nextPageFetcher is null even with hasMore true', fu
     expect($result->next())->toBeNull();
 });
 
+it('next() returns null when limit is zero to prevent infinite loop', function (): void {
+    $nextResult = AsaasPaginatedResult::success(
+        data: [['id' => 'b']],
+        totalCount: 10,
+        hasMore: false,
+        limit: 10,
+        offset: 0,
+        rawResponse: RawResponse::fake(200),
+        nextPageFetcher: null,
+    );
+
+    $result = AsaasPaginatedResult::success(
+        data: [['id' => 'a']],
+        totalCount: 10,
+        hasMore: true,
+        limit: 0,
+        offset: 0,
+        rawResponse: RawResponse::fake(200),
+        nextPageFetcher: fn (int $offset) => $nextResult,
+    );
+
+    expect($result->next())->toBeNull();
+});
+
 it('next() passes correct offset to fetcher', function (): void {
     $receivedOffset = null;
     $nextResult = AsaasPaginatedResult::success(
