@@ -200,6 +200,22 @@ it('all enforces minimum limit of 1', function (): void {
     expect($capturedQuery['limit'])->toBe(1);
 });
 
+it('all accepts string limit', function (): void {
+    $capturedQuery = [];
+    $connector = fakeConnector(function (string $path, array $query) use (&$capturedQuery): AsaasResult {
+        $capturedQuery = $query;
+
+        return AsaasResult::success(
+            ['data' => [['id' => 'p1']], 'totalCount' => 1, 'hasMore' => false, 'limit' => 10, 'offset' => 0],
+            RawResponse::fake(),
+        );
+    });
+
+    iterator_to_array($connector->all('/v3/payments', ['limit' => '10']));
+
+    expect($capturedQuery['limit'])->toBe(10);
+});
+
 it('all stops when data is empty', function (): void {
     $connector = fakeConnector(fn (): AsaasResult => AsaasResult::success(
         ['data' => [], 'totalCount' => 0, 'hasMore' => true, 'limit' => 10, 'offset' => 0],

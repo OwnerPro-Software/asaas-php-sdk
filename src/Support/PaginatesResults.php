@@ -51,7 +51,9 @@ trait PaginatesResults
     public function all(string $path, array $filters): Generator
     {
         $offset = 0;
-        $limit = is_int($filters['limit'] ?? null) ? max(1, $filters['limit']) : 100;
+        /** @var int|string|null $rawLimit */
+        $rawLimit = $filters['limit'] ?? null;
+        $limit = $rawLimit !== null ? max(1, (int) $rawLimit) : 100;
 
         do {
             $result = $this->paginate(
