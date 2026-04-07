@@ -95,10 +95,12 @@ final readonly class AsaasConnector implements Connector
             );
         }
 
-        /** @var array<string, mixed> $json */
-        $json = $response->json() ?? [];
+        $json = $response->json();
 
-        return AsaasResult::success($json, $rawResponse);
+        /** @var array<string, mixed> $data */
+        $data = is_array($json) ? $json : [];
+
+        return AsaasResult::success($data, $rawResponse);
     }
 
     /** @return list<array{code?: string, description?: string}> */

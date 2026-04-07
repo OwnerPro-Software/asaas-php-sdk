@@ -141,6 +141,22 @@ it('standalone get returns success result', function (): void {
     expect($result->response->status())->toBe(200);
 });
 
+it('standalone get returns empty data on scalar JSON response', function (): void {
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response('true', 200)]);
+
+    $connector = new AsaasConnector($pendingRequest);
+    $result = $connector->get('/v3/payments/pay_123', []);
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toBe([]);
+    expect($result->response->body())->toBe('true');
+});
+
 it('standalone post returns success result', function (): void {
     $pendingRequest = (new PendingRequest)
         ->baseUrl('https://api-sandbox.asaas.com')
