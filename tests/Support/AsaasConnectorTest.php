@@ -130,6 +130,27 @@ it('forStandalone accepts custom connect timeout', function (): void {
     expect($pendingRequest->getOptions()['connect_timeout'])->toBe(5);
 });
 
+it('forStandalone enforces TLS certificate verification', function (): void {
+    $connector = AsaasConnector::forStandalone('test-key', Environment::Sandbox, 30);
+
+    $reflection = new ReflectionClass($connector);
+    $property = $reflection->getProperty('pendingRequest');
+    $pendingRequest = $property->getValue($connector);
+
+    expect($pendingRequest->getOptions()['verify'])->toBeTrue();
+});
+
+it('forLaravel enforces TLS certificate verification', function (): void {
+    Http::fake();
+    $connector = AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
+
+    $reflection = new ReflectionClass($connector);
+    $property = $reflection->getProperty('pendingRequest');
+    $pendingRequest = $property->getValue($connector);
+
+    expect($pendingRequest->getOptions()['verify'])->toBeTrue();
+});
+
 // --- Standalone HTTP behavior via DI constructor with stubbed PendingRequest ---
 
 it('standalone get returns success result', function (): void {

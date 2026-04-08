@@ -72,6 +72,7 @@ final readonly class AsaasConnector implements Connector
                 ->withHeader('access_token', $apiKey)
                 ->connectTimeout($connectTimeout)
                 ->timeout($timeout)
+                ->withOptions(['verify' => true])
         );
     }
 
