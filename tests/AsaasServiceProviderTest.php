@@ -13,6 +13,10 @@ use OwnerPro\Asaas\Support\Environment;
 mutates(AsaasServiceProvider::class, Asaas::class);
 
 it('registers AsaasClient as singleton', function () {
+    $this->app->forgetInstance(AsaasClient::class);
+
+    (new AsaasServiceProvider($this->app))->register();
+
     $client1 = app(AsaasClient::class);
     $client2 = app(AsaasClient::class);
 
@@ -26,19 +30,24 @@ it('resolves AsaasClient via facade', function () {
     expect($client)->toBeInstanceOf(AsaasClient::class);
 });
 
-it('makes config available after registration', function () {
-    expect(config('asaas'))->toHaveKeys(['api_key', 'environment', 'timeout']);
-});
-
-it('restores config after re-registration', function () {
+it('merges the package config defaults on register', function () {
     $this->app['config']->set('asaas', []);
 
     (new AsaasServiceProvider($this->app))->register();
 
-    expect(config('asaas'))->toHaveKeys(['api_key', 'environment', 'timeout']);
+    expect(config('asaas'))
+        ->toBeArray()
+        ->toHaveKeys(['api_key', 'environment', 'timeout', 'connect_timeout']);
+    expect(config('asaas.environment'))->toBe('sandbox');
+    expect(config('asaas.timeout'))->toBe(30);
+    expect(config('asaas.connect_timeout'))->toBe(10);
 });
 
-it('registers config source path for publishing', function () {
+it('publishes the config file from the correct source path on boot', function () {
+    ServiceProvider::$publishes = [];
+
+    (new AsaasServiceProvider($this->app))->boot();
+
     $paths = ServiceProvider::pathsToPublish(AsaasServiceProvider::class, 'asaas-config');
 
     expect($paths)->not->toBeEmpty();
