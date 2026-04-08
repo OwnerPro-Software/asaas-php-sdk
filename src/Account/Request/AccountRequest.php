@@ -45,7 +45,7 @@ final readonly class AccountRequest implements JsonSerializable
         return [
             'name' => $this->name,
             'email' => '***',
-            'cpfCnpj' => str_repeat('*', max(0, strlen($this->cpfCnpj) - 3)).substr($this->cpfCnpj, -3),
+            'cpfCnpj' => self::mask($this->cpfCnpj, 3),
             'mobilePhone' => '***',
             'incomeValue' => $this->incomeValue,
             'address' => $this->address,

@@ -37,7 +37,7 @@ final readonly class CreditCardHolderInfo implements Arrayable, JsonSerializable
         return [
             'name' => $this->name,
             'email' => '***',
-            'cpfCnpj' => str_repeat('*', max(0, strlen($this->cpfCnpj) - 3)).substr($this->cpfCnpj, -3),
+            'cpfCnpj' => self::mask($this->cpfCnpj, 3),
             'postalCode' => $this->postalCode,
             'addressNumber' => $this->addressNumber,
             'phone' => '***',

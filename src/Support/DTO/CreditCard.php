@@ -31,7 +31,7 @@ final readonly class CreditCard implements Arrayable, JsonSerializable
     {
         return [
             'holderName' => $this->holderName,
-            'number' => str_repeat('*', max(0, strlen($this->number) - 4)).substr($this->number, -4),
+            'number' => self::mask($this->number, 4),
             'expiryMonth' => $this->expiryMonth,
             'expiryYear' => $this->expiryYear,
             'ccv' => '***',

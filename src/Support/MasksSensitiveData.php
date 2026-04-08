@@ -13,4 +13,9 @@ trait MasksSensitiveData
     {
         return $this->__debugInfo();
     }
+
+    protected static function mask(string $value, int $visibleSuffix): string
+    {
+        return str_repeat('*', max(0, strlen($value) - $visibleSuffix)).substr($value, -$visibleSuffix);
+    }
 }

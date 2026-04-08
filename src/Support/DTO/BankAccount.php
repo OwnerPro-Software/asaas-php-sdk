@@ -40,9 +40,9 @@ final readonly class BankAccount implements Arrayable, JsonSerializable
     {
         return [
             'ownerName' => $this->ownerName,
-            'cpfCnpj' => str_repeat('*', max(0, strlen($this->cpfCnpj) - 3)).substr($this->cpfCnpj, -3),
+            'cpfCnpj' => self::mask($this->cpfCnpj, 3),
             'agency' => $this->agency,
-            'account' => str_repeat('*', max(0, strlen($this->account) - 2)).substr($this->account, -2),
+            'account' => self::mask($this->account, 2),
             'accountDigit' => '*',
             'bank' => $this->bank,
             'accountName' => $this->accountName,
