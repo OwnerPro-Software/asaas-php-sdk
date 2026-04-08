@@ -12,6 +12,16 @@ final readonly class RawResponse
 {
     public function __construct(private Response $response) {}
 
+    /** @return array{status: int, headers: array<string, list<string>>, body: string} */
+    public function __debugInfo(): array
+    {
+        return [
+            'status' => $this->status(),
+            'headers' => $this->headers(),
+            'body' => $this->body(),
+        ];
+    }
+
     public function status(): int
     {
         return $this->response->status();

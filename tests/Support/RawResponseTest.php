@@ -65,3 +65,17 @@ it('creates a fake response with defaults', function (): void {
     expect($rawResponse->body())->toBe('');
     expect($rawResponse->headers())->toBeEmpty();
 });
+
+it('hides the underlying response from debug output to prevent API key leakage', function (): void {
+    $rawResponse = new RawResponse(new Response(new Psr7Response(200, [
+        'Content-Type' => 'application/json',
+    ], '{"id":"pay_123"}')));
+
+    $debug = $rawResponse->__debugInfo();
+
+    expect($debug)->toBe([
+        'status' => 200,
+        'headers' => ['Content-Type' => ['application/json']],
+        'body' => '{"id":"pay_123"}',
+    ]);
+});
