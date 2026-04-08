@@ -9,6 +9,7 @@ use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
 use OwnerPro\Asaas\PixTransaction\Request\PayQrCodeRequest;
+use OwnerPro\Asaas\Support\Arrayable;
 use OwnerPro\Asaas\Support\DTO\Bank;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\DTO\Callback;
@@ -16,6 +17,7 @@ use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\DTO\QrCodePayload;
 use OwnerPro\Asaas\Support\DTO\Split;
+use OwnerPro\Asaas\Support\DTO\SplitRefund;
 use OwnerPro\Asaas\Support\DTO\Taxes;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Transfer\Request\TransferRequest;
@@ -334,6 +336,29 @@ it('fromArray throws when nested array is missing required DTO fields', function
         'creditCard' => ['holderName' => 'John'],
     ]);
 })->throws(InvalidArgumentException::class);
+
+it('nested DTOs implement Arrayable', function (string $class): void {
+    expect(new $class(...array_map(
+        fn (ReflectionParameter $p): mixed => match (true) {
+            $p->isDefaultValueAvailable() => $p->getDefaultValue(),
+            (string) $p->getType() === 'string' => 'x',
+            (string) $p->getType() === 'float' => 0.0,
+            (string) $p->getType() === 'bool' => false,
+            default => 'x',
+        },
+        (new ReflectionClass($class))->getConstructor()->getParameters(),
+    )))->toBeInstanceOf(Arrayable::class);
+})->with([
+    Bank::class,
+    BankAccount::class,
+    Callback::class,
+    CreditCard::class,
+    CreditCardHolderInfo::class,
+    QrCodePayload::class,
+    Split::class,
+    SplitRefund::class,
+    Taxes::class,
+]);
 
 it('serializes mixed enum and string items in arrays', function (): void {
     $request = CreateWebhookRequest::fromArray([

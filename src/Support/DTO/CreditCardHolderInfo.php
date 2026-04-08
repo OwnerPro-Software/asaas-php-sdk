@@ -6,11 +6,12 @@ namespace OwnerPro\Asaas\Support\DTO;
 
 use InvalidArgumentException;
 use JsonSerializable;
+use OwnerPro\Asaas\Support\Arrayable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use SensitiveParameter;
 
-final readonly class CreditCardHolderInfo implements JsonSerializable
+final readonly class CreditCardHolderInfo implements Arrayable, JsonSerializable
 {
     use HasArrayFactory;
     use MasksSensitiveData;

@@ -6,12 +6,13 @@ namespace OwnerPro\Asaas\Support\DTO;
 
 use InvalidArgumentException;
 use JsonSerializable;
+use OwnerPro\Asaas\Support\Arrayable;
 use OwnerPro\Asaas\Support\Enums\BankAccountType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use SensitiveParameter;
 
-final readonly class BankAccount implements JsonSerializable
+final readonly class BankAccount implements Arrayable, JsonSerializable
 {
     use HasArrayFactory;
     use MasksSensitiveData;

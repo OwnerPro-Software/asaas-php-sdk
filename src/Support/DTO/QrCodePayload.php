@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Support\DTO;
 
 use InvalidArgumentException;
+use OwnerPro\Asaas\Support\Arrayable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final readonly class QrCodePayload
+final readonly class QrCodePayload implements Arrayable
 {
     use HasArrayFactory;
 

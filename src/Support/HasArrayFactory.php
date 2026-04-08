@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas\Support;
 
 use BackedEnum;
 
+/** @see Arrayable */
 trait HasArrayFactory
 {
     abstract public static function fromArray(array $data): static;
@@ -32,7 +33,7 @@ trait HasArrayFactory
                 return $value->value;
             }
 
-            if (is_object($value) && method_exists($value, 'toArray')) {
+            if ($value instanceof Arrayable) {
                 return $value->toArray();
             }
 
@@ -40,7 +41,7 @@ trait HasArrayFactory
                 return array_map(
                     fn (mixed $item): mixed => match (true) {
                         $item instanceof BackedEnum => $item->value,
-                        is_object($item) && method_exists($item, 'toArray') => $item->toArray(),
+                        $item instanceof Arrayable => $item->toArray(),
                         default => $item,
                     },
                     $value,

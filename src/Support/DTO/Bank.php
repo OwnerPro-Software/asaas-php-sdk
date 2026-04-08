@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Support\DTO;
 
 use InvalidArgumentException;
+use OwnerPro\Asaas\Support\Arrayable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final readonly class Bank
+final readonly class Bank implements Arrayable
 {
     use HasArrayFactory;
 
