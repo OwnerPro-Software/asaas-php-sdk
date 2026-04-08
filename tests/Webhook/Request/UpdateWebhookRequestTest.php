@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use OwnerPro\Asaas\Support\Missing;
 use OwnerPro\Asaas\Webhook\Request\UpdateWebhookRequest;
 
 mutates(UpdateWebhookRequest::class);
@@ -28,17 +29,17 @@ it('creates from array with all fields', function (): void {
     expect($request->events)->toBe(['PAYMENT_CONFIRMED']);
 });
 
-it('creates from array with no fields', function (): void {
+it('creates from array with no fields defaults to Missing', function (): void {
     $request = UpdateWebhookRequest::fromArray([]);
 
-    expect($request->url)->toBeNull();
-    expect($request->email)->toBeNull();
-    expect($request->name)->toBeNull();
-    expect($request->enabled)->toBeNull();
-    expect($request->apiVersion)->toBeNull();
-    expect($request->sendType)->toBeNull();
-    expect($request->authToken)->toBeNull();
-    expect($request->events)->toBeNull();
+    expect($request->url)->toBe(Missing::Value);
+    expect($request->email)->toBe(Missing::Value);
+    expect($request->name)->toBe(Missing::Value);
+    expect($request->enabled)->toBe(Missing::Value);
+    expect($request->apiVersion)->toBe(Missing::Value);
+    expect($request->sendType)->toBe(Missing::Value);
+    expect($request->authToken)->toBe(Missing::Value);
+    expect($request->events)->toBe(Missing::Value);
 });
 
 it('masks authToken in debug info', function (): void {
@@ -66,7 +67,7 @@ it('masks authToken in debug info', function (): void {
 });
 
 it('shows null authToken as null in debug info', function (): void {
-    $request = new UpdateWebhookRequest(url: 'https://example.com/hook');
+    $request = new UpdateWebhookRequest(url: 'https://example.com/hook', authToken: null);
 
     expect($request->__debugInfo()['authToken'])->toBeNull();
 });

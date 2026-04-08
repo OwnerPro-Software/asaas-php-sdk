@@ -432,6 +432,40 @@ Asaas::billPayments()->simulate(new SimulateBillPaymentRequest(
 ));
 ```
 
+### Clearing Fields on Updates
+
+Update DTOs (`UpdatePaymentRequest`, `UpdateInvoiceRequest`, `UpdateWebhookRequest`) support three states for each field:
+
+```php
+use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
+
+// 1. Don't change — omit the field (default):
+Asaas::payments()->update('pay_123', new UpdatePaymentRequest(
+    value: 200.00,
+    // description not passed → field not sent → API keeps current value
+));
+
+// 2. Clear the field — pass null explicitly:
+Asaas::payments()->update('pay_123', new UpdatePaymentRequest(
+    description: null, // → sends {"description": null} → API clears it
+));
+
+// 3. Set a new value:
+Asaas::payments()->update('pay_123', new UpdatePaymentRequest(
+    description: 'New description',
+));
+```
+
+This also works with `fromArray()` — missing keys are omitted, explicit `null` values are sent:
+
+```php
+// Only updates value, description untouched:
+Asaas::payments()->update('pay_123', ['value' => 200.00]);
+
+// Clears description:
+Asaas::payments()->update('pay_123', ['value' => 200.00, 'description' => null]);
+```
+
 ### Updated Request DTOs with Nested DTO Support
 
 `CreatePaymentRequest`, `CreditCardRequest`, `CreateInvoiceRequest`, and `TransferRequest` now accept typed nested DTOs alongside plain arrays:

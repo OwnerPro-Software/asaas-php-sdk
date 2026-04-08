@@ -28,6 +28,15 @@ trait HasArrayFactory
         /** @var array<string, mixed> $vars */
         $vars = array_filter(get_object_vars($this), fn (mixed $v): bool => $v !== null);
 
+        return $this->convertProperties($vars);
+    }
+
+    /**
+     * @param  array<string, mixed>  $vars
+     * @return array<string, mixed>
+     */
+    protected function convertProperties(array $vars): array
+    {
         return array_map(function (mixed $value): mixed {
             if ($value instanceof BackedEnum) {
                 return $value->value;
