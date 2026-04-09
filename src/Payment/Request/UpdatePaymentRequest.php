@@ -6,12 +6,12 @@ namespace OwnerPro\Asaas\Payment\Request;
 
 use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Support\DTO\Split;
-use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\Missing;
 
 final readonly class UpdatePaymentRequest
 {
-    use HasArrayFactory;
+    use HasUpdatableArrayFactory;
 
     /** @param list<Split>|Missing|null $split */
     public function __construct(
@@ -26,15 +26,6 @@ final readonly class UpdatePaymentRequest
         public bool|Missing|null $postalService = Missing::Value,
         public array|Missing|null $split = Missing::Value,
     ) {}
-
-    /** @return array<string, mixed> */
-    public function toArray(): array
-    {
-        /** @var array<string, mixed> $vars */
-        $vars = array_filter(get_object_vars($this), fn (mixed $v): bool => ! $v instanceof Missing);
-
-        return $this->convertProperties($vars);
-    }
 
     /** @param array{billingType?: BillingType|string|null, value?: float|null, dueDate?: string|null, description?: string|null, externalReference?: string|null, discount?: float|null, interest?: float|null, fine?: float|null, postalService?: bool|null, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>|null} $data */
     public static function fromArray(array $data): static

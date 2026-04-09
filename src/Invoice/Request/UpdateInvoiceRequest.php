@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Invoice\Request;
 
 use OwnerPro\Asaas\Support\DTO\Taxes;
-use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\Missing;
 
 final readonly class UpdateInvoiceRequest
 {
-    use HasArrayFactory;
+    use HasUpdatableArrayFactory;
 
     /** @param array<string, mixed>|Taxes|Missing|null $taxes */
     public function __construct(
@@ -23,15 +23,6 @@ final readonly class UpdateInvoiceRequest
         public array|Taxes|Missing|null $taxes = Missing::Value,
         public string|Missing|null $externalReference = Missing::Value,
     ) {}
-
-    /** @return array<string, mixed> */
-    public function toArray(): array
-    {
-        /** @var array<string, mixed> $vars */
-        $vars = array_filter(get_object_vars($this), fn (mixed $v): bool => ! $v instanceof Missing);
-
-        return $this->convertProperties($vars);
-    }
 
     /** @param array{serviceDescription?: string|null, observations?: string|null, value?: float|null, deductions?: float|null, effectiveDate?: string|null, municipalServiceName?: string|null, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|null, externalReference?: string|null} $data */
     public static function fromArray(array $data): static

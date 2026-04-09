@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Webhook\Request;
 
 use JsonSerializable;
-use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Support\Missing;
 use OwnerPro\Asaas\Webhook\WebhookEvent;
@@ -14,7 +14,7 @@ use SensitiveParameter;
 
 final readonly class UpdateWebhookRequest implements JsonSerializable
 {
-    use HasArrayFactory;
+    use HasUpdatableArrayFactory;
     use MasksSensitiveData;
 
     /** @param list<WebhookEvent|string>|Missing|null $events */
@@ -41,15 +41,6 @@ final readonly class UpdateWebhookRequest implements JsonSerializable
         }
 
         return $fields;
-    }
-
-    /** @return array<string, mixed> */
-    public function toArray(): array
-    {
-        /** @var array<string, mixed> $vars */
-        $vars = array_filter(get_object_vars($this), fn (mixed $v): bool => ! $v instanceof Missing);
-
-        return $this->convertProperties($vars);
     }
 
     /** @param array{url?: string|null, email?: string|null, name?: string|null, enabled?: bool|null, apiVersion?: int|null, sendType?: WebhookSendType|string|null, authToken?: string|null, events?: list<WebhookEvent|string>|null} $data */
