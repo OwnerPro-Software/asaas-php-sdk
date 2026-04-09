@@ -13,16 +13,23 @@ final readonly class CreditCardRequest
 {
     use HasArrayFactory;
 
+    public CreditCard $creditCard;
+
+    public CreditCardHolderInfo $creditCardHolderInfo;
+
     /**
-     * @param  array<string, mixed>|CreditCard  $creditCard
-     * @param  array<string, mixed>|CreditCardHolderInfo  $creditCardHolderInfo
+     * @param  array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}|CreditCard  $creditCard
+     * @param  array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}|CreditCardHolderInfo  $creditCardHolderInfo
      */
     public function __construct(
         public string $customer,
-        public array|CreditCard $creditCard,
-        public array|CreditCardHolderInfo $creditCardHolderInfo,
+        array|CreditCard $creditCard,
+        array|CreditCardHolderInfo $creditCardHolderInfo,
         public string $remoteIp,
-    ) {}
+    ) {
+        $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
+        $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
+    }
 
     /** @param array{customer?: string, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */
     public static function fromArray(array $data): static

@@ -53,8 +53,8 @@ it('UpdatePaymentRequest: fromArray serializes nested Split DTOs', function (): 
     expect($request->split)->toBeArray();
     expect($request->split[0])->toBeInstanceOf(Split::class);
     expect($request->toArray())->toBe([
-        'value' => 200.00,
         'split' => [['walletId' => 'wal_1', 'fixedValue' => 20.00]],
+        'value' => 200.00,
     ]);
 });
 

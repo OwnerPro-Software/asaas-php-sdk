@@ -12,7 +12,9 @@ final readonly class UpdateInvoiceRequest
 {
     use HasUpdatableArrayFactory;
 
-    /** @param array<string, mixed>|Taxes|Missing|null $taxes */
+    public Taxes|Missing|null $taxes;
+
+    /** @param array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes|Missing|null $taxes */
     public function __construct(
         public string|Missing|null $serviceDescription = Missing::Value,
         public string|Missing|null $observations = Missing::Value,
@@ -20,9 +22,11 @@ final readonly class UpdateInvoiceRequest
         public float|Missing|null $deductions = Missing::Value,
         public string|Missing|null $effectiveDate = Missing::Value,
         public string|Missing|null $municipalServiceName = Missing::Value,
-        public array|Taxes|Missing|null $taxes = Missing::Value,
+        array|Taxes|Missing|null $taxes = Missing::Value,
         public string|Missing|null $externalReference = Missing::Value,
-    ) {}
+    ) {
+        $this->taxes = is_array($taxes) ? Taxes::fromArray($taxes) : $taxes;
+    }
 
     /** @param array{serviceDescription?: string|null, observations?: string|null, value?: float|null, deductions?: float|null, effectiveDate?: string|null, municipalServiceName?: string|null, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|null, externalReference?: string|null} $data */
     public static function fromArray(array $data): static

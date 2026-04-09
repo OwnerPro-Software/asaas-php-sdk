@@ -157,8 +157,8 @@ it('UpdatePaymentRequest: serializes nested Split DTOs', function (): void {
     );
 
     expect($request->toArray())->toBe([
-        'value' => 200.00,
         'split' => [['walletId' => 'wal_1', 'fixedValue' => 20.00]],
+        'value' => 200.00,
     ]);
 });
 
@@ -265,12 +265,12 @@ it('BankAccount: serializes nested Bank DTO via recursive toArray', function ():
     );
 
     expect($account->toArray())->toBe([
+        'bank' => ['code' => '001'],
         'ownerName' => 'John',
         'cpfCnpj' => '12345678901',
         'agency' => '1234',
         'account' => '56789',
         'accountDigit' => '0',
-        'bank' => ['code' => '001'],
     ]);
 });
 

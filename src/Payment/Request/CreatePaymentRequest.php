@@ -16,11 +16,20 @@ final readonly class CreatePaymentRequest
 {
     use HasArrayFactory;
 
+    /** @var list<Split>|null */
+    public ?array $split;
+
+    public ?Callback $callback;
+
+    public ?CreditCard $creditCard;
+
+    public ?CreditCardHolderInfo $creditCardHolderInfo;
+
     /**
-     * @param  list<Split>|null  $split
-     * @param  array<string, mixed>|Callback|null  $callback
-     * @param  array<string, mixed>|CreditCard|null  $creditCard
-     * @param  array<string, mixed>|CreditCardHolderInfo|null  $creditCardHolderInfo
+     * @param  list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}|Split>|null  $split
+     * @param  array{successUrl?: string, autoRedirect?: bool}|Callback|null  $callback
+     * @param  array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}|CreditCard|null  $creditCard
+     * @param  array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}|CreditCardHolderInfo|null  $creditCardHolderInfo
      */
     public function __construct(
         public string $customer,
@@ -33,12 +42,20 @@ final readonly class CreatePaymentRequest
         public ?float $interest = null,
         public ?float $fine = null,
         public ?bool $postalService = null,
-        public ?array $split = null,
-        public array|Callback|null $callback = null,
-        public array|CreditCard|null $creditCard = null,
-        public array|CreditCardHolderInfo|null $creditCardHolderInfo = null,
+        ?array $split = null,
+        array|Callback|null $callback = null,
+        array|CreditCard|null $creditCard = null,
+        array|CreditCardHolderInfo|null $creditCardHolderInfo = null,
         public ?string $remoteIp = null,
-    ) {}
+    ) {
+        $this->split = $split !== null ? array_map(
+            fn (array|Split $item): Split => $item instanceof Split ? $item : Split::fromArray($item),
+            $split,
+        ) : null;
+        $this->callback = is_array($callback) ? Callback::fromArray($callback) : $callback;
+        $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
+        $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
+    }
 
     /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */
     public static function fromArray(array $data): static

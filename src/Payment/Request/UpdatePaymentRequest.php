@@ -13,7 +13,10 @@ final readonly class UpdatePaymentRequest
 {
     use HasUpdatableArrayFactory;
 
-    /** @param list<Split>|Missing|null $split */
+    /** @var list<Split>|Missing|null */
+    public array|Missing|null $split;
+
+    /** @param list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}|Split>|Missing|null $split */
     public function __construct(
         public BillingType|string|Missing|null $billingType = Missing::Value,
         public float|Missing|null $value = Missing::Value,
@@ -24,8 +27,13 @@ final readonly class UpdatePaymentRequest
         public float|Missing|null $interest = Missing::Value,
         public float|Missing|null $fine = Missing::Value,
         public bool|Missing|null $postalService = Missing::Value,
-        public array|Missing|null $split = Missing::Value,
-    ) {}
+        array|Missing|null $split = Missing::Value,
+    ) {
+        $this->split = is_array($split) ? array_map(
+            fn (array|Split $item): Split => $item instanceof Split ? $item : Split::fromArray($item),
+            $split,
+        ) : $split;
+    }
 
     /** @param array{billingType?: BillingType|string|null, value?: float|null, dueDate?: string|null, description?: string|null, externalReference?: string|null, discount?: float|null, interest?: float|null, fine?: float|null, postalService?: bool|null, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>|null} $data */
     public static function fromArray(array $data): static

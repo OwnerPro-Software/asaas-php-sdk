@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas\Transfer\Request;
 
 use InvalidArgumentException;
 use OwnerPro\Asaas\Pix\PixAddressKeyType;
+use OwnerPro\Asaas\Support\BankAccountType;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Transfer\TransferOperationType;
@@ -14,18 +15,22 @@ final readonly class TransferRequest
 {
     use HasArrayFactory;
 
-    /** @param array<string, mixed>|BankAccount|null $bankAccount */
+    public ?BankAccount $bankAccount;
+
+    /** @param array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string}|BankAccount|null $bankAccount */
     public function __construct(
         public float $value,
         public ?string $pixAddressKey = null,
         public PixAddressKeyType|string|null $pixAddressKeyType = null,
-        public array|BankAccount|null $bankAccount = null,
+        array|BankAccount|null $bankAccount = null,
         public ?string $walletId = null,
         public TransferOperationType|string|null $operationType = null,
         public ?string $description = null,
         public ?string $scheduleDate = null,
         public ?string $externalReference = null,
-    ) {}
+    ) {
+        $this->bankAccount = is_array($bankAccount) ? BankAccount::fromArray($bankAccount) : $bankAccount;
+    }
 
     /** @param array{value?: float, pixAddressKey?: string, pixAddressKeyType?: PixAddressKeyType|string, bankAccount?: array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: string, ispb?: string}, walletId?: string, operationType?: TransferOperationType|string, description?: string, scheduleDate?: string, externalReference?: string} $data */
     public static function fromArray(array $data): static

@@ -59,12 +59,12 @@ it('serializes nested Bank DTO in toArray', function (): void {
     );
 
     expect($account->toArray())->toBe([
+        'bank' => ['code' => '001'],
         'ownerName' => 'John Doe',
         'cpfCnpj' => '12345678901',
         'agency' => '1234',
         'account' => '56789',
         'accountDigit' => '0',
-        'bank' => ['code' => '001'],
     ]);
 });
 

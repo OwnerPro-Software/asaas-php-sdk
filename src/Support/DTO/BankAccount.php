@@ -17,7 +17,9 @@ final readonly class BankAccount implements Arrayable, JsonSerializable
     use HasArrayFactory;
     use MasksSensitiveData;
 
-    /** @param array<string, mixed>|Bank|null $bank */
+    public ?Bank $bank;
+
+    /** @param array{code?: string}|Bank|null $bank */
     public function __construct(
         public string $ownerName,
         #[SensitiveParameter]
@@ -27,15 +29,17 @@ final readonly class BankAccount implements Arrayable, JsonSerializable
         public string $account,
         #[SensitiveParameter]
         public string $accountDigit,
-        public array|Bank|null $bank = null,
+        array|Bank|null $bank = null,
         public ?string $accountName = null,
         #[SensitiveParameter]
         public ?string $ownerBirthDate = null,
         public BankAccountType|string|null $bankAccountType = null,
         public ?string $ispb = null,
-    ) {}
+    ) {
+        $this->bank = is_array($bank) ? Bank::fromArray($bank) : $bank;
+    }
 
-    /** @return array{ownerName: string, cpfCnpj: string, agency: string, account: string, accountDigit: string, bank: array<string, mixed>|Bank|null, accountName: ?string, ownerBirthDate: ?string, bankAccountType: BankAccountType|string|null, ispb: ?string} */
+    /** @return array{ownerName: string, cpfCnpj: string, agency: string, account: string, accountDigit: string, bank: ?array<string, mixed>, accountName: ?string, ownerBirthDate: ?string, bankAccountType: BankAccountType|string|null, ispb: ?string} */
     public function __debugInfo(): array
     {
         return [
@@ -44,7 +48,7 @@ final readonly class BankAccount implements Arrayable, JsonSerializable
             'agency' => $this->agency,
             'account' => self::mask($this->account, 2),
             'accountDigit' => '*',
-            'bank' => $this->bank,
+            'bank' => $this->bank?->toArray(),
             'accountName' => $this->accountName,
             'ownerBirthDate' => $this->ownerBirthDate !== null ? '***' : null,
             'bankAccountType' => $this->bankAccountType,

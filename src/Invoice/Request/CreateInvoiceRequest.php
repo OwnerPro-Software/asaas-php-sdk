@@ -12,7 +12,9 @@ final readonly class CreateInvoiceRequest
 {
     use HasArrayFactory;
 
-    /** @param array<string, mixed>|Taxes $taxes */
+    public Taxes $taxes;
+
+    /** @param array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes $taxes */
     public function __construct(
         public string $serviceDescription,
         public string $observations,
@@ -20,14 +22,16 @@ final readonly class CreateInvoiceRequest
         public float $deductions,
         public string $effectiveDate,
         public string $municipalServiceName,
-        public array|Taxes $taxes,
+        array|Taxes $taxes,
         public ?string $payment = null,
         public ?string $installment = null,
         public ?string $customer = null,
         public ?string $externalReference = null,
         public ?string $municipalServiceId = null,
         public ?string $municipalServiceCode = null,
-    ) {}
+    ) {
+        $this->taxes = is_array($taxes) ? Taxes::fromArray($taxes) : $taxes;
+    }
 
     /** @param array{serviceDescription?: string, observations?: string, value?: float, deductions?: float, effectiveDate?: string, municipalServiceName?: string, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}, payment?: string, installment?: string, customer?: string, externalReference?: string, municipalServiceId?: string, municipalServiceCode?: string} $data */
     public static function fromArray(array $data): static
