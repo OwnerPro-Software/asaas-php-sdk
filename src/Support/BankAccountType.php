@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OwnerPro\Asaas\Support\Enums;
+namespace OwnerPro\Asaas\Support;
 
 enum BankAccountType: string
 {

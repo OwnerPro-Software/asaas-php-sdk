@@ -7,7 +7,7 @@ namespace OwnerPro\Asaas\Support\DTO;
 use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Support\Arrayable;
-use OwnerPro\Asaas\Support\Enums\BankAccountType;
+use OwnerPro\Asaas\Support\BankAccountType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use SensitiveParameter;

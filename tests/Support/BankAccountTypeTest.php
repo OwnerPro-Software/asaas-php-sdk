@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use OwnerPro\Asaas\Support\Enums\BankAccountType;
+use OwnerPro\Asaas\Support\BankAccountType;
 
 mutates(BankAccountType::class);
 
