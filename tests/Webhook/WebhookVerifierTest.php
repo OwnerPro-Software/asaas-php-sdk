@@ -39,10 +39,9 @@ it('is timing-safe by using hash_equals', function (): void {
 it('returns true when IP is a known Asaas IP', function (): void {
     $verifier = new WebhookVerifier('token');
 
-    expect($verifier->isFromAsaas('52.67.12.206'))->toBeTrue();
-    expect($verifier->isFromAsaas('18.230.8.159'))->toBeTrue();
-    expect($verifier->isFromAsaas('54.94.136.112'))->toBeTrue();
-    expect($verifier->isFromAsaas('54.94.183.101'))->toBeTrue();
+    foreach (WebhookVerifier::DEFAULT_IPS as $ip) {
+        expect($verifier->isFromAsaas($ip))->toBeTrue();
+    }
 });
 
 it('returns false when IP is not a known Asaas IP', function (): void {
@@ -51,4 +50,21 @@ it('returns false when IP is not a known Asaas IP', function (): void {
     expect($verifier->isFromAsaas('1.2.3.4'))->toBeFalse();
     expect($verifier->isFromAsaas('127.0.0.1'))->toBeFalse();
     expect($verifier->isFromAsaas(''))->toBeFalse();
+});
+
+it('accepts custom trusted IPs', function (): void {
+    $verifier = new WebhookVerifier('token', ['10.0.0.1', '10.0.0.2']);
+
+    expect($verifier->isFromAsaas('10.0.0.1'))->toBeTrue();
+    expect($verifier->isFromAsaas('10.0.0.2'))->toBeTrue();
+    expect($verifier->isFromAsaas('52.67.12.206'))->toBeFalse();
+});
+
+it('exposes default IPs as a public constant', function (): void {
+    expect(WebhookVerifier::DEFAULT_IPS)->toBe([
+        '52.67.12.206',
+        '18.230.8.159',
+        '54.94.136.112',
+        '54.94.183.101',
+    ]);
 });

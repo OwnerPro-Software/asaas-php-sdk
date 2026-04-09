@@ -690,7 +690,14 @@ if (! $verifier->isFromAsaas($request->ip())) {
 }
 ```
 
-The known Asaas IPs are `52.67.12.206`, `18.230.8.159`, `54.94.136.112`, and `54.94.183.101`.
+The default known Asaas IPs are `52.67.12.206`, `18.230.8.159`, `54.94.136.112`, and `54.94.183.101`. You can override them if Asaas updates their IP list:
+
+```php
+$verifier = new WebhookVerifier(
+    authToken: 'your-webhook-auth-token',
+    trustedIps: [...WebhookVerifier::DEFAULT_IPS, '10.0.0.1'],
+);
+```
 
 ### Invoices (`invoices()`)
 
