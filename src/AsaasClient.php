@@ -43,6 +43,25 @@ final class AsaasClient
 
     public function __construct(private readonly Connector $connector) {}
 
+    /** @return array{resources: list<string>} */
+    public function __debugInfo(): array
+    {
+        return [
+            'resources' => [
+                'payments',
+                'pix',
+                'pixTransactions',
+                'transfers',
+                'webhooks',
+                'invoices',
+                'accounts',
+                'creditCards',
+                'billPayments',
+                'statements',
+            ],
+        ];
+    }
+
     public static function for(
         #[SensitiveParameter] string $apiKey,
         Environment|string $environment = Environment::Sandbox,

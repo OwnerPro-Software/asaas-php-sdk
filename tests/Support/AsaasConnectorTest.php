@@ -792,6 +792,23 @@ it('all() yields AsaasPaginatedError on connection exception mid-pagination', fu
     expect($items[2]->limit)->toBe(10);
 });
 
+it('hides the API key from debug output', function (): void {
+    $connector = AsaasConnector::forStandalone('sk_live_super_secret_key_123', Environment::Sandbox, 30);
+
+    $debug = $connector->__debugInfo();
+
+    expect($debug)->toBe(['baseUrl' => 'https://api-sandbox.asaas.com']);
+    expect(print_r($connector, true))->not->toContain('sk_live_super_secret_key_123');
+});
+
+it('debug output shows production base url', function (): void {
+    $connector = AsaasConnector::forStandalone('sk_live_key', Environment::Production, 30);
+
+    $debug = $connector->__debugInfo();
+
+    expect($debug)->toBe(['baseUrl' => 'https://api.asaas.com']);
+});
+
 it('orFail() on connection failure result throws AsaasRequestException with status 0', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 

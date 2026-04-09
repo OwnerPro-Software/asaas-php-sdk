@@ -79,6 +79,28 @@ it('creates client via DI constructor', function (): void {
     expect($client)->toBeInstanceOf(AsaasClient::class);
 });
 
+it('hides the connector from debug output', function (): void {
+    $client = AsaasClient::for(apiKey: 'sk_live_super_secret_key_123');
+
+    $debug = $client->__debugInfo();
+
+    expect($debug)->toHaveKey('resources');
+    expect($debug['resources'])->toBe([
+        'payments',
+        'pix',
+        'pixTransactions',
+        'transfers',
+        'webhooks',
+        'invoices',
+        'accounts',
+        'creditCards',
+        'billPayments',
+        'statements',
+    ]);
+    expect($debug)->not->toHaveKey('connector');
+    expect(print_r($client, true))->not->toContain('sk_live_super_secret_key_123');
+});
+
 it('resolves PaymentResource', function (): void {
     Http::fake();
     $client = new AsaasClient(AsaasConnector::forLaravel('k', Environment::Sandbox, 30));

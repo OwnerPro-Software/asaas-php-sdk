@@ -16,7 +16,16 @@ final readonly class AsaasConnector implements Connector
 {
     use PaginatesResults;
 
-    public function __construct(private PendingRequest $pendingRequest) {}
+    public function __construct(
+        private PendingRequest $pendingRequest,
+        private string $baseUrl = '',
+    ) {}
+
+    /** @return array{baseUrl: string} */
+    public function __debugInfo(): array
+    {
+        return ['baseUrl' => $this->baseUrl];
+    }
 
     public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10): self
     {
@@ -72,7 +81,8 @@ final readonly class AsaasConnector implements Connector
                 ->withHeader('access_token', $apiKey)
                 ->connectTimeout($connectTimeout)
                 ->timeout($timeout)
-                ->withOptions(['verify' => true])
+                ->withOptions(['verify' => true]),
+            $environment->baseUrl(),
         );
     }
 
