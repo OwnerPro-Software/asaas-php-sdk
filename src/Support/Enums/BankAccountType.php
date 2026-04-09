@@ -6,6 +6,6 @@ namespace OwnerPro\Asaas\Support\Enums;
 
 enum BankAccountType: string
 {
-    case ContaCorrente = 'CONTA_CORRENTE';
-    case ContaPoupanca = 'CONTA_POUPANCA';
+    case CheckingAccount = 'CONTA_CORRENTE';
+    case SavingsAccount = 'CONTA_POUPANCA';
 }

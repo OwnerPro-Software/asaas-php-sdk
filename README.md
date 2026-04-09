@@ -223,7 +223,7 @@ PaymentStatus::from($payment['status']);     // PaymentStatus::Pending
 | `Webhook\WebhookSendType` | `Sequentially`, `NonSequentially` |
 | `Webhook\WebhookEvent` | 111 event types (`PaymentCreated`, `PaymentReceived`, `TransferDone`, etc.) |
 | `Statement\FinancialTransactionType` | 129 transaction types (`PaymentReceived`, `Transfer`, `BillPayment`, etc.) |
-| `Support\Enums\BankAccountType` | `ContaCorrente`, `ContaPoupanca` |
+| `Support\Enums\BankAccountType` | `CheckingAccount`, `SavingsAccount` |
 
 ## Input: Arrays or Request Objects
 
@@ -538,7 +538,7 @@ Asaas::transfers()->create(new TransferRequest(
         account: '123456',
         accountDigit: '1',
         bank: new Bank(code: '001'),
-        bankAccountType: BankAccountType::ContaCorrente,
+        bankAccountType: BankAccountType::CheckingAccount,
     ),
     operationType: TransferOperationType::Ted,
 ));
