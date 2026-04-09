@@ -5,15 +5,15 @@ declare(strict_types=1);
 use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
-use OwnerPro\Asaas\Support\HttpConnector;
+use OwnerPro\Asaas\Support\Connector;
 use OwnerPro\Asaas\Support\PaginatesResults;
 use OwnerPro\Asaas\Support\RawResponse;
 
 mutates(PaginatesResults::class);
 
-function fakeConnector(Closure $getHandler): HttpConnector
+function fakeConnector(Closure $getHandler): Connector
 {
-    return new class($getHandler) implements HttpConnector
+    return new class($getHandler) implements Connector
     {
         use PaginatesResults;
 

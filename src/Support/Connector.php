@@ -6,8 +6,19 @@ namespace OwnerPro\Asaas\Support;
 
 use Generator;
 
-interface Connector extends HttpConnector
+interface Connector
 {
+    /** @param array<string, mixed> $query */
+    public function get(string $path, array $query): AsaasResult;
+
+    /** @param array<string, mixed> $data */
+    public function post(string $path, array $data): AsaasResult;
+
+    /** @param array<string, mixed> $data */
+    public function put(string $path, array $data): AsaasResult;
+
+    public function delete(string $path): AsaasResult;
+
     /** @param array<string, mixed> $query */
     public function paginate(string $path, array $query): AsaasPaginatedResult;
 

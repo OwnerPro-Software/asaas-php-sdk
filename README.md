@@ -747,9 +747,7 @@ Asaas::statements()->all(array $filters = []): Generator (yields array|AsaasPagi
 
 All resources depend on the `Connector` interface (`OwnerPro\Asaas\Support\Connector`) rather than the concrete `AsaasConnector`. You can provide your own implementation for testing, logging, caching, or any custom behavior.
 
-The `Connector` interface extends `HttpConnector`, which defines the four HTTP methods (`get`, `post`, `put`, `delete`). `Connector` adds `paginate` and `all`.
-
-The `PaginatesResults` trait provides default implementations of `paginate()` and `all()` built on top of `get()`, so you only need to implement the four HTTP methods:
+The `Connector` interface defines six methods: the four HTTP verbs (`get`, `post`, `put`, `delete`) plus `paginate` and `all`. The `PaginatesResults` trait provides default implementations of `paginate()` and `all()` built on top of `get()`, so you only need to implement the four HTTP methods:
 
 ```php
 use OwnerPro\Asaas\AsaasClient;
@@ -768,20 +766,6 @@ class MyLoggingConnector implements Connector
 }
 
 $client = new AsaasClient(new MyLoggingConnector());
-```
-
-If you only need HTTP access without pagination, implement `HttpConnector` directly:
-
-```php
-use OwnerPro\Asaas\Support\HttpConnector;
-
-class SimpleConnector implements HttpConnector
-{
-    public function get(string $path, array $query): AsaasResult { /* ... */ }
-    public function post(string $path, array $data): AsaasResult { /* ... */ }
-    public function put(string $path, array $data): AsaasResult { /* ... */ }
-    public function delete(string $path): AsaasResult { /* ... */ }
-}
 ```
 
 ## License
