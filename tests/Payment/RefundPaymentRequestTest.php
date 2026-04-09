@@ -19,6 +19,21 @@ it('creates from array with all fields', function (): void {
     expect($request->splitRefunds)->toHaveCount(1);
 });
 
+it('hydrates splitRefunds from arrays into SplitRefund objects', function (): void {
+    $request = RefundPaymentRequest::fromArray([
+        'value' => 50.00,
+        'splitRefunds' => [
+            ['id' => 'split_1', 'value' => 25.00],
+            ['id' => 'split_2', 'value' => 25.00],
+        ],
+    ]);
+
+    expect($request->splitRefunds)->toHaveCount(2);
+    expect($request->splitRefunds[0])->toBeInstanceOf(SplitRefund::class);
+    expect($request->splitRefunds[0]->id)->toBe('split_1');
+    expect($request->splitRefunds[1]->id)->toBe('split_2');
+});
+
 it('creates from empty array', function (): void {
     $request = RefundPaymentRequest::fromArray([]);
 
