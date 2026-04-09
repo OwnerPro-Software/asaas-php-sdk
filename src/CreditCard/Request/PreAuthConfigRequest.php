@@ -19,7 +19,7 @@ final readonly class PreAuthConfigRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            daysToExpire: $data['daysToExpire'] ?? throw new InvalidArgumentException('daysToExpire is required'),
+            daysToExpire: $data['daysToExpire'] ?? throw new InvalidArgumentException('PreAuthConfigRequest: daysToExpire is required'),
         );
     }
 }

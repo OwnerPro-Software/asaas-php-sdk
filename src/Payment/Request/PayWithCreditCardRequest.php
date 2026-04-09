@@ -26,8 +26,8 @@ final readonly class PayWithCreditCardRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            creditCard: CreditCard::fromArray($data['creditCard'] ?? throw new InvalidArgumentException('creditCard is required')),
-            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('creditCardHolderInfo is required')),
+            creditCard: CreditCard::fromArray($data['creditCard'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCard is required')),
+            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCardHolderInfo is required')),
         );
     }
 }

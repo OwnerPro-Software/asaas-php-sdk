@@ -21,8 +21,8 @@ final readonly class SplitRefund implements Arrayable
     public static function fromArray(array $data): static
     {
         return new self(
-            id: $data['id'] ?? throw new InvalidArgumentException('id is required'),
-            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
+            id: $data['id'] ?? throw new InvalidArgumentException('SplitRefund: id is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('SplitRefund: value is required'),
         );
     }
 }

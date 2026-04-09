@@ -44,10 +44,10 @@ final readonly class CreatePaymentRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            customer: $data['customer'] ?? throw new InvalidArgumentException('customer is required'),
-            billingType: $data['billingType'] ?? throw new InvalidArgumentException('billingType is required'),
-            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
-            dueDate: $data['dueDate'] ?? throw new InvalidArgumentException('dueDate is required'),
+            customer: $data['customer'] ?? throw new InvalidArgumentException('CreatePaymentRequest: customer is required'),
+            billingType: $data['billingType'] ?? throw new InvalidArgumentException('CreatePaymentRequest: billingType is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('CreatePaymentRequest: value is required'),
+            dueDate: $data['dueDate'] ?? throw new InvalidArgumentException('CreatePaymentRequest: dueDate is required'),
             description: $data['description'] ?? null,
             externalReference: $data['externalReference'] ?? null,
             discount: $data['discount'] ?? null,

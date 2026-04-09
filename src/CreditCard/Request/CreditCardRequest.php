@@ -28,10 +28,10 @@ final readonly class CreditCardRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            customer: $data['customer'] ?? throw new InvalidArgumentException('customer is required'),
-            creditCard: CreditCard::fromArray($data['creditCard'] ?? throw new InvalidArgumentException('creditCard is required')),
-            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('creditCardHolderInfo is required')),
-            remoteIp: $data['remoteIp'] ?? throw new InvalidArgumentException('remoteIp is required'),
+            customer: $data['customer'] ?? throw new InvalidArgumentException('CreditCardRequest: customer is required'),
+            creditCard: CreditCard::fromArray($data['creditCard'] ?? throw new InvalidArgumentException('CreditCardRequest: creditCard is required')),
+            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('CreditCardRequest: creditCardHolderInfo is required')),
+            remoteIp: $data['remoteIp'] ?? throw new InvalidArgumentException('CreditCardRequest: remoteIp is required'),
         );
     }
 }

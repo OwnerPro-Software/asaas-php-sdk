@@ -20,7 +20,7 @@ final readonly class PixKeyRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            type: $data['type'] ?? throw new InvalidArgumentException('type is required'),
+            type: $data['type'] ?? throw new InvalidArgumentException('PixKeyRequest: type is required'),
         );
     }
 }

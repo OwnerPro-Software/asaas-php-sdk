@@ -20,7 +20,7 @@ final readonly class Bank implements Arrayable
     public static function fromArray(array $data): static
     {
         return new self(
-            code: $data['code'] ?? throw new InvalidArgumentException('code is required'),
+            code: $data['code'] ?? throw new InvalidArgumentException('Bank: code is required'),
         );
     }
 }

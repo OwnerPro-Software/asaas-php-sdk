@@ -24,8 +24,8 @@ final readonly class PayQrCodeRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            qrCode: QrCodePayload::fromArray($data['qrCode'] ?? throw new InvalidArgumentException('qrCode is required')),
-            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
+            qrCode: QrCodePayload::fromArray($data['qrCode'] ?? throw new InvalidArgumentException('PayQrCodeRequest: qrCode is required')),
+            value: $data['value'] ?? throw new InvalidArgumentException('PayQrCodeRequest: value is required'),
             description: $data['description'] ?? null,
             scheduleDate: $data['scheduleDate'] ?? null,
         );

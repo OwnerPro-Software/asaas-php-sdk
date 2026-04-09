@@ -50,12 +50,12 @@ final readonly class CreditCardHolderInfo implements Arrayable, JsonSerializable
     public static function fromArray(array $data): static
     {
         return new self(
-            name: $data['name'] ?? throw new InvalidArgumentException('name is required'),
-            email: $data['email'] ?? throw new InvalidArgumentException('email is required'),
-            cpfCnpj: $data['cpfCnpj'] ?? throw new InvalidArgumentException('cpfCnpj is required'),
-            postalCode: $data['postalCode'] ?? throw new InvalidArgumentException('postalCode is required'),
-            addressNumber: $data['addressNumber'] ?? throw new InvalidArgumentException('addressNumber is required'),
-            phone: $data['phone'] ?? throw new InvalidArgumentException('phone is required'),
+            name: $data['name'] ?? throw new InvalidArgumentException('CreditCardHolderInfo: name is required'),
+            email: $data['email'] ?? throw new InvalidArgumentException('CreditCardHolderInfo: email is required'),
+            cpfCnpj: $data['cpfCnpj'] ?? throw new InvalidArgumentException('CreditCardHolderInfo: cpfCnpj is required'),
+            postalCode: $data['postalCode'] ?? throw new InvalidArgumentException('CreditCardHolderInfo: postalCode is required'),
+            addressNumber: $data['addressNumber'] ?? throw new InvalidArgumentException('CreditCardHolderInfo: addressNumber is required'),
+            phone: $data['phone'] ?? throw new InvalidArgumentException('CreditCardHolderInfo: phone is required'),
             addressComplement: $data['addressComplement'] ?? null,
             mobilePhone: $data['mobilePhone'] ?? null,
         );

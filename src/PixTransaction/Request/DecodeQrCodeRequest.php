@@ -21,7 +21,7 @@ final readonly class DecodeQrCodeRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            payload: $data['payload'] ?? throw new InvalidArgumentException('payload is required'),
+            payload: $data['payload'] ?? throw new InvalidArgumentException('DecodeQrCodeRequest: payload is required'),
             changeValue: $data['changeValue'] ?? null,
             expectedPaymentDate: $data['expectedPaymentDate'] ?? null,
         );

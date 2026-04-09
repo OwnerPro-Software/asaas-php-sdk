@@ -49,8 +49,8 @@ final readonly class CreateWebhookRequest implements JsonSerializable
     public static function fromArray(array $data): static
     {
         return new self(
-            url: $data['url'] ?? throw new InvalidArgumentException('url is required'),
-            email: $data['email'] ?? throw new InvalidArgumentException('email is required'),
+            url: $data['url'] ?? throw new InvalidArgumentException('CreateWebhookRequest: url is required'),
+            email: $data['email'] ?? throw new InvalidArgumentException('CreateWebhookRequest: email is required'),
             name: $data['name'] ?? null,
             enabled: $data['enabled'] ?? null,
             apiVersion: $data['apiVersion'] ?? null,

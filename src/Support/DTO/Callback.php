@@ -21,7 +21,7 @@ final readonly class Callback implements Arrayable
     public static function fromArray(array $data): static
     {
         return new self(
-            successUrl: $data['successUrl'] ?? throw new InvalidArgumentException('successUrl is required'),
+            successUrl: $data['successUrl'] ?? throw new InvalidArgumentException('Callback: successUrl is required'),
             autoRedirect: $data['autoRedirect'] ?? null,
         );
     }

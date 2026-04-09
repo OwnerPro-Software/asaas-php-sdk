@@ -21,7 +21,7 @@ final readonly class QrCodePayload implements Arrayable
     public static function fromArray(array $data): static
     {
         return new self(
-            payload: $data['payload'] ?? throw new InvalidArgumentException('payload is required'),
+            payload: $data['payload'] ?? throw new InvalidArgumentException('QrCodePayload: payload is required'),
             changeValue: $data['changeValue'] ?? null,
         );
     }

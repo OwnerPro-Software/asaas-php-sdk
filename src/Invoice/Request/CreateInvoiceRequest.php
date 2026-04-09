@@ -33,13 +33,13 @@ final readonly class CreateInvoiceRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            serviceDescription: $data['serviceDescription'] ?? throw new InvalidArgumentException('serviceDescription is required'),
-            observations: $data['observations'] ?? throw new InvalidArgumentException('observations is required'),
-            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
-            deductions: $data['deductions'] ?? throw new InvalidArgumentException('deductions is required'),
-            effectiveDate: $data['effectiveDate'] ?? throw new InvalidArgumentException('effectiveDate is required'),
-            municipalServiceName: $data['municipalServiceName'] ?? throw new InvalidArgumentException('municipalServiceName is required'),
-            taxes: Taxes::fromArray($data['taxes'] ?? throw new InvalidArgumentException('taxes is required')),
+            serviceDescription: $data['serviceDescription'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: serviceDescription is required'),
+            observations: $data['observations'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: observations is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: value is required'),
+            deductions: $data['deductions'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: deductions is required'),
+            effectiveDate: $data['effectiveDate'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: effectiveDate is required'),
+            municipalServiceName: $data['municipalServiceName'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: municipalServiceName is required'),
+            taxes: Taxes::fromArray($data['taxes'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: taxes is required')),
             payment: $data['payment'] ?? null,
             installment: $data['installment'] ?? null,
             customer: $data['customer'] ?? null,

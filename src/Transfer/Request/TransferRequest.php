@@ -31,7 +31,7 @@ final readonly class TransferRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('TransferRequest: value is required'),
             pixAddressKey: $data['pixAddressKey'] ?? null,
             pixAddressKeyType: $data['pixAddressKeyType'] ?? null,
             bankAccount: isset($data['bankAccount']) ? BankAccount::fromArray($data['bankAccount']) : null,

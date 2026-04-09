@@ -25,7 +25,7 @@ final readonly class Split implements Arrayable
     public static function fromArray(array $data): static
     {
         return new self(
-            walletId: $data['walletId'] ?? throw new InvalidArgumentException('walletId is required'),
+            walletId: $data['walletId'] ?? throw new InvalidArgumentException('Split: walletId is required'),
             fixedValue: $data['fixedValue'] ?? null,
             percentualValue: $data['percentualValue'] ?? null,
             totalFixedValue: $data['totalFixedValue'] ?? null,

@@ -26,7 +26,7 @@ final readonly class CreateBillPaymentRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            identificationField: $data['identificationField'] ?? throw new InvalidArgumentException('identificationField is required'),
+            identificationField: $data['identificationField'] ?? throw new InvalidArgumentException('CreateBillPaymentRequest: identificationField is required'),
             scheduleDate: $data['scheduleDate'] ?? null,
             description: $data['description'] ?? null,
             discount: $data['discount'] ?? null,

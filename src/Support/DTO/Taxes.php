@@ -32,13 +32,13 @@ final readonly class Taxes implements Arrayable
     public static function fromArray(array $data): static
     {
         return new self(
-            retainIss: $data['retainIss'] ?? throw new InvalidArgumentException('retainIss is required'),
-            iss: $data['iss'] ?? throw new InvalidArgumentException('iss is required'),
-            pis: $data['pis'] ?? throw new InvalidArgumentException('pis is required'),
-            cofins: $data['cofins'] ?? throw new InvalidArgumentException('cofins is required'),
-            csll: $data['csll'] ?? throw new InvalidArgumentException('csll is required'),
-            inss: $data['inss'] ?? throw new InvalidArgumentException('inss is required'),
-            ir: $data['ir'] ?? throw new InvalidArgumentException('ir is required'),
+            retainIss: $data['retainIss'] ?? throw new InvalidArgumentException('Taxes: retainIss is required'),
+            iss: $data['iss'] ?? throw new InvalidArgumentException('Taxes: iss is required'),
+            pis: $data['pis'] ?? throw new InvalidArgumentException('Taxes: pis is required'),
+            cofins: $data['cofins'] ?? throw new InvalidArgumentException('Taxes: cofins is required'),
+            csll: $data['csll'] ?? throw new InvalidArgumentException('Taxes: csll is required'),
+            inss: $data['inss'] ?? throw new InvalidArgumentException('Taxes: inss is required'),
+            ir: $data['ir'] ?? throw new InvalidArgumentException('Taxes: ir is required'),
             nbsCode: $data['nbsCode'] ?? null,
             taxSituationCode: $data['taxSituationCode'] ?? null,
             taxClassificationCode: $data['taxClassificationCode'] ?? null,

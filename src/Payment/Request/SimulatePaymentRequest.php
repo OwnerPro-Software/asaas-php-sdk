@@ -23,8 +23,8 @@ final readonly class SimulatePaymentRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            value: $data['value'] ?? throw new InvalidArgumentException('value is required'),
-            billingTypes: $data['billingTypes'] ?? throw new InvalidArgumentException('billingTypes is required'),
+            value: $data['value'] ?? throw new InvalidArgumentException('SimulatePaymentRequest: value is required'),
+            billingTypes: $data['billingTypes'] ?? throw new InvalidArgumentException('SimulatePaymentRequest: billingTypes is required'),
             installmentCount: $data['installmentCount'] ?? null,
         );
     }
