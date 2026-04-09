@@ -33,7 +33,7 @@ final readonly class WebhookResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
     }
 
     /** @param array<string, mixed>|UpdateWebhookRequest $data */
@@ -49,7 +49,7 @@ final readonly class WebhookResource
 
     public function removeBackoff(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/removeBackoff', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/removeBackoff', self::BASE, IdGuard::validate($id)));
     }
 
     /**

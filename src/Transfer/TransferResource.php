@@ -32,12 +32,12 @@ final readonly class TransferResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/cancel', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/cancel', self::BASE, IdGuard::validate($id)));
     }
 
     /**

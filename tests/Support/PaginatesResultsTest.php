@@ -26,19 +26,19 @@ function fakeConnector(Closure $getHandler): Connector
         }
 
         /** @param array<string, mixed> $query */
-        public function get(string $path, array $query): AsaasResult
+        public function get(string $path, array $query = []): AsaasResult
         {
             return ($this->getHandler)($path, $query);
         }
 
         /** @param array<string, mixed> $data */
-        public function post(string $path, array $data): AsaasResult
+        public function post(string $path, array $data = []): AsaasResult
         {
             return AsaasResult::failure([['code' => 'NOT_IMPLEMENTED', 'description' => 'Not implemented']]);
         }
 
         /** @param array<string, mixed> $data */
-        public function put(string $path, array $data): AsaasResult
+        public function put(string $path, array $data = []): AsaasResult
         {
             return AsaasResult::failure([['code' => 'NOT_IMPLEMENTED', 'description' => 'Not implemented']]);
         }

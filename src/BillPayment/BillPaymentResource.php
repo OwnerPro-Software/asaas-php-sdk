@@ -33,7 +33,7 @@ final readonly class BillPaymentResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
     }
 
     /** @param array<string, mixed>|SimulateBillPaymentRequest $data */
@@ -44,7 +44,7 @@ final readonly class BillPaymentResource
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/cancel', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/cancel', self::BASE, IdGuard::validate($id)));
     }
 
     /**

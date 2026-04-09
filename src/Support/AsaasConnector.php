@@ -38,7 +38,7 @@ final readonly class AsaasConnector implements Connector
     }
 
     /** @param array<string, mixed> $query */
-    public function get(string $path, array $query): AsaasResult
+    public function get(string $path, array $query = []): AsaasResult
     {
         return $this->sendRequest(
             fn (): Response => $this->pendingRequest->get($path, $query),
@@ -46,7 +46,7 @@ final readonly class AsaasConnector implements Connector
     }
 
     /** @param array<string, mixed> $data */
-    public function post(string $path, array $data): AsaasResult
+    public function post(string $path, array $data = []): AsaasResult
     {
         return $this->sendRequest(
             fn (): Response => $this->pendingRequest->post($path, $data),
@@ -54,7 +54,7 @@ final readonly class AsaasConnector implements Connector
     }
 
     /** @param array<string, mixed> $data */
-    public function put(string $path, array $data): AsaasResult
+    public function put(string $path, array $data = []): AsaasResult
     {
         return $this->sendRequest(
             fn (): Response => $this->pendingRequest->put($path, $data),

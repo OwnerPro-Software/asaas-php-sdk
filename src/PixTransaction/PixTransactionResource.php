@@ -41,12 +41,12 @@ final readonly class PixTransactionResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::TRANSACTIONS, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::TRANSACTIONS, IdGuard::validate($id)));
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/cancel', self::TRANSACTIONS, IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/cancel', self::TRANSACTIONS, IdGuard::validate($id)));
     }
 
     /**

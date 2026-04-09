@@ -33,7 +33,7 @@ final readonly class InvoiceResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
     }
 
     /** @param array<string, mixed>|UpdateInvoiceRequest $data */
@@ -44,12 +44,12 @@ final readonly class InvoiceResource
 
     public function authorize(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/authorize', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/authorize', self::BASE, IdGuard::validate($id)));
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/cancel', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/cancel', self::BASE, IdGuard::validate($id)));
     }
 
     /**

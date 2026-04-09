@@ -25,7 +25,7 @@ final readonly class CreditCardResource
 
     public function getPreAuthorizationConfig(): AsaasResult
     {
-        return $this->connector->get(self::PRE_AUTH_CONFIG, []);
+        return $this->connector->get(self::PRE_AUTH_CONFIG);
     }
 
     /** @param array<string, mixed>|PreAuthConfigRequest $data */

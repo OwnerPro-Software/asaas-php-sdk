@@ -35,7 +35,7 @@ final readonly class PixResource
 
     public function findKey(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::KEYS, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::KEYS, IdGuard::validate($id)));
     }
 
     public function deleteKey(string $id): AsaasResult
@@ -56,7 +56,7 @@ final readonly class PixResource
 
     public function tokenBucket(): AsaasResult
     {
-        return $this->connector->get('/pix/tokenBucket/addressKey', []);
+        return $this->connector->get('/pix/tokenBucket/addressKey');
     }
 
     /**

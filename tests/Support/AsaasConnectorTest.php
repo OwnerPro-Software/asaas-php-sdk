@@ -29,7 +29,7 @@ it('forLaravel accepts string environment', function (): void {
     Http::fake(['https://api.asaas.com/*' => Http::response(['id' => 'x', 'status' => 'OK'], 200)]);
 
     $connector = AsaasConnector::forLaravel('key', 'production', 30);
-    $result = $connector->get('/payments/x', []);
+    $result = $connector->get('/payments/x');
 
     expect($result->success)->toBeTrue();
     Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api.asaas.com/'));
@@ -47,7 +47,7 @@ it('forLaravel uses sandbox base url', function (): void {
     Http::fake(['https://api-sandbox.asaas.com/*' => Http::response(['id' => 'x', 'status' => 'OK'], 200)]);
 
     $connector = AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
-    $result = $connector->get('/payments/x', []);
+    $result = $connector->get('/payments/x');
 
     expect($result->success)->toBeTrue();
     expect($result->data['id'])->toBe('x');
@@ -62,7 +62,7 @@ it('forLaravel uses production base url', function (): void {
     Http::fake(['https://api.asaas.com/*' => Http::response(['id' => 'x', 'status' => 'OK'], 200)]);
 
     $connector = AsaasConnector::forLaravel('prod-key', Environment::Production, 30);
-    $result = $connector->get('/payments/x', []);
+    $result = $connector->get('/payments/x');
 
     expect($result->success)->toBeTrue();
 
@@ -162,7 +162,7 @@ it('standalone get returns success result', function (): void {
         ->stub([fn ($request, $options) => Factory::response(['id' => 'pay_123', 'status' => 'PENDING'], 200)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123');
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
@@ -179,7 +179,7 @@ it('standalone get returns empty data on scalar JSON response', function (): voi
         ->stub([fn ($request, $options) => Factory::response('true', 200)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123');
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toBe([]);
@@ -300,7 +300,7 @@ it('strips HTML tags and truncates long non-JSON error bodies', function (): voi
         ->stub([fn ($request, $options) => Factory::response($htmlBody, 502)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123');
 
     expect($result->success)->toBeFalse();
     $description = $result->errors[0]['description'];
@@ -319,7 +319,7 @@ it('standalone get returns failure result on connection exception', function ():
         ->stub([fn ($request, $options): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123');
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
@@ -355,7 +355,7 @@ it('returns AsaasResult with response on successful GET', function (): void {
     )]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->get('/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123');
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
@@ -670,7 +670,7 @@ it('returns success with empty response on 2xx with no JSON body', function (): 
     Http::fake(['*' => Http::response('', 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->get('/payments/x', []);
+    $result = $connector->get('/payments/x');
 
     expect($result->success)->toBeTrue();
     expect($result->response->status())->toBe(200);
@@ -685,7 +685,7 @@ it('standalone handles 2xx with no JSON body', function (): void {
         ->stub([fn ($request, $options) => Factory::response('', 200)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/payments/x', []);
+    $result = $connector->get('/payments/x');
 
     expect($result->success)->toBeTrue();
     expect($result->response->status())->toBe(200);
@@ -697,7 +697,7 @@ it('get returns failure result on connection exception', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->get('/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123');
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
@@ -813,7 +813,7 @@ it('orFail() on connection failure result throws AsaasRequestException with stat
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->get('/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123');
 
     expect($result->success)->toBeFalse();
 

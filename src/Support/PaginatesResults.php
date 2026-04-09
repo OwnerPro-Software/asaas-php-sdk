@@ -9,7 +9,7 @@ use Generator;
 trait PaginatesResults
 {
     /** @param array<string, mixed> $query */
-    abstract public function get(string $path, array $query): AsaasResult;
+    abstract public function get(string $path, array $query = []): AsaasResult;
 
     /** @param array<string, mixed> $query */
     public function paginate(string $path, array $query): AsaasPaginatedResult

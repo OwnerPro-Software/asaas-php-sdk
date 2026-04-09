@@ -33,17 +33,17 @@ final readonly class AccountResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
     }
 
     public function listAccessTokens(string $accountId): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/accessTokens', self::BASE, IdGuard::validate($accountId)), []);
+        return $this->connector->get(sprintf('%s/%s/accessTokens', self::BASE, IdGuard::validate($accountId)));
     }
 
     public function createAccessToken(string $accountId): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/accessTokens', self::BASE, IdGuard::validate($accountId)), []);
+        return $this->connector->post(sprintf('%s/%s/accessTokens', self::BASE, IdGuard::validate($accountId)));
     }
 
     /** @param array<string, mixed>|AccessTokenRequest $data */

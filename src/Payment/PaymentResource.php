@@ -31,7 +31,7 @@ final readonly class PaymentResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
     }
 
     /** @param array<string, mixed> $query */
@@ -59,12 +59,12 @@ final readonly class PaymentResource
 
     public function restore(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/restore', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/restore', self::BASE, IdGuard::validate($id)));
     }
 
     public function captureAuthorized(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/captureAuthorizedPayment', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/captureAuthorizedPayment', self::BASE, IdGuard::validate($id)));
     }
 
     /** @param array<string, mixed>|PayWithCreditCardRequest $data */
@@ -81,32 +81,32 @@ final readonly class PaymentResource
 
     public function undoReceivedInCash(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/undoReceivedInCash', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/undoReceivedInCash', self::BASE, IdGuard::validate($id)));
     }
 
     public function status(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/status', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s/status', self::BASE, IdGuard::validate($id)));
     }
 
     public function billingInfo(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/billingInfo', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s/billingInfo', self::BASE, IdGuard::validate($id)));
     }
 
     public function pixQrCode(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/pixQrCode', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s/pixQrCode', self::BASE, IdGuard::validate($id)));
     }
 
     public function identificationField(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/identificationField', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s/identificationField', self::BASE, IdGuard::validate($id)));
     }
 
     public function viewingInfo(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/viewingInfo', self::BASE, IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s/viewingInfo', self::BASE, IdGuard::validate($id)));
     }
 
     /** @param array<string, mixed>|SimulatePaymentRequest $data */
@@ -117,7 +117,7 @@ final readonly class PaymentResource
 
     public function limits(): AsaasResult
     {
-        return $this->connector->get(self::BASE.'/limits', []);
+        return $this->connector->get(self::BASE.'/limits');
     }
 
     /**
