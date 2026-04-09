@@ -6,6 +6,10 @@ use OwnerPro\Asaas\Webhook\WebhookVerifier;
 
 mutates(WebhookVerifier::class);
 
+it('throws on empty auth token', function (): void {
+    new WebhookVerifier('');
+})->throws(InvalidArgumentException::class, 'The webhook auth token must not be empty.');
+
 it('returns true when header token matches the configured token', function (): void {
     $verifier = new WebhookVerifier('my-secret-token');
 

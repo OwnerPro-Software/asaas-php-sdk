@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Webhook;
 
+use InvalidArgumentException;
 use SensitiveParameter;
 
 final readonly class WebhookVerifier
@@ -11,7 +12,11 @@ final readonly class WebhookVerifier
     public function __construct(
         #[SensitiveParameter]
         private string $authToken,
-    ) {}
+    ) {
+        if ($authToken === '') {
+            throw new InvalidArgumentException('The webhook auth token must not be empty.');
+        }
+    }
 
     public function verify(string $headerToken): bool
     {
