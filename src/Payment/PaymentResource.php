@@ -31,7 +31,7 @@ final readonly class PaymentResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->path($id));
     }
 
     /** @param array<string, mixed> $query */
@@ -43,70 +43,70 @@ final readonly class PaymentResource
     /** @param array<string, mixed>|UpdatePaymentRequest $data */
     public function update(string $id, array|UpdatePaymentRequest $data): AsaasResult
     {
-        return $this->connector->put(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), UpdatePaymentRequest::resolveData($data));
+        return $this->connector->put($this->path($id), UpdatePaymentRequest::resolveData($data));
     }
 
     public function delete(string $id): AsaasResult
     {
-        return $this->connector->delete(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
+        return $this->connector->delete($this->path($id));
     }
 
     /** @param array<string, mixed>|RefundPaymentRequest $data */
     public function refund(string $id, array|RefundPaymentRequest $data = []): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/refund', self::BASE, IdGuard::validate($id)), RefundPaymentRequest::resolveData($data));
+        return $this->connector->post($this->path($id, '/refund'), RefundPaymentRequest::resolveData($data));
     }
 
     public function restore(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/restore', self::BASE, IdGuard::validate($id)));
+        return $this->connector->post($this->path($id, '/restore'));
     }
 
     public function captureAuthorized(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/captureAuthorizedPayment', self::BASE, IdGuard::validate($id)));
+        return $this->connector->post($this->path($id, '/captureAuthorizedPayment'));
     }
 
     /** @param array<string, mixed>|PayWithCreditCardRequest $data */
     public function payWithCreditCard(string $id, array|PayWithCreditCardRequest $data): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/payWithCreditCard', self::BASE, IdGuard::validate($id)), PayWithCreditCardRequest::resolveData($data));
+        return $this->connector->post($this->path($id, '/payWithCreditCard'), PayWithCreditCardRequest::resolveData($data));
     }
 
     /** @param array<string, mixed>|ReceivePaymentInCashRequest $data */
     public function receiveInCash(string $id, array|ReceivePaymentInCashRequest $data = []): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/receiveInCash', self::BASE, IdGuard::validate($id)), ReceivePaymentInCashRequest::resolveData($data));
+        return $this->connector->post($this->path($id, '/receiveInCash'), ReceivePaymentInCashRequest::resolveData($data));
     }
 
     public function undoReceivedInCash(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/undoReceivedInCash', self::BASE, IdGuard::validate($id)));
+        return $this->connector->post($this->path($id, '/undoReceivedInCash'));
     }
 
     public function status(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/status', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->path($id, '/status'));
     }
 
     public function billingInfo(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/billingInfo', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->path($id, '/billingInfo'));
     }
 
     public function pixQrCode(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/pixQrCode', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->path($id, '/pixQrCode'));
     }
 
     public function identificationField(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/identificationField', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->path($id, '/identificationField'));
     }
 
     public function viewingInfo(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/viewingInfo', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->path($id, '/viewingInfo'));
     }
 
     /** @param array<string, mixed>|SimulatePaymentRequest $data */
@@ -127,5 +127,10 @@ final readonly class PaymentResource
     public function all(array $filters = []): Generator
     {
         return $this->connector->all(self::BASE, $filters);
+    }
+
+    private function path(string $id, string $suffix = ''): string
+    {
+        return sprintf('%s/%s%s', self::BASE, IdGuard::validate($id), $suffix);
     }
 }

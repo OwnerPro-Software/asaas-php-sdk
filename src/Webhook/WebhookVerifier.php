@@ -17,20 +17,15 @@ final readonly class WebhookVerifier
         '54.94.183.101', // @pest-mutate-ignore
     ];
 
-    /** @var list<string> */
-    private array $trustedIps;
-
     /** @param list<string> $trustedIps */
     public function __construct(
         #[SensitiveParameter]
         private string $authToken,
-        array $trustedIps = self::DEFAULT_IPS,
+        private array $trustedIps = self::DEFAULT_IPS,
     ) {
         if ($authToken === '') {
             throw new InvalidArgumentException('The webhook auth token must not be empty.');
         }
-
-        $this->trustedIps = $trustedIps;
     }
 
     public function verify(string $headerToken): bool

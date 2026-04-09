@@ -33,23 +33,23 @@ final readonly class WebhookResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->path($id));
     }
 
     /** @param array<string, mixed>|UpdateWebhookRequest $data */
     public function update(string $id, array|UpdateWebhookRequest $data): AsaasResult
     {
-        return $this->connector->put(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), UpdateWebhookRequest::resolveData($data));
+        return $this->connector->put($this->path($id), UpdateWebhookRequest::resolveData($data));
     }
 
     public function delete(string $id): AsaasResult
     {
-        return $this->connector->delete(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
+        return $this->connector->delete($this->path($id));
     }
 
     public function removeBackoff(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/removeBackoff', self::BASE, IdGuard::validate($id)));
+        return $this->connector->post($this->path($id, '/removeBackoff'));
     }
 
     /**
@@ -59,5 +59,10 @@ final readonly class WebhookResource
     public function all(array $filters = []): Generator
     {
         return $this->connector->all(self::BASE, $filters);
+    }
+
+    private function path(string $id, string $suffix = ''): string
+    {
+        return sprintf('%s/%s%s', self::BASE, IdGuard::validate($id), $suffix);
     }
 }

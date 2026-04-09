@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\DeadCode\Rector\Node\RemoveNonExistingVarAnnotationRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\AddReturnArrayDocblockBasedOnArrayMapRector;
 use RectorLaravel\Rector\MethodCall\ContainerBindConcreteWithClosureOnlyRector;
 use RectorLaravel\Set\LaravelSetProvider;
@@ -21,6 +22,9 @@ return RectorConfig::configure()
         ],
         AddReturnArrayDocblockBasedOnArrayMapRector::class => [
             __DIR__.'/src/Support/HasArrayFactory.php',
+        ],
+        RemoveNonExistingVarAnnotationRector::class => [
+            __DIR__.'/src/AsaasClient.php',
         ],
     ])
     ->withPreparedSets(

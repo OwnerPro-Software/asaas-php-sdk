@@ -35,12 +35,12 @@ final readonly class PixResource
 
     public function findKey(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::KEYS, IdGuard::validate($id)));
+        return $this->connector->get($this->path(self::KEYS, $id));
     }
 
     public function deleteKey(string $id): AsaasResult
     {
-        return $this->connector->delete(sprintf('%s/%s', self::KEYS, IdGuard::validate($id)));
+        return $this->connector->delete($this->path(self::KEYS, $id));
     }
 
     /** @param array<string, mixed>|StaticQrCodeRequest $data */
@@ -51,7 +51,7 @@ final readonly class PixResource
 
     public function deleteStaticQrCode(string $id): AsaasResult
     {
-        return $this->connector->delete(sprintf('%s/%s', self::STATIC_QR, IdGuard::validate($id)));
+        return $this->connector->delete($this->path(self::STATIC_QR, $id));
     }
 
     public function tokenBucket(): AsaasResult
@@ -66,5 +66,10 @@ final readonly class PixResource
     public function all(array $filters = []): Generator
     {
         return $this->connector->all(self::KEYS, $filters);
+    }
+
+    private function path(string $base, string $id): string
+    {
+        return sprintf('%s/%s', $base, IdGuard::validate($id));
     }
 }

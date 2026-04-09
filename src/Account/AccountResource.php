@@ -33,28 +33,28 @@ final readonly class AccountResource
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->path($id));
     }
 
     public function listAccessTokens(string $accountId): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/%s/accessTokens', self::BASE, IdGuard::validate($accountId)));
+        return $this->connector->get($this->path($accountId, '/accessTokens'));
     }
 
     public function createAccessToken(string $accountId): AsaasResult
     {
-        return $this->connector->post(sprintf('%s/%s/accessTokens', self::BASE, IdGuard::validate($accountId)));
+        return $this->connector->post($this->path($accountId, '/accessTokens'));
     }
 
     /** @param array<string, mixed>|AccessTokenRequest $data */
     public function updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
     {
-        return $this->connector->put(sprintf('%s/%s/accessTokens/%s', self::BASE, IdGuard::validate($accountId), IdGuard::validate($tokenId)), AccessTokenRequest::resolveData($data));
+        return $this->connector->put($this->tokenPath($accountId, $tokenId), AccessTokenRequest::resolveData($data));
     }
 
     public function deleteAccessToken(string $accountId, string $tokenId): AsaasResult
     {
-        return $this->connector->delete(sprintf('%s/%s/accessTokens/%s', self::BASE, IdGuard::validate($accountId), IdGuard::validate($tokenId)));
+        return $this->connector->delete($this->tokenPath($accountId, $tokenId));
     }
 
     /**
@@ -64,5 +64,15 @@ final readonly class AccountResource
     public function all(array $filters = []): Generator
     {
         return $this->connector->all(self::BASE, $filters);
+    }
+
+    private function path(string $id, string $suffix = ''): string
+    {
+        return sprintf('%s/%s%s', self::BASE, IdGuard::validate($id), $suffix);
+    }
+
+    private function tokenPath(string $accountId, string $tokenId): string
+    {
+        return sprintf('%s/%s/accessTokens/%s', self::BASE, IdGuard::validate($accountId), IdGuard::validate($tokenId));
     }
 }
