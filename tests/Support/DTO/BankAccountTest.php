@@ -143,8 +143,8 @@ it('masks short cpfCnpj and account without negative repeat', function (): void 
 
     $debug = $account->__debugInfo();
 
-    expect($debug['cpfCnpj'])->toBe('01');
-    expect($debug['account'])->toBe('9');
+    expect($debug['cpfCnpj'])->toBe('**');
+    expect($debug['account'])->toBe('*');
 });
 
 it('masks sensitive data in json serialization', function (): void {

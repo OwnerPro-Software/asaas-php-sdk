@@ -16,6 +16,10 @@ trait MasksSensitiveData
 
     protected static function mask(string $value, int $visibleSuffix): string
     {
-        return str_repeat('*', max(0, strlen($value) - $visibleSuffix)).substr($value, -$visibleSuffix);
+        if (strlen($value) <= $visibleSuffix) {
+            return str_repeat('*', strlen($value));
+        }
+
+        return str_repeat('*', strlen($value) - $visibleSuffix).substr($value, -$visibleSuffix);
     }
 }

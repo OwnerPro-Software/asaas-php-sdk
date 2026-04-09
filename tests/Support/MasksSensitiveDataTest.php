@@ -62,6 +62,6 @@ it('mask keeps the specified number of trailing characters visible', function ()
     expect($results[0])->toBe('********901');
     expect($results[1])->toBe('************1111');
     expect($results[2])->toBe('***89');
-    expect($results[3])->toBe('ab');
+    expect($results[3])->toBe('**');
     expect($results[4])->toBe('');
 });

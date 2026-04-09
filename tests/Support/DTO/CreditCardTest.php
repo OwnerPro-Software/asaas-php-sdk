@@ -67,7 +67,7 @@ it('masks short card number in debug info', function (): void {
         ccv: '123',
     );
 
-    expect($card->__debugInfo()['number'])->toBe('12');
+    expect($card->__debugInfo()['number'])->toBe('**');
 });
 
 it('masks sensitive data in json serialization', function (): void {

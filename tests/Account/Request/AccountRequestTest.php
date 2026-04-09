@@ -133,7 +133,7 @@ it('masks short cpfCnpj without negative repeat', function (): void {
         postalCode: '01001000',
     );
 
-    expect($request->__debugInfo()['cpfCnpj'])->toBe('01');
+    expect($request->__debugInfo()['cpfCnpj'])->toBe('**');
 });
 
 it('masks sensitive data in json serialization', function (): void {
