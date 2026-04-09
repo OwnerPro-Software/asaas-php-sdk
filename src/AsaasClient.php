@@ -21,25 +21,8 @@ use SensitiveParameter;
 
 final class AsaasClient
 {
-    private ?PaymentResource $paymentResource = null;
-
-    private ?PixResource $pixResource = null;
-
-    private ?PixTransactionResource $pixTransactionResource = null;
-
-    private ?TransferResource $transferResource = null;
-
-    private ?WebhookResource $webhookResource = null;
-
-    private ?InvoiceResource $invoiceResource = null;
-
-    private ?AccountResource $accountResource = null;
-
-    private ?CreditCardResource $creditCardResource = null;
-
-    private ?BillPaymentResource $billPaymentResource = null;
-
-    private ?StatementResource $statementResource = null;
+    /** @var array<class-string, object> */
+    private array $resources = [];
 
     public function __construct(private readonly Connector $connector) {}
 
@@ -73,51 +56,63 @@ final class AsaasClient
 
     public function payments(): PaymentResource
     {
-        return $this->paymentResource ??= new PaymentResource($this->connector);
+        return $this->resolve(PaymentResource::class);
     }
 
     public function pix(): PixResource
     {
-        return $this->pixResource ??= new PixResource($this->connector);
+        return $this->resolve(PixResource::class);
     }
 
     public function pixTransactions(): PixTransactionResource
     {
-        return $this->pixTransactionResource ??= new PixTransactionResource($this->connector);
+        return $this->resolve(PixTransactionResource::class);
     }
 
     public function transfers(): TransferResource
     {
-        return $this->transferResource ??= new TransferResource($this->connector);
+        return $this->resolve(TransferResource::class);
     }
 
     public function webhooks(): WebhookResource
     {
-        return $this->webhookResource ??= new WebhookResource($this->connector);
+        return $this->resolve(WebhookResource::class);
     }
 
     public function invoices(): InvoiceResource
     {
-        return $this->invoiceResource ??= new InvoiceResource($this->connector);
+        return $this->resolve(InvoiceResource::class);
     }
 
     public function accounts(): AccountResource
     {
-        return $this->accountResource ??= new AccountResource($this->connector);
+        return $this->resolve(AccountResource::class);
     }
 
     public function creditCards(): CreditCardResource
     {
-        return $this->creditCardResource ??= new CreditCardResource($this->connector);
+        return $this->resolve(CreditCardResource::class);
     }
 
     public function billPayments(): BillPaymentResource
     {
-        return $this->billPaymentResource ??= new BillPaymentResource($this->connector);
+        return $this->resolve(BillPaymentResource::class);
     }
 
     public function statements(): StatementResource
     {
-        return $this->statementResource ??= new StatementResource($this->connector);
+        return $this->resolve(StatementResource::class);
+    }
+
+    /**
+     * @template T of object
+     *
+     * @param  class-string<T>  $resource
+     * @return T
+     */
+    private function resolve(string $resource): object
+    {
+        /** @var T */
+        return $this->resources[$resource] ??= new $resource($this->connector);
     }
 }
