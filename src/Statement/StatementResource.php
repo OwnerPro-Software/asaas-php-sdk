@@ -11,12 +11,14 @@ use OwnerPro\Asaas\Support\Connector;
 
 final readonly class StatementResource
 {
+    private const string BASE = '/financialTransactions';
+
     public function __construct(private Connector $connector) {}
 
     /** @param array<string, mixed> $query */
     public function list(array $query = []): AsaasPaginatedResult
     {
-        return $this->connector->paginate('/v3/financialTransactions', $query);
+        return $this->connector->paginate(self::BASE, $query);
     }
 
     /**
@@ -25,6 +27,6 @@ final readonly class StatementResource
      */
     public function all(array $filters = []): Generator
     {
-        return $this->connector->all('/v3/financialTransactions', $filters);
+        return $this->connector->all(self::BASE, $filters);
     }
 }

@@ -12,8 +12,8 @@ enum Environment: string
     public function baseUrl(): string
     {
         return match ($this) {
-            self::Sandbox => 'https://api-sandbox.asaas.com',
-            self::Production => 'https://api.asaas.com',
+            self::Sandbox => 'https://api-sandbox.asaas.com/v3',
+            self::Production => 'https://api.asaas.com/v3',
         };
     }
 }

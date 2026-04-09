@@ -29,7 +29,7 @@ it('forLaravel accepts string environment', function (): void {
     Http::fake(['https://api.asaas.com/*' => Http::response(['id' => 'x', 'status' => 'OK'], 200)]);
 
     $connector = AsaasConnector::forLaravel('key', 'production', 30);
-    $result = $connector->get('/v3/payments/x', []);
+    $result = $connector->get('/payments/x', []);
 
     expect($result->success)->toBeTrue();
     Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api.asaas.com/'));
@@ -47,14 +47,14 @@ it('forLaravel uses sandbox base url', function (): void {
     Http::fake(['https://api-sandbox.asaas.com/*' => Http::response(['id' => 'x', 'status' => 'OK'], 200)]);
 
     $connector = AsaasConnector::forLaravel('test-key', Environment::Sandbox, 30);
-    $result = $connector->get('/v3/payments/x', []);
+    $result = $connector->get('/payments/x', []);
 
     expect($result->success)->toBeTrue();
     expect($result->data['id'])->toBe('x');
 
     Http::assertSent(function ($request): bool {
         return $request->hasHeader('access_token', 'test-key')
-            && str_starts_with($request->url(), 'https://api-sandbox.asaas.com/');
+            && str_starts_with($request->url(), 'https://api-sandbox.asaas.com/v3/');
     });
 });
 
@@ -62,7 +62,7 @@ it('forLaravel uses production base url', function (): void {
     Http::fake(['https://api.asaas.com/*' => Http::response(['id' => 'x', 'status' => 'OK'], 200)]);
 
     $connector = AsaasConnector::forLaravel('prod-key', Environment::Production, 30);
-    $result = $connector->get('/v3/payments/x', []);
+    $result = $connector->get('/payments/x', []);
 
     expect($result->success)->toBeTrue();
 
@@ -155,14 +155,14 @@ it('forLaravel enforces TLS certificate verification', function (): void {
 
 it('standalone get returns success result', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response(['id' => 'pay_123', 'status' => 'PENDING'], 200)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/v3/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123', []);
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
@@ -172,14 +172,14 @@ it('standalone get returns success result', function (): void {
 
 it('standalone get returns empty data on scalar JSON response', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response('true', 200)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/v3/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123', []);
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toBe([]);
@@ -188,14 +188,14 @@ it('standalone get returns empty data on scalar JSON response', function (): voi
 
 it('standalone post returns success result', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response(['id' => 'pay_new', 'status' => 'PENDING'], 200)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->post('/v3/payments', ['value' => 100]);
+    $result = $connector->post('/payments', ['value' => 100]);
 
     expect($result->success)->toBeTrue();
     expect($result->data['id'])->toBe('pay_new');
@@ -203,14 +203,14 @@ it('standalone post returns success result', function (): void {
 
 it('standalone put returns success result', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response(['id' => 'pay_123', 'status' => 'UPDATED'], 200)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->put('/v3/payments/pay_123', ['value' => 200]);
+    $result = $connector->put('/payments/pay_123', ['value' => 200]);
 
     expect($result->success)->toBeTrue();
     expect($result->data['status'])->toBe('UPDATED');
@@ -218,21 +218,21 @@ it('standalone put returns success result', function (): void {
 
 it('standalone delete returns success result', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response(['deleted' => true, 'id' => 'pay_123'], 200)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->delete('/v3/payments/pay_123');
+    $result = $connector->delete('/payments/pay_123');
 
     expect($result->success)->toBeTrue();
 });
 
 it('standalone returns failure result on error response', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
@@ -242,7 +242,7 @@ it('standalone returns failure result on error response', function (): void {
         )]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->post('/v3/payments', ['bad' => 'data']);
+    $result = $connector->post('/payments', ['bad' => 'data']);
 
     expect($result->success)->toBeFalse();
     expect($result->response->status())->toBe(400);
@@ -252,7 +252,7 @@ it('standalone returns failure result on error response', function (): void {
 
 it('standalone paginate returns paginated result', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
@@ -262,7 +262,7 @@ it('standalone paginate returns paginated result', function (): void {
         )]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->paginate('/v3/payments', ['limit' => 10]);
+    $result = $connector->paginate('/payments', ['limit' => 10]);
 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeTrue();
@@ -274,14 +274,14 @@ it('standalone paginate returns paginated result', function (): void {
 
 it('standalone returns fallback error when error response has no errors array', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response('Internal Server Error', 500)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->post('/v3/payments', ['bad' => 'data']);
+    $result = $connector->post('/payments', ['bad' => 'data']);
 
     expect($result->success)->toBeFalse();
     expect($result->response->status())->toBe(500);
@@ -293,14 +293,14 @@ it('strips HTML tags and truncates long non-JSON error bodies', function (): voi
     $htmlBody = '<html><head><title>502 Bad Gateway</title></head><body><h1>502 Bad Gateway</h1><p>nginx/1.24.0</p>'.str_repeat('<p>extra</p>', 200).'</body></html>';
 
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response($htmlBody, 502)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/v3/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123', []);
 
     expect($result->success)->toBeFalse();
     $description = $result->errors[0]['description'];
@@ -312,14 +312,14 @@ it('strips HTML tags and truncates long non-JSON error bodies', function (): voi
 
 it('standalone get returns failure result on connection exception', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/v3/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123', []);
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
@@ -330,14 +330,14 @@ it('standalone get returns failure result on connection exception', function ():
 
 it('standalone paginate returns failure result on connection exception', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options): never => throw new ConnectionException('cURL error 7: Failed to connect')]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->paginate('/v3/payments', []);
+    $result = $connector->paginate('/payments', []);
 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeFalse();
@@ -355,7 +355,7 @@ it('returns AsaasResult with response on successful GET', function (): void {
     )]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->get('/v3/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123', []);
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeTrue();
@@ -370,7 +370,7 @@ it('returns AsaasResult with response on successful POST', function (): void {
     Http::fake(['*' => Http::response(['id' => 'pay_new', 'status' => 'PENDING'], 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->post('/v3/payments', ['value' => 100]);
+    $result = $connector->post('/payments', ['value' => 100]);
 
     expect($result->success)->toBeTrue();
     expect($result->data['id'])->toBe('pay_new');
@@ -383,7 +383,7 @@ it('returns AsaasResult with response on successful PUT', function (): void {
     Http::fake(['*' => Http::response(['id' => 'pay_123', 'status' => 'UPDATED'], 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->put('/v3/payments/pay_123', ['value' => 200]);
+    $result = $connector->put('/payments/pay_123', ['value' => 200]);
 
     expect($result->success)->toBeTrue();
     expect($result->data['status'])->toBe('UPDATED');
@@ -396,7 +396,7 @@ it('returns AsaasResult on DELETE', function (): void {
     Http::fake(['*' => Http::response(['deleted' => true, 'id' => 'pay_123'], 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->delete('/v3/payments/pay_123');
+    $result = $connector->delete('/payments/pay_123');
 
     expect($result->success)->toBeTrue();
 
@@ -411,7 +411,7 @@ it('returns failure result on error response', function (): void {
     )]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->post('/v3/payments', ['bad' => 'data']);
+    $result = $connector->post('/payments', ['bad' => 'data']);
 
     expect($result->success)->toBeFalse();
     expect($result->response->status())->toBe(400);
@@ -429,7 +429,7 @@ it('returns AsaasPaginatedResult on paginate', function (): void {
     )]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->paginate('/v3/payments', ['limit' => 10]);
+    $result = $connector->paginate('/payments', ['limit' => 10]);
 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeTrue();
@@ -450,7 +450,7 @@ it('paginate returns failure on error', function (): void {
     )]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->paginate('/v3/payments', []);
+    $result = $connector->paginate('/payments', []);
 
     expect($result->success)->toBeFalse();
     expect($result->response->status())->toBe(400);
@@ -468,7 +468,7 @@ it('iterates all pages lazily via all()', function (): void {
     Http::fakeSequence()->push($page1, 200)->push($page2, 200);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 10]));
+    $items = iterator_to_array($connector->all('/payments', ['limit' => 10]));
 
     expect($items)->toHaveCount(3);
     expect($items[0]['id'])->toBe('pay_1');
@@ -486,7 +486,7 @@ it('all() uses default limit of 100 when not specified', function (): void {
     Http::fake(['*' => Http::response($page, 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $items = iterator_to_array($connector->all('/v3/payments', []));
+    $items = iterator_to_array($connector->all('/payments', []));
 
     expect($items)->toHaveCount(1);
 
@@ -507,7 +507,7 @@ it('all() sends correct offset and limit on each page', function (): void {
     Http::fakeSequence()->push($page1, 200)->push($page2, 200);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 2]));
+    $items = iterator_to_array($connector->all('/payments', ['limit' => 2]));
 
     expect($items)->toHaveCount(3);
     expect($items[0]['id'])->toBe('a1');
@@ -535,7 +535,7 @@ it('all() enforces minimum limit of 1', function (): void {
     Http::fake(['*' => Http::response($page, 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 0]));
+    $items = iterator_to_array($connector->all('/payments', ['limit' => 0]));
 
     expect($items)->toHaveCount(1);
 
@@ -551,7 +551,7 @@ it('all() enforces minimum limit of 1 for negative values', function (): void {
     Http::fake(['*' => Http::response($page, 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => -5]));
+    $items = iterator_to_array($connector->all('/payments', ['limit' => -5]));
 
     expect($items)->toHaveCount(1);
 
@@ -567,7 +567,7 @@ it('all() stops when API returns hasMore true with empty data', function (): voi
     Http::fake(['*' => Http::response($emptyPage, 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $items = iterator_to_array($connector->all('/v3/payments', []));
+    $items = iterator_to_array($connector->all('/payments', []));
 
     expect($items)->toBeEmpty();
 
@@ -581,7 +581,7 @@ it('all() yields AsaasPaginatedError on error during pagination', function (): v
     Http::fakeSequence()->push($page1, 200)->push($errorResponse, 400);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 10]));
+    $items = iterator_to_array($connector->all('/payments', ['limit' => 10]));
 
     expect($items)->toHaveCount(3);
     expect($items[0]['id'])->toBe('pay_1');
@@ -600,7 +600,7 @@ it('paginate uses defaults for missing pagination fields', function (): void {
     ], 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->paginate('/v3/payments', []);
+    $result = $connector->paginate('/payments', []);
 
     expect($result->success)->toBeTrue();
     expect($result->totalCount)->toBe(0);
@@ -614,7 +614,7 @@ it('returns fallback error when error response has no errors array', function ()
     Http::fake(['*' => Http::response('Internal Server Error', 500)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->post('/v3/payments', ['bad' => 'data']);
+    $result = $connector->post('/payments', ['bad' => 'data']);
 
     expect($result->success)->toBeFalse();
     expect($result->response->status())->toBe(500);
@@ -626,7 +626,7 @@ it('paginate returns fallback error when error response has no errors array', fu
     Http::fake(['*' => Http::response('Internal Server Error', 500)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->paginate('/v3/payments', []);
+    $result = $connector->paginate('/payments', []);
 
     expect($result->success)->toBeFalse();
     expect($result->response->status())->toBe(500);
@@ -646,7 +646,7 @@ it('paginate next page fetcher passes correct offset in URL', function (): void 
     Http::fakeSequence()->push($page1, 200)->push($page2, 200);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->paginate('/v3/payments', ['limit' => 2]);
+    $result = $connector->paginate('/payments', ['limit' => 2]);
 
     expect($result->hasMore)->toBeTrue();
 
@@ -670,7 +670,7 @@ it('returns success with empty response on 2xx with no JSON body', function (): 
     Http::fake(['*' => Http::response('', 200)]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->get('/v3/payments/x', []);
+    $result = $connector->get('/payments/x', []);
 
     expect($result->success)->toBeTrue();
     expect($result->response->status())->toBe(200);
@@ -678,14 +678,14 @@ it('returns success with empty response on 2xx with no JSON body', function (): 
 
 it('standalone handles 2xx with no JSON body', function (): void {
     $pendingRequest = (new PendingRequest)
-        ->baseUrl('https://api-sandbox.asaas.com')
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
         ->timeout(30)
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response('', 200)]);
 
     $connector = new AsaasConnector($pendingRequest);
-    $result = $connector->get('/v3/payments/x', []);
+    $result = $connector->get('/payments/x', []);
 
     expect($result->success)->toBeTrue();
     expect($result->response->status())->toBe(200);
@@ -697,7 +697,7 @@ it('get returns failure result on connection exception', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->get('/v3/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123', []);
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
@@ -710,7 +710,7 @@ it('post returns failure result on connection exception', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('Connection refused')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->post('/v3/payments', ['value' => 100]);
+    $result = $connector->post('/payments', ['value' => 100]);
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
@@ -723,7 +723,7 @@ it('put returns failure result on connection exception', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('DNS resolution failed')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->put('/v3/payments/pay_123', ['value' => 200]);
+    $result = $connector->put('/payments/pay_123', ['value' => 200]);
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
@@ -736,7 +736,7 @@ it('delete returns failure result on connection exception', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('Connection reset by peer')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->delete('/v3/payments/pay_123');
+    $result = $connector->delete('/payments/pay_123');
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
     expect($result->success)->toBeFalse();
@@ -749,7 +749,7 @@ it('paginate returns failure result on connection exception', function (): void 
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 7: Failed to connect')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->paginate('/v3/payments', []);
+    $result = $connector->paginate('/payments', []);
 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeFalse();
@@ -762,7 +762,7 @@ it('all() yields AsaasPaginatedError on connection exception', function (): void
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $items = iterator_to_array($connector->all('/v3/payments', []));
+    $items = iterator_to_array($connector->all('/payments', []));
 
     expect($items)->toHaveCount(1);
     expect($items[0])->toBeInstanceOf(AsaasPaginatedError::class);
@@ -780,7 +780,7 @@ it('all() yields AsaasPaginatedError on connection exception mid-pagination', fu
         ->whenEmpty(fn (): never => throw new ConnectionException('cURL error 28: Connection timed out'));
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 10]));
+    $items = iterator_to_array($connector->all('/payments', ['limit' => 10]));
 
     expect($items)->toHaveCount(3);
     expect($items[0]['id'])->toBe('pay_1');
@@ -797,7 +797,7 @@ it('hides the API key from debug output', function (): void {
 
     $debug = $connector->__debugInfo();
 
-    expect($debug)->toBe(['baseUrl' => 'https://api-sandbox.asaas.com']);
+    expect($debug)->toBe(['baseUrl' => 'https://api-sandbox.asaas.com/v3']);
     expect(print_r($connector, true))->not->toContain('sk_live_super_secret_key_123');
 });
 
@@ -806,14 +806,14 @@ it('debug output shows production base url', function (): void {
 
     $debug = $connector->__debugInfo();
 
-    expect($debug)->toBe(['baseUrl' => 'https://api.asaas.com']);
+    expect($debug)->toBe(['baseUrl' => 'https://api.asaas.com/v3']);
 });
 
 it('orFail() on connection failure result throws AsaasRequestException with status 0', function (): void {
     Http::fake(['*' => fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
-    $result = $connector->get('/v3/payments/pay_123', []);
+    $result = $connector->get('/payments/pay_123', []);
 
     expect($result->success)->toBeFalse();
 

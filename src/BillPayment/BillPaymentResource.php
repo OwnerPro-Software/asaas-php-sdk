@@ -15,34 +15,36 @@ use OwnerPro\Asaas\Support\IdGuard;
 
 final readonly class BillPaymentResource
 {
+    private const string BASE = '/bill';
+
     public function __construct(private Connector $connector) {}
 
     /** @param array<string, mixed>|CreateBillPaymentRequest $data */
     public function create(array|CreateBillPaymentRequest $data): AsaasResult
     {
-        return $this->connector->post('/v3/bill', CreateBillPaymentRequest::resolveData($data));
+        return $this->connector->post(self::BASE, CreateBillPaymentRequest::resolveData($data));
     }
 
     /** @param array<string, mixed> $query */
     public function list(array $query = []): AsaasPaginatedResult
     {
-        return $this->connector->paginate('/v3/bill', $query);
+        return $this->connector->paginate(self::BASE, $query);
     }
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/bill/%s', IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
     }
 
     /** @param array<string, mixed>|SimulateBillPaymentRequest $data */
     public function simulate(array|SimulateBillPaymentRequest $data = []): AsaasResult
     {
-        return $this->connector->post('/v3/bill/simulate', SimulateBillPaymentRequest::resolveData($data));
+        return $this->connector->post(self::BASE.'/simulate', SimulateBillPaymentRequest::resolveData($data));
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/bill/%s/cancel', IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/cancel', self::BASE, IdGuard::validate($id)), []);
     }
 
     /**
@@ -51,6 +53,6 @@ final readonly class BillPaymentResource
      */
     public function all(array $filters = []): Generator
     {
-        return $this->connector->all('/v3/bill', $filters);
+        return $this->connector->all(self::BASE, $filters);
     }
 }

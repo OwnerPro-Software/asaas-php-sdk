@@ -14,28 +14,30 @@ use OwnerPro\Asaas\Transfer\Request\TransferRequest;
 
 final readonly class TransferResource
 {
+    private const string BASE = '/transfers';
+
     public function __construct(private Connector $connector) {}
 
     /** @param array<string, mixed>|TransferRequest $data */
     public function create(array|TransferRequest $data): AsaasResult
     {
-        return $this->connector->post('/v3/transfers', TransferRequest::resolveData($data));
+        return $this->connector->post(self::BASE, TransferRequest::resolveData($data));
     }
 
     /** @param array<string, mixed> $query */
     public function list(array $query = []): AsaasPaginatedResult
     {
-        return $this->connector->paginate('/v3/transfers', $query);
+        return $this->connector->paginate(self::BASE, $query);
     }
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/transfers/%s', IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/transfers/%s/cancel', IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/cancel', self::BASE, IdGuard::validate($id)), []);
     }
 
     /**
@@ -44,6 +46,6 @@ final readonly class TransferResource
      */
     public function all(array $filters = []): Generator
     {
-        return $this->connector->all('/v3/transfers', $filters);
+        return $this->connector->all(self::BASE, $filters);
     }
 }

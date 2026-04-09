@@ -11,22 +11,26 @@ use OwnerPro\Asaas\Support\Connector;
 
 final readonly class CreditCardResource
 {
+    private const string TOKENIZE = '/creditCard/tokenizeCreditCard';
+
+    private const string PRE_AUTH_CONFIG = '/creditCard/preAuthorization/config';
+
     public function __construct(private Connector $connector) {}
 
     /** @param array<string, mixed>|CreditCardRequest $data */
     public function tokenize(array|CreditCardRequest $data): AsaasResult
     {
-        return $this->connector->post('/v3/creditCard/tokenizeCreditCard', CreditCardRequest::resolveData($data));
+        return $this->connector->post(self::TOKENIZE, CreditCardRequest::resolveData($data));
     }
 
     public function getPreAuthorizationConfig(): AsaasResult
     {
-        return $this->connector->get('/v3/creditCard/preAuthorization/config', []);
+        return $this->connector->get(self::PRE_AUTH_CONFIG, []);
     }
 
     /** @param array<string, mixed>|PreAuthConfigRequest $data */
     public function setPreAuthorizationConfig(array|PreAuthConfigRequest $data): AsaasResult
     {
-        return $this->connector->post('/v3/creditCard/preAuthorization/config', PreAuthConfigRequest::resolveData($data));
+        return $this->connector->post(self::PRE_AUTH_CONFIG, PreAuthConfigRequest::resolveData($data));
     }
 }

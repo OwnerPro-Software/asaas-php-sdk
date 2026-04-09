@@ -15,11 +15,11 @@ it('has production case with correct value', function (): void {
 });
 
 it('returns sandbox base url', function (): void {
-    expect(Environment::Sandbox->baseUrl())->toBe('https://api-sandbox.asaas.com');
+    expect(Environment::Sandbox->baseUrl())->toBe('https://api-sandbox.asaas.com/v3');
 });
 
 it('returns production base url', function (): void {
-    expect(Environment::Production->baseUrl())->toBe('https://api.asaas.com');
+    expect(Environment::Production->baseUrl())->toBe('https://api.asaas.com/v3');
 });
 
 it('creates from valid string', function (): void {

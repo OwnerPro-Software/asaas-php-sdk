@@ -15,39 +15,41 @@ use OwnerPro\Asaas\Webhook\Request\UpdateWebhookRequest;
 
 final readonly class WebhookResource
 {
+    private const string BASE = '/webhooks';
+
     public function __construct(private Connector $connector) {}
 
     /** @param array<string, mixed>|CreateWebhookRequest $data */
     public function create(array|CreateWebhookRequest $data): AsaasResult
     {
-        return $this->connector->post('/v3/webhooks', CreateWebhookRequest::resolveData($data));
+        return $this->connector->post(self::BASE, CreateWebhookRequest::resolveData($data));
     }
 
     /** @param array<string, mixed> $query */
     public function list(array $query = []): AsaasPaginatedResult
     {
-        return $this->connector->paginate('/v3/webhooks', $query);
+        return $this->connector->paginate(self::BASE, $query);
     }
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/webhooks/%s', IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
     }
 
     /** @param array<string, mixed>|UpdateWebhookRequest $data */
     public function update(string $id, array|UpdateWebhookRequest $data): AsaasResult
     {
-        return $this->connector->put(sprintf('/v3/webhooks/%s', IdGuard::validate($id)), UpdateWebhookRequest::resolveData($data));
+        return $this->connector->put(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), UpdateWebhookRequest::resolveData($data));
     }
 
     public function delete(string $id): AsaasResult
     {
-        return $this->connector->delete(sprintf('/v3/webhooks/%s', IdGuard::validate($id)));
+        return $this->connector->delete(sprintf('%s/%s', self::BASE, IdGuard::validate($id)));
     }
 
     public function removeBackoff(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/webhooks/%s/removeBackoff', IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/removeBackoff', self::BASE, IdGuard::validate($id)), []);
     }
 
     /**
@@ -56,6 +58,6 @@ final readonly class WebhookResource
      */
     public function all(array $filters = []): Generator
     {
-        return $this->connector->all('/v3/webhooks', $filters);
+        return $this->connector->all(self::BASE, $filters);
     }
 }

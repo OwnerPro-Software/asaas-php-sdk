@@ -15,39 +15,41 @@ use OwnerPro\Asaas\Support\IdGuard;
 
 final readonly class InvoiceResource
 {
+    private const string BASE = '/invoices';
+
     public function __construct(private Connector $connector) {}
 
     /** @param array<string, mixed>|CreateInvoiceRequest $data */
     public function create(array|CreateInvoiceRequest $data): AsaasResult
     {
-        return $this->connector->post('/v3/invoices', CreateInvoiceRequest::resolveData($data));
+        return $this->connector->post(self::BASE, CreateInvoiceRequest::resolveData($data));
     }
 
     /** @param array<string, mixed> $query */
     public function list(array $query = []): AsaasPaginatedResult
     {
-        return $this->connector->paginate('/v3/invoices', $query);
+        return $this->connector->paginate(self::BASE, $query);
     }
 
     public function find(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('/v3/invoices/%s', IdGuard::validate($id)), []);
+        return $this->connector->get(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), []);
     }
 
     /** @param array<string, mixed>|UpdateInvoiceRequest $data */
     public function update(string $id, array|UpdateInvoiceRequest $data): AsaasResult
     {
-        return $this->connector->put(sprintf('/v3/invoices/%s', IdGuard::validate($id)), UpdateInvoiceRequest::resolveData($data));
+        return $this->connector->put(sprintf('%s/%s', self::BASE, IdGuard::validate($id)), UpdateInvoiceRequest::resolveData($data));
     }
 
     public function authorize(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/invoices/%s/authorize', IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/authorize', self::BASE, IdGuard::validate($id)), []);
     }
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/v3/invoices/%s/cancel', IdGuard::validate($id)), []);
+        return $this->connector->post(sprintf('%s/%s/cancel', self::BASE, IdGuard::validate($id)), []);
     }
 
     /**
@@ -56,6 +58,6 @@ final readonly class InvoiceResource
      */
     public function all(array $filters = []): Generator
     {
-        return $this->connector->all('/v3/invoices', $filters);
+        return $this->connector->all(self::BASE, $filters);
     }
 }
