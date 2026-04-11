@@ -1,5 +1,50 @@
 # CLAUDE.md
 
+## Project Overview
+
+PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API. Works both as a Laravel package (auto-discovered `ServiceProvider` + `Asaas` facade) and as a standalone library in plain PHP via `AsaasClient::for(apiKey: ...)`. Target: PHP 8.2+, `illuminate/http` 10/11/12.
+
+The public, user-facing contract is documented in `README.md` — consult it before changing any public API surface and update it whenever methods, parameters, or behavior change.
+
+---
+
+## Architecture
+
+Top-down map of the moving parts:
+
+- **`AsaasClient`** (`src/AsaasClient.php`) — entry point. Lazy-resolves one Resource per API domain (`payments()`, `pix()`, `transfers()`, `webhooks()`, `invoices()`, `accounts()`, `creditCards()`, `billPayments()`, `statements()`, `pixTransactions()`). Constructed via `AsaasClient::for()` for standalone usage, or via the Laravel container/`Asaas` facade.
+- **Resource classes** (`src/<Domain>/<Domain>Resource.php`) — one per API domain. Thin orchestrators that translate method calls into `Connector` HTTP calls. Each Resource holds a `private const BASE` path constant and a `private function path(string $id, string $suffix = '')` helper.
+- **`Connector` interface + `AsaasConnector`** (`src/Support/`) — Humble Object wrapping `Illuminate\Http\Client\PendingRequest`. Exposes `get/post/put/delete/paginate/all`. Handles `ConnectionException`, error extraction, and result wrapping. Built via `AsaasConnector::forStandalone()` or `AsaasConnector::forLaravel()`.
+- **`AsaasResult` / `AsaasPaginatedResult`** (`src/Support/`) — Result objects returned by every Resource method. No exceptions by default: `$result->success`, `$result->data`, `$result->errors`, `$result->response`. Use the `ThrowsOnFailure` trait opt-in when exception semantics are needed.
+- **`Environment` enum** (`src/Support/Environment.php`) — `Sandbox` / `Production`. `baseUrl()` **already includes the `/v3` suffix** — never prefix paths with `/v3` inside Resources.
+- **Request DTOs** (`src/<Domain>/Request/*.php`) — typed request payloads. Use the `HasArrayFactory` trait (or `HasUpdatableArrayFactory` for partial updates).
+- **Shared DTOs** (`src/Support/DTO/*.php`) — reusable value objects (`Split`, `Callback`, `CreditCard`, `Bank`, `BankAccount`, `Taxes`, `QrCodePayload`, etc.).
+
+---
+
+## Key Patterns
+
+- **Result-based error handling** — methods never throw on API failures by default. They return `AsaasResult` with `success`/`failure` factory methods. This is intentional; do not wrap calls in try/catch unless you've opted into `ThrowsOnFailure`.
+- **`array|RequestDTO` on resource methods** — every mutation method accepts either a typed DTO or a raw array, normalized via `RequestDTO::resolveData($data)` (from `HasArrayFactory`). Keep both shapes supported when adding new endpoints.
+- **Eager DTO coercion in constructors** — when a Request DTO has nested DTOs (e.g. `CreatePaymentRequest` → `Split`, `Callback`, `CreditCard`), the constructor coerces raw arrays to DTO instances immediately for eager validation. Follow this pattern for any new nested-DTO fields.
+- **`IdGuard::validate()` in every `path()`** — URL-segment IDs must go through `IdGuard::validate($id)` to reject empty/malformed IDs before the HTTP call. Never concatenate raw `$id` into a URL.
+- **Private `path()` helper per Resource** — resources use `$this->path($id, '/suffix')` instead of inlining `sprintf('%s/%s/suffix', self::BASE, $id)` — this is an intentional refactor to reduce duplication. Keep it.
+- **Enum policy: requests only** — enums like `BillingType`, `WebhookEvent` are accepted on request DTOs, but response data stays as raw strings for backward compatibility. Do not convert response fields to enums.
+- **DTO naming — drop the action prefix for single-action requests** — e.g., if a resource has only one update request, name it after the entity, not `Update<Entity>Request`. For multi-action resources (like `Payment`), keep the action prefix.
+- **`WebhookVerifier` IPs are configurable** — pass allowed IPs via constructor, don't hardcode.
+
+---
+
+## Testing
+
+- Built on **Pest 4** + **Orchestra Testbench** — `tests/TestCase.php` extends Testbench and registers the `AsaasServiceProvider` with sandbox defaults.
+- `tests/Pest.php` applies `TestCase` globally to all test files in `tests/` — no need to declare `uses(TestCase::class)` per file.
+- A shared `error_fixture` dataset is declared in `tests/Pest.php`, loading `tests/Fixtures/error_400.json`.
+- Test organization mirrors `src/` — one test folder per domain.
+- Mutation testing is required (`--min=100`); any new code must survive mutation or be covered by targeted tests.
+
+---
+
 ## Quality Checks
 
 Always run before considering the work done:
@@ -241,7 +286,7 @@ Whenever the public API changes (new methods, renamed parameters, changed behavi
 - Use the **Adapter pattern** to translate between external data formats and your internal models
 - When the external API changes, only the adapter needs to change — the rest of your codebase is protected
 - Write **boundary tests** (integration/contract tests) that verify your assumptions about the external API
-- This package (Larafocus) *is* a boundary: it isolates Laravel applications from FocusNFe API details
+- This package (Asaas PHP SDK) *is* a boundary: it isolates applications from Asaas API details
 
 ---
 
