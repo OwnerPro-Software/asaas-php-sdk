@@ -1,5 +1,11 @@
+includes:
+    - vendor/tomasvotruba/cognitive-complexity/config/extension.neon
+
 parameters:
     level: 10
     paths:
         - src
     tmpDir: .phpunit.cache/phpstan
+    cognitive_complexity:
+        class: 15
+        function: 12

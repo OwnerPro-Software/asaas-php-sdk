@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a10071435f79089c1bb39d8ac07c823e",
+    "content-hash": "c9496fcffde94ac76123b64d9b3cd0a2",
     "packages": [
         {
             "name": "brick/math",
@@ -11406,6 +11406,58 @@
             "time": "2025-12-08T11:19:18+00:00"
         },
         {
+            "name": "tomasvotruba/cognitive-complexity",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/TomasVotruba/cognitive-complexity.git",
+                "reference": "3ca30d23ec743d1d0d67d2d6f2824538a98941f8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/TomasVotruba/cognitive-complexity/zipball/3ca30d23ec743d1d0d67d2d6f2824538a98941f8",
+                "reference": "3ca30d23ec743d1d0d67d2d6f2824538a98941f8",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 || ^8.0",
+                "phpstan/phpstan": "^2"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "phpstan": {
+                    "includes": [
+                        "config/extension.neon"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "TomasVotruba\\CognitiveComplexity\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHPStan rules to measure cognitive complexity of your classes and methods",
+            "support": {
+                "issues": "https://github.com/TomasVotruba/cognitive-complexity/issues",
+                "source": "https://github.com/TomasVotruba/cognitive-complexity/tree/1.1.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.me/rectorphp",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/tomasvotruba",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-03-30T14:54:38+00:00"
+        },
+        {
             "name": "tomasvotruba/type-coverage",
             "version": "2.1.0",
             "source": {
@@ -11649,7 +11701,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.1"
+        "php": "^8.2"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"
