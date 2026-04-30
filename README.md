@@ -634,7 +634,7 @@ If an API error occurs during pagination, the Generator yields an `AsaasPaginate
 - `offset` — the page offset that failed
 - `limit` — the page size
 
-You can opt-in to exceptions by calling `throw()` on the error object:
+You can opt-in to exceptions by calling `orFail()` on the error object:
 
 ```php
 foreach (Asaas::payments()->all() as $payment) {
