@@ -87,6 +87,22 @@ it('forStandalone throws on invalid environment string', function (): void {
     AsaasConnector::forStandalone('key', 'invalid', 30);
 })->throws(ValueError::class);
 
+it('forStandalone rejects request timeout of 0 (Guzzle would treat it as unlimited)', function (): void {
+    AsaasConnector::forStandalone('key', 'sandbox', 0);
+})->throws(InvalidArgumentException::class, 'Request timeout must be at least 1 second; got 0.');
+
+it('forStandalone rejects negative request timeout', function (): void {
+    AsaasConnector::forStandalone('key', 'sandbox', -5);
+})->throws(InvalidArgumentException::class, 'Request timeout must be at least 1 second; got -5.');
+
+it('forStandalone rejects connect timeout of 0', function (): void {
+    AsaasConnector::forStandalone('key', 'sandbox', 30, 0);
+})->throws(InvalidArgumentException::class, 'Connect timeout must be at least 1 second; got 0.');
+
+it('forStandalone rejects negative connect timeout', function (): void {
+    AsaasConnector::forStandalone('key', 'sandbox', 30, -3);
+})->throws(InvalidArgumentException::class, 'Connect timeout must be at least 1 second; got -3.');
+
 it('forStandalone creates connector for sandbox', function (): void {
     $connector = AsaasConnector::forStandalone('test-key', Environment::Sandbox, 30);
 

@@ -74,6 +74,14 @@ final readonly class AsaasConnector implements Connector
             throw new InvalidArgumentException('The API key must not be empty.');
         }
 
+        if ($timeout < 1) {
+            throw new InvalidArgumentException(sprintf('Request timeout must be at least 1 second; got %d. Guzzle treats 0 as unlimited, which would let stalled connections hang indefinitely.', $timeout));
+        }
+
+        if ($connectTimeout < 1) {
+            throw new InvalidArgumentException(sprintf('Connect timeout must be at least 1 second; got %d. Guzzle treats 0 as unlimited, which would let stalled TCP handshakes hang indefinitely.', $connectTimeout));
+        }
+
         $environment = $environment instanceof Environment ? $environment : Environment::from($environment);
 
         return new self(
