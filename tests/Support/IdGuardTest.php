@@ -67,4 +67,21 @@ it('rejects IDs with slashes', function (string $id): void {
 
 it('rejects empty string', function (): void {
     IdGuard::validate('');
-})->throws(InvalidArgumentException::class);
+})->throws(InvalidArgumentException::class, 'Resource ID must be 1..255 chars; got 0.');
+
+it('accepts an ID at the exact 255-char limit', function (): void {
+    $id = str_repeat('a', 255);
+    expect(IdGuard::validate($id))->toBe($id);
+});
+
+it('rejects an ID one char over the limit before running the regex', function (): void {
+    $id = str_repeat('a', 256);
+    expect(fn () => IdGuard::validate($id))
+        ->toThrow(InvalidArgumentException::class, 'Resource ID must be 1..255 chars; got 256.');
+});
+
+it('rejects an absurdly large ID without interpolating it into the error message', function (): void {
+    $id = str_repeat('a', 100_000);
+    expect(fn () => IdGuard::validate($id))
+        ->toThrow(InvalidArgumentException::class, 'Resource ID must be 1..255 chars; got 100000.');
+});
