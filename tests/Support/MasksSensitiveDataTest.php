@@ -52,22 +52,24 @@ it('__toString prefixes class name and uses masked __debugInfo', function (): vo
         ->toContain('"visible":"hello"');
 });
 
-it('__serialize returns masked __debugInfo so serialize() never leaks raw data', function (): void {
+it('__serialize throws so jobs/caches/sessions fail fast at dispatch instead of at the worker', function (): void {
     $object = new MaskableFixture('raw-secret', 'hello');
 
-    $serialized = serialize($object);
-
-    expect($serialized)
-        ->toContain('***')
-        ->toContain('hello')
-        ->not->toContain('raw-secret');
-    expect($object->__serialize())->toBe(['secret' => '***', 'visible' => 'hello']);
+    expect(fn () => serialize($object))
+        ->toThrow(LogicException::class, 'cannot be serialized');
 });
 
-it('__unserialize throws to block silent restoration of masked data', function (): void {
-    $serialized = serialize(new MaskableFixture('raw-secret', 'hello'));
+it('__serialize throw includes the concrete class name to make the source obvious', function (): void {
+    $object = new MaskableFixture('raw-secret', 'hello');
 
-    expect(fn () => unserialize($serialized))
+    expect(fn () => $object->__serialize())
+        ->toThrow(LogicException::class, MaskableFixture::class);
+});
+
+it('__unserialize throws to block restoration even from manually-crafted payloads', function (): void {
+    $payload = 'O:'.strlen(MaskableFixture::class).':"'.MaskableFixture::class.'":1:{i:0;a:0:{}}';
+
+    expect(fn () => unserialize($payload))
         ->toThrow(LogicException::class, 'cannot be unserialized');
 });
 

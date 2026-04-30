@@ -16,16 +16,19 @@ trait MasksSensitiveData
         return static::class.'('.json_encode($this->__debugInfo(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).')';
     }
 
-    /** @return array<string, mixed> */
+    /** @return never */
     public function __serialize(): array
     {
-        return $this->__debugInfo();
+        throw new LogicException(static::class.' cannot be serialized: it holds sensitive data that must never reach a queue, cache, or session payload. If you need a portable representation, call ->toArray() and serialize the array yourself.');
     }
 
-    /** @param array<string, mixed> $data */
+    /**
+     * @param  array<string, mixed>  $data
+     * @return never
+     */
     public function __unserialize(array $data): void
     {
-        throw new LogicException(static::class.' cannot be unserialized: it is intentionally serialized as masked data to prevent leaking sensitive fields through caches, sessions, or queue payloads.');
+        throw new LogicException(static::class.' cannot be unserialized.');
     }
 
     public function jsonSerialize(): mixed
