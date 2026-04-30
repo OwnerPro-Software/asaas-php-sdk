@@ -29,8 +29,9 @@ Set the following environment variables:
 
 ```env
 ASAAS_API_KEY=your-api-key
-ASAAS_ENVIRONMENT=sandbox   # or "production"
-ASAAS_TIMEOUT=30
+ASAAS_ENVIRONMENT=sandbox       # or "production"
+ASAAS_TIMEOUT=30                # request timeout in seconds (default: 30)
+ASAAS_CONNECT_TIMEOUT=10        # TCP connect timeout in seconds (default: 10)
 ```
 
 ## Usage
@@ -81,7 +82,8 @@ $result = $client->payments()->find('pay_abc123');
 $client = AsaasClient::for(
     apiKey: 'your-api-key',
     environment: Environment::Production,
-    timeout: 60,
+    timeout: 60,           // request timeout in seconds (default: 30)
+    connectTimeout: 5,     // TCP connect timeout in seconds (default: 10)
 );
 ```
 
@@ -99,10 +101,12 @@ foreach ($tenants as $tenant) {
     $result = $client->payments()->list();
 }
 
-// Override per-tenant
+// Override per-tenant (any param omitted falls back to config/asaas.php)
 $client = Asaas::for(
     apiKey: $tenant->asaas_api_key,
     environment: Environment::Production,
+    timeout: 60,
+    connectTimeout: 5,
 );
 
 // Standalone (without Laravel)
