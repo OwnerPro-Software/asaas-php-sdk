@@ -55,19 +55,54 @@ it('serializes nested SplitRefund DTOs in toArray', function (): void {
     );
 
     expect($request->toArray())->toBe([
-        'value' => 50.00,
         'splitRefunds' => [['id' => 'split_1', 'value' => 25.00]],
+        'value' => 50.00,
     ]);
 });
 
-it('passes array splitRefunds through as-is in toArray', function (): void {
+it('coerces array splitRefunds to SplitRefund DTOs in the constructor', function (): void {
     $request = new RefundPaymentRequest(
         value: 50.00,
         splitRefunds: [['id' => 'split_1', 'value' => 25.00]],
     );
 
+    expect($request->splitRefunds)->toHaveCount(1);
+    expect($request->splitRefunds[0])->toBeInstanceOf(SplitRefund::class);
+    expect($request->splitRefunds[0]->id)->toBe('split_1');
     expect($request->toArray())->toBe([
-        'value' => 50.00,
         'splitRefunds' => [['id' => 'split_1', 'value' => 25.00]],
+        'value' => 50.00,
     ]);
+});
+
+it('throws on missing keys when array splitRefunds passed via constructor', function (): void {
+    expect(fn () => new RefundPaymentRequest(
+        value: 50.00,
+        splitRefunds: [['value' => 25.00]],
+    ))->toThrow(InvalidArgumentException::class, 'SplitRefund: id is required');
+});
+
+it('accepts already-built SplitRefund instances unchanged', function (): void {
+    $existing = new SplitRefund(id: 'split_1', value: 25.00);
+
+    $request = new RefundPaymentRequest(
+        value: 50.00,
+        splitRefunds: [$existing],
+    );
+
+    expect($request->splitRefunds[0])->toBe($existing);
+});
+
+it('mixes SplitRefund instances and arrays in the same call', function (): void {
+    $request = new RefundPaymentRequest(
+        value: 50.00,
+        splitRefunds: [
+            ['id' => 'split_1', 'value' => 10.00],
+            new SplitRefund(id: 'split_2', value: 15.00),
+        ],
+    );
+
+    expect($request->splitRefunds[0])->toBeInstanceOf(SplitRefund::class);
+    expect($request->splitRefunds[0]->id)->toBe('split_1');
+    expect($request->splitRefunds[1]->id)->toBe('split_2');
 });
