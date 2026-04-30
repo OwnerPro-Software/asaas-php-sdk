@@ -266,13 +266,15 @@ it('pays with credit card', function (array $fixture): void {
     $result = paymentResource()->payWithCreditCard('pay_abc123', [
         'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
         'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+        'remoteIp' => '203.0.113.42',
     ]);
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toBeArray();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/payWithCreditCard'
-        && $request->method() === 'POST');
+        && $request->method() === 'POST'
+        && $request->data()['remoteIp'] === '203.0.113.42');
 })->with('payment_fixture');
 
 // --- receiveInCash ---
@@ -419,13 +421,15 @@ it('pays with credit card from request object', function (array $fixture): void 
     $result = paymentResource()->payWithCreditCard('pay_abc123', new PayWithCreditCardRequest(
         creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
         creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
+        remoteIp: '203.0.113.42',
     ));
 
     expect($result->success)->toBeTrue();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/payWithCreditCard'
         && $request->method() === 'POST'
-        && $request->data()['creditCard']['holderName'] === 'John');
+        && $request->data()['creditCard']['holderName'] === 'John'
+        && $request->data()['remoteIp'] === '203.0.113.42');
 })->with('payment_fixture');
 
 it('receives in cash from request object', function (array $fixture): void {

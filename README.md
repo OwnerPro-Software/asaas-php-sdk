@@ -34,6 +34,8 @@ ASAAS_TIMEOUT=30                # request timeout in seconds (default: 30)
 ASAAS_CONNECT_TIMEOUT=10        # TCP connect timeout in seconds (default: 10)
 ```
 
+> `ASAAS_API_KEY` is required. The `AsaasServiceProvider` throws `RuntimeException` the first time `AsaasClient` is resolved from the container if the key is missing or empty — keep this in mind when bootstrapping in CI or test environments where the env var may not be set.
+
 ## Usage
 
 ### Via Facade
@@ -156,6 +158,23 @@ try {
     $e->response;        // ?RawResponse — null for connection errors
 }
 ```
+
+### Resource ID Validation
+
+Every method that takes a resource ID (`find`, `update`, `delete`, etc.) validates the input before making the HTTP call. IDs must be 1–255 chars and match `[a-zA-Z0-9_-]+`. Empty, oversized, or otherwise malformed IDs throw `InvalidArgumentException` synchronously — they never reach the API.
+
+```php
+use InvalidArgumentException;
+
+try {
+    Asaas::payments()->find('');           // empty
+    Asaas::payments()->find('pay/abc');    // illegal char
+} catch (InvalidArgumentException $e) {
+    // e.g. "Resource ID must be 1..255 chars; got 0."
+}
+```
+
+This guards against accidental URL-segment injection from unsanitized input. Validate or sanitize user-supplied IDs upstream if you need to surface a friendlier error.
 
 ### Raw Response Access
 
@@ -329,6 +348,30 @@ Available nested DTOs (`OwnerPro\Asaas\Support\DTO\*`):
 | `Callback` | `CreatePaymentRequest` |
 | `QrCodePayload` | `PayQrCodeRequest` |
 
+Example with `Split` (marketplace splits) and `Callback` (post-payment redirect):
+
+```php
+use OwnerPro\Asaas\Payment\BillingType;
+use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
+use OwnerPro\Asaas\Support\DTO\Callback;
+use OwnerPro\Asaas\Support\DTO\Split;
+
+Asaas::payments()->create(new CreatePaymentRequest(
+    customer: 'cus_abc123',
+    billingType: BillingType::Pix,
+    value: 200.00,
+    dueDate: '2026-04-01',
+    split: [
+        new Split(walletId: 'wallet_partner_a', percentualValue: 70.0),
+        new Split(walletId: 'wallet_partner_b', fixedValue: 30.00),
+    ],
+    callback: new Callback(
+        successUrl: 'https://example.com/return',
+        autoRedirect: true,
+    ),
+));
+```
+
 ### New Request DTOs
 
 Beyond `create()` and `update()`, several action methods now accept typed request objects:
@@ -380,6 +423,7 @@ Asaas::payments()->payWithCreditCard('pay_abc123', new PayWithCreditCardRequest(
         addressNumber: '100',
         phone: '11999999999',
     ),
+    remoteIp: '203.0.113.42', // payer's IP — required for Asaas antifraud analysis
 ));
 
 // Receive payment in cash
@@ -769,15 +813,68 @@ class MyLoggingConnector implements Connector
 {
     use PaginatesResults;
 
-    public function get(string $path, array $query): AsaasResult { /* ... */ }
-    public function post(string $path, array $data): AsaasResult { /* ... */ }
-    public function put(string $path, array $data): AsaasResult { /* ... */ }
+    public function get(string $path, array $query = []): AsaasResult { /* ... */ }
+    public function post(string $path, array $data = []): AsaasResult { /* ... */ }
+    public function put(string $path, array $data = []): AsaasResult { /* ... */ }
     public function delete(string $path): AsaasResult { /* ... */ }
     // paginate() and all() are provided by the trait
 }
 
 $client = new AsaasClient(new MyLoggingConnector());
 ```
+
+## Testing
+
+For app-level tests, swap the real connector for a fake one. The `Connector` interface plus `RawResponse::fake()` and `AsaasResult::success()`/`failure()` factories give you everything needed without hitting the network.
+
+```php
+use OwnerPro\Asaas\AsaasClient;
+use OwnerPro\Asaas\Support\AsaasResult;
+use OwnerPro\Asaas\Support\Connector;
+use OwnerPro\Asaas\Support\PaginatesResults;
+use OwnerPro\Asaas\Support\RawResponse;
+
+final class FakeConnector implements Connector
+{
+    use PaginatesResults;
+
+    /** @param array<string, AsaasResult> $responses keyed by "VERB path" */
+    public function __construct(private array $responses) {}
+
+    public function get(string $path, array $query = []): AsaasResult
+    {
+        return $this->responses["GET {$path}"];
+    }
+
+    public function post(string $path, array $data = []): AsaasResult
+    {
+        return $this->responses["POST {$path}"];
+    }
+
+    public function put(string $path, array $data = []): AsaasResult { /* ... */ }
+    public function delete(string $path): AsaasResult { /* ... */ }
+}
+
+// In your test
+$client = new AsaasClient(new FakeConnector([
+    'GET /payments/pay_abc123' => AsaasResult::success(
+        data: ['id' => 'pay_abc123', 'status' => 'CONFIRMED'],
+        rawResponse: RawResponse::fake(200, [], '{"id":"pay_abc123"}'),
+    ),
+]));
+
+$result = $client->payments()->find('pay_abc123');
+expect($result->success)->toBeTrue();
+expect($result->data['status'])->toBe('CONFIRMED');
+```
+
+In Laravel, bind the fake to the container:
+
+```php
+$this->app->instance(AsaasClient::class, new AsaasClient(new FakeConnector([...])));
+```
+
+This keeps tests fast and deterministic — no HTTP calls, no fixtures to maintain beyond the responses your test cares about.
 
 ## License
 

@@ -27,17 +27,19 @@ final readonly class PayWithCreditCardRequest
         array|CreditCard $creditCard,
         #[SensitiveParameter]
         array|CreditCardHolderInfo $creditCardHolderInfo,
+        public string $remoteIp,
     ) {
         $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
         $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
     }
 
-    /** @param array{creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}} $data */
+    /** @param array{creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */
     public static function fromArray(array $data): static
     {
         return new self(
             creditCard: CreditCard::fromArray($data['creditCard'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCard is required')),
             creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCardHolderInfo is required')),
+            remoteIp: $data['remoteIp'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: remoteIp is required'),
         );
     }
 }
