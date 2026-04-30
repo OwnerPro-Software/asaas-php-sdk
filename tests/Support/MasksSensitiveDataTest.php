@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use OwnerPro\Asaas\Support\MasksSensitiveData;
+use OwnerPro\Asaas\Tests\Support\Fixtures\MaskableFixture;
 
 mutates(MasksSensitiveData::class);
 
@@ -32,6 +33,42 @@ it('json_encode uses masked data from __debugInfo', function (): void {
     };
 
     expect(json_encode($object))->toBe('{"secret":"***","visible":"hello"}');
+});
+
+it('__toString prefixes class name and uses masked __debugInfo', function (): void {
+    $object = new class implements JsonSerializable
+    {
+        use MasksSensitiveData;
+
+        public function __debugInfo(): array
+        {
+            return ['secret' => '***', 'visible' => 'hello'];
+        }
+    };
+
+    expect((string) $object)
+        ->toContain($object::class)
+        ->toContain('"secret":"***"')
+        ->toContain('"visible":"hello"');
+});
+
+it('__serialize returns masked __debugInfo so serialize() never leaks raw data', function (): void {
+    $object = new MaskableFixture('raw-secret', 'hello');
+
+    $serialized = serialize($object);
+
+    expect($serialized)
+        ->toContain('***')
+        ->toContain('hello')
+        ->not->toContain('raw-secret');
+    expect($object->__serialize())->toBe(['secret' => '***', 'visible' => 'hello']);
+});
+
+it('__unserialize throws to block silent restoration of masked data', function (): void {
+    $serialized = serialize(new MaskableFixture('raw-secret', 'hello'));
+
+    expect(fn () => unserialize($serialized))
+        ->toThrow(LogicException::class, 'cannot be unserialized');
 });
 
 it('mask keeps the specified number of trailing characters visible', function (): void {

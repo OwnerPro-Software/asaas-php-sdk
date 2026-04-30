@@ -10,6 +10,7 @@ use OwnerPro\Asaas\Support\BankAccountType;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Transfer\TransferOperationType;
+use SensitiveParameter;
 
 final readonly class TransferRequest
 {
@@ -20,8 +21,10 @@ final readonly class TransferRequest
     /** @param array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string}|BankAccount|null $bankAccount */
     public function __construct(
         public float $value,
+        #[SensitiveParameter]
         public ?string $pixAddressKey = null,
         public PixAddressKeyType|string|null $pixAddressKeyType = null,
+        #[SensitiveParameter]
         array|BankAccount|null $bankAccount = null,
         public ?string $walletId = null,
         public TransferOperationType|string|null $operationType = null,

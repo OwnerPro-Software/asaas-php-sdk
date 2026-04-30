@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use SensitiveParameter;
 
 final readonly class PayWithCreditCardRequest
 {
@@ -22,7 +23,9 @@ final readonly class PayWithCreditCardRequest
      * @param  array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}|CreditCardHolderInfo  $creditCardHolderInfo
      */
     public function __construct(
+        #[SensitiveParameter]
         array|CreditCard $creditCard,
+        #[SensitiveParameter]
         array|CreditCardHolderInfo $creditCardHolderInfo,
     ) {
         $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
