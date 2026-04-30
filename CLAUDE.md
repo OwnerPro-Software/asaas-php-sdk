@@ -6,6 +6,8 @@ PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API. Works both
 
 The public, user-facing contract is documented in `README.md` — consult it before changing any public API surface and update it whenever methods, parameters, or behavior change.
 
+> **Never commit anything under `docs/`.** That directory is reserved for internal planning artifacts (specs, plans, scratch notes) and is gitignored. If a doc belongs in the repo, it goes in `README.md`, `CHANGELOG.md`, or another top-level file — not under `docs/`.
+
 ---
 
 ## Architecture
