@@ -99,13 +99,10 @@ final readonly class CreatePaymentRequest implements JsonSerializable
             interest: $data['interest'] ?? null,
             fine: $data['fine'] ?? null,
             postalService: $data['postalService'] ?? null,
-            split: isset($data['split']) ? array_map(
-                Split::fromArray(...),
-                $data['split'],
-            ) : null,
-            callback: isset($data['callback']) ? Callback::fromArray($data['callback']) : null,
-            creditCard: isset($data['creditCard']) ? CreditCard::fromArray($data['creditCard']) : null,
-            creditCardHolderInfo: isset($data['creditCardHolderInfo']) ? CreditCardHolderInfo::fromArray($data['creditCardHolderInfo']) : null,
+            split: $data['split'] ?? null,
+            callback: $data['callback'] ?? null,
+            creditCard: $data['creditCard'] ?? null,
+            creditCardHolderInfo: $data['creditCardHolderInfo'] ?? null,
             remoteIp: $data['remoteIp'] ?? null,
         );
     }

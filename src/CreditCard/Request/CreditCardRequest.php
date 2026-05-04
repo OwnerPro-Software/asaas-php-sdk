@@ -53,8 +53,8 @@ final readonly class CreditCardRequest implements JsonSerializable
     {
         return new self(
             customer: $data['customer'] ?? throw new InvalidArgumentException('CreditCardRequest: customer is required'),
-            creditCard: CreditCard::fromArray($data['creditCard'] ?? throw new InvalidArgumentException('CreditCardRequest: creditCard is required')),
-            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('CreditCardRequest: creditCardHolderInfo is required')),
+            creditCard: $data['creditCard'] ?? throw new InvalidArgumentException('CreditCardRequest: creditCard is required'),
+            creditCardHolderInfo: $data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('CreditCardRequest: creditCardHolderInfo is required'),
             remoteIp: $data['remoteIp'] ?? throw new InvalidArgumentException('CreditCardRequest: remoteIp is required'),
         );
     }

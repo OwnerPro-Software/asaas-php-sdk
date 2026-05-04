@@ -61,7 +61,7 @@ final readonly class TransferRequest implements JsonSerializable
             value: $data['value'] ?? throw new InvalidArgumentException('TransferRequest: value is required'),
             pixAddressKey: $data['pixAddressKey'] ?? null,
             pixAddressKeyType: $data['pixAddressKeyType'] ?? null,
-            bankAccount: isset($data['bankAccount']) ? BankAccount::fromArray($data['bankAccount']) : null,
+            bankAccount: $data['bankAccount'] ?? null,
             walletId: $data['walletId'] ?? null,
             operationType: $data['operationType'] ?? null,
             description: $data['description'] ?? null,

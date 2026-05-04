@@ -48,9 +48,7 @@ final readonly class UpdatePaymentRequest
             interest: array_key_exists('interest', $data) ? $data['interest'] : Missing::Value,
             fine: array_key_exists('fine', $data) ? $data['fine'] : Missing::Value,
             postalService: array_key_exists('postalService', $data) ? $data['postalService'] : Missing::Value,
-            split: array_key_exists('split', $data)
-                ? (is_array($data['split']) ? array_map(Split::fromArray(...), $data['split']) : $data['split'])
-                : Missing::Value,
+            split: array_key_exists('split', $data) ? $data['split'] : Missing::Value,
         );
     }
 }

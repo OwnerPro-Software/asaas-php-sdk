@@ -50,8 +50,8 @@ final readonly class PayWithCreditCardRequest implements JsonSerializable
     public static function fromArray(array $data): static
     {
         return new self(
-            creditCard: CreditCard::fromArray($data['creditCard'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCard is required')),
-            creditCardHolderInfo: CreditCardHolderInfo::fromArray($data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCardHolderInfo is required')),
+            creditCard: $data['creditCard'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCard is required'),
+            creditCardHolderInfo: $data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCardHolderInfo is required'),
             remoteIp: $data['remoteIp'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: remoteIp is required'),
         );
     }
