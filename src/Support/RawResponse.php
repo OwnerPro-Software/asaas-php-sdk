@@ -15,10 +15,16 @@ final readonly class RawResponse
     /** @return array{status: int, headers: array<string, list<string>>, body: string} */
     public function __debugInfo(): array
     {
+        $body = $this->body();
+        $length = mb_strlen($body);
+        $limit = 350;
+
         return [
             'status' => $this->status(),
             'headers' => $this->headers(),
-            'body' => $this->body(),
+            'body' => $length <= $limit
+                ? $body
+                : mb_substr($body, 0, $limit).'... <truncated; '.$length.' chars total>',
         ];
     }
 

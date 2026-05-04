@@ -79,3 +79,20 @@ it('hides the underlying response from debug output to prevent API key leakage',
         'body' => '{"id":"pay_123"}',
     ]);
 });
+
+it('keeps body intact in debug info when at the size limit', function (): void {
+    $body = str_repeat('a', 350);
+    $rawResponse = new RawResponse(new Response(new Psr7Response(200, [], $body)));
+
+    expect($rawResponse->__debugInfo()['body'])->toBe($body);
+});
+
+it('truncates body in debug info when over the size limit', function (): void {
+    $body = str_repeat('a', 351);
+    $rawResponse = new RawResponse(new Response(new Psr7Response(200, [], $body)));
+
+    $debug = $rawResponse->__debugInfo();
+
+    expect($debug['body'])->toBe(str_repeat('a', 350).'... <truncated; 351 chars total>');
+    expect($rawResponse->body())->toBe($body);
+});
