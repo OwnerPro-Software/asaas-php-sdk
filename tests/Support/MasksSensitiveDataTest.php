@@ -46,17 +46,52 @@ it('__toString prefixes class name and uses masked __debugInfo', function (): vo
         }
     };
 
+    expect((string) $object)->toBe($object::class.'({"secret":"***","visible":"hello"})');
+});
+
+it('__toString preserves slashes and unicode unescaped', function (): void {
+    $object = new class implements JsonSerializable
+    {
+        use MasksSensitiveData;
+
+        public function __debugInfo(): array
+        {
+            return ['url' => 'https://example.com/path', 'name' => 'José'];
+        }
+    };
+
     expect((string) $object)
-        ->toContain($object::class)
-        ->toContain('"secret":"***"')
-        ->toContain('"visible":"hello"');
+        ->toContain('"url":"https://example.com/path"')
+        ->toContain('"name":"José"');
 });
 
 it('__serialize throws so jobs/caches/sessions fail fast at dispatch instead of at the worker', function (): void {
     $object = new MaskableFixture('raw-secret', 'hello');
 
     expect(fn () => serialize($object))
-        ->toThrow(LogicException::class, 'cannot be serialized');
+        ->toThrow(LogicException::class);
+});
+
+it('__serialize message starts with the concrete class name', function (): void {
+    $object = new MaskableFixture('raw-secret', 'hello');
+
+    try {
+        $object->__serialize();
+        $this->fail('Expected LogicException');
+    } catch (LogicException $exception) {
+        expect($exception->getMessage())->toStartWith(MaskableFixture::class.' cannot be serialized');
+    }
+});
+
+it('__unserialize message starts with the concrete class name', function (): void {
+    $object = new MaskableFixture('raw-secret', 'hello');
+
+    try {
+        $object->__unserialize([]);
+        $this->fail('Expected LogicException');
+    } catch (LogicException $exception) {
+        expect($exception->getMessage())->toStartWith(MaskableFixture::class.' cannot be unserialized');
+    }
 });
 
 it('__serialize throw includes the concrete class name to make the source obvious', function (): void {
@@ -103,4 +138,24 @@ it('mask keeps the specified number of trailing characters visible', function ()
     expect($results[2])->toBe('***89');
     expect($results[3])->toBe('**');
     expect($results[4])->toBe('');
+});
+
+it('mask fully masks when string length equals visibleSuffix', function (): void {
+    $object = new class implements JsonSerializable
+    {
+        use MasksSensitiveData;
+
+        public function __debugInfo(): array
+        {
+            return [];
+        }
+
+        public function exposeMask(string $value, int $visibleSuffix): string
+        {
+            return self::mask($value, $visibleSuffix);
+        }
+    };
+
+    expect($object->exposeMask('abc', 3))->toBe('***');
+    expect($object->exposeMask('abcd', 3))->toBe('*bcd');
 });

@@ -70,7 +70,7 @@ it('serializes nested DTOs in toArray', function (): void {
     expect($array['remoteIp'])->toBe('203.0.113.42');
 });
 
-it('masks nested sensitive data in debug info', function (): void {
+it('produces an exact debug info shape with masked nested DTOs', function (): void {
     $request = new CreditCardRequest(
         customer: 'cus_001',
         creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
@@ -78,14 +78,27 @@ it('masks nested sensitive data in debug info', function (): void {
         remoteIp: '203.0.113.42',
     );
 
-    $debug = $request->__debugInfo();
-
-    expect($debug['customer'])->toBe('cus_001');
-    expect($debug['creditCard']['number'])->toBe('************1111');
-    expect($debug['creditCard']['ccv'])->toBe('***');
-    expect($debug['creditCardHolderInfo']['email'])->toBe('***');
-    expect($debug['creditCardHolderInfo']['cpfCnpj'])->toBe('********900');
-    expect($debug['remoteIp'])->toBe('203.0.113.42');
+    expect($request->__debugInfo())->toBe([
+        'customer' => 'cus_001',
+        'creditCard' => [
+            'holderName' => 'John',
+            'number' => '************1111',
+            'expiryMonth' => '12',
+            'expiryYear' => '2030',
+            'ccv' => '***',
+        ],
+        'creditCardHolderInfo' => [
+            'name' => 'John',
+            'email' => '***',
+            'cpfCnpj' => '********900',
+            'postalCode' => '01001000',
+            'addressNumber' => '1',
+            'phone' => '***',
+            'addressComplement' => null,
+            'mobilePhone' => null,
+        ],
+        'remoteIp' => '203.0.113.42',
+    ]);
 });
 
 it('cannot be serialized', function (): void {

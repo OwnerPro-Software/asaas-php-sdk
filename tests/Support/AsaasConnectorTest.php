@@ -835,3 +835,21 @@ it('orFail() on connection failure result throws AsaasRequestException with stat
 
     $result->orFail();
 })->throws(AsaasRequestException::class, 'Unable to connect to the Asaas API.');
+
+it('accepts the minimum valid request timeout (1 second)', function (): void {
+    $connector = AsaasConnector::forStandalone('key', Environment::Sandbox, 1);
+
+    expect($connector)->toBeInstanceOf(AsaasConnector::class);
+});
+
+it('accepts the minimum valid connect timeout (1 second)', function (): void {
+    $connector = AsaasConnector::forStandalone('key', Environment::Sandbox, 30, 1);
+
+    expect($connector)->toBeInstanceOf(AsaasConnector::class);
+});
+
+it('default baseUrl is empty string when not provided', function (): void {
+    $connector = new AsaasConnector(new PendingRequest);
+
+    expect($connector->__debugInfo())->toBe(['baseUrl' => '']);
+});

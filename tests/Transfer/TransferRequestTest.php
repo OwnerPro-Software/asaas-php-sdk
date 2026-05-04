@@ -70,24 +70,51 @@ it('serializes nested BankAccount in toArray', function (): void {
     expect($array['bankAccount']['account'])->toBe('12345');
 });
 
-it('masks pix key and nested bank account in debug info', function (): void {
+it('persists every optional scalar field passed via fromArray', function (): void {
+    $request = TransferRequest::fromArray([
+        'value' => 100.00,
+        'pixAddressKey' => 'jdoe@example.com',
+        'pixAddressKeyType' => PixAddressKeyType::Email,
+        'walletId' => 'wal_001',
+        'operationType' => TransferOperationType::Ted,
+        'description' => 'salary',
+        'scheduleDate' => '2026-04-01',
+        'externalReference' => 'ext_42',
+    ]);
+
+    expect($request->walletId)->toBe('wal_001');
+    expect($request->operationType)->toBe(TransferOperationType::Ted);
+    expect($request->description)->toBe('salary');
+    expect($request->scheduleDate)->toBe('2026-04-01');
+    expect($request->externalReference)->toBe('ext_42');
+});
+
+it('produces an exact debug info shape with masked pix key and all scalar fields', function (): void {
     $request = new TransferRequest(
         value: 100.00,
         pixAddressKey: 'jdoe@example.com',
         pixAddressKeyType: PixAddressKeyType::Email,
         walletId: 'wal_001',
+        operationType: TransferOperationType::Ted,
+        description: 'salary',
+        scheduleDate: '2026-04-01',
+        externalReference: 'ext_42',
     );
 
-    $debug = $request->__debugInfo();
-
-    expect($debug['value'])->toBe(100.00);
-    expect($debug['pixAddressKey'])->toBe('************.com');
-    expect($debug['pixAddressKeyType'])->toBe(PixAddressKeyType::Email);
-    expect($debug['bankAccount'])->toBeNull();
-    expect($debug['walletId'])->toBe('wal_001');
+    expect($request->__debugInfo())->toBe([
+        'value' => 100.00,
+        'pixAddressKey' => '************.com',
+        'pixAddressKeyType' => PixAddressKeyType::Email,
+        'bankAccount' => null,
+        'walletId' => 'wal_001',
+        'operationType' => TransferOperationType::Ted,
+        'description' => 'salary',
+        'scheduleDate' => '2026-04-01',
+        'externalReference' => 'ext_42',
+    ]);
 });
 
-it('masks nested bank account in debug info', function (): void {
+it('produces an exact debug info shape with masked nested bank account', function (): void {
     $request = new TransferRequest(
         value: 100.00,
         bankAccount: new BankAccount(
@@ -99,12 +126,28 @@ it('masks nested bank account in debug info', function (): void {
         ),
     );
 
-    $debug = $request->__debugInfo();
-
-    expect($debug['pixAddressKey'])->toBeNull();
-    expect($debug['bankAccount']['cpfCnpj'])->toBe('********900');
-    expect($debug['bankAccount']['account'])->toBe('***45');
-    expect($debug['bankAccount']['accountDigit'])->toBe('*');
+    expect($request->__debugInfo())->toBe([
+        'value' => 100.00,
+        'pixAddressKey' => null,
+        'pixAddressKeyType' => null,
+        'bankAccount' => [
+            'ownerName' => 'John',
+            'cpfCnpj' => '********900',
+            'agency' => '0001',
+            'account' => '***45',
+            'accountDigit' => '*',
+            'bank' => null,
+            'accountName' => null,
+            'ownerBirthDate' => null,
+            'bankAccountType' => null,
+            'ispb' => null,
+        ],
+        'walletId' => null,
+        'operationType' => null,
+        'description' => null,
+        'scheduleDate' => null,
+        'externalReference' => null,
+    ]);
 });
 
 it('cannot be serialized', function (): void {

@@ -47,6 +47,46 @@ it('creates from array with all nested DTOs', function (): void {
     expect($request->split[0])->toBeInstanceOf(Split::class);
 });
 
+it('persists every optional scalar field passed via fromArray', function (): void {
+    $request = CreatePaymentRequest::fromArray([
+        'customer' => 'cus_001',
+        'billingType' => BillingType::Pix,
+        'value' => 100.00,
+        'dueDate' => '2026-04-01',
+        'description' => 'order_001',
+        'externalReference' => 'ext_42',
+        'discount' => 5.0,
+        'interest' => 1.5,
+        'fine' => 2.5,
+        'postalService' => true,
+        'remoteIp' => '203.0.113.42',
+    ]);
+
+    expect($request->description)->toBe('order_001');
+    expect($request->externalReference)->toBe('ext_42');
+    expect($request->discount)->toBe(5.0);
+    expect($request->interest)->toBe(1.5);
+    expect($request->fine)->toBe(2.5);
+    expect($request->postalService)->toBeTrue();
+    expect($request->remoteIp)->toBe('203.0.113.42');
+});
+
+it('coerces split items to Split DTOs when constructed directly with arrays', function (): void {
+    $request = new CreatePaymentRequest(
+        customer: 'cus_001',
+        billingType: BillingType::Pix,
+        value: 100.00,
+        dueDate: '2026-04-01',
+        split: [['walletId' => 'wal_1', 'fixedValue' => 10.0], new Split(walletId: 'wal_2', fixedValue: 20.0)],
+    );
+
+    expect($request->split)->toHaveCount(2);
+    expect($request->split[0])->toBeInstanceOf(Split::class);
+    expect($request->split[0]->walletId)->toBe('wal_1');
+    expect($request->split[1])->toBeInstanceOf(Split::class);
+    expect($request->split[1]->walletId)->toBe('wal_2');
+});
+
 it('throws when customer is missing', function (): void {
     CreatePaymentRequest::fromArray([
         'billingType' => BillingType::Pix,
@@ -95,31 +135,62 @@ it('serializes nested DTOs in toArray', function (): void {
     expect($array['creditCardHolderInfo']['email'])->toBe('j@t.com');
 });
 
-it('masks nested credit card and holder info in debug', function (): void {
+it('produces an exact debug info shape with all scalar fields and masked nested DTOs', function (): void {
+    $callback = new Callback(successUrl: 'https://example.com/ok', autoRedirect: true);
+    $split = new Split(walletId: 'wal_1', fixedValue: 10.0);
     $request = new CreatePaymentRequest(
         customer: 'cus_001',
         billingType: BillingType::CreditCard,
         value: 100.00,
         dueDate: '2026-04-01',
         description: 'order_001',
+        externalReference: 'ext_42',
+        discount: 5.0,
+        interest: 1.5,
+        fine: 2.5,
+        postalService: true,
+        split: [$split],
+        callback: $callback,
         creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
         creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '12345678900', postalCode: '01001000', addressNumber: '1', phone: '11999'),
         remoteIp: '203.0.113.42',
     );
 
-    $debug = $request->__debugInfo();
-
-    expect($debug['customer'])->toBe('cus_001');
-    expect($debug['billingType'])->toBe(BillingType::CreditCard);
-    expect($debug['value'])->toBe(100.00);
-    expect($debug['dueDate'])->toBe('2026-04-01');
-    expect($debug['description'])->toBe('order_001');
-    expect($debug['creditCard']['number'])->toBe('************1111');
-    expect($debug['creditCardHolderInfo']['cpfCnpj'])->toBe('********900');
-    expect($debug['remoteIp'])->toBe('203.0.113.42');
+    expect($request->__debugInfo())->toBe([
+        'customer' => 'cus_001',
+        'billingType' => BillingType::CreditCard,
+        'value' => 100.00,
+        'dueDate' => '2026-04-01',
+        'description' => 'order_001',
+        'externalReference' => 'ext_42',
+        'discount' => 5.0,
+        'interest' => 1.5,
+        'fine' => 2.5,
+        'postalService' => true,
+        'split' => [$split],
+        'callback' => $callback,
+        'creditCard' => [
+            'holderName' => 'John',
+            'number' => '************1111',
+            'expiryMonth' => '12',
+            'expiryYear' => '2030',
+            'ccv' => '***',
+        ],
+        'creditCardHolderInfo' => [
+            'name' => 'John',
+            'email' => '***',
+            'cpfCnpj' => '********900',
+            'postalCode' => '01001000',
+            'addressNumber' => '1',
+            'phone' => '***',
+            'addressComplement' => null,
+            'mobilePhone' => null,
+        ],
+        'remoteIp' => '203.0.113.42',
+    ]);
 });
 
-it('returns nulls for unset fields in debug info', function (): void {
+it('produces an exact debug info shape with nulls for unset optional fields', function (): void {
     $request = new CreatePaymentRequest(
         customer: 'cus_001',
         billingType: BillingType::Pix,
@@ -127,13 +198,23 @@ it('returns nulls for unset fields in debug info', function (): void {
         dueDate: '2026-04-01',
     );
 
-    $debug = $request->__debugInfo();
-
-    expect($debug['creditCard'])->toBeNull();
-    expect($debug['creditCardHolderInfo'])->toBeNull();
-    expect($debug['split'])->toBeNull();
-    expect($debug['callback'])->toBeNull();
-    expect($debug['remoteIp'])->toBeNull();
+    expect($request->__debugInfo())->toBe([
+        'customer' => 'cus_001',
+        'billingType' => BillingType::Pix,
+        'value' => 100.00,
+        'dueDate' => '2026-04-01',
+        'description' => null,
+        'externalReference' => null,
+        'discount' => null,
+        'interest' => null,
+        'fine' => null,
+        'postalService' => null,
+        'split' => null,
+        'callback' => null,
+        'creditCard' => null,
+        'creditCardHolderInfo' => null,
+        'remoteIp' => null,
+    ]);
 });
 
 it('cannot be serialized', function (): void {

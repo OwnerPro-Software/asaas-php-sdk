@@ -54,20 +54,23 @@ it('throws when value is missing', function (): void {
     PayQrCodeRequest::fromArray(['qrCode' => ['payload' => '00020126...']]);
 })->throws(InvalidArgumentException::class);
 
-it('masks the qr payload in debug info', function (): void {
+it('produces an exact debug info shape with masked qr payload', function (): void {
     $request = new PayQrCodeRequest(
         qrCode: new QrCodePayload(payload: '00020126aabbccddeeff', changeValue: 5.00),
         value: 100.00,
         description: 'QR payment',
+        scheduleDate: '2026-04-01',
     );
 
-    $debug = $request->__debugInfo();
-
-    expect($debug['qrCode']['payload'])->toBe('************ccddeeff');
-    expect($debug['qrCode']['changeValue'])->toBe(5.00);
-    expect($debug['value'])->toBe(100.00);
-    expect($debug['description'])->toBe('QR payment');
-    expect($debug['scheduleDate'])->toBeNull();
+    expect($request->__debugInfo())->toBe([
+        'qrCode' => [
+            'payload' => '************ccddeeff',
+            'changeValue' => 5.00,
+        ],
+        'value' => 100.00,
+        'description' => 'QR payment',
+        'scheduleDate' => '2026-04-01',
+    ]);
 });
 
 it('cannot be serialized', function (): void {
