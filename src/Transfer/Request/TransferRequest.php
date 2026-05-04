@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Transfer\Request;
 
 use InvalidArgumentException;
+use JsonSerializable;
 use OwnerPro\Asaas\Pix\PixAddressKeyType;
 use OwnerPro\Asaas\Support\BankAccountType;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Transfer\TransferOperationType;
 use SensitiveParameter;
 
-final readonly class TransferRequest
+final readonly class TransferRequest implements JsonSerializable
 {
     use HasArrayFactory;
+    use MasksSensitiveData;
 
     public ?BankAccount $bankAccount;
 
@@ -33,6 +36,22 @@ final readonly class TransferRequest
         public ?string $externalReference = null,
     ) {
         $this->bankAccount = is_array($bankAccount) ? BankAccount::fromArray($bankAccount) : $bankAccount;
+    }
+
+    /** @return array{value: float, pixAddressKey: ?string, pixAddressKeyType: PixAddressKeyType|string|null, bankAccount: ?array<string, mixed>, walletId: ?string, operationType: TransferOperationType|string|null, description: ?string, scheduleDate: ?string, externalReference: ?string} */
+    public function __debugInfo(): array
+    {
+        return [
+            'value' => $this->value,
+            'pixAddressKey' => $this->pixAddressKey !== null ? self::mask($this->pixAddressKey, 4) : null,
+            'pixAddressKeyType' => $this->pixAddressKeyType,
+            'bankAccount' => $this->bankAccount?->__debugInfo(),
+            'walletId' => $this->walletId,
+            'operationType' => $this->operationType,
+            'description' => $this->description,
+            'scheduleDate' => $this->scheduleDate,
+            'externalReference' => $this->externalReference,
+        ];
     }
 
     /** @param array{value?: float, pixAddressKey?: string, pixAddressKeyType?: PixAddressKeyType|string, bankAccount?: array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: string, ispb?: string}, walletId?: string, operationType?: TransferOperationType|string, description?: string, scheduleDate?: string, externalReference?: string} $data */

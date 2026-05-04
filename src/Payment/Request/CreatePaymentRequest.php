@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Payment\Request;
 
 use InvalidArgumentException;
+use JsonSerializable;
 use OwnerPro\Asaas\Payment\BillingType;
 use OwnerPro\Asaas\Support\DTO\Callback;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\MasksSensitiveData;
+use SensitiveParameter;
 
-final readonly class CreatePaymentRequest
+final readonly class CreatePaymentRequest implements JsonSerializable
 {
     use HasArrayFactory;
+    use MasksSensitiveData;
 
     /** @var list<Split>|null */
     public ?array $split;
@@ -44,7 +48,9 @@ final readonly class CreatePaymentRequest
         public ?bool $postalService = null,
         ?array $split = null,
         array|Callback|null $callback = null,
+        #[SensitiveParameter]
         array|CreditCard|null $creditCard = null,
+        #[SensitiveParameter]
         array|CreditCardHolderInfo|null $creditCardHolderInfo = null,
         public ?string $remoteIp = null,
     ) {
@@ -55,6 +61,28 @@ final readonly class CreatePaymentRequest
         $this->callback = is_array($callback) ? Callback::fromArray($callback) : $callback;
         $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
         $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
+    }
+
+    /** @return array{customer: string, billingType: BillingType|string, value: float, dueDate: string, description: ?string, externalReference: ?string, discount: ?float, interest: ?float, fine: ?float, postalService: ?bool, split: ?list<Split>, callback: ?Callback, creditCard: ?array<string, mixed>, creditCardHolderInfo: ?array<string, mixed>, remoteIp: ?string} */
+    public function __debugInfo(): array
+    {
+        return [
+            'customer' => $this->customer,
+            'billingType' => $this->billingType,
+            'value' => $this->value,
+            'dueDate' => $this->dueDate,
+            'description' => $this->description,
+            'externalReference' => $this->externalReference,
+            'discount' => $this->discount,
+            'interest' => $this->interest,
+            'fine' => $this->fine,
+            'postalService' => $this->postalService,
+            'split' => $this->split,
+            'callback' => $this->callback,
+            'creditCard' => $this->creditCard?->__debugInfo(),
+            'creditCardHolderInfo' => $this->creditCardHolderInfo?->__debugInfo(),
+            'remoteIp' => $this->remoteIp,
+        ];
     }
 
     /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */

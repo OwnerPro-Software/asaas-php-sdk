@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Payment\Request;
 
 use InvalidArgumentException;
+use JsonSerializable;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\HasArrayFactory;
+use OwnerPro\Asaas\Support\MasksSensitiveData;
 use SensitiveParameter;
 
-final readonly class PayWithCreditCardRequest
+final readonly class PayWithCreditCardRequest implements JsonSerializable
 {
     use HasArrayFactory;
+    use MasksSensitiveData;
 
     public CreditCard $creditCard;
 
@@ -31,6 +34,16 @@ final readonly class PayWithCreditCardRequest
     ) {
         $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
         $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
+    }
+
+    /** @return array{creditCard: array<string, mixed>, creditCardHolderInfo: array<string, mixed>, remoteIp: string} */
+    public function __debugInfo(): array
+    {
+        return [
+            'creditCard' => $this->creditCard->__debugInfo(),
+            'creditCardHolderInfo' => $this->creditCardHolderInfo->__debugInfo(),
+            'remoteIp' => $this->remoteIp,
+        ];
     }
 
     /** @param array{creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */

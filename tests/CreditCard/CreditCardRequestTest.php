@@ -2,47 +2,61 @@
 
 declare(strict_types=1);
 
-use OwnerPro\Asaas\Payment\Request\PayWithCreditCardRequest;
+use OwnerPro\Asaas\CreditCard\Request\CreditCardRequest;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 
-mutates(PayWithCreditCardRequest::class);
+mutates(CreditCardRequest::class);
 
 it('creates from array', function (): void {
-    $request = PayWithCreditCardRequest::fromArray([
+    $request = CreditCardRequest::fromArray([
+        'customer' => 'cus_001',
         'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
-        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '12345678900', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
         'remoteIp' => '203.0.113.42',
     ]);
 
+    expect($request->customer)->toBe('cus_001');
     expect($request->creditCard)->toBeInstanceOf(CreditCard::class);
     expect($request->creditCardHolderInfo)->toBeInstanceOf(CreditCardHolderInfo::class);
     expect($request->remoteIp)->toBe('203.0.113.42');
 });
 
-it('throws when creditCard is missing', function (): void {
-    PayWithCreditCardRequest::fromArray([
+it('throws when customer is missing', function (): void {
+    CreditCardRequest::fromArray([
+        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
         'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
         'remoteIp' => '203.0.113.42',
     ]);
-})->throws(InvalidArgumentException::class);
+})->throws(InvalidArgumentException::class, 'CreditCardRequest: customer is required');
+
+it('throws when creditCard is missing', function (): void {
+    CreditCardRequest::fromArray([
+        'customer' => 'cus_001',
+        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+        'remoteIp' => '203.0.113.42',
+    ]);
+})->throws(InvalidArgumentException::class, 'CreditCardRequest: creditCard is required');
 
 it('throws when creditCardHolderInfo is missing', function (): void {
-    PayWithCreditCardRequest::fromArray([
+    CreditCardRequest::fromArray([
+        'customer' => 'cus_001',
         'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
         'remoteIp' => '203.0.113.42',
     ]);
-})->throws(InvalidArgumentException::class);
+})->throws(InvalidArgumentException::class, 'CreditCardRequest: creditCardHolderInfo is required');
 
 it('throws when remoteIp is missing', function (): void {
-    PayWithCreditCardRequest::fromArray([
+    CreditCardRequest::fromArray([
+        'customer' => 'cus_001',
         'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
         'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
     ]);
-})->throws(InvalidArgumentException::class, 'PayWithCreditCardRequest: remoteIp is required');
+})->throws(InvalidArgumentException::class, 'CreditCardRequest: remoteIp is required');
 
-it('serializes nested CreditCard DTO in toArray', function (): void {
-    $request = new PayWithCreditCardRequest(
+it('serializes nested DTOs in toArray', function (): void {
+    $request = new CreditCardRequest(
+        customer: 'cus_001',
         creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
         creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
         remoteIp: '203.0.113.42',
@@ -50,25 +64,15 @@ it('serializes nested CreditCard DTO in toArray', function (): void {
 
     $array = $request->toArray();
 
-    expect($array['creditCard'])->toBe(['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123']);
-    expect($array['creditCardHolderInfo'])->toBe(['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999']);
+    expect($array['customer'])->toBe('cus_001');
+    expect($array['creditCard']['number'])->toBe('4111111111111111');
+    expect($array['creditCardHolderInfo']['email'])->toBe('j@t.com');
     expect($array['remoteIp'])->toBe('203.0.113.42');
 });
 
-it('passes arrays through as-is in toArray', function (): void {
-    $request = new PayWithCreditCardRequest(
-        creditCard: ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
-        creditCardHolderInfo: ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
-        remoteIp: '203.0.113.42',
-    );
-
-    $array = $request->toArray();
-
-    expect($array['creditCard'])->toBe(['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123']);
-});
-
 it('masks nested sensitive data in debug info', function (): void {
-    $request = new PayWithCreditCardRequest(
+    $request = new CreditCardRequest(
+        customer: 'cus_001',
         creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
         creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '12345678900', postalCode: '01001000', addressNumber: '1', phone: '11999'),
         remoteIp: '203.0.113.42',
@@ -76,6 +80,7 @@ it('masks nested sensitive data in debug info', function (): void {
 
     $debug = $request->__debugInfo();
 
+    expect($debug['customer'])->toBe('cus_001');
     expect($debug['creditCard']['number'])->toBe('************1111');
     expect($debug['creditCard']['ccv'])->toBe('***');
     expect($debug['creditCardHolderInfo']['email'])->toBe('***');
@@ -84,7 +89,8 @@ it('masks nested sensitive data in debug info', function (): void {
 });
 
 it('cannot be serialized', function (): void {
-    $request = new PayWithCreditCardRequest(
+    $request = new CreditCardRequest(
+        customer: 'cus_001',
         creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
         creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
         remoteIp: '203.0.113.42',
