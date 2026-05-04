@@ -12,7 +12,7 @@ return RectorConfig::configure()
     ->withPaths([
         __DIR__.'/src',
     ])
-    ->withPhpSets(php82: true)
+    ->withPhpSets(php83: true)
     ->withSetProviders(LaravelSetProvider::class)
     ->withComposerBased(laravel: true)
     ->withImportNames(removeUnusedImports: true)

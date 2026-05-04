@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas;
 
 use Illuminate\Support\ServiceProvider;
+use Override;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use RuntimeException;
 
 final class AsaasServiceProvider extends ServiceProvider
 {
+    #[Override]
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/asaas.php', 'asaas');

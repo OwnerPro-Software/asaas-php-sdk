@@ -10,7 +10,7 @@ use SensitiveParameter;
 final readonly class WebhookVerifier
 {
     /** @var list<string> */
-    public const DEFAULT_IPS = [
+    public const array DEFAULT_IPS = [
         '52.67.12.206', // @pest-mutate-ignore
         '18.230.8.159', // @pest-mutate-ignore
         '54.94.136.112', // @pest-mutate-ignore
