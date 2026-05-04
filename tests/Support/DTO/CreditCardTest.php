@@ -107,3 +107,15 @@ it('throws when required field is missing', function (string $missingField): voi
     'expiryYear',
     'ccv',
 ]);
+
+it('cannot be serialized', function (): void {
+    $card = new CreditCard(
+        holderName: 'John Doe',
+        number: '4111111111111111',
+        expiryMonth: '12',
+        expiryYear: '2030',
+        ccv: '123',
+    );
+
+    serialize($card);
+})->throws(LogicException::class);

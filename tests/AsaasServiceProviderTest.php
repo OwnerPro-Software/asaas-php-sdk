@@ -138,3 +138,29 @@ it('throws RuntimeException when api_key is empty string', function () {
 
     app(AsaasClient::class);
 })->throws(RuntimeException::class, 'The asaas.api_key config value is required.');
+
+it('falls back to default timeout when ASAAS_TIMEOUT env var is empty', function () {
+    putenv('ASAAS_TIMEOUT=');
+    $_ENV['ASAAS_TIMEOUT'] = '';
+    $_SERVER['ASAAS_TIMEOUT'] = '';
+
+    $config = require __DIR__.'/../config/asaas.php';
+
+    expect($config['timeout'])->toBe(30);
+
+    putenv('ASAAS_TIMEOUT');
+    unset($_ENV['ASAAS_TIMEOUT'], $_SERVER['ASAAS_TIMEOUT']);
+});
+
+it('falls back to default connect_timeout when ASAAS_CONNECT_TIMEOUT env var is empty', function () {
+    putenv('ASAAS_CONNECT_TIMEOUT=');
+    $_ENV['ASAAS_CONNECT_TIMEOUT'] = '';
+    $_SERVER['ASAAS_CONNECT_TIMEOUT'] = '';
+
+    $config = require __DIR__.'/../config/asaas.php';
+
+    expect($config['connect_timeout'])->toBe(10);
+
+    putenv('ASAAS_CONNECT_TIMEOUT');
+    unset($_ENV['ASAAS_CONNECT_TIMEOUT'], $_SERVER['ASAAS_CONNECT_TIMEOUT']);
+});

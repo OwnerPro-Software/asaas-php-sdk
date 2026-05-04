@@ -187,3 +187,19 @@ it('throws when required field is missing', function (string $missingField): voi
     'province',
     'postalCode',
 ]);
+
+it('cannot be serialized', function (): void {
+    $request = new AccountRequest(
+        name: 'Acme',
+        email: 'acme@example.com',
+        cpfCnpj: '12345678900',
+        mobilePhone: '11999990000',
+        incomeValue: 1000.0,
+        address: 'Av Paulista',
+        addressNumber: '1',
+        province: 'Centro',
+        postalCode: '01001000',
+    );
+
+    serialize($request);
+})->throws(LogicException::class);

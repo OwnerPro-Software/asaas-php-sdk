@@ -83,3 +83,12 @@ it('masks authToken in json serialization', function (): void {
     expect($json['url'])->toBe('https://example.com/hook');
     expect($json['authToken'])->toBe('***');
 });
+
+it('cannot be serialized', function (): void {
+    $request = new UpdateWebhookRequest(
+        url: 'https://example.com/hook',
+        authToken: 'super-secret-token',
+    );
+
+    serialize($request);
+})->throws(LogicException::class);

@@ -133,3 +133,16 @@ it('throws when required field is missing', function (string $missingField): voi
     'addressNumber',
     'phone',
 ]);
+
+it('cannot be serialized', function (): void {
+    $info = new CreditCardHolderInfo(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678900',
+        postalCode: '01001000',
+        addressNumber: '1',
+        phone: '11999990000',
+    );
+
+    serialize($info);
+})->throws(LogicException::class);

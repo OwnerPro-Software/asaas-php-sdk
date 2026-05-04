@@ -184,3 +184,15 @@ it('throws when required field is missing', function (string $missingField): voi
     'account',
     'accountDigit',
 ]);
+
+it('cannot be serialized', function (): void {
+    $account = new BankAccount(
+        ownerName: 'John Doe',
+        cpfCnpj: '12345678900',
+        agency: '0001',
+        account: '12345',
+        accountDigit: '6',
+    );
+
+    serialize($account);
+})->throws(LogicException::class);

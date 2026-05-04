@@ -165,3 +165,11 @@ it('returns failure on API error', function (array $errorFixture): void {
     expect($result->response->status())->toBe(400);
     expect($result->errors[0]['description'])->toBe('The value field is required');
 })->with('error_fixture');
+
+it('rejects empty id on find', function (): void {
+    pixTxResource()->find('');
+})->throws(InvalidArgumentException::class);
+
+it('rejects empty id on cancel', function (): void {
+    pixTxResource()->cancel('');
+})->throws(InvalidArgumentException::class);

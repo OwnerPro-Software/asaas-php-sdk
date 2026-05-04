@@ -101,3 +101,13 @@ it('throws when required field is missing', function (string $missingField): voi
     'url',
     'email',
 ]);
+
+it('cannot be serialized', function (): void {
+    $request = new CreateWebhookRequest(
+        url: 'https://example.com/hook',
+        email: 'dev@test.com',
+        authToken: 'super-secret-token',
+    );
+
+    serialize($request);
+})->throws(LogicException::class);
