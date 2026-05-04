@@ -3,6 +3,32 @@
     "description": "Clean PHP SDK for the Asaas payment platform API",
     "type": "library",
     "license": "MIT",
+    "keywords": [
+        "asaas",
+        "asaas-sdk",
+        "payment",
+        "payment-gateway",
+        "sdk",
+        "laravel",
+        "pix",
+        "boleto",
+        "credit-card",
+        "billing",
+        "brazil",
+        "brasil"
+    ],
+    "homepage": "https://github.com/OwnerPro-Software/asaas-php-sdk",
+    "authors": [
+        {
+            "name": "Jonathan Martins",
+            "email": "web@jonathanmartins.com.br",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/OwnerPro-Software/asaas-php-sdk/issues",
+        "source": "https://github.com/OwnerPro-Software/asaas-php-sdk"
+    },
     "require": {
         "php": "^8.2",
         "illuminate/http": "^10.0|^11.0|^12.0",
