@@ -4,10 +4,10 @@ Clean PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API with 
 
 ## Requirements
 
-- PHP 8.2+
-- `illuminate/http` ^10.0|^11.0|^12.0
+- PHP 8.3+
+- `illuminate/http` ^11.0|^12.0
 
-Works with Laravel 10, 11, or 12 (auto-discovers ServiceProvider and Facade), and also works in any PHP project without Laravel.
+Works with Laravel 11 or 12 (auto-discovers ServiceProvider and Facade), and also works in any PHP project without Laravel.
 
 ## Installation
 
