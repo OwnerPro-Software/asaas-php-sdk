@@ -91,7 +91,12 @@ $client = AsaasClient::for(
 
 ### Multi-Tenant
 
-For SaaS platforms where each tenant has their own Asaas API key:
+This SDK supports two multi-tenant patterns:
+
+1. **Existing Asaas account (standalone)** — the tenant already has an Asaas account and provides their own apiKey. The integrator has no administrative visibility; the tenant operates independently.
+2. **White-label subaccount** — the integrator creates a subaccount on behalf of the tenant via `accounts()->create()` and drives the full onboarding (KYC, commercial info, document upload, bank account) without redirecting the tenant to the Asaas panel. The subaccount keeps its own balance and KYC status; the integrator only retains administrative visibility (listing, status checks). See [My Account (`myAccount()`)](#my-account-myaccount) for the onboarding endpoints.
+
+In both patterns, instantiate one client per tenant using their apiKey:
 
 ```php
 // In Laravel — inherits environment/timeout from config
