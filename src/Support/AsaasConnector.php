@@ -68,6 +68,39 @@ final readonly class AsaasConnector implements Connector
         );
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @param array<int, array{
+     *     name: string,
+     *     contents: string|resource,
+     *     filename?: string,
+     *     headers?: array<string, string>
+     * }> $files
+     */
+    public function postMultipart(string $path, array $data, array $files): AsaasResult
+    {
+        if ($files === []) {
+            throw new InvalidArgumentException('postMultipart requires at least one file.');
+        }
+
+        return $this->sendRequest(function () use ($path, $data, $files): Response {
+            try {
+                foreach ($files as $file) {
+                    $this->pendingRequest->attach(
+                        $file['name'],
+                        $file['contents'],
+                        $file['filename'] ?? null,
+                        $file['headers'] ?? [],
+                    );
+                }
+
+                return $this->pendingRequest->asMultipart()->post($path, $data);
+            } finally {
+                $this->pendingRequest->asJson();
+            }
+        });
+    }
+
     private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout): self
     {
         if ($apiKey === '') {

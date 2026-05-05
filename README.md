@@ -242,6 +242,7 @@ PaymentStatus::from($payment['status']);     // PaymentStatus::Pending
 | `BillPayment\BillPaymentStatus` | `Pending`, `BankProcessing`, `Paid`, `Failed`, `Cancelled`, `Refunded`, `AwaitingCheckoutRiskAnalysisRequest` |
 | `Account\CompanyType` | `Mei`, `Limited`, `Individual`, `Association` |
 | `Account\PersonType` | `Fisica`, `Juridica` |
+| `Account\DocumentType` | `Identification`, `SocialContract`, `EntrepreneurRequirement`, `Minutes`, `Custom` |
 | `CreditCard\CreditCardBrand` | `Visa`, `Mastercard`, `Elo`, `Diners`, `Discover`, `Amex`, `Cabal`, `Banescard`, `Credz`, `Sorocred`, `Credsystem`, `Jcb`, `Unknown` |
 | `Webhook\WebhookSendType` | `Sequentially`, `NonSequentially` |
 | `Webhook\WebhookEvent` | 111 event types (`PaymentCreated`, `PaymentReceived`, `TransferDone`, etc.) |
@@ -772,6 +773,73 @@ Asaas::accounts()->deleteAccessToken(string $accountId, string $tokenId): AsaasR
 Asaas::accounts()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
+### My Account (`myAccount()`)
+
+Operates on the **current** account behind the apiKey — used for tenant onboarding (KYC, commercial info, document upload, bank account). Must be called with the **subaccount's** apiKey, not the master.
+
+```php
+Asaas::myAccount()->status(): AsaasResult
+Asaas::myAccount()->commercialInfo(): AsaasResult
+Asaas::myAccount()->updateCommercialInfo(array|CommercialInfoRequest $data): AsaasResult
+Asaas::myAccount()->documents(): AsaasResult
+Asaas::myAccount()->uploadDocumentFile(string $documentId, string|resource $file, DocumentType|string $type, string $filename): AsaasResult
+Asaas::myAccount()->deleteDocumentFile(string $fileId): AsaasResult
+Asaas::myAccount()->bankAccount(): AsaasResult
+Asaas::myAccount()->updateBankAccount(array|AccountBankAccountRequest $data): AsaasResult
+Asaas::myAccount()->delete(array|DeleteAccountRequest $data): AsaasResult
+```
+
+#### Subaccount onboarding (white label)
+
+After `accounts()->create()` returns a new subaccount, the tenant must complete KYC, send commercial info, and register a bank account before they can transact. Drive the full flow without redirecting the tenant to the Asaas panel by instantiating a tenant-scoped client with the **subaccount's apiKey** and calling `myAccount()`.
+
+```php
+use OwnerPro\Asaas\Account\DocumentType;
+use OwnerPro\Asaas\Account\Request\AccountBankAccountRequest;
+use OwnerPro\Asaas\Account\Request\CommercialInfoRequest;
+use OwnerPro\Asaas\AsaasClient;
+use OwnerPro\Asaas\Account\CompanyType;
+use OwnerPro\Asaas\Support\BankAccountType;
+use OwnerPro\Asaas\Support\Environment;
+
+$tenantClient = AsaasClient::for(
+    apiKey: $tenant->asaas_api_key,
+    environment: Environment::Production,
+);
+
+// 1. Pull current onboarding status
+$status = $tenantClient->myAccount()->status();
+// $status->data: ['general' => ..., 'commercialInfo' => ..., 'documentation' => ..., 'bankAccountInfo' => ...]
+
+// 2. Update commercial info (partial — only changed fields)
+$tenantClient->myAccount()->updateCommercialInfo(new CommercialInfoRequest(
+    incomeValue: 12000.0,
+    companyType: CompanyType::Limited,
+));
+
+// 3. Upload required KYC documents
+$documents = $tenantClient->myAccount()->documents();
+$documentId = $documents->data['data'][0]['id'];
+
+$tenantClient->myAccount()->uploadDocumentFile(
+    documentId: $documentId,
+    file: fopen('/tmp/rg.png', 'rb'),
+    type: DocumentType::Identification,
+    filename: 'rg.png',
+);
+
+// 4. Set the bank account where withdrawals will land
+$tenantClient->myAccount()->updateBankAccount(new AccountBankAccountRequest(
+    bankCode: '341',
+    agency: '1234',
+    account: '56789',
+    accountDigit: '0',
+    accountType: BankAccountType::CheckingAccount,
+));
+```
+
+Listen to the `ACCOUNT_STATUS_*` webhook events (already in `WebhookEvent`) to react to approvals and rejections asynchronously.
+
 ### Credit Cards (`creditCards()`)
 
 ```php
@@ -802,7 +870,7 @@ Asaas::statements()->all(array $filters = []): Generator (yields array|AsaasPagi
 
 All resources depend on the `Connector` interface (`OwnerPro\Asaas\Support\Connector`) rather than the concrete `AsaasConnector`. You can provide your own implementation for testing, logging, caching, or any custom behavior.
 
-The `Connector` interface defines six methods: the four HTTP verbs (`get`, `post`, `put`, `delete`) plus `paginate` and `all`. The `PaginatesResults` trait provides default implementations of `paginate()` and `all()` built on top of `get()`, so you only need to implement the four HTTP methods:
+The `Connector` interface defines seven methods: the four HTTP verbs (`get`, `post`, `put`, `delete`), `postMultipart` for file uploads, plus `paginate` and `all`. The `PaginatesResults` trait provides default implementations of `paginate()` and `all()` built on top of `get()`, so you only need to implement the five HTTP methods:
 
 ```php
 use OwnerPro\Asaas\AsaasClient;
@@ -817,6 +885,7 @@ class MyLoggingConnector implements Connector
     public function post(string $path, array $data = []): AsaasResult { /* ... */ }
     public function put(string $path, array $data = []): AsaasResult { /* ... */ }
     public function delete(string $path): AsaasResult { /* ... */ }
+    public function postMultipart(string $path, array $data, array $files): AsaasResult { /* ... */ }
     // paginate() and all() are provided by the trait
 }
 

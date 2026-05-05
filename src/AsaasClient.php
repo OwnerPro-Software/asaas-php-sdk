@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas;
 
 use OwnerPro\Asaas\Account\AccountResource;
+use OwnerPro\Asaas\Account\MyAccountResource;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
@@ -38,6 +39,7 @@ final class AsaasClient
                 'webhooks',
                 'invoices',
                 'accounts',
+                'myAccount',
                 'creditCards',
                 'billPayments',
                 'statements',
@@ -87,6 +89,11 @@ final class AsaasClient
     public function accounts(): AccountResource
     {
         return $this->resolve(AccountResource::class);
+    }
+
+    public function myAccount(): MyAccountResource
+    {
+        return $this->resolve(MyAccountResource::class);
     }
 
     public function creditCards(): CreditCardResource

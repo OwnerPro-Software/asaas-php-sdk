@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Account\AccountResource;
+use OwnerPro\Asaas\Account\MyAccountResource;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
@@ -93,6 +94,7 @@ it('hides the connector from debug output', function (): void {
         'webhooks',
         'invoices',
         'accounts',
+        'myAccount',
         'creditCards',
         'billPayments',
         'statements',
@@ -179,4 +181,22 @@ it('resolves StatementResource', function (): void {
     $first = $client->statements();
     expect($first)->toBeInstanceOf(StatementResource::class);
     expect($client->statements())->toBe($first);
+});
+
+it('exposes a MyAccountResource through myAccount()', function (): void {
+    $client = AsaasClient::for('test-key', Environment::Sandbox);
+
+    expect($client->myAccount())->toBeInstanceOf(MyAccountResource::class);
+});
+
+it('caches the MyAccountResource instance', function (): void {
+    $client = AsaasClient::for('test-key', Environment::Sandbox);
+
+    expect($client->myAccount())->toBe($client->myAccount());
+});
+
+it('lists myAccount in __debugInfo resources', function (): void {
+    $client = AsaasClient::for('test-key', Environment::Sandbox);
+
+    expect($client->__debugInfo()['resources'])->toContain('myAccount');
 });

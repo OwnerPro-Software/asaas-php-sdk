@@ -19,6 +19,17 @@ interface Connector
 
     public function delete(string $path): AsaasResult;
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @param array<int, array{
+     *     name: string,
+     *     contents: string|resource,
+     *     filename?: string,
+     *     headers?: array<string, string>
+     * }> $files
+     */
+    public function postMultipart(string $path, array $data, array $files): AsaasResult;
+
     /** @param array<string, mixed> $query */
     public function paginate(string $path, array $query): AsaasPaginatedResult;
 
