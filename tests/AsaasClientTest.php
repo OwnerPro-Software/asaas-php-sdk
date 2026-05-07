@@ -11,6 +11,7 @@ use OwnerPro\Asaas\CreditCard\CreditCardResource;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Pix\PixResource;
+use OwnerPro\Asaas\PixAutomatic\PixAutomaticResource;
 use OwnerPro\Asaas\PixTransaction\PixTransactionResource;
 use OwnerPro\Asaas\Statement\StatementResource;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -90,6 +91,7 @@ it('hides the connector from debug output', function (): void {
         'payments',
         'pix',
         'pixTransactions',
+        'pixAutomatic',
         'transfers',
         'webhooks',
         'invoices',
@@ -125,6 +127,14 @@ it('resolves PixTransactionResource', function (): void {
     $first = $client->pixTransactions();
     expect($first)->toBeInstanceOf(PixTransactionResource::class);
     expect($client->pixTransactions())->toBe($first);
+});
+
+it('resolves PixAutomaticResource', function (): void {
+    Http::fake();
+    $client = new AsaasClient(AsaasConnector::forLaravel('k', Environment::Sandbox, 30));
+    $first = $client->pixAutomatic();
+    expect($first)->toBeInstanceOf(PixAutomaticResource::class);
+    expect($client->pixAutomatic())->toBe($first);
 });
 
 it('resolves TransferResource', function (): void {

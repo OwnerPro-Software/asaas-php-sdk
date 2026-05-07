@@ -82,7 +82,7 @@ final readonly class MyAccountResource
      * `Connector::delete()` contract has no query overload (no other DELETE endpoint
      * needs one today), so the value is appended to the path here.
      *
-     * @param array{removeReason?: string}|DeleteAccountRequest $data
+     * @param  array{removeReason?: string}|DeleteAccountRequest  $data
      */
     public function delete(array|DeleteAccountRequest $data): AsaasResult
     {

@@ -11,6 +11,7 @@ use OwnerPro\Asaas\CreditCard\CreditCardResource;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Pix\PixResource;
+use OwnerPro\Asaas\PixAutomatic\PixAutomaticResource;
 use OwnerPro\Asaas\PixTransaction\PixTransactionResource;
 use OwnerPro\Asaas\Statement\StatementResource;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -35,6 +36,7 @@ final class AsaasClient
                 'payments',
                 'pix',
                 'pixTransactions',
+                'pixAutomatic',
                 'transfers',
                 'webhooks',
                 'invoices',
@@ -69,6 +71,11 @@ final class AsaasClient
     public function pixTransactions(): PixTransactionResource
     {
         return $this->resolve(PixTransactionResource::class);
+    }
+
+    public function pixAutomatic(): PixAutomaticResource
+    {
+        return $this->resolve(PixAutomaticResource::class);
     }
 
     public function transfers(): TransferResource

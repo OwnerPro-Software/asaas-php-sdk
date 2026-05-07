@@ -173,3 +173,120 @@ it('rejects empty id on find', function (): void {
 it('rejects empty id on cancel', function (): void {
     pixTxResource()->cancel('');
 })->throws(InvalidArgumentException::class);
+
+it('lists pix recurrings', function (): void {
+    Http::fake(['*' => Http::response([
+        'object' => 'list', 'hasMore' => false, 'totalCount' => 1, 'limit' => 10, 'offset' => 0,
+        'data' => [['id' => 'rec_1', 'status' => 'PENDING']],
+    ], 200)]);
+
+    $result = pixTxResource()->listRecurrings(['status' => 'PENDING']);
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toHaveCount(1);
+    expect($result->data[0]['id'])->toBe('rec_1');
+
+    Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api-sandbox.asaas.com/v3/pix/transactions/recurrings'));
+});
+
+it('finds a pix recurring', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'rec_1', 'status' => 'PENDING'], 200)]);
+
+    $result = pixTxResource()->findRecurring('rec_1');
+
+    expect($result->success)->toBeTrue();
+    expect($result->data['id'])->toBe('rec_1');
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/transactions/recurrings/rec_1'
+        && $request->method() === 'GET');
+});
+
+it('cancels a pix recurring', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'rec_1', 'status' => 'CANCELLED'], 200)]);
+
+    $result = pixTxResource()->cancelRecurring('rec_1');
+
+    expect($result->success)->toBeTrue();
+    expect($result->data['status'])->toBe('CANCELLED');
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/transactions/recurrings/rec_1/cancel'
+        && $request->method() === 'POST');
+});
+
+it('lists pix recurring items', function (): void {
+    Http::fake(['*' => Http::response([
+        'object' => 'list', 'hasMore' => false, 'totalCount' => 2, 'limit' => 10, 'offset' => 0,
+        'data' => [['id' => 'item_1', 'status' => 'PENDING'], ['id' => 'item_2', 'status' => 'DONE']],
+    ], 200)]);
+
+    $result = pixTxResource()->listRecurringItems('rec_1');
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toHaveCount(2);
+
+    Http::assertSent(fn ($request): bool => str_starts_with($request->url(), 'https://api-sandbox.asaas.com/v3/pix/transactions/recurrings/rec_1/items'));
+});
+
+it('cancels a pix recurring item', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'item_1', 'status' => 'CANCELLED'], 200)]);
+
+    $result = pixTxResource()->cancelRecurringItem('item_1');
+
+    expect($result->success)->toBeTrue();
+    expect($result->data['status'])->toBe('CANCELLED');
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/transactions/recurrings/items/item_1/cancel'
+        && $request->method() === 'POST');
+});
+
+it('iterates all pix recurrings lazily', function (): void {
+    $page1 = [
+        'object' => 'list', 'hasMore' => true, 'totalCount' => 2, 'limit' => 1, 'offset' => 0,
+        'data' => [['id' => 'rec_1']],
+    ];
+    $page2 = [
+        'object' => 'list', 'hasMore' => false, 'totalCount' => 2, 'limit' => 1, 'offset' => 1,
+        'data' => [['id' => 'rec_2']],
+    ];
+
+    Http::fakeSequence()->push($page1, 200)->push($page2, 200);
+
+    $items = iterator_to_array(pixTxResource()->allRecurrings(['limit' => 1]));
+
+    expect($items)->toHaveCount(2);
+    expect($items[1]['id'])->toBe('rec_2');
+});
+
+it('iterates all pix recurring items lazily', function (): void {
+    $page1 = [
+        'object' => 'list', 'hasMore' => true, 'totalCount' => 2, 'limit' => 1, 'offset' => 0,
+        'data' => [['id' => 'item_1']],
+    ];
+    $page2 = [
+        'object' => 'list', 'hasMore' => false, 'totalCount' => 2, 'limit' => 1, 'offset' => 1,
+        'data' => [['id' => 'item_2']],
+    ];
+
+    Http::fakeSequence()->push($page1, 200)->push($page2, 200);
+
+    $items = iterator_to_array(pixTxResource()->allRecurringItems('rec_1', ['limit' => 1]));
+
+    expect($items)->toHaveCount(2);
+    expect($items[0]['id'])->toBe('item_1');
+});
+
+it('rejects empty id on findRecurring', function (): void {
+    pixTxResource()->findRecurring('');
+})->throws(InvalidArgumentException::class);
+
+it('rejects empty id on cancelRecurring', function (): void {
+    pixTxResource()->cancelRecurring('');
+})->throws(InvalidArgumentException::class);
+
+it('rejects empty id on listRecurringItems', function (): void {
+    pixTxResource()->listRecurringItems('');
+})->throws(InvalidArgumentException::class);
+
+it('rejects empty id on cancelRecurringItem', function (): void {
+    pixTxResource()->cancelRecurringItem('');
+})->throws(InvalidArgumentException::class);

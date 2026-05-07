@@ -718,6 +718,30 @@ Asaas::pixTransactions()->find(string $id): AsaasResult
 Asaas::pixTransactions()->list(array $query = []): AsaasPaginatedResult
 Asaas::pixTransactions()->cancel(string $id): AsaasResult
 Asaas::pixTransactions()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
+
+// Pix recurrings (scheduled outflow)
+Asaas::pixTransactions()->listRecurrings(array $query = []): AsaasPaginatedResult
+Asaas::pixTransactions()->findRecurring(string $id): AsaasResult
+Asaas::pixTransactions()->cancelRecurring(string $id): AsaasResult
+Asaas::pixTransactions()->listRecurringItems(string $id, array $query = []): AsaasPaginatedResult
+Asaas::pixTransactions()->cancelRecurringItem(string $itemId): AsaasResult
+Asaas::pixTransactions()->allRecurrings(array $filters = []): Generator (yields array|AsaasPaginatedError)
+Asaas::pixTransactions()->allRecurringItems(string $id, array $filters = []): Generator (yields array|AsaasPaginatedError)
+```
+
+### Pix Automático (`pixAutomatic()`)
+
+Authorized recurring debits (Pix Automático) — payer authorizes the receiver to charge periodically.
+
+```php
+Asaas::pixAutomatic()->createAuthorization(array|AuthorizationRequest $data): AsaasResult
+Asaas::pixAutomatic()->listAuthorizations(array $query = []): AsaasPaginatedResult
+Asaas::pixAutomatic()->findAuthorization(string $id): AsaasResult
+Asaas::pixAutomatic()->cancelAuthorization(string $id): AsaasResult
+Asaas::pixAutomatic()->listPaymentInstructions(array $query = []): AsaasPaginatedResult
+Asaas::pixAutomatic()->findPaymentInstruction(string $id): AsaasResult
+Asaas::pixAutomatic()->allAuthorizations(array $filters = []): Generator (yields array|AsaasPaginatedError)
+Asaas::pixAutomatic()->allPaymentInstructions(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 ### Transfers (`transfers()`)
