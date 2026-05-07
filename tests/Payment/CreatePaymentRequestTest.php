@@ -60,6 +60,7 @@ it('persists every optional scalar field passed via fromArray', function (): voi
         'fine' => 2.5,
         'postalService' => true,
         'remoteIp' => '203.0.113.42',
+        'authorizeOnly' => true,
     ]);
 
     expect($request->description)->toBe('order_001');
@@ -69,6 +70,19 @@ it('persists every optional scalar field passed via fromArray', function (): voi
     expect($request->fine)->toBe(2.5);
     expect($request->postalService)->toBeTrue();
     expect($request->remoteIp)->toBe('203.0.113.42');
+    expect($request->authorizeOnly)->toBeTrue();
+});
+
+it('serializes authorizeOnly in toArray when set', function (): void {
+    $request = new CreatePaymentRequest(
+        customer: 'cus_001',
+        billingType: BillingType::CreditCard,
+        value: 100.00,
+        dueDate: '2026-04-01',
+        authorizeOnly: true,
+    );
+
+    expect($request->toArray()['authorizeOnly'])->toBeTrue();
 });
 
 it('coerces split items to Split DTOs when constructed directly with arrays', function (): void {
@@ -154,6 +168,7 @@ it('produces an exact debug info shape with all scalar fields and masked nested 
         creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
         creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '12345678900', postalCode: '01001000', addressNumber: '1', phone: '11999'),
         remoteIp: '203.0.113.42',
+        authorizeOnly: true,
     );
 
     expect($request->__debugInfo())->toBe([
@@ -187,6 +202,7 @@ it('produces an exact debug info shape with all scalar fields and masked nested 
             'mobilePhone' => null,
         ],
         'remoteIp' => '203.0.113.42',
+        'authorizeOnly' => true,
     ]);
 });
 
@@ -214,6 +230,7 @@ it('produces an exact debug info shape with nulls for unset optional fields', fu
         'creditCard' => null,
         'creditCardHolderInfo' => null,
         'remoteIp' => null,
+        'authorizeOnly' => null,
     ]);
 });
 

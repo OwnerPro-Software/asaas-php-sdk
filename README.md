@@ -678,6 +678,24 @@ Asaas::payments()->limits(): AsaasResult
 Asaas::payments()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
+#### Credit card pre-authorization (two-step capture)
+
+Set `authorizeOnly: true` on `CreatePaymentRequest` (or via array) to reserve the value without capturing it. Capture later with `captureAuthorized($id)`:
+
+```php
+$result = Asaas::payments()->create(new CreatePaymentRequest(
+    customer: 'cus_abc123',
+    billingType: 'CREDIT_CARD',
+    value: 200.00,
+    dueDate: '2026-04-01',
+    creditCard: new CreditCard(/* ... */),
+    creditCardHolderInfo: new CreditCardHolderInfo(/* ... */),
+    authorizeOnly: true,
+));
+
+Asaas::payments()->captureAuthorized($result->data['id']);
+```
+
 ### Pix Keys (`pix()`)
 
 ```php

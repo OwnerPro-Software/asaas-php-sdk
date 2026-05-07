@@ -53,6 +53,7 @@ final readonly class CreatePaymentRequest implements JsonSerializable
         #[SensitiveParameter]
         array|CreditCardHolderInfo|null $creditCardHolderInfo = null,
         public ?string $remoteIp = null,
+        public ?bool $authorizeOnly = null,
     ) {
         $this->split = $split !== null ? array_map(
             fn (array|Split $item): Split => $item instanceof Split ? $item : Split::fromArray($item),
@@ -63,7 +64,7 @@ final readonly class CreatePaymentRequest implements JsonSerializable
         $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
     }
 
-    /** @return array{customer: string, billingType: BillingType|string, value: float, dueDate: string, description: ?string, externalReference: ?string, discount: ?float, interest: ?float, fine: ?float, postalService: ?bool, split: ?list<Split>, callback: ?Callback, creditCard: ?array<string, mixed>, creditCardHolderInfo: ?array<string, mixed>, remoteIp: ?string} */
+    /** @return array{customer: string, billingType: BillingType|string, value: float, dueDate: string, description: ?string, externalReference: ?string, discount: ?float, interest: ?float, fine: ?float, postalService: ?bool, split: ?list<Split>, callback: ?Callback, creditCard: ?array<string, mixed>, creditCardHolderInfo: ?array<string, mixed>, remoteIp: ?string, authorizeOnly: ?bool} */
     public function __debugInfo(): array
     {
         return [
@@ -82,10 +83,11 @@ final readonly class CreatePaymentRequest implements JsonSerializable
             'creditCard' => $this->creditCard?->__debugInfo(),
             'creditCardHolderInfo' => $this->creditCardHolderInfo?->__debugInfo(),
             'remoteIp' => $this->remoteIp,
+            'authorizeOnly' => $this->authorizeOnly,
         ];
     }
 
-    /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */
+    /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string, authorizeOnly?: bool} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -104,6 +106,7 @@ final readonly class CreatePaymentRequest implements JsonSerializable
             creditCard: $data['creditCard'] ?? null,
             creditCardHolderInfo: $data['creditCardHolderInfo'] ?? null,
             remoteIp: $data['remoteIp'] ?? null,
+            authorizeOnly: $data['authorizeOnly'] ?? null,
         );
     }
 }
