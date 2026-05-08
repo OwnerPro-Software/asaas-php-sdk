@@ -44,7 +44,7 @@ Top-down map of the moving parts:
 - A shared `error_fixture` dataset is declared in `tests/Pest.php`, loading `tests/Fixtures/error_400.json`.
 - Test organization mirrors `src/` — one test folder per domain.
 - Mutation testing is required (`--min=100`); any new code must survive mutation or be covered by targeted tests.
-- **Pest mutate cache trap:** `vendor/pestphp/pest-plugin-mutate/.temp/mutations/` caches kill-results per source-file hash. If a mutation was killed in a previous run and the source line hasn't changed, the plugin reuses the cached pass — even if the test that used to cover it has weakened. CI runs without this cache and surfaces escapes that look green locally. Always clear `vendor/pestphp/pest-plugin-mutate/.temp/mutations` before trusting a local mutation run, and watch for `assertSent` callbacks that early-`return true` on unrelated requests (those make the assertion always pass).
+- **Pest mutate cache trap:** `vendor/pestphp/pest-plugin-mutate/.temp/mutations/` caches kill-results per source-file hash. If a mutation was killed in a previous run and the source line hasn't changed, the plugin reuses the cached pass — even if the test that used to cover it has weakened. CI runs without this cache and surfaces escapes that look green locally. Always invalidate the cache via `--clear-cache` (the plugin's official flag) before trusting a local mutation run; do not `rm -rf` the directory because the plugin tries to write cache during the run and `file_put_contents: No such directory` warnings can leave the run reporting a partial mutant set as 100%. Also watch for `assertSent` callbacks that early-`return true` on unrelated requests (those make the assertion always pass).
 
 ---
 
@@ -56,8 +56,8 @@ Always run before considering the work done:
 # tests
 
 ./vendor/bin/pest --coverage --min=100 --parallel # runs the complete suite test
-rm -rf vendor/pestphp/pest-plugin-mutate/.temp/mutations # clear stale mutate cache
-./vendor/bin/pest --mutate --min=100 --parallel # mutation tests
+./vendor/bin/pest --mutate --clear-cache --min=100 --parallel # mutation tests (--clear-cache invalidates the stale-cache trap)
+# if needed, clear stale mutate cache: rm -rf vendor/pestphp/pest-plugin-mutate/.temp/mutations 
 
 # quality checks
 
