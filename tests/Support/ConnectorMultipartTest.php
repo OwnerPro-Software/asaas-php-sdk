@@ -71,6 +71,24 @@ it('attaches multiple files', function (): void {
     });
 });
 
+it('forwards custom per-file headers to the multipart attachment', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    multipartConnector()->postMultipart(
+        '/myAccount/documents/doc_1/files',
+        [],
+        [[
+            'name' => 'documentFile',
+            'contents' => 'binary-bytes',
+            'filename' => 'rg.png',
+            'headers' => ['X-Custom-File-Header' => 'tagged-value'],
+        ]],
+    );
+
+    Http::assertSent(fn ($request): bool => str_contains((string) $request->body(), 'X-Custom-File-Header')
+        && str_contains((string) $request->body(), 'tagged-value'));
+});
+
 it('rejects empty files array', function (): void {
     multipartConnector()->postMultipart('/myAccount/documents/x/files', [], []);
 })->throws(InvalidArgumentException::class, 'postMultipart requires at least one file.');
@@ -109,15 +127,8 @@ it('restores JSON body format after a multipart upload', function (): void {
 
     $connector->post('/payments', ['value' => 100]);
 
-    Http::assertSent(function ($request): bool {
-        if (! str_contains($request->url(), '/payments')) {
-            return true;
-        }
-
-        $contentType = (string) $request->header('Content-Type')[0];
-
-        return str_contains($contentType, 'application/json');
-    });
+    Http::assertSent(fn ($request): bool => str_contains($request->url(), '/payments')
+        && str_contains((string) $request->header('Content-Type')[0], 'application/json'));
 });
 
 it('does not leak attached files between sequential multipart calls', function (): void {
@@ -152,11 +163,6 @@ it('restores JSON body format even when the multipart upload fails', function ()
 
     $connector->post('/payments', ['value' => 100]);
 
-    Http::assertSent(function ($request): bool {
-        if (! str_contains($request->url(), '/payments')) {
-            return true;
-        }
-
-        return str_contains((string) $request->header('Content-Type')[0], 'application/json');
-    });
+    Http::assertSent(fn ($request): bool => str_contains($request->url(), '/payments')
+        && str_contains((string) $request->header('Content-Type')[0], 'application/json'));
 });

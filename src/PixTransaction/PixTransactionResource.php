@@ -117,7 +117,7 @@ final readonly class PixTransactionResource
         return sprintf('%s/%s%s', self::RECURRINGS, IdGuard::validate($id), $suffix);
     }
 
-    private function recurringItemPath(string $itemId, string $suffix = ''): string
+    private function recurringItemPath(string $itemId, string $suffix): string
     {
         return sprintf('%s/%s%s', self::RECURRING_ITEMS, IdGuard::validate($itemId), $suffix);
     }

@@ -152,8 +152,11 @@ it('uploads a KYC document file via multipart', function (): void {
         if ($request->url() !== 'https://api-sandbox.asaas.com/v3/myAccount/documents/doc_1/files') {
             return false;
         }
+        if (! str_contains((string) $request->header('Content-Type')[0], 'multipart/form-data')) {
+            return false;
+        }
 
-        return str_contains((string) $request->header('Content-Type')[0], 'multipart/form-data');
+        return str_contains((string) $request->body(), 'IDENTIFICATION');
     });
 });
 
