@@ -156,7 +156,9 @@ it('uploads a KYC document file via multipart', function (): void {
             return false;
         }
 
-        return str_contains((string) $request->body(), 'IDENTIFICATION');
+        $body = (string) $request->body();
+
+        return str_contains($body, 'IDENTIFICATION') && str_contains($body, 'filename="rg.png"');
     });
 });
 

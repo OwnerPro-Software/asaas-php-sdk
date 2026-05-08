@@ -49,8 +49,8 @@ final readonly class CommercialInfoRequest implements JsonSerializable
             $fields['email'] = '***';
         }
 
-        if (array_key_exists('cpfCnpj', $fields)) {
-            $fields['cpfCnpj'] = self::mask($this->cpfCnpj instanceof Missing ? '' : $this->cpfCnpj, 3);
+        if (! $this->cpfCnpj instanceof Missing) {
+            $fields['cpfCnpj'] = self::mask($this->cpfCnpj, 3);
         }
 
         if (array_key_exists('mobilePhone', $fields)) {
