@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas;
 
+use Closure;
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\ResponseSequence;
 use OwnerPro\Asaas\Account\AccountResource;
 use OwnerPro\Asaas\Account\MyAccountResource;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
+use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
 use OwnerPro\Asaas\Payment\PaymentResource;
@@ -17,11 +21,12 @@ use OwnerPro\Asaas\Statement\StatementResource;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Connector;
 use OwnerPro\Asaas\Support\Environment;
+use OwnerPro\Asaas\Testing\FakeAsaasClient;
 use OwnerPro\Asaas\Transfer\TransferResource;
 use OwnerPro\Asaas\Webhook\WebhookResource;
 use SensitiveParameter;
 
-final class AsaasClient
+final class AsaasClient implements AsaasClientContract
 {
     /** @var array<class-string, object> */
     private array $resources = [];
@@ -56,6 +61,12 @@ final class AsaasClient
         int $connectTimeout = 10,
     ): self {
         return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout, $connectTimeout));
+    }
+
+    /** @param array<string, array<string, mixed>|PromiseInterface|ResponseSequence|Closure> $stubs */
+    public static function fake(array $stubs = [], Environment|string $environment = Environment::Sandbox): FakeAsaasClient
+    {
+        return new FakeAsaasClient($stubs, $environment);
     }
 
     public function payments(): PaymentResource

@@ -210,3 +210,20 @@ it('lists myAccount in __debugInfo resources', function (): void {
 
     expect($client->__debugInfo()['resources'])->toContain('myAccount');
 });
+
+it('fake() forwards a string environment through to FakeAsaasClient', function (): void {
+    $fake = AsaasClient::fake([], 'production');
+
+    $fake->stub('payments/*', ['id' => 'pay_1']);
+    $fake->payments()->find('pay_1');
+
+    // String 'production' is resolved to Environment::Production inside
+    // FakeAsaasClient::__construct (where the coercion now lives) — observable
+    // through the production baseUrl in the recorded request.
+    expect($fake->recorded()[0][0]->url())
+        ->toBe('https://api.asaas.com/v3/payments/pay_1');
+});
+
+it('fake() throws ValueError on invalid environment string', function (): void {
+    AsaasClient::fake([], 'staging');
+})->throws(ValueError::class);

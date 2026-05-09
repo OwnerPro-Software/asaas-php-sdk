@@ -939,58 +939,111 @@ class MyLoggingConnector implements Connector
 $client = new AsaasClient(new MyLoggingConnector());
 ```
 
-## Testing
+## Testing your integration
 
-For app-level tests, swap the real connector for a fake one. The `Connector` interface plus `RawResponse::fake()` and `AsaasResult::success()`/`failure()` factories give you everything needed without hitting the network.
+The SDK ships with a first-class test fake. Use it to assert outgoing requests and stub responses without touching the network.
+
+### Construction
 
 ```php
 use OwnerPro\Asaas\AsaasClient;
-use OwnerPro\Asaas\Support\AsaasResult;
-use OwnerPro\Asaas\Support\Connector;
-use OwnerPro\Asaas\Support\PaginatesResults;
-use OwnerPro\Asaas\Support\RawResponse;
+use Illuminate\Support\Facades\Http;
 
-final class FakeConnector implements Connector
-{
-    use PaginatesResults;
+// Empty fake — every unmatched request throws NoMatchingStubException (loud).
+$asaas = AsaasClient::fake();
 
-    /** @param array<string, AsaasResult> $responses keyed by "VERB path" */
-    public function __construct(private array $responses) {}
+// Stub via constructor.
+$asaas = AsaasClient::fake([
+    'payments'      => ['id' => 'pay_123', 'status' => 'PENDING'],
+    'payments/*'    => ['id' => 'pay_123'],
+    'pix/qrCodes/*' => Http::sequence()->push([...])->push([...]),
+]);
 
-    public function get(string $path, array $query = []): AsaasResult
-    {
-        return $this->responses["GET {$path}"];
-    }
-
-    public function post(string $path, array $data = []): AsaasResult
-    {
-        return $this->responses["POST {$path}"];
-    }
-
-    public function put(string $path, array $data = []): AsaasResult { /* ... */ }
-    public function delete(string $path): AsaasResult { /* ... */ }
-}
-
-// In your test
-$client = new AsaasClient(new FakeConnector([
-    'GET /payments/pay_abc123' => AsaasResult::success(
-        data: ['id' => 'pay_abc123', 'status' => 'CONFIRMED'],
-        rawResponse: RawResponse::fake(200, [], '{"id":"pay_abc123"}'),
-    ),
-]));
-
-$result = $client->payments()->find('pay_abc123');
-expect($result->success)->toBeTrue();
-expect($result->data['status'])->toBe('CONFIRMED');
+// Or fluent (chainable).
+$asaas = AsaasClient::fake()
+    ->stub('webhooks', ['id' => 'wh_1'])
+    ->stubError('payments', status: 400, body: ['errors' => [['code' => 'invalid_value']]])
+    ->stubException('payments/*', new \Illuminate\Http\Client\ConnectionException('timeout'));
 ```
 
-In Laravel, bind the fake to the container:
+Closure stubs receive `(Illuminate\Http\Client\Request $request, array $options)` from Laravel's HTTP client and may return a `Response`, a `PromiseInterface`, or any value `Http::response()` accepts. The `$options` parameter can be ignored when not needed:
 
 ```php
-$this->app->instance(AsaasClient::class, new AsaasClient(new FakeConnector([...])));
+$asaas->stub('payments/*', function (\Illuminate\Http\Client\Request $r): \GuzzleHttp\Promise\PromiseInterface {
+    return Http::response(['id' => 'pay_'.uniqid()], 201);
+});
 ```
 
-This keeps tests fast and deterministic — no HTTP calls, no fixtures to maintain beyond the responses your test cares about.
+Pass response headers via the fourth `stubError()` parameter when simulating retry/throttling responses:
+
+```php
+$asaas->stubError('payments', status: 429, body: [], headers: ['Retry-After' => '30']);
+```
+
+### Path patterns
+
+Stub paths are **relative** to the API base URL — no `https://...`, no `/v3` prefix. Patterns use `Str::is` semantics where `*` is a glob.
+
+A trailing `*` is appended automatically when the pattern doesn't already end in one, so path-only patterns also match URLs that carry query strings or extra segments. `'payments'` matches `/payments`, `/payments?limit=10`, `/payments/pay_123`. Use an explicit suffix when you need a tighter match — e.g. `'payments/*'` matches only individual-payment paths, never the index endpoint.
+
+Patterns are **prefix-globs, not segment-bounded**: `'payments'` also matches sibling-prefix paths like `/paymentsBook` if such an endpoint existed. Stick to either explicit segments (`'payments/*'`) or full paths when adjacent endpoints share a prefix.
+
+When multiple stubs match the same URL, the **first registered wins**. Construct ordering matters: list specific stubs before broader ones if both could match.
+
+### Pagination
+
+`['data' => [...]]` infers `hasMore=false` and `totalCount=count($data)` automatically (and fills sensible defaults for `object`, `limit`, `offset`). Providing either `hasMore` or `totalCount` disables inference entirely — supply all paging fields you care about yourself in that case. To drive multi-page flows through `->all()`:
+
+```php
+$asaas->stubPages('payments', [
+    ['data' => [['id' => 'a']], 'hasMore' => true,  'totalCount' => 2],
+    ['data' => [['id' => 'b']], 'hasMore' => false, 'totalCount' => 2],
+]);
+```
+
+### Assertions
+
+```php
+use Illuminate\Http\Client\Request;
+
+$asaas->assertSent('payments', fn (Request $r) => $r['value'] === 100.0);
+$asaas->assertSent('payments/*', times: 2);     // also: exact-N count for a pattern
+$asaas->assertNotSent('webhooks/*');
+$asaas->assertSentCount(3);                      // total across all patterns
+$asaas->assertNothingSent();
+
+$asaas->assertSentInOrder([
+    'accounts',
+    'accounts/*',
+    'accounts/*/accessTokens',
+]);
+
+// Inspect raw recordings.
+$asaas->recorded();             // list<array{Request, Response}>
+$asaas->recorded('payments');
+```
+
+Recordings accumulate for the lifetime of the fake — there is no `flush()` or `forget()`. Build a fresh `AsaasClient::fake()` per test (the recommended pattern) to start with a clean slate.
+
+### Loud catch-all
+
+Unmatched requests throw `OwnerPro\Asaas\Testing\NoMatchingStubException` with the request method, URL, and the list of registered patterns. This catches forgotten stubs early instead of letting tests pass against empty 200 responses.
+
+### Laravel container
+
+The service provider binds the real `AsaasClient` as a singleton and registers an alias so `AsaasClientContract` resolves to the same instance. Type-hint application code against `AsaasClientContract` to make the seam swappable:
+
+```php
+public function __construct(private readonly AsaasClientContract $asaas) {}
+```
+
+Swap the fake in tests by overriding the contract binding:
+
+```php
+$this->app->instance(\OwnerPro\Asaas\Contracts\AsaasClientContract::class, AsaasClient::fake([...]));
+```
+
+`FakeAsaasClient` does **not** extend `AsaasClient` (the production class is `final`), so code that type-hints the concrete `AsaasClient` cannot receive the fake from the container. Migrate those constructor signatures to `AsaasClientContract` to make them testable.
 
 ## License
 

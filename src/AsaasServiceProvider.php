@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas;
 
 use Illuminate\Support\ServiceProvider;
 use Override;
+use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use RuntimeException;
 
@@ -35,6 +36,8 @@ final class AsaasServiceProvider extends ServiceProvider
                 )
             );
         });
+
+        $this->app->alias(AsaasClient::class, AsaasClientContract::class);
     }
 
     public function boot(): void

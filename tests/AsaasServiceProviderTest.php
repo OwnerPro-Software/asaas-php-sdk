@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use OwnerPro\Asaas\Asaas;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\AsaasServiceProvider;
+use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Environment;
 
@@ -22,6 +23,17 @@ it('registers AsaasClient as singleton', function () {
 
     expect($client1)->toBeInstanceOf(AsaasClient::class);
     expect($client1)->toBe($client2);
+});
+
+it('aliases AsaasClientContract to the AsaasClient singleton', function () {
+    $this->app->forgetInstance(AsaasClient::class);
+
+    (new AsaasServiceProvider($this->app))->register();
+
+    $viaContract = app(AsaasClientContract::class);
+    $viaConcrete = app(AsaasClient::class);
+
+    expect($viaContract)->toBe($viaConcrete);
 });
 
 it('resolves AsaasClient via facade', function () {
