@@ -102,6 +102,19 @@ it('updates commercial info from CommercialInfoRequest object', function (): voi
     Http::assertSent(fn ($request): bool => $request['incomeValue'] === 7500.0);
 });
 
+it('sends personType and companyName on the wire when present', function (): void {
+    Http::fake(['*' => Http::response(['updated' => true], 200)]);
+
+    myAccountResource()->updateCommercialInfo([
+        'personType' => 'JURIDICA',
+        'companyName' => 'Acme Ltda.',
+    ]);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/commercialInfo'
+        && $request['personType'] === 'JURIDICA'
+        && $request['companyName'] === 'Acme Ltda.');
+});
+
 it('reads the account number from /myAccount/accountNumber', function (): void {
     Http::fake(['*' => Http::response(['agency' => '0001', 'account' => '12345', 'accountDigit' => '6'], 200)]);
 

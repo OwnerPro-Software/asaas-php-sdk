@@ -20,6 +20,11 @@ interface Connector
     public function delete(string $path): AsaasResult;
 
     /**
+     * Implementations MUST coerce any PHP `bool` values in $data to the literal strings
+     * `'true'` / `'false'` before sending. Guzzle's MultipartStream encodes `false` as an
+     * empty body, which Asaas treats as a missing field — boolean form fields like
+     * `simplesNacional`, `enabled`, and `availableAfterPayment` would silently drop.
+     *
      * @param  array<string, mixed>  $data
      * @param array<int, array{
      *     name: string,

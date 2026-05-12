@@ -609,6 +609,7 @@ Asaas::invoices()->create(new CreateInvoiceRequest(
         inss: 0.0,
         ir: 1.5,
     ),
+    updatePayment: true, // since 2.0.0 — auto-discount the tax retention from the linked payment value
 ));
 ```
 

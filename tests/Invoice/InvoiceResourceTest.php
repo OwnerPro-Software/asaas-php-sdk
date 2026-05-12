@@ -121,6 +121,32 @@ it('updates an invoice from request object', function (array $fixture): void {
         && $request->method() === 'PUT');
 })->with('invoice_fixture');
 
+it('sends updatePayment on the wire when creating', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    invoiceResource()->create([
+        'serviceDescription' => 'Dev services', 'observations' => 'Note',
+        'value' => 1000.00, 'deductions' => 0, 'effectiveDate' => '2026-04-01',
+        'municipalServiceName' => 'IT Services',
+        'taxes' => ['retainIss' => true, 'iss' => 5.0, 'pis' => 0.65, 'cofins' => 3.0, 'csll' => 1.0, 'inss' => 11.0, 'ir' => 1.5],
+        'updatePayment' => true,
+    ]);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices'
+        && $request->method() === 'POST'
+        && $request['updatePayment'] === true);
+})->with('invoice_fixture');
+
+it('sends updatePayment on the wire when updating', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    invoiceResource()->update('inv_123', new UpdateInvoiceRequest(value: 1500.00, updatePayment: false));
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices/inv_123'
+        && $request->method() === 'PUT'
+        && $request['updatePayment'] === false);
+})->with('invoice_fixture');
+
 it('authorizes an invoice', function (array $fixture): void {
     $authorized = array_merge($fixture, ['status' => 'AUTHORIZED']);
     Http::fake(['*' => Http::response($authorized, 200)]);
