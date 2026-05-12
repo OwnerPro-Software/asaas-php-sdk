@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Payment\Request;
 
-use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
@@ -17,42 +16,46 @@ final readonly class PayWithCreditCardRequest implements JsonSerializable
     use HasArrayFactory;
     use MasksSensitiveData;
 
-    public CreditCard $creditCard;
+    public ?CreditCard $creditCard;
 
-    public CreditCardHolderInfo $creditCardHolderInfo;
+    public ?CreditCardHolderInfo $creditCardHolderInfo;
 
     /**
-     * @param  array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}|CreditCard  $creditCard
-     * @param  array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}|CreditCardHolderInfo  $creditCardHolderInfo
+     * @param  array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}|CreditCard|null  $creditCard
+     * @param  array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}|CreditCardHolderInfo|null  $creditCardHolderInfo
      */
     public function __construct(
         #[SensitiveParameter]
-        array|CreditCard $creditCard,
+        array|CreditCard|null $creditCard = null,
         #[SensitiveParameter]
-        array|CreditCardHolderInfo $creditCardHolderInfo,
-        public string $remoteIp,
+        array|CreditCardHolderInfo|null $creditCardHolderInfo = null,
+        public ?string $remoteIp = null,
+        #[SensitiveParameter]
+        public ?string $creditCardToken = null,
     ) {
         $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
         $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
     }
 
-    /** @return array{creditCard: array<string, mixed>, creditCardHolderInfo: array<string, mixed>, remoteIp: string} */
+    /** @return array{creditCard: ?array<string, mixed>, creditCardHolderInfo: ?array<string, mixed>, remoteIp: ?string, creditCardToken: ?string} */
     public function __debugInfo(): array
     {
         return [
-            'creditCard' => $this->creditCard->__debugInfo(),
-            'creditCardHolderInfo' => $this->creditCardHolderInfo->__debugInfo(),
+            'creditCard' => $this->creditCard?->__debugInfo(),
+            'creditCardHolderInfo' => $this->creditCardHolderInfo?->__debugInfo(),
             'remoteIp' => $this->remoteIp,
+            'creditCardToken' => $this->creditCardToken !== null ? '***' : null,
         ];
     }
 
-    /** @param array{creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string} $data */
+    /** @param array{creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string, creditCardToken?: string} $data */
     public static function fromArray(array $data): static
     {
         return new self(
-            creditCard: $data['creditCard'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCard is required'),
-            creditCardHolderInfo: $data['creditCardHolderInfo'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: creditCardHolderInfo is required'),
-            remoteIp: $data['remoteIp'] ?? throw new InvalidArgumentException('PayWithCreditCardRequest: remoteIp is required'),
+            creditCard: $data['creditCard'] ?? null,
+            creditCardHolderInfo: $data['creditCardHolderInfo'] ?? null,
+            remoteIp: $data['remoteIp'] ?? null,
+            creditCardToken: $data['creditCardToken'] ?? null,
         );
     }
 }

@@ -22,6 +22,16 @@ final readonly class MyAccountResource
         return $this->connector->get(self::BASE.'/status');
     }
 
+    public function accountNumber(): AsaasResult
+    {
+        return $this->connector->get(self::BASE.'/accountNumber');
+    }
+
+    public function fees(): AsaasResult
+    {
+        return $this->connector->get(self::BASE.'/fees');
+    }
+
     public function commercialInfo(): AsaasResult
     {
         return $this->connector->get(self::BASE.'/commercialInfo');

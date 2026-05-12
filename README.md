@@ -658,11 +658,14 @@ foreach (Asaas::payments()->all() as $payment) {
 
 ```php
 Asaas::payments()->create(array|CreatePaymentRequest $data): AsaasResult
+Asaas::payments()->createWithCreditCard(array|CreatePaymentRequest $data): AsaasResult
 Asaas::payments()->find(string $id): AsaasResult
 Asaas::payments()->list(array $query = []): AsaasPaginatedResult
 Asaas::payments()->update(string $id, array|UpdatePaymentRequest $data): AsaasResult
 Asaas::payments()->delete(string $id): AsaasResult
 Asaas::payments()->refund(string $id, array|RefundPaymentRequest $data = []): AsaasResult
+Asaas::payments()->listRefunds(string $id): AsaasResult
+Asaas::payments()->refundBankSlip(string $id): AsaasResult
 Asaas::payments()->restore(string $id): AsaasResult
 Asaas::payments()->captureAuthorized(string $id): AsaasResult
 Asaas::payments()->payWithCreditCard(string $id, array|PayWithCreditCardRequest $data): AsaasResult
@@ -673,6 +676,8 @@ Asaas::payments()->billingInfo(string $id): AsaasResult
 Asaas::payments()->pixQrCode(string $id): AsaasResult
 Asaas::payments()->identificationField(string $id): AsaasResult
 Asaas::payments()->viewingInfo(string $id): AsaasResult
+Asaas::payments()->getChargeback(string $id): AsaasResult
+Asaas::payments()->getEscrow(string $id): AsaasResult
 Asaas::payments()->simulate(array|SimulatePaymentRequest $data): AsaasResult
 Asaas::payments()->limits(): AsaasResult
 Asaas::payments()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
@@ -748,6 +753,7 @@ Asaas::pixAutomatic()->allPaymentInstructions(array $filters = []): Generator (y
 
 ```php
 Asaas::transfers()->create(array|TransferRequest $data): AsaasResult
+Asaas::transfers()->createInternal(array|InternalTransferRequest $data): AsaasResult
 Asaas::transfers()->find(string $id): AsaasResult
 Asaas::transfers()->list(array $query = []): AsaasPaginatedResult
 Asaas::transfers()->cancel(string $id): AsaasResult
@@ -816,7 +822,7 @@ Asaas::accounts()->create(array|AccountRequest $data): AsaasResult
 Asaas::accounts()->find(string $id): AsaasResult
 Asaas::accounts()->list(array $query = []): AsaasPaginatedResult
 Asaas::accounts()->listAccessTokens(string $accountId): AsaasResult
-Asaas::accounts()->createAccessToken(string $accountId): AsaasResult
+Asaas::accounts()->createAccessToken(string $accountId, array|AccessTokenRequest|null $data = null): AsaasResult
 Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
 Asaas::accounts()->deleteAccessToken(string $accountId, string $tokenId): AsaasResult
 Asaas::accounts()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
@@ -828,6 +834,8 @@ Operates on the **current** account behind the apiKey — used for tenant onboar
 
 ```php
 Asaas::myAccount()->status(): AsaasResult
+Asaas::myAccount()->accountNumber(): AsaasResult
+Asaas::myAccount()->fees(): AsaasResult
 Asaas::myAccount()->commercialInfo(): AsaasResult
 Asaas::myAccount()->updateCommercialInfo(array|CommercialInfoRequest $data): AsaasResult
 Asaas::myAccount()->documents(): AsaasResult
@@ -912,6 +920,9 @@ Asaas::billPayments()->all(array $filters = []): Generator (yields array|AsaasPa
 
 ```php
 Asaas::statements()->list(array $query = []): AsaasPaginatedResult
+Asaas::statements()->balance(): AsaasResult
+Asaas::statements()->paymentStatistics(array $query = []): AsaasResult
+Asaas::statements()->splitStatistics(array $query = []): AsaasResult
 Asaas::statements()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 

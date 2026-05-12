@@ -101,6 +101,26 @@ it('updates commercial info from CommercialInfoRequest object', function (): voi
     Http::assertSent(fn ($request): bool => $request['incomeValue'] === 7500.0);
 });
 
+it('reads the account number from /myAccount/accountNumber', function (): void {
+    Http::fake(['*' => Http::response(['agency' => '0001', 'account' => '12345', 'accountDigit' => '6'], 200)]);
+
+    $result = myAccountResource()->accountNumber();
+
+    expect($result->success)->toBeTrue();
+    Http::assertSent(fn ($request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/accountNumber');
+});
+
+it('reads fees from /myAccount/fees', function (): void {
+    Http::fake(['*' => Http::response(['boleto' => 1.99], 200)]);
+
+    $result = myAccountResource()->fees();
+
+    expect($result->success)->toBeTrue();
+    Http::assertSent(fn ($request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/fees');
+});
+
 it('lists pending documents from /myAccount/documents', function (): void {
     Http::fake(['*' => Http::response([
         'object' => 'list',

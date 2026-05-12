@@ -111,6 +111,7 @@ it('produces an exact debug info shape with masked pix key and all scalar fields
         'description' => 'salary',
         'scheduleDate' => '2026-04-01',
         'externalReference' => 'ext_42',
+        'recurring' => null,
     ]);
 });
 
@@ -147,6 +148,7 @@ it('produces an exact debug info shape with masked nested bank account', functio
         'description' => null,
         'scheduleDate' => null,
         'externalReference' => null,
+        'recurring' => null,
     ]);
 });
 

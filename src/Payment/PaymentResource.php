@@ -29,6 +29,12 @@ final readonly class PaymentResource
         return $this->connector->post(self::BASE, CreatePaymentRequest::resolveData($data));
     }
 
+    /** @param array<string, mixed>|CreatePaymentRequest $data */
+    public function createWithCreditCard(array|CreatePaymentRequest $data): AsaasResult
+    {
+        return $this->connector->post(self::BASE.'/', CreatePaymentRequest::resolveData($data));
+    }
+
     public function find(string $id): AsaasResult
     {
         return $this->connector->get($this->path($id));
@@ -55,6 +61,26 @@ final readonly class PaymentResource
     public function refund(string $id, array|RefundPaymentRequest $data = []): AsaasResult
     {
         return $this->connector->post($this->path($id, '/refund'), RefundPaymentRequest::resolveData($data));
+    }
+
+    public function listRefunds(string $id): AsaasResult
+    {
+        return $this->connector->get($this->path($id, '/refunds'));
+    }
+
+    public function refundBankSlip(string $id): AsaasResult
+    {
+        return $this->connector->post($this->path($id, '/bankSlip/refund'));
+    }
+
+    public function getChargeback(string $id): AsaasResult
+    {
+        return $this->connector->get($this->path($id, '/chargeback'));
+    }
+
+    public function getEscrow(string $id): AsaasResult
+    {
+        return $this->connector->get($this->path($id, '/escrow'));
     }
 
     public function restore(string $id): AsaasResult

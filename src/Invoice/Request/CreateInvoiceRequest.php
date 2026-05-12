@@ -29,11 +29,12 @@ final readonly class CreateInvoiceRequest
         public ?string $externalReference = null,
         public ?string $municipalServiceId = null,
         public ?string $municipalServiceCode = null,
+        public ?bool $updatePayment = null,
     ) {
         $this->taxes = is_array($taxes) ? Taxes::fromArray($taxes) : $taxes;
     }
 
-    /** @param array{serviceDescription?: string, observations?: string, value?: float, deductions?: float, effectiveDate?: string, municipalServiceName?: string, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}, payment?: string, installment?: string, customer?: string, externalReference?: string, municipalServiceId?: string, municipalServiceCode?: string} $data */
+    /** @param array{serviceDescription?: string, observations?: string, value?: float, deductions?: float, effectiveDate?: string, municipalServiceName?: string, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}, payment?: string, installment?: string, customer?: string, externalReference?: string, municipalServiceId?: string, municipalServiceCode?: string, updatePayment?: bool} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -50,6 +51,7 @@ final readonly class CreateInvoiceRequest
             externalReference: $data['externalReference'] ?? null,
             municipalServiceId: $data['municipalServiceId'] ?? null,
             municipalServiceCode: $data['municipalServiceCode'] ?? null,
+            updatePayment: $data['updatePayment'] ?? null,
         );
     }
 }

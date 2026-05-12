@@ -64,6 +64,39 @@ it('iterates all transactions lazily', function (): void {
     expect($items[2]['id'])->toBe('ft_3');
 });
 
+it('reads current balance from /finance/balance', function (): void {
+    Http::fake(['*' => Http::response(['balance' => 1234.56], 200)]);
+
+    $result = statementResource()->balance();
+
+    expect($result->success)->toBeTrue();
+    expect($result->data['balance'])->toBe(1234.56);
+    Http::assertSent(fn ($request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/finance/balance');
+});
+
+it('reads payment statistics from /finance/payment/statistics with filters', function (): void {
+    Http::fake(['*' => Http::response(['quantity' => 3, 'value' => 300.0, 'netValue' => 295.0], 200)]);
+
+    $result = statementResource()->paymentStatistics(['billingType' => 'PIX']);
+
+    expect($result->success)->toBeTrue();
+    expect($result->data['quantity'])->toBe(3);
+    Http::assertSent(fn ($request): bool => $request->method() === 'GET'
+        && str_starts_with($request->url(), 'https://api-sandbox.asaas.com/v3/finance/payment/statistics')
+        && str_contains($request->url(), 'billingType=PIX'));
+});
+
+it('reads split statistics from /finance/split/statistics', function (): void {
+    Http::fake(['*' => Http::response(['income' => 100.0, 'value' => 1000.0], 200)]);
+
+    $result = statementResource()->splitStatistics();
+
+    expect($result->success)->toBeTrue();
+    Http::assertSent(fn ($request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/finance/split/statistics');
+});
+
 it('returns failure on error', function (): void {
     Http::fake(['*' => Http::response(['errors' => [['description' => 'Unauthorized']]], 401)]);
 

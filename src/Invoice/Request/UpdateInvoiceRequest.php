@@ -24,11 +24,12 @@ final readonly class UpdateInvoiceRequest
         public string|Missing|null $municipalServiceName = Missing::Value,
         array|Taxes|Missing|null $taxes = Missing::Value,
         public string|Missing|null $externalReference = Missing::Value,
+        public bool|Missing|null $updatePayment = Missing::Value,
     ) {
         $this->taxes = is_array($taxes) ? Taxes::fromArray($taxes) : $taxes;
     }
 
-    /** @param array{serviceDescription?: string|null, observations?: string|null, value?: float|null, deductions?: float|null, effectiveDate?: string|null, municipalServiceName?: string|null, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|null, externalReference?: string|null} $data */
+    /** @param array{serviceDescription?: string|null, observations?: string|null, value?: float|null, deductions?: float|null, effectiveDate?: string|null, municipalServiceName?: string|null, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|null, externalReference?: string|null, updatePayment?: bool|null} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -42,6 +43,7 @@ final readonly class UpdateInvoiceRequest
                 ? (is_array($data['taxes']) ? Taxes::fromArray($data['taxes']) : $data['taxes'])
                 : Missing::Value,
             externalReference: array_key_exists('externalReference', $data) ? $data['externalReference'] : Missing::Value,
+            updatePayment: array_key_exists('updatePayment', $data) ? $data['updatePayment'] : Missing::Value,
         );
     }
 }

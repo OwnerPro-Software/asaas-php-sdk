@@ -483,6 +483,63 @@ it('simulates a payment from request object', function (): void {
         && $request->data()['billingTypes'] === ['PIX']);
 });
 
+// --- 1.5.0 new endpoints ---
+
+it('creates a payment with credit card via trailing-slash endpoint', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    paymentResource()->createWithCreditCard([
+        'customer' => 'cus_456',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 150.00,
+        'dueDate' => '2026-04-01',
+        'creditCardToken' => 'tok_xyz',
+    ]);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/'
+        && $request->method() === 'POST');
+})->with('payment_fixture');
+
+it('lists refunds for a payment', function (): void {
+    Http::fake(['*' => Http::response(['object' => 'list', 'data' => [['id' => 'ref_1']]], 200)]);
+
+    $result = paymentResource()->listRefunds('pay_abc123');
+
+    expect($result->success)->toBeTrue();
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/refunds'
+        && $request->method() === 'GET');
+});
+
+it('refunds a bank slip payment', function (): void {
+    Http::fake(['*' => Http::response(['requestUrl' => 'https://sandbox.asaas.com/solicitar-estorno/xyz'], 200)]);
+
+    $result = paymentResource()->refundBankSlip('pay_abc123');
+
+    expect($result->success)->toBeTrue();
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/bankSlip/refund'
+        && $request->method() === 'POST');
+});
+
+it('gets chargeback details for a payment', function (): void {
+    Http::fake(['*' => Http::response(['status' => 'REQUESTED'], 200)]);
+
+    $result = paymentResource()->getChargeback('pay_abc123');
+
+    expect($result->success)->toBeTrue();
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/chargeback'
+        && $request->method() === 'GET');
+});
+
+it('gets escrow details for a payment', function (): void {
+    Http::fake(['*' => Http::response(['status' => 'AWAITING_RELEASE'], 200)]);
+
+    $result = paymentResource()->getEscrow('pay_abc123');
+
+    expect($result->success)->toBeTrue();
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/escrow'
+        && $request->method() === 'GET');
+});
+
 // --- error handling ---
 
 it('returns failure on API error', function (array $errorFixture): void {

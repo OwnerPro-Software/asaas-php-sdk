@@ -20,9 +20,10 @@ final readonly class CreateBillPaymentRequest
         public ?float $fine = null,
         public ?string $dueDate = null,
         public ?string $externalReference = null,
+        public ?float $value = null,
     ) {}
 
-    /** @param array{identificationField?: string, scheduleDate?: string, description?: string, discount?: float, interest?: float, fine?: float, dueDate?: string, externalReference?: string} $data */
+    /** @param array{identificationField?: string, scheduleDate?: string, description?: string, discount?: float, interest?: float, fine?: float, dueDate?: string, externalReference?: string, value?: float} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -34,6 +35,7 @@ final readonly class CreateBillPaymentRequest
             fine: $data['fine'] ?? null,
             dueDate: $data['dueDate'] ?? null,
             externalReference: $data['externalReference'] ?? null,
+            value: $data['value'] ?? null,
         );
     }
 }

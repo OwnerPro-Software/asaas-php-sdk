@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\Statement;
 use Generator;
 use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
+use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
 
 final readonly class StatementResource
@@ -19,6 +20,23 @@ final readonly class StatementResource
     public function list(array $query = []): AsaasPaginatedResult
     {
         return $this->connector->paginate(self::BASE, $query);
+    }
+
+    public function balance(): AsaasResult
+    {
+        return $this->connector->get('/finance/balance');
+    }
+
+    /** @param array<string, mixed> $query */
+    public function paymentStatistics(array $query = []): AsaasResult
+    {
+        return $this->connector->get('/finance/payment/statistics', $query);
+    }
+
+    /** @param array<string, mixed> $query */
+    public function splitStatistics(array $query = []): AsaasResult
+    {
+        return $this->connector->get('/finance/split/statistics', $query);
     }
 
     /**

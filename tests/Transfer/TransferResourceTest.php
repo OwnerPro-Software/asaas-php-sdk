@@ -94,7 +94,30 @@ it('cancels a transfer', function (array $fixture): void {
     expect($result->data['status'])->toBe('CANCELLED');
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/transfers/tr_123/cancel'
-        && $request->method() === 'POST');
+        && $request->method() === 'DELETE');
+})->with('transfer_fixture');
+
+it('sends recurring object on Pix transfer when supplied', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    transferResource()->create([
+        'value' => 100.0,
+        'pixAddressKey' => 'key@example.com',
+        'pixAddressKeyType' => 'EMAIL',
+        'recurring' => ['frequency' => 'MONTHLY', 'quantity' => 12],
+    ]);
+
+    Http::assertSent(fn ($request): bool => ($request->data()['recurring'] ?? null) === ['frequency' => 'MONTHLY', 'quantity' => 12]);
+})->with('transfer_fixture');
+
+it('creates an internal transfer with walletId via trailing-slash endpoint', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    transferResource()->createInternal(['value' => 50.0, 'walletId' => 'wal_42', 'externalReference' => 'int_001']);
+
+    Http::assertSent(fn ($request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/transfers/'
+        && ($request->data()['walletId'] ?? null) === 'wal_42');
 })->with('transfer_fixture');
 
 it('iterates all transfers lazily', function (array $page1): void {

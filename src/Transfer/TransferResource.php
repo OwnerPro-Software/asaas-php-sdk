@@ -10,6 +10,7 @@ use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
 use OwnerPro\Asaas\Support\IdGuard;
+use OwnerPro\Asaas\Transfer\Request\InternalTransferRequest;
 use OwnerPro\Asaas\Transfer\Request\TransferRequest;
 
 final readonly class TransferResource
@@ -22,6 +23,12 @@ final readonly class TransferResource
     public function create(array|TransferRequest $data): AsaasResult
     {
         return $this->connector->post(self::BASE, TransferRequest::resolveData($data));
+    }
+
+    /** @param array<string, mixed>|InternalTransferRequest $data */
+    public function createInternal(array|InternalTransferRequest $data): AsaasResult
+    {
+        return $this->connector->post(self::BASE.'/', InternalTransferRequest::resolveData($data));
     }
 
     /** @param array<string, mixed> $query */
@@ -37,7 +44,7 @@ final readonly class TransferResource
 
     public function cancel(string $id): AsaasResult
     {
-        return $this->connector->post($this->path($id, '/cancel'));
+        return $this->connector->delete($this->path($id, '/cancel'));
     }
 
     /**

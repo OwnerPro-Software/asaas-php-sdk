@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use OwnerPro\Asaas\Account\CompanyType;
+use OwnerPro\Asaas\Account\PersonType;
 use OwnerPro\Asaas\Account\Request\CommercialInfoRequest;
 
 mutates(CommercialInfoRequest::class);
@@ -135,6 +136,20 @@ it('masks sensitive data in json serialization', function (): void {
     expect($json['mobilePhone'])->toBe('***');
     expect($json['phone'])->toBe('***');
     expect($json['birthDate'])->toBe('***');
+});
+
+it('accepts personType (enum or string) and companyName', function (): void {
+    $req = CommercialInfoRequest::fromArray([
+        'personType' => PersonType::Juridica,
+        'companyName' => 'Acme S/A',
+    ]);
+
+    expect($req->personType)->toBe(PersonType::Juridica);
+    expect($req->companyName)->toBe('Acme S/A');
+    expect($req->toArray())->toBe([
+        'personType' => 'JURIDICA',
+        'companyName' => 'Acme S/A',
+    ]);
 });
 
 it('refuses to be serialised', function (): void {

@@ -8,7 +8,7 @@ use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 
 mutates(PayWithCreditCardRequest::class);
 
-it('creates from array', function (): void {
+it('creates from array with card and holder info', function (): void {
     $request = PayWithCreditCardRequest::fromArray([
         'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
         'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
@@ -18,28 +18,25 @@ it('creates from array', function (): void {
     expect($request->creditCard)->toBeInstanceOf(CreditCard::class);
     expect($request->creditCardHolderInfo)->toBeInstanceOf(CreditCardHolderInfo::class);
     expect($request->remoteIp)->toBe('203.0.113.42');
+    expect($request->creditCardToken)->toBeNull();
 });
 
-it('throws when creditCard is missing', function (): void {
-    PayWithCreditCardRequest::fromArray([
-        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
-        'remoteIp' => '203.0.113.42',
+it('accepts creditCardToken alone without card and holder info', function (): void {
+    $request = PayWithCreditCardRequest::fromArray([
+        'creditCardToken' => 'tok_abc',
     ]);
-})->throws(InvalidArgumentException::class);
 
-it('throws when creditCardHolderInfo is missing', function (): void {
-    PayWithCreditCardRequest::fromArray([
-        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
-        'remoteIp' => '203.0.113.42',
-    ]);
-})->throws(InvalidArgumentException::class);
+    expect($request->creditCardToken)->toBe('tok_abc');
+    expect($request->creditCard)->toBeNull();
+    expect($request->creditCardHolderInfo)->toBeNull();
+    expect($request->remoteIp)->toBeNull();
+});
 
-it('throws when remoteIp is missing', function (): void {
-    PayWithCreditCardRequest::fromArray([
-        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
-        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
-    ]);
-})->throws(InvalidArgumentException::class, 'PayWithCreditCardRequest: remoteIp is required');
+it('serializes creditCardToken in toArray when set', function (): void {
+    $request = new PayWithCreditCardRequest(creditCardToken: 'tok_abc');
+
+    expect($request->toArray())->toBe(['creditCardToken' => 'tok_abc']);
+});
 
 it('serializes nested CreditCard DTO in toArray', function (): void {
     $request = new PayWithCreditCardRequest(
@@ -93,7 +90,14 @@ it('produces an exact debug info shape with masked nested DTOs', function (): vo
             'mobilePhone' => null,
         ],
         'remoteIp' => '203.0.113.42',
+        'creditCardToken' => null,
     ]);
+});
+
+it('masks creditCardToken in debug info when set', function (): void {
+    $request = new PayWithCreditCardRequest(creditCardToken: 'tok_super_secret');
+
+    expect($request->__debugInfo()['creditCardToken'])->toBe('***');
 });
 
 it('cannot be serialized', function (): void {

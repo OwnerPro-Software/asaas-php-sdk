@@ -6,13 +6,14 @@ namespace OwnerPro\Asaas\Webhook\Request;
 
 use InvalidArgumentException;
 use JsonSerializable;
+use OwnerPro\Asaas\Support\Arrayable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Webhook\WebhookEvent;
 use OwnerPro\Asaas\Webhook\WebhookSendType;
 use SensitiveParameter;
 
-final readonly class CreateWebhookRequest implements JsonSerializable
+final readonly class CreateWebhookRequest implements Arrayable, JsonSerializable
 {
     use HasArrayFactory;
     use MasksSensitiveData;

@@ -127,6 +127,16 @@ it('creates an access token', function (): void {
         && $request->method() === 'POST');
 });
 
+it('creates an access token with name and expirationDate body', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'tok_1'], 200)]);
+
+    accountResource()->createAccessToken('acc_123', ['name' => 'Onboarding', 'expirationDate' => '2026-12-31']);
+
+    Http::assertSent(fn ($request): bool => $request->method() === 'POST'
+        && ($request->data()['name'] ?? null) === 'Onboarding'
+        && ($request->data()['expirationDate'] ?? null) === '2026-12-31');
+});
+
 it('updates an access token from array', function (): void {
     Http::fake(['*' => Http::response([
         'id' => 'tok_1', 'name' => 'Updated', 'enabled' => false,

@@ -15,6 +15,9 @@ use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\DTO\Callback;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+use OwnerPro\Asaas\Support\DTO\Discount;
+use OwnerPro\Asaas\Support\DTO\Fine;
+use OwnerPro\Asaas\Support\DTO\Interest;
 use OwnerPro\Asaas\Support\DTO\QrCodePayload;
 use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\DTO\SplitRefund;
@@ -354,6 +357,9 @@ it('nested DTOs implement Arrayable', function (string $class): void {
     Callback::class,
     CreditCard::class,
     CreditCardHolderInfo::class,
+    Discount::class,
+    Fine::class,
+    Interest::class,
     QrCodePayload::class,
     Split::class,
     SplitRefund::class,

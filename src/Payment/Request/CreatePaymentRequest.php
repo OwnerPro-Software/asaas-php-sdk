@@ -7,9 +7,14 @@ namespace OwnerPro\Asaas\Payment\Request;
 use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Payment\BillingType;
+use OwnerPro\Asaas\Payment\DiscountType;
+use OwnerPro\Asaas\Payment\FineType;
 use OwnerPro\Asaas\Support\DTO\Callback;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+use OwnerPro\Asaas\Support\DTO\Discount;
+use OwnerPro\Asaas\Support\DTO\Fine;
+use OwnerPro\Asaas\Support\DTO\Interest;
 use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
@@ -29,11 +34,20 @@ final readonly class CreatePaymentRequest implements JsonSerializable
 
     public ?CreditCardHolderInfo $creditCardHolderInfo;
 
+    public ?Discount $discount;
+
+    public ?Interest $interest;
+
+    public ?Fine $fine;
+
     /**
      * @param  list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}|Split>|null  $split
      * @param  array{successUrl?: string, autoRedirect?: bool}|Callback|null  $callback
      * @param  array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}|CreditCard|null  $creditCard
      * @param  array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}|CreditCardHolderInfo|null  $creditCardHolderInfo
+     * @param  array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float|null  $discount
+     * @param  array{value?: float}|Interest|float|null  $interest
+     * @param  array{value?: float, type?: FineType|string}|Fine|float|null  $fine
      */
     public function __construct(
         public string $customer,
@@ -42,10 +56,15 @@ final readonly class CreatePaymentRequest implements JsonSerializable
         public string $dueDate,
         public ?string $description = null,
         public ?string $externalReference = null,
-        public ?float $discount = null,
-        public ?float $interest = null,
-        public ?float $fine = null,
+        array|Discount|float|null $discount = null,
+        array|Interest|float|null $interest = null,
+        array|Fine|float|null $fine = null,
         public ?bool $postalService = null,
+        public ?int $daysAfterDueDateToRegistrationCancellation = null,
+        public ?int $installmentCount = null,
+        public ?float $installmentValue = null,
+        public ?float $totalValue = null,
+        public ?string $pixAutomaticAuthorizationId = null,
         ?array $split = null,
         array|Callback|null $callback = null,
         #[SensitiveParameter]
@@ -62,9 +81,18 @@ final readonly class CreatePaymentRequest implements JsonSerializable
         $this->callback = is_array($callback) ? Callback::fromArray($callback) : $callback;
         $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
         $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
+        /** @var ?Discount */
+        $coercedDiscount = Discount::coerce($discount);
+        /** @var ?Interest */
+        $coercedInterest = Interest::coerce($interest);
+        /** @var ?Fine */
+        $coercedFine = Fine::coerce($fine);
+        $this->discount = $coercedDiscount;
+        $this->interest = $coercedInterest;
+        $this->fine = $coercedFine;
     }
 
-    /** @return array{customer: string, billingType: BillingType|string, value: float, dueDate: string, description: ?string, externalReference: ?string, discount: ?float, interest: ?float, fine: ?float, postalService: ?bool, split: ?list<Split>, callback: ?Callback, creditCard: ?array<string, mixed>, creditCardHolderInfo: ?array<string, mixed>, remoteIp: ?string, authorizeOnly: ?bool} */
+    /** @return array{customer: string, billingType: BillingType|string, value: float, dueDate: string, description: ?string, externalReference: ?string, discount: ?Discount, interest: ?Interest, fine: ?Fine, postalService: ?bool, daysAfterDueDateToRegistrationCancellation: ?int, installmentCount: ?int, installmentValue: ?float, totalValue: ?float, pixAutomaticAuthorizationId: ?string, split: ?list<Split>, callback: ?Callback, creditCard: ?array<string, mixed>, creditCardHolderInfo: ?array<string, mixed>, remoteIp: ?string, authorizeOnly: ?bool} */
     public function __debugInfo(): array
     {
         return [
@@ -78,6 +106,11 @@ final readonly class CreatePaymentRequest implements JsonSerializable
             'interest' => $this->interest,
             'fine' => $this->fine,
             'postalService' => $this->postalService,
+            'daysAfterDueDateToRegistrationCancellation' => $this->daysAfterDueDateToRegistrationCancellation,
+            'installmentCount' => $this->installmentCount,
+            'installmentValue' => $this->installmentValue,
+            'totalValue' => $this->totalValue,
+            'pixAutomaticAuthorizationId' => $this->pixAutomaticAuthorizationId,
             'split' => $this->split,
             'callback' => $this->callback,
             'creditCard' => $this->creditCard?->__debugInfo(),
@@ -87,7 +120,7 @@ final readonly class CreatePaymentRequest implements JsonSerializable
         ];
     }
 
-    /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: float, interest?: float, fine?: float, postalService?: bool, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string, authorizeOnly?: bool} $data */
+    /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float, interest?: array{value?: float}|Interest|float, fine?: array{value?: float, type?: FineType|string}|Fine|float, postalService?: bool, daysAfterDueDateToRegistrationCancellation?: int, installmentCount?: int, installmentValue?: float, totalValue?: float, pixAutomaticAuthorizationId?: string, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string, authorizeOnly?: bool} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -101,6 +134,11 @@ final readonly class CreatePaymentRequest implements JsonSerializable
             interest: $data['interest'] ?? null,
             fine: $data['fine'] ?? null,
             postalService: $data['postalService'] ?? null,
+            daysAfterDueDateToRegistrationCancellation: $data['daysAfterDueDateToRegistrationCancellation'] ?? null,
+            installmentCount: $data['installmentCount'] ?? null,
+            installmentValue: $data['installmentValue'] ?? null,
+            totalValue: $data['totalValue'] ?? null,
+            pixAutomaticAuthorizationId: $data['pixAutomaticAuthorizationId'] ?? null,
             split: $data['split'] ?? null,
             callback: $data['callback'] ?? null,
             creditCard: $data['creditCard'] ?? null,

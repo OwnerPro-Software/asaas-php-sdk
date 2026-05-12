@@ -13,4 +13,7 @@ enum BillingType: string
     case Transfer = 'TRANSFER';
     case Deposit = 'DEPOSIT';
     case Pix = 'PIX';
+    case MundipaggCielo = 'MUNDIPAGG_CIELO';
+    case VoucherCard = 'VOUCHER_CARD';
+    case AsaasMoney = 'ASAAS_MONEY';
 }

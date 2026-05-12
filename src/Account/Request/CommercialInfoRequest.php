@@ -6,6 +6,7 @@ namespace OwnerPro\Asaas\Account\Request;
 
 use JsonSerializable;
 use OwnerPro\Asaas\Account\CompanyType;
+use OwnerPro\Asaas\Account\PersonType;
 use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Support\Missing;
@@ -37,6 +38,8 @@ final readonly class CommercialInfoRequest implements JsonSerializable
         public string|Missing $postalCode = Missing::Value,
         public string|Missing $tradingName = Missing::Value,
         public string|Missing $site = Missing::Value,
+        public PersonType|string|Missing $personType = Missing::Value,
+        public string|Missing $companyName = Missing::Value,
     ) {}
 
     /** @return array<string, mixed> */
@@ -68,7 +71,7 @@ final readonly class CommercialInfoRequest implements JsonSerializable
         return $fields;
     }
 
-    /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, phone?: string, birthDate?: string, companyType?: CompanyType|string, incomeValue?: float, address?: string, addressNumber?: string, complement?: string, province?: string, postalCode?: string, tradingName?: string, site?: string} $data */
+    /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, phone?: string, birthDate?: string, companyType?: CompanyType|string, incomeValue?: float, address?: string, addressNumber?: string, complement?: string, province?: string, postalCode?: string, tradingName?: string, site?: string, personType?: PersonType|string, companyName?: string} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -87,6 +90,8 @@ final readonly class CommercialInfoRequest implements JsonSerializable
             postalCode: $data['postalCode'] ?? Missing::Value,
             tradingName: $data['tradingName'] ?? Missing::Value,
             site: $data['site'] ?? Missing::Value,
+            personType: $data['personType'] ?? Missing::Value,
+            companyName: $data['companyName'] ?? Missing::Value,
         );
     }
 }

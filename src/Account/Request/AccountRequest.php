@@ -9,6 +9,7 @@ use JsonSerializable;
 use OwnerPro\Asaas\Account\CompanyType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
+use OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest;
 use SensitiveParameter;
 
 final readonly class AccountRequest implements JsonSerializable
@@ -16,6 +17,10 @@ final readonly class AccountRequest implements JsonSerializable
     use HasArrayFactory;
     use MasksSensitiveData;
 
+    /** @var list<CreateWebhookRequest>|null */
+    public ?array $webhooks;
+
+    /** @param list<array<string, mixed>|CreateWebhookRequest>|null $webhooks */
     public function __construct(
         public string $name,
         #[SensitiveParameter]
@@ -37,9 +42,18 @@ final readonly class AccountRequest implements JsonSerializable
         public ?string $complement = null,
         public ?string $tradingName = null,
         public ?string $site = null,
-    ) {}
+        #[SensitiveParameter]
+        public ?string $loginEmail = null,
+        ?array $webhooks = null,
+    ) {
+        $this->webhooks = $webhooks !== null ? array_map(
+            // @phpstan-ignore argument.type
+            fn (array|CreateWebhookRequest $item): CreateWebhookRequest => $item instanceof CreateWebhookRequest ? $item : CreateWebhookRequest::fromArray($item),
+            $webhooks,
+        ) : null;
+    }
 
-    /** @return array{name: string, email: string, cpfCnpj: string, mobilePhone: string, incomeValue: float, address: string, addressNumber: string, province: string, postalCode: string, birthDate: ?string, companyType: CompanyType|string|null, phone: ?string, complement: ?string, tradingName: ?string, site: ?string} */
+    /** @return array{name: string, email: string, cpfCnpj: string, mobilePhone: string, incomeValue: float, address: string, addressNumber: string, province: string, postalCode: string, birthDate: ?string, companyType: CompanyType|string|null, phone: ?string, complement: ?string, tradingName: ?string, site: ?string, loginEmail: ?string, webhooks: ?list<CreateWebhookRequest>} */
     public function __debugInfo(): array
     {
         return [
@@ -58,10 +72,12 @@ final readonly class AccountRequest implements JsonSerializable
             'complement' => $this->complement,
             'tradingName' => $this->tradingName,
             'site' => $this->site,
+            'loginEmail' => $this->loginEmail !== null ? '***' : null,
+            'webhooks' => $this->webhooks,
         ];
     }
 
-    /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, incomeValue?: float, address?: string, addressNumber?: string, province?: string, postalCode?: string, birthDate?: string, companyType?: CompanyType|string, phone?: string, complement?: string, tradingName?: string, site?: string} $data */
+    /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, incomeValue?: float, address?: string, addressNumber?: string, province?: string, postalCode?: string, birthDate?: string, companyType?: CompanyType|string, phone?: string, complement?: string, tradingName?: string, site?: string, loginEmail?: string, webhooks?: list<array<string, mixed>|CreateWebhookRequest>} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -80,6 +96,8 @@ final readonly class AccountRequest implements JsonSerializable
             complement: $data['complement'] ?? null,
             tradingName: $data['tradingName'] ?? null,
             site: $data['site'] ?? null,
+            loginEmail: $data['loginEmail'] ?? null,
+            webhooks: $data['webhooks'] ?? null,
         );
     }
 }

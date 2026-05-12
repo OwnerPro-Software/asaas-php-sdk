@@ -12,6 +12,7 @@ use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Transfer\TransferOperationType;
+use OwnerPro\Asaas\Transfer\TransferRecurrenceFrequency;
 use SensitiveParameter;
 
 final readonly class TransferRequest implements JsonSerializable
@@ -21,7 +22,12 @@ final readonly class TransferRequest implements JsonSerializable
 
     public ?BankAccount $bankAccount;
 
-    /** @param array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string}|BankAccount|null $bankAccount */
+    public ?Recurring $recurring;
+
+    /**
+     * @param  array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string}|BankAccount|null  $bankAccount
+     * @param  array{frequency?: TransferRecurrenceFrequency|string, quantity?: int}|Recurring|null  $recurring
+     */
     public function __construct(
         public float $value,
         #[SensitiveParameter]
@@ -34,11 +40,13 @@ final readonly class TransferRequest implements JsonSerializable
         public ?string $description = null,
         public ?string $scheduleDate = null,
         public ?string $externalReference = null,
+        array|Recurring|null $recurring = null,
     ) {
         $this->bankAccount = is_array($bankAccount) ? BankAccount::fromArray($bankAccount) : $bankAccount;
+        $this->recurring = is_array($recurring) ? Recurring::fromArray($recurring) : $recurring;
     }
 
-    /** @return array{value: float, pixAddressKey: ?string, pixAddressKeyType: PixAddressKeyType|string|null, bankAccount: ?array<string, mixed>, walletId: ?string, operationType: TransferOperationType|string|null, description: ?string, scheduleDate: ?string, externalReference: ?string} */
+    /** @return array{value: float, pixAddressKey: ?string, pixAddressKeyType: PixAddressKeyType|string|null, bankAccount: ?array<string, mixed>, walletId: ?string, operationType: TransferOperationType|string|null, description: ?string, scheduleDate: ?string, externalReference: ?string, recurring: ?Recurring} */
     public function __debugInfo(): array
     {
         return [
@@ -51,10 +59,11 @@ final readonly class TransferRequest implements JsonSerializable
             'description' => $this->description,
             'scheduleDate' => $this->scheduleDate,
             'externalReference' => $this->externalReference,
+            'recurring' => $this->recurring,
         ];
     }
 
-    /** @param array{value?: float, pixAddressKey?: string, pixAddressKeyType?: PixAddressKeyType|string, bankAccount?: array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: string, ispb?: string}, walletId?: string, operationType?: TransferOperationType|string, description?: string, scheduleDate?: string, externalReference?: string} $data */
+    /** @param array{value?: float, pixAddressKey?: string, pixAddressKeyType?: PixAddressKeyType|string, bankAccount?: array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: string, ispb?: string}, walletId?: string, operationType?: TransferOperationType|string, description?: string, scheduleDate?: string, externalReference?: string, recurring?: array{frequency?: TransferRecurrenceFrequency|string, quantity?: int}|Recurring} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -67,6 +76,7 @@ final readonly class TransferRequest implements JsonSerializable
             description: $data['description'] ?? null,
             scheduleDate: $data['scheduleDate'] ?? null,
             externalReference: $data['externalReference'] ?? null,
+            recurring: $data['recurring'] ?? null,
         );
     }
 }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use OwnerPro\Asaas\Account\Request\AccountRequest;
+use OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest;
 
 mutates(AccountRequest::class);
 
@@ -187,6 +188,69 @@ it('throws when required field is missing', function (string $missingField): voi
     'province',
     'postalCode',
 ]);
+
+it('accepts loginEmail and persists it', function (): void {
+    $request = AccountRequest::fromArray([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'loginEmail' => 'login@example.com',
+        'cpfCnpj' => '12345678901',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua Exemplo',
+        'addressNumber' => '123',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+    ]);
+
+    expect($request->loginEmail)->toBe('login@example.com');
+});
+
+it('coerces webhooks array to CreateWebhookRequest list', function (): void {
+    $request = AccountRequest::fromArray([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'cpfCnpj' => '12345678901',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua Exemplo',
+        'addressNumber' => '123',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'webhooks' => [
+            ['url' => 'https://hooks.example.com/x', 'email' => 'ops@example.com'],
+        ],
+    ]);
+
+    expect($request->webhooks)->toHaveCount(1);
+    expect($request->webhooks[0])->toBeInstanceOf(CreateWebhookRequest::class);
+    expect($request->webhooks[0]->url)->toBe('https://hooks.example.com/x');
+});
+
+it('serializes loginEmail and webhooks in toArray when set', function (): void {
+    $request = new AccountRequest(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        mobilePhone: '11999999999',
+        incomeValue: 5000.00,
+        address: 'Rua',
+        addressNumber: '1',
+        province: 'Centro',
+        postalCode: '01001000',
+        loginEmail: 'login@example.com',
+        webhooks: [new CreateWebhookRequest(url: 'https://x.com', email: 'a@b.com')],
+    );
+
+    $array = $request->toArray();
+
+    expect($array['loginEmail'])->toBe('login@example.com');
+    expect($array['webhooks'])->toBe([[
+        'url' => 'https://x.com',
+        'email' => 'a@b.com',
+        'interrupted' => false,
+    ]]);
+});
 
 it('cannot be serialized', function (): void {
     $request = new AccountRequest(

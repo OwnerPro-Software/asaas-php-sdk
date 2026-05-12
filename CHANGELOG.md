@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Spec-alignment release driven by a full audit of the SDK against `specs/asaas_openapi.json`. Closes 19 documented field gaps plus a wrong-verb bug on `TransferResource::cancel()`.
+
+### Breaking
+
+- `TransferResource::cancel($id)` now sends **DELETE** (was POST). Asaas's spec requires DELETE on `/v3/transfers/{id}/cancel` — POST silently failed or hit the wrong handler in some configurations. Any consumer wrapping the SDK's HTTP layer (e.g. retry middleware keyed by method) must update accordingly.
+- `PayWithCreditCardRequest::$creditCard`, `$creditCardHolderInfo`, and `$remoteIp` are now optional (`?CreditCard`, `?CreditCardHolderInfo`, `?string`) to support the new token-only flow. Constructors using positional args keep working; consumers relying on the previous "throws when missing" semantics will no longer see those exceptions and must validate at their own boundaries.
+
+### Added — DTO fields
+
+- `CreatePaymentRequest`: `daysAfterDueDateToRegistrationCancellation`, `installmentCount`, `installmentValue`, `totalValue`, `pixAutomaticAuthorizationId`.
+- `UpdatePaymentRequest`: `daysAfterDueDateToRegistrationCancellation`, `callback`.
+- `PayWithCreditCardRequest`: `creditCardToken` (lets you pay using a saved-card token without sending card details again).
+- `AccountRequest`: `loginEmail`, `webhooks` (list of `CreateWebhookRequest`; coerced from raw arrays).
+- `CommercialInfoRequest`: `personType` (uses existing `OwnerPro\Asaas\Account\PersonType` enum), `companyName`.
+- `CreateInvoiceRequest`, `UpdateInvoiceRequest`: `updatePayment` (auto-discount taxes from the payment value).
+- `CreateBillPaymentRequest`: `value` (required for credit-card bills whose digitable line carries no embedded amount).
+- `TransferRequest`: `recurring` (Pix-recurrence object; nested `Recurring` value object with `frequency` enum + `quantity`).
+
+### Added — value objects + enums
+
+- `OwnerPro\Asaas\Support\DTO\Discount` (`{value, dueDateLimitDays, type}`), `Interest` (`{value}`), `Fine` (`{value, type}`). Each ships a static `coerce()` helper that accepts a float (legacy shape, wrapped as `value`), a raw array, an instance, `Missing::Value`, or `null`. The Payment Create/Update DTOs now hold typed instances on `$discount`, `$interest`, `$fine` (previously `?float` — see Migration below).
+- `OwnerPro\Asaas\Payment\DiscountType` (`FIXED`, `PERCENTAGE`).
+- `OwnerPro\Asaas\Payment\FineType` (`FIXED`, `PERCENTAGE`).
+- `OwnerPro\Asaas\Transfer\Request\Recurring` value object + `OwnerPro\Asaas\Transfer\TransferRecurrenceFrequency` enum (`WEEKLY`, `MONTHLY`).
+- `OwnerPro\Asaas\Transfer\Request\InternalTransferRequest` (for the `POST /v3/transfers/` internal-transfer endpoint).
+- `OwnerPro\Asaas\Support\DTO\Callback` gains a `coerce()` static helper consistent with the other value objects.
+- `BillingType` enum gains `MUNDIPAGG_CIELO`, `VOUCHER_CARD`, `ASAAS_MONEY` (still string-pass-through, but typed callers can now use the cases).
+
+### Added — resource endpoints
+
+- `PaymentResource::createWithCreditCard(array|CreatePaymentRequest $data)` — `POST /v3/payments/` (trailing slash) for the one-shot create-with-card flow.
+- `PaymentResource::listRefunds(string $id)` — `GET /v3/payments/{id}/refunds`.
+- `PaymentResource::refundBankSlip(string $id)` — `POST /v3/payments/{id}/bankSlip/refund`.
+- `PaymentResource::getChargeback(string $id)` — `GET /v3/payments/{id}/chargeback`.
+- `PaymentResource::getEscrow(string $id)` — `GET /v3/payments/{id}/escrow`.
+- `AccountResource::createAccessToken($accountId, $data = null)` now accepts an optional `AccessTokenRequest` (or array) body with `name`/`expirationDate`.
+- `MyAccountResource::accountNumber()` — `GET /v3/myAccount/accountNumber`.
+- `MyAccountResource::fees()` — `GET /v3/myAccount/fees/`.
+- `StatementResource::balance()` — `GET /v3/finance/balance`.
+- `StatementResource::paymentStatistics(array $query = [])` — `GET /v3/finance/payment/statistics`.
+- `StatementResource::splitStatistics(array $query = [])` — `GET /v3/finance/split/statistics`.
+- `TransferResource::createInternal(array|InternalTransferRequest $data)` — `POST /v3/transfers/` (trailing slash) for the internal-Asaas-account flow with `walletId`.
+
+### Migration notes
+
+- `discount` / `interest` / `fine` on `CreatePaymentRequest` and `UpdatePaymentRequest`: passing a float keeps working — the SDK wraps it as `Discount(value: $float)` / `Interest(...)` / `Fine(...)`. Wire output is now the documented object shape (`{value: ..., dueDateLimitDays: ..., type: ...}`), which is what Asaas's validator describes. If you were relying on the older scalar-on-wire behavior, audit your downstream consumers accordingly.
+- `PayWithCreditCardRequest::fromArray` no longer throws on missing `creditCard`, `creditCardHolderInfo`, or `remoteIp` — required validation moves to the server. Provide either `creditCardToken` **or** the full card/holder/IP triple.
+- `TransferResource::cancel()`: confirmed via the audit that the spec uses DELETE. If you reverse-proxy or log by HTTP method, update mappings.
+- Deferred to 1.6.0: `fiscalInfo` resource (9 endpoints, multipart), `POST/GET /v3/payments/{id}/documents` and related document CRUD, MyAccount escrow endpoints, `paymentCheckoutConfig`, `wallets`, and the `lean/payments`/`splits/paid+received` families.
+
+### Internal
+
+- `Discount`, `Interest`, `Fine`, `Callback` each expose a static `coerce()` helper, normalising union inputs (`array | float | DTO | Missing | null`) into a normalized DTO instance. This kept `UpdatePaymentRequest`'s constructor cognitive complexity under PHPStan's class threshold without weakening the public API.
+
 ## [1.4.0] - 2026-05-12
 
 ### Added
