@@ -63,6 +63,57 @@ it('validates required fields', function (): void {
     webhookResource()->create(['url' => 'https://example.com']);
 })->throws(InvalidArgumentException::class);
 
+it('sends interrupted=false by default on create to satisfy Asaas validator', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    webhookResource()->create(new CreateWebhookRequest(url: 'https://example.com/hook', email: 'dev@test.com'));
+
+    Http::assertSent(fn ($request): bool => $request->method() === 'POST'
+        && ($request->data()['interrupted'] ?? null) === false);
+})->with('webhook_fixture');
+
+it('sends interrupted=true when explicitly set on create', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    webhookResource()->create(new CreateWebhookRequest(
+        url: 'https://example.com/hook',
+        email: 'dev@test.com',
+        interrupted: true,
+    ));
+
+    Http::assertSent(fn ($request): bool => ($request->data()['interrupted'] ?? null) === true);
+})->with('webhook_fixture');
+
+it('accepts interrupted from raw array on create', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    webhookResource()->create([
+        'url' => 'https://example.com/hook',
+        'email' => 'dev@test.com',
+        'interrupted' => true,
+    ]);
+
+    Http::assertSent(fn ($request): bool => ($request->data()['interrupted'] ?? null) === true);
+})->with('webhook_fixture');
+
+it('sends interrupted on update when set', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    webhookResource()->update('wh_123', new UpdateWebhookRequest(interrupted: false));
+
+    Http::assertSent(fn ($request): bool => $request->method() === 'PUT'
+        && ($request->data()['interrupted'] ?? null) === false);
+})->with('webhook_fixture');
+
+it('omits interrupted from update payload when not set', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    webhookResource()->update('wh_123', new UpdateWebhookRequest(enabled: false));
+
+    Http::assertSent(fn ($request): bool => $request->method() === 'PUT'
+        && ! array_key_exists('interrupted', $request->data()));
+})->with('webhook_fixture');
+
 it('lists webhooks', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 

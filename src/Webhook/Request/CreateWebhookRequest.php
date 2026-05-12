@@ -23,6 +23,7 @@ final readonly class CreateWebhookRequest implements JsonSerializable
         public string $email,
         public ?string $name = null,
         public ?bool $enabled = null,
+        public bool $interrupted = false,
         public ?int $apiVersion = null,
         public WebhookSendType|string|null $sendType = null,
         #[SensitiveParameter]
@@ -30,7 +31,7 @@ final readonly class CreateWebhookRequest implements JsonSerializable
         public ?array $events = null,
     ) {}
 
-    /** @return array{url: string, email: string, name: ?string, enabled: ?bool, apiVersion: ?int, sendType: WebhookSendType|string|null, authToken: ?string, events: ?list<WebhookEvent|string>} */
+    /** @return array{url: string, email: string, name: ?string, enabled: ?bool, interrupted: bool, apiVersion: ?int, sendType: WebhookSendType|string|null, authToken: ?string, events: ?list<WebhookEvent|string>} */
     public function __debugInfo(): array
     {
         return [
@@ -38,6 +39,7 @@ final readonly class CreateWebhookRequest implements JsonSerializable
             'email' => $this->email,
             'name' => $this->name,
             'enabled' => $this->enabled,
+            'interrupted' => $this->interrupted,
             'apiVersion' => $this->apiVersion,
             'sendType' => $this->sendType,
             'authToken' => $this->authToken !== null ? '***' : null,
@@ -45,7 +47,7 @@ final readonly class CreateWebhookRequest implements JsonSerializable
         ];
     }
 
-    /** @param array{url?: string, email?: string, name?: string, enabled?: bool, apiVersion?: int, sendType?: WebhookSendType|string, authToken?: string, events?: list<WebhookEvent|string>} $data */
+    /** @param array{url?: string, email?: string, name?: string, enabled?: bool, interrupted?: bool, apiVersion?: int, sendType?: WebhookSendType|string, authToken?: string, events?: list<WebhookEvent|string>} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -53,6 +55,7 @@ final readonly class CreateWebhookRequest implements JsonSerializable
             email: $data['email'] ?? throw new InvalidArgumentException('CreateWebhookRequest: email is required'),
             name: $data['name'] ?? null,
             enabled: $data['enabled'] ?? null,
+            interrupted: $data['interrupted'] ?? false,
             apiVersion: $data['apiVersion'] ?? null,
             sendType: $data['sendType'] ?? null,
             authToken: $data['authToken'] ?? null,

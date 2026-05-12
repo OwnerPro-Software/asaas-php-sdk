@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `CreateWebhookRequest::interrupted` and `UpdateWebhookRequest::interrupted` — webhook sync-queue interruption flag from the Asaas OpenAPI spec. The Asaas validator rejects webhook creation with HTTP 400 (`"O parâmetro poolInterrupted deve ser informado"` — `poolInterrupted` is the validator's internal variable name; the wire field is `interrupted`) whenever the field is absent, so `CreateWebhookRequest::interrupted` defaults to `false` to keep the request acceptable out of the box. `UpdateWebhookRequest::interrupted` uses the standard `Missing::Value` partial-update default.
+
+### Fixed
+
+- `WebhookResourceTest` now asserts request body shape (not only URL/method), so missing fields on webhook DTOs fail loudly going forward.
+
 ## [1.3.0] - 2026-05-08
 
 ### Added

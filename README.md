@@ -766,6 +766,8 @@ Asaas::webhooks()->removeBackoff(string $id): AsaasResult
 Asaas::webhooks()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
+> **Asaas requires `interrupted` on create.** The Asaas API rejects `POST /v3/webhooks` with HTTP 400 (`"O parâmetro poolInterrupted deve ser informado"` — `poolInterrupted` is the Asaas validator's internal variable name; the documented and accepted JSON field is `interrupted`) when the field is absent. `CreateWebhookRequest` defaults `interrupted` to `false` so the request is always accepted. `UpdateWebhookRequest::interrupted` follows the usual partial-update pattern (`Missing` = not sent).
+
 ### Webhook Verification
 
 When you create a webhook with an `authToken`, Asaas sends that token in the `asaas-access-token` header on every delivery. Use `WebhookVerifier` to validate incoming requests with a timing-safe comparison:

@@ -23,6 +23,7 @@ final readonly class UpdateWebhookRequest implements JsonSerializable
         public string|Missing|null $email = Missing::Value,
         public string|Missing|null $name = Missing::Value,
         public bool|Missing|null $enabled = Missing::Value,
+        public bool|Missing|null $interrupted = Missing::Value,
         public int|Missing|null $apiVersion = Missing::Value,
         public WebhookSendType|string|Missing|null $sendType = Missing::Value,
         #[SensitiveParameter]
@@ -43,7 +44,7 @@ final readonly class UpdateWebhookRequest implements JsonSerializable
         return $fields;
     }
 
-    /** @param array{url?: string|null, email?: string|null, name?: string|null, enabled?: bool|null, apiVersion?: int|null, sendType?: WebhookSendType|string|null, authToken?: string|null, events?: list<WebhookEvent|string>|null} $data */
+    /** @param array{url?: string|null, email?: string|null, name?: string|null, enabled?: bool|null, interrupted?: bool|null, apiVersion?: int|null, sendType?: WebhookSendType|string|null, authToken?: string|null, events?: list<WebhookEvent|string>|null} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -51,6 +52,7 @@ final readonly class UpdateWebhookRequest implements JsonSerializable
             email: array_key_exists('email', $data) ? $data['email'] : Missing::Value,
             name: array_key_exists('name', $data) ? $data['name'] : Missing::Value,
             enabled: array_key_exists('enabled', $data) ? $data['enabled'] : Missing::Value,
+            interrupted: array_key_exists('interrupted', $data) ? $data['interrupted'] : Missing::Value,
             apiVersion: array_key_exists('apiVersion', $data) ? $data['apiVersion'] : Missing::Value,
             sendType: array_key_exists('sendType', $data) ? $data['sendType'] : Missing::Value,
             authToken: array_key_exists('authToken', $data) ? $data['authToken'] : Missing::Value,
