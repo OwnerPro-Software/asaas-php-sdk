@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
+use OwnerPro\Asaas\Payment\DiscountType;
+use OwnerPro\Asaas\Payment\FineType;
 use OwnerPro\Asaas\Payment\PaymentDocumentType;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
@@ -17,6 +19,9 @@ use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\DTO\Callback;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+use OwnerPro\Asaas\Support\DTO\Discount;
+use OwnerPro\Asaas\Support\DTO\Fine;
+use OwnerPro\Asaas\Support\DTO\Interest;
 use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\Environment;
 
@@ -76,6 +81,74 @@ it('creates a payment from request object', function (array $fixture): void {
 it('validates required fields when creating from array', function (): void {
     paymentResource()->create(['customer' => 'cus_456']);
 })->throws(InvalidArgumentException::class);
+
+it('serializes float discount/interest/fine as object shape on the wire when creating', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    paymentResource()->create([
+        'customer' => 'cus_456',
+        'billingType' => 'BOLETO',
+        'value' => 100.00,
+        'dueDate' => '2026-04-01',
+        'discount' => 5.0,
+        'interest' => 1.5,
+        'fine' => 2.0,
+    ]);
+
+    Http::assertSent(function ($request): bool {
+        if ($request->url() !== 'https://api-sandbox.asaas.com/v3/payments' || $request->method() !== 'POST') {
+            return false;
+        }
+        $body = $request->data();
+
+        return $body['discount'] === ['value' => 5.0]
+            && $body['interest'] === ['value' => 1.5]
+            && $body['fine'] === ['value' => 2.0];
+    });
+})->with('payment_fixture');
+
+it('serializes typed Discount/Interest/Fine DTOs on the wire when creating', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    paymentResource()->create(new CreatePaymentRequest(
+        customer: 'cus_456',
+        billingType: 'BOLETO',
+        value: 100.00,
+        dueDate: '2026-04-01',
+        discount: new Discount(value: 10.0, dueDateLimitDays: 3, type: DiscountType::Percentage),
+        interest: new Interest(value: 1.5),
+        fine: new Fine(value: 2.0, type: FineType::Fixed),
+    ));
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body['discount'] === ['value' => 10.0, 'dueDateLimitDays' => 3, 'type' => 'PERCENTAGE']
+            && $body['interest'] === ['value' => 1.5]
+            && $body['fine'] === ['value' => 2.0, 'type' => 'FIXED'];
+    });
+})->with('payment_fixture');
+
+it('serializes float discount/interest/fine as object shape on the wire when updating', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    paymentResource()->update('pay_abc123', [
+        'discount' => 5.0,
+        'interest' => 1.5,
+        'fine' => 2.0,
+    ]);
+
+    Http::assertSent(function ($request): bool {
+        if ($request->url() !== 'https://api-sandbox.asaas.com/v3/payments/pay_abc123' || $request->method() !== 'PUT') {
+            return false;
+        }
+        $body = $request->data();
+
+        return $body['discount'] === ['value' => 5.0]
+            && $body['interest'] === ['value' => 1.5]
+            && $body['fine'] === ['value' => 2.0];
+    });
+})->with('payment_fixture');
 
 // --- find ---
 
@@ -634,8 +707,7 @@ it('uploads a payment document via multipart', function (): void {
         $body = (string) $request->body();
 
         return str_contains($body, 'INVOICE')
-            && str_contains($body, 'name="availableAfterPayment"')
-            && str_contains($body, 'true')
+            && str_contains($body, "name=\"availableAfterPayment\"\r\nContent-Length: 4\r\n\r\ntrue")
             && str_contains($body, 'filename="nf.pdf"');
     });
 });
@@ -652,7 +724,7 @@ it('accepts a string document type on upload', function (): void {
     );
 
     Http::assertSent(fn ($r): bool => str_contains((string) $r->body(), 'NEW_CUSTOM_TYPE')
-        && str_contains((string) $r->body(), 'false'));
+        && str_contains((string) $r->body(), "name=\"availableAfterPayment\"\r\nContent-Length: 5\r\n\r\nfalse"));
 });
 
 it('rejects empty paymentId on uploadDocument', function (): void {

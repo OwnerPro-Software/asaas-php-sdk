@@ -86,7 +86,7 @@ final readonly class PaymentResource
 
     public function finishEscrow(string $id): AsaasResult
     {
-        return $this->connector->post(sprintf('/escrow/%s/finish', IdGuard::validate($id)));
+        return $this->connector->post($this->escrowPath($id));
     }
 
     public function restore(string $id): AsaasResult
@@ -160,7 +160,7 @@ final readonly class PaymentResource
 
     public function findSplitPaid(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/splits/paid/%s', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->splitPath('paid', $id));
     }
 
     /** @param array<string, mixed> $query */
@@ -171,7 +171,7 @@ final readonly class PaymentResource
 
     public function findSplitReceived(string $id): AsaasResult
     {
-        return $this->connector->get(sprintf('%s/splits/received/%s', self::BASE, IdGuard::validate($id)));
+        return $this->connector->get($this->splitPath('received', $id));
     }
 
     /** @param string|resource $file */
@@ -188,7 +188,7 @@ final readonly class PaymentResource
             $this->path($paymentId, '/documents'),
             [
                 'type' => $typeValue,
-                'availableAfterPayment' => $availableAfterPayment ? 'true' : 'false',
+                'availableAfterPayment' => $availableAfterPayment,
             ],
             [[
                 'name' => 'file',
@@ -239,5 +239,15 @@ final readonly class PaymentResource
     private function documentPath(string $paymentId, string $documentId): string
     {
         return sprintf('%s/%s/documents/%s', self::BASE, IdGuard::validate($paymentId), IdGuard::validate($documentId));
+    }
+
+    private function splitPath(string $kind, string $id): string
+    {
+        return sprintf('%s/splits/%s/%s', self::BASE, $kind, IdGuard::validate($id));
+    }
+
+    private function escrowPath(string $id): string
+    {
+        return sprintf('/escrow/%s/finish', IdGuard::validate($id));
     }
 }

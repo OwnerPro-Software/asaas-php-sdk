@@ -89,6 +89,37 @@ it('forwards custom per-file headers to the multipart attachment', function (): 
         && str_contains((string) $request->body(), 'tagged-value'));
 });
 
+it('stringifies boolean fields in the multipart payload', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    multipartConnector()->postMultipart('/fiscalInfo/', [
+        'simplesNacional' => false,
+        'culturalProjectsPromoter' => true,
+    ]);
+
+    Http::assertSent(function ($request): bool {
+        $body = (string) $request->body();
+
+        return str_contains($body, "name=\"simplesNacional\"\r\nContent-Length: 5\r\n\r\nfalse")
+            && str_contains($body, "name=\"culturalProjectsPromoter\"\r\nContent-Length: 4\r\n\r\ntrue");
+    });
+});
+
+it('stringifies boolean values inside nested arrays before Laravel flattens them', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    multipartConnector()->postMultipart('/checkout/', [
+        'flags' => [false, true],
+    ]);
+
+    Http::assertSent(function ($request): bool {
+        $body = (string) $request->body();
+
+        return str_contains($body, "name=\"flags[]\"\r\nContent-Length: 5\r\n\r\nfalse")
+            && str_contains($body, "name=\"flags[]\"\r\nContent-Length: 4\r\n\r\ntrue");
+    });
+});
+
 it('sends form-only multipart when no files are attached', function (): void {
     Http::fake(['*' => Http::response(['ok' => true], 200)]);
 

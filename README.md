@@ -233,7 +233,10 @@ PaymentStatus::from($payment['status']);     // PaymentStatus::Pending
 
 | Enum | Values |
 |------|--------|
-| `Payment\BillingType` | `Undefined`, `Boleto`, `CreditCard`, `DebitCard`, `Transfer`, `Deposit`, `Pix` |
+| `Payment\BillingType` | `Undefined`, `Boleto`, `CreditCard`, `DebitCard`, `Transfer`, `Deposit`, `Pix`, `MundipaggCielo`, `VoucherCard`, `AsaasMoney` |
+| `Payment\DiscountType` | `Fixed`, `Percentage` |
+| `Payment\FineType` | `Fixed`, `Percentage` |
+| `Payment\PaymentDocumentType` | `Invoice`, `Contract`, `Media`, `Document`, `Spreadsheet`, `Program`, `Other` |
 | `Payment\PaymentStatus` | `Pending`, `Received`, `Confirmed`, `Overdue`, `Refunded`, `ReceivedInCash`, `RefundRequested`, `RefundInProgress`, `ChargebackRequested`, `ChargebackDispute`, `AwaitingChargebackReversal`, `DunningRequested`, `DunningReceived`, `AwaitingRiskAnalysis` |
 | `Pix\PixAddressKeyType` | `Cpf`, `Cnpj`, `Email`, `Phone`, `Evp` |
 | `Pix\PixAddressKeyStatus` | `AwaitingActivation`, `Active`, `AwaitingDeletion`, `AwaitingAccountDeletion`, `Deleted`, `Error` |
@@ -242,12 +245,15 @@ PaymentStatus::from($payment['status']);     // PaymentStatus::Pending
 | `PixTransaction\PixTransactionStatus` | `AwaitingBalanceValidation`, `AwaitingInstantPaymentAccountBalance`, `AwaitingCriticalActionAuthorization`, `AwaitingCheckoutRiskAnalysisRequest`, `AwaitingCashInRiskAnalysisRequest`, `Scheduled`, `AwaitingRequest`, `Requested`, `Done`, `Refused`, `Cancelled` |
 | `PixTransaction\PixQrCodeType` | `Static`, `Dynamic`, `DynamicWithAsaasAddressKey`, `Composite` |
 | `Transfer\TransferOperationType` | `Pix`, `Ted`, `Internal` |
+| `Transfer\TransferRecurrenceFrequency` | `Weekly`, `Monthly` |
 | `Transfer\TransferStatus` | `Pending`, `BankProcessing`, `Done`, `Cancelled`, `Failed` |
 | `Invoice\InvoiceStatus` | `Scheduled`, `Authorized`, `ProcessingCancellation`, `Canceled`, `CancellationDenied`, `Error` |
 | `BillPayment\BillPaymentStatus` | `Pending`, `BankProcessing`, `Paid`, `Failed`, `Cancelled`, `Refunded`, `AwaitingCheckoutRiskAnalysisRequest` |
 | `Account\CompanyType` | `Mei`, `Limited`, `Individual`, `Association` |
 | `Account\PersonType` | `Fisica`, `Juridica` |
 | `Account\DocumentType` | `Identification`, `SocialContract`, `EntrepreneurRequirement`, `Minutes`, `Custom` |
+| `Account\AccessTokenPermission` | 33 cases â€” `Payment`, `Transfer`, `Webhook`, `Invoice`, `Bill`, `PixDebit`, `PixCredit`, `PixAddressKey`, `PixRecurring`, `PixTransaction`, `PixAutomatic`, `Customer`, `CustomerNotification`, `PaymentRefund`, `Chargeback`, `Installment`, `Subscription`, `PaymentLink`, `Checkout`, `CreditCard`, `Anticipation`, `AnticipationConfig`, `Escrow`, `EscrowConfig`, `CreditBureau`, `PaymentDunning`, `FiscalInfo`, `MobilePhoneRecharge`, `FinancialTransaction`, `AccountInfo`, `PaymentCheckoutConfig`, `SubAccount`, `AccountDocument` |
+| `Account\AccessTokenScope` | `Read`, `ReadWrite` |
 | `CreditCard\CreditCardBrand` | `Visa`, `Mastercard`, `Elo`, `Diners`, `Discover`, `Amex`, `Cabal`, `Banescard`, `Credz`, `Sorocred`, `Credsystem`, `Jcb`, `Unknown` |
 | `Webhook\WebhookSendType` | `Sequentially`, `NonSequentially` |
 | `Webhook\WebhookEvent` | 111 event types (`PaymentCreated`, `PaymentReceived`, `TransferDone`, etc.) |
@@ -351,7 +357,8 @@ Available nested DTOs (`OwnerPro\Asaas\Support\DTO\*`):
 | `Taxes` | `CreateInvoiceRequest`, `UpdateInvoiceRequest` |
 | `Split` | `CreatePaymentRequest`, `UpdatePaymentRequest` |
 | `SplitRefund` | `RefundPaymentRequest` |
-| `Callback` | `CreatePaymentRequest` |
+| `Callback` | `CreatePaymentRequest`, `UpdatePaymentRequest` |
+| `Transfer\Request\Recurring` | `TransferRequest` (`{frequency, quantity}`; frequency = `TransferRecurrenceFrequency`) |
 | `QrCodePayload` | `PayQrCodeRequest` |
 | `Discount` | `CreatePaymentRequest`, `UpdatePaymentRequest` (`{value, dueDateLimitDays?, type?}`) |
 | `Interest` | `CreatePaymentRequest`, `UpdatePaymentRequest` (`{value}`) |
@@ -1056,7 +1063,7 @@ Configures fiscal data and digital certificates for NFS-e (Nota Fiscal de ServiÃ
 ```php
 Asaas::fiscalInfo()->recover(): AsaasResult
 Asaas::fiscalInfo()->save(
-    array|FiscalInfoSaveRequest $data,
+    array|FiscalInfoRequest $data,
     string|resource|null $certificateFile = null,
     ?string $certificateFilename = null,
 ): AsaasResult
@@ -1070,7 +1077,7 @@ Asaas::fiscalInfo()->taxSituationCodes(array $query = []): AsaasPaginatedResult
 Asaas::fiscalInfo()->configureNationalPortal(bool $enabled): AsaasResult
 ```
 
-`save()` is a `multipart/form-data` POST. Pass `$certificateFile` (binary string or file resource) only when uploading an A1 digital certificate; the form-only call works the same way without it. `email` and `simplesNacional` are the only required fields on `FiscalInfoSaveRequest`.
+`save()` is a `multipart/form-data` POST. Pass `$certificateFile` (binary string or file resource) only when uploading an A1 digital certificate; the form-only call works the same way without it. `email` and `simplesNacional` are the only required fields on `FiscalInfoRequest`.
 
 ## Custom Connector
 

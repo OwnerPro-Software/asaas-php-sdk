@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\FiscalInfo;
 
-use OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoSaveRequest;
+use OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoRequest;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
@@ -21,11 +21,11 @@ final readonly class FiscalInfoResource
     }
 
     /**
-     * @param  array<string, mixed>|FiscalInfoSaveRequest  $data
+     * @param  array<string, mixed>|FiscalInfoRequest  $data
      * @param  string|resource|null  $certificateFile  Optional A1 digital certificate file (binary).
      */
     public function save(
-        array|FiscalInfoSaveRequest $data,
+        array|FiscalInfoRequest $data,
         mixed $certificateFile = null,
         ?string $certificateFilename = null,
     ): AsaasResult {
@@ -41,7 +41,7 @@ final readonly class FiscalInfoResource
 
         return $this->connector->postMultipart(
             self::BASE.'/',
-            FiscalInfoSaveRequest::resolveData($data),
+            FiscalInfoRequest::resolveData($data),
             $files,
         );
     }

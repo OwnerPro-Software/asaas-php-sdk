@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoSaveRequest;
+use OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoRequest;
 
-mutates(FiscalInfoSaveRequest::class);
+mutates(FiscalInfoRequest::class);
 
 it('builds from array with only the provided fields', function (): void {
-    $req = FiscalInfoSaveRequest::fromArray([
+    $req = FiscalInfoRequest::fromArray([
         'email' => 'a@b.c',
         'simplesNacional' => true,
         'cnae' => '6209100',
@@ -21,13 +21,13 @@ it('builds from array with only the provided fields', function (): void {
 });
 
 it('omits Missing fields entirely', function (): void {
-    $req = new FiscalInfoSaveRequest(email: 'a@b.c');
+    $req = new FiscalInfoRequest(email: 'a@b.c');
 
     expect($req->toArray())->toBe(['email' => 'a@b.c']);
 });
 
 it('serialises every supported field through fromArray', function (): void {
-    $req = FiscalInfoSaveRequest::fromArray([
+    $req = FiscalInfoRequest::fromArray([
         'email' => 'a@b.c',
         'simplesNacional' => false,
         'municipalInscription' => '21779501',
@@ -67,8 +67,9 @@ it('serialises every supported field through fromArray', function (): void {
 });
 
 it('masks sensitive fields in __debugInfo', function (): void {
-    $req = new FiscalInfoSaveRequest(
+    $req = new FiscalInfoRequest(
         email: 'fiscal@asaas.com',
+        username: 'john',
         password: 'p4ss',
         accessToken: 'tok',
         certificatePassword: 'cert-p4ss',
@@ -77,13 +78,14 @@ it('masks sensitive fields in __debugInfo', function (): void {
     $debug = $req->__debugInfo();
 
     expect($debug['email'])->toBe('***');
+    expect($debug['username'])->toBe('***');
     expect($debug['password'])->toBe('***');
     expect($debug['accessToken'])->toBe('***');
     expect($debug['certificatePassword'])->toBe('***');
 });
 
 it('omits Missing fields entirely from __debugInfo', function (): void {
-    $req = new FiscalInfoSaveRequest(email: 'fiscal@asaas.com');
+    $req = new FiscalInfoRequest(email: 'fiscal@asaas.com');
 
     $debug = $req->__debugInfo();
 
@@ -93,5 +95,5 @@ it('omits Missing fields entirely from __debugInfo', function (): void {
 });
 
 it('refuses to be serialised', function (): void {
-    serialize(new FiscalInfoSaveRequest(email: 'a@b.c'));
+    serialize(new FiscalInfoRequest(email: 'a@b.c'));
 })->throws(LogicException::class);

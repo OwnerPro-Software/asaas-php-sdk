@@ -112,14 +112,14 @@ it('reads the account number from /myAccount/accountNumber', function (): void {
         && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/accountNumber');
 });
 
-it('reads fees from /myAccount/fees', function (): void {
+it('reads fees from /myAccount/fees/', function (): void {
     Http::fake(['*' => Http::response(['boleto' => 1.99], 200)]);
 
     $result = myAccountResource()->fees();
 
     expect($result->success)->toBeTrue();
     Http::assertSent(fn ($request): bool => $request->method() === 'GET'
-        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/fees');
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/fees/');
 });
 
 it('lists pending documents from /myAccount/documents', function (): void {
@@ -345,8 +345,25 @@ it('updates the payment checkout config without a logo file', function (): void 
         }
         $body = (string) $r->body();
 
-        return str_contains($body, '#000000') && str_contains($body, 'name="enabled"');
+        return str_contains($body, '#000000')
+            && str_contains($body, "name=\"enabled\"\r\nContent-Length: 4\r\n\r\ntrue");
     });
+});
+
+it('stringifies a false `enabled` on payment checkout config', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    myAccountResource()->updatePaymentCheckoutConfig(new PaymentCheckoutConfigRequest(
+        logoBackgroundColor: '#000',
+        infoBackgroundColor: '#fff',
+        fontColor: '#222',
+        enabled: false,
+    ));
+
+    Http::assertSent(fn ($r): bool => str_contains(
+        (string) $r->body(),
+        "name=\"enabled\"\r\nContent-Length: 5\r\n\r\nfalse",
+    ));
 });
 
 it('updates the payment checkout config with a logo upload', function (): void {

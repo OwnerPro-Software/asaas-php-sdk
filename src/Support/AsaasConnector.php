@@ -79,6 +79,8 @@ final readonly class AsaasConnector implements Connector
      */
     public function postMultipart(string $path, array $data, array $files = []): AsaasResult
     {
+        $data = self::stringifyBooleans($data);
+
         return $this->sendRequest(function () use ($path, $data, $files): Response {
             try {
                 foreach ($files as $file) {
@@ -154,6 +156,29 @@ final readonly class AsaasConnector implements Connector
         $data = is_array($json) ? $json : [];
 
         return AsaasResult::success($data, $rawResponse);
+    }
+
+    /**
+     * Coerce PHP bool values in a multipart payload to the literal strings 'true' / 'false'.
+     *
+     * Guzzle's MultipartStream casts booleans via (string), turning `true` into `"1"` and
+     * `false` into the empty string. Asaas's multipart endpoints expect the literal text,
+     * so this normalization is applied centrally before the request leaves the SDK.
+     *
+     * @param  array<mixed, mixed>  $data
+     * @return array<mixed, mixed>
+     */
+    private static function stringifyBooleans(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_bool($value)) {
+                $data[$key] = $value ? 'true' : 'false';
+            } elseif (is_array($value)) {
+                $data[$key] = self::stringifyBooleans($value);
+            }
+        }
+
+        return $data;
     }
 
     /** @return list<array{code?: string, description?: string}> */

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\FiscalInfo\FiscalInfoResource;
-use OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoSaveRequest;
+use OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoRequest;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
@@ -52,7 +52,7 @@ it('saves fiscal info as multipart with no file', function (): void {
 
         return str_contains($body, 'name="email"')
             && str_contains($body, 'fiscal@asaas.com')
-            && str_contains($body, 'name="simplesNacional"')
+            && str_contains($body, "name=\"simplesNacional\"\r\nContent-Length: 4\r\n\r\ntrue")
             && str_contains($body, 'name="cnae"');
     });
 });
@@ -61,7 +61,7 @@ it('saves fiscal info as multipart with certificate file', function (): void {
     Http::fake(['*' => Http::response(['object' => 'customerFiscalInfo'], 200)]);
 
     fiscalInfoResource()->save(
-        data: new FiscalInfoSaveRequest(
+        data: new FiscalInfoRequest(
             email: 'fiscal@asaas.com',
             simplesNacional: false,
             certificatePassword: 's3cret',
@@ -76,6 +76,7 @@ it('saves fiscal info as multipart with certificate file', function (): void {
         return str_contains($body, 'name="certificateFile"')
             && str_contains($body, 'filename="my-cert.pfx"')
             && str_contains($body, 'binary-pfx-bytes')
+            && str_contains($body, "name=\"simplesNacional\"\r\nContent-Length: 5\r\n\r\nfalse")
             && str_contains($body, 's3cret');
     });
 });
@@ -158,22 +159,22 @@ it('lists tax situation codes', function (): void {
     Http::assertSent(fn ($r): bool => str_starts_with($r->url(), 'https://api-sandbox.asaas.com/v3/fiscalInfo/taxSituationCodes'));
 });
 
-it('configures national portal toggle', function (): void {
+it('configures national portal toggle', function (bool $enabled): void {
     Http::fake(['*' => Http::response(['success' => true], 200)]);
 
-    $result = fiscalInfoResource()->configureNationalPortal(enabled: true);
+    $result = fiscalInfoResource()->configureNationalPortal(enabled: $enabled);
 
     expect($result->success)->toBeTrue();
 
-    Http::assertSent(function ($r): bool {
+    Http::assertSent(function ($r) use ($enabled): bool {
         if ($r->method() !== 'POST' || $r->url() !== 'https://api-sandbox.asaas.com/v3/fiscalInfo/nationalPortal') {
             return false;
         }
         $data = $r->data();
 
-        return ($data['enabled'] ?? null) === true;
+        return array_key_exists('enabled', $data) && $data['enabled'] === $enabled;
     });
-});
+})->with([true, false]);
 
 it('propagates failure on recover', function (array $err): void {
     Http::fake(['*' => Http::response($err, 400)]);

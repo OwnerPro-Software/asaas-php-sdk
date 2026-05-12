@@ -31,7 +31,7 @@ final readonly class MyAccountResource
 
     public function fees(): AsaasResult
     {
-        return $this->connector->get(self::BASE.'/fees');
+        return $this->connector->get(self::BASE.'/fees/');
     }
 
     public function commercialInfo(): AsaasResult

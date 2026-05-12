@@ -10,7 +10,7 @@ use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Support\Missing;
 use SensitiveParameter;
 
-final readonly class FiscalInfoSaveRequest implements JsonSerializable
+final readonly class FiscalInfoRequest implements JsonSerializable
 {
     use HasUpdatableArrayFactory;
     use MasksSensitiveData;
@@ -28,6 +28,7 @@ final readonly class FiscalInfoSaveRequest implements JsonSerializable
         public string|Missing $rpsSerie = Missing::Value,
         public int|Missing $rpsNumber = Missing::Value,
         public int|Missing $loteNumber = Missing::Value,
+        #[SensitiveParameter]
         public string|Missing $username = Missing::Value,
         #[SensitiveParameter]
         public string|Missing $password = Missing::Value,
@@ -44,7 +45,7 @@ final readonly class FiscalInfoSaveRequest implements JsonSerializable
         /** @var array<string, mixed> $fields */
         $fields = array_filter(get_object_vars($this), fn (mixed $v): bool => ! $v instanceof Missing);
 
-        foreach (['email', 'password', 'accessToken', 'certificatePassword'] as $secret) {
+        foreach (['email', 'username', 'password', 'accessToken', 'certificatePassword'] as $secret) {
             if (array_key_exists($secret, $fields)) {
                 $fields[$secret] = '***';
             }
