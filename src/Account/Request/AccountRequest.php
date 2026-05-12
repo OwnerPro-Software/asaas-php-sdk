@@ -6,6 +6,8 @@ namespace OwnerPro\Asaas\Account\Request;
 
 use InvalidArgumentException;
 use JsonSerializable;
+use OwnerPro\Asaas\Account\AccessTokenPermission;
+use OwnerPro\Asaas\Account\AccessTokenScope;
 use OwnerPro\Asaas\Account\CompanyType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
@@ -20,7 +22,12 @@ final readonly class AccountRequest implements JsonSerializable
     /** @var list<CreateWebhookRequest>|null */
     public ?array $webhooks;
 
-    /** @param list<array<string, mixed>|CreateWebhookRequest>|null $webhooks */
+    public ?AccessTokenConfig $accessTokenConfig;
+
+    /**
+     * @param  list<array<string, mixed>|CreateWebhookRequest>|null  $webhooks
+     * @param  array{name?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>}|AccessTokenConfig|null  $accessTokenConfig
+     */
     public function __construct(
         public string $name,
         #[SensitiveParameter]
@@ -45,15 +52,17 @@ final readonly class AccountRequest implements JsonSerializable
         #[SensitiveParameter]
         public ?string $loginEmail = null,
         ?array $webhooks = null,
+        array|AccessTokenConfig|null $accessTokenConfig = null,
     ) {
         $this->webhooks = $webhooks !== null ? array_map(
             // @phpstan-ignore argument.type
             fn (array|CreateWebhookRequest $item): CreateWebhookRequest => $item instanceof CreateWebhookRequest ? $item : CreateWebhookRequest::fromArray($item),
             $webhooks,
         ) : null;
+        $this->accessTokenConfig = is_array($accessTokenConfig) ? AccessTokenConfig::fromArray($accessTokenConfig) : $accessTokenConfig;
     }
 
-    /** @return array{name: string, email: string, cpfCnpj: string, mobilePhone: string, incomeValue: float, address: string, addressNumber: string, province: string, postalCode: string, birthDate: ?string, companyType: CompanyType|string|null, phone: ?string, complement: ?string, tradingName: ?string, site: ?string, loginEmail: ?string, webhooks: ?list<CreateWebhookRequest>} */
+    /** @return array{name: string, email: string, cpfCnpj: string, mobilePhone: string, incomeValue: float, address: string, addressNumber: string, province: string, postalCode: string, birthDate: ?string, companyType: CompanyType|string|null, phone: ?string, complement: ?string, tradingName: ?string, site: ?string, loginEmail: ?string, webhooks: ?list<CreateWebhookRequest>, accessTokenConfig: ?AccessTokenConfig} */
     public function __debugInfo(): array
     {
         return [
@@ -74,10 +83,11 @@ final readonly class AccountRequest implements JsonSerializable
             'site' => $this->site,
             'loginEmail' => $this->loginEmail !== null ? '***' : null,
             'webhooks' => $this->webhooks,
+            'accessTokenConfig' => $this->accessTokenConfig,
         ];
     }
 
-    /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, incomeValue?: float, address?: string, addressNumber?: string, province?: string, postalCode?: string, birthDate?: string, companyType?: CompanyType|string, phone?: string, complement?: string, tradingName?: string, site?: string, loginEmail?: string, webhooks?: list<array<string, mixed>|CreateWebhookRequest>} $data */
+    /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, incomeValue?: float, address?: string, addressNumber?: string, province?: string, postalCode?: string, birthDate?: string, companyType?: CompanyType|string, phone?: string, complement?: string, tradingName?: string, site?: string, loginEmail?: string, webhooks?: list<array<string, mixed>|CreateWebhookRequest>, accessTokenConfig?: array{name?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>}|AccessTokenConfig} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -98,6 +108,7 @@ final readonly class AccountRequest implements JsonSerializable
             site: $data['site'] ?? null,
             loginEmail: $data['loginEmail'] ?? null,
             webhooks: $data['webhooks'] ?? null,
+            accessTokenConfig: $data['accessTokenConfig'] ?? null,
         );
     }
 }

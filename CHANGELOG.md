@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Spec-alignment release driven by a full audit of the SDK against `specs/asaas_openapi.json`. Closes 19 documented field gaps plus a wrong-verb bug on `TransferResource::cancel()`.
+Spec-alignment release driven by a full audit of the SDK against `specs/asaas_openapi.json` plus a follow-up on the subaccount API-key permission flow that the local OpenAPI snapshot did not surface. Closes 19 documented field gaps, the wrong-verb bug on `TransferResource::cancel()`, the missing `GET /v3/accounts/{id}/accessTokens/{accessTokenId}` endpoint, and the new `accessTokenConfig` / `permissions` payload pieces — without which subaccounts created via the SDK inherited a key with no `TRANSFER` permission and blocked the production flow.
 
 ### Breaking
 
@@ -19,7 +19,8 @@ Spec-alignment release driven by a full audit of the SDK against `specs/asaas_op
 - `CreatePaymentRequest`: `daysAfterDueDateToRegistrationCancellation`, `installmentCount`, `installmentValue`, `totalValue`, `pixAutomaticAuthorizationId`.
 - `UpdatePaymentRequest`: `daysAfterDueDateToRegistrationCancellation`, `callback`.
 - `PayWithCreditCardRequest`: `creditCardToken` (lets you pay using a saved-card token without sending card details again).
-- `AccountRequest`: `loginEmail`, `webhooks` (list of `CreateWebhookRequest`; coerced from raw arrays).
+- `AccountRequest`: `loginEmail`, `webhooks` (list of `CreateWebhookRequest`; coerced from raw arrays), and `accessTokenConfig` (`{name, permissions[]}`) — set the initial subaccount API key's name and permission scope at creation time so the key ships ready for `TRANSFER`, `PIX_*`, `WEBHOOK`, etc. without a manual visit to the painel. If omitted, Asaas's default (all permissions in `READ_WRITE`) still applies.
+- `AccessTokenRequest`: `permissions` (`list<AccessTokenPermissionConfig>`) — same shape, accepted by `accounts()->updateAccessToken(...)` for adjusting an existing key's permissions.
 - `CommercialInfoRequest`: `personType` (uses existing `OwnerPro\Asaas\Account\PersonType` enum), `companyName`.
 - `CreateInvoiceRequest`, `UpdateInvoiceRequest`: `updatePayment` (auto-discount taxes from the payment value).
 - `CreateBillPaymentRequest`: `value` (required for credit-card bills whose digitable line carries no embedded amount).
@@ -34,6 +35,10 @@ Spec-alignment release driven by a full audit of the SDK against `specs/asaas_op
 - `OwnerPro\Asaas\Transfer\Request\InternalTransferRequest` (for the `POST /v3/transfers/` internal-transfer endpoint).
 - `OwnerPro\Asaas\Support\DTO\Callback` gains a `coerce()` static helper consistent with the other value objects.
 - `BillingType` enum gains `MUNDIPAGG_CIELO`, `VOUCHER_CARD`, `ASAAS_MONEY` (still string-pass-through, but typed callers can now use the cases).
+- `OwnerPro\Asaas\Account\AccessTokenPermission` enum — all 33 documented permission codes (`PAYMENT`, `TRANSFER`, `WEBHOOK`, `PIX_*`, `INVOICE`, `BILL`, …).
+- `OwnerPro\Asaas\Account\AccessTokenScope` enum (`READ`, `READ_WRITE`).
+- `OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig` — `{name, scope}` pair; the DTO that goes inside `permissions[]`.
+- `OwnerPro\Asaas\Account\Request\AccessTokenConfig` — `{name, permissions[]}`; the object form Asaas expects under `accessTokenConfig`.
 
 ### Added — resource endpoints
 
@@ -43,6 +48,7 @@ Spec-alignment release driven by a full audit of the SDK against `specs/asaas_op
 - `PaymentResource::getChargeback(string $id)` — `GET /v3/payments/{id}/chargeback`.
 - `PaymentResource::getEscrow(string $id)` — `GET /v3/payments/{id}/escrow`.
 - `AccountResource::createAccessToken($accountId, $data = null)` now accepts an optional `AccessTokenRequest` (or array) body with `name`/`expirationDate`.
+- `AccountResource::findAccessToken(string $accountId, string $tokenId)` — `GET /v3/accounts/{id}/accessTokens/{accessTokenId}`, the single-token retrieve that the original audit missed.
 - `MyAccountResource::accountNumber()` — `GET /v3/myAccount/accountNumber`.
 - `MyAccountResource::fees()` — `GET /v3/myAccount/fees/`.
 - `StatementResource::balance()` — `GET /v3/finance/balance`.

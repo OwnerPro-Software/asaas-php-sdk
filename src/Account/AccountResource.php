@@ -41,6 +41,11 @@ final readonly class AccountResource
         return $this->connector->get($this->path($accountId, '/accessTokens'));
     }
 
+    public function findAccessToken(string $accountId, string $tokenId): AsaasResult
+    {
+        return $this->connector->get($this->tokenPath($accountId, $tokenId));
+    }
+
     /** @param array<string, mixed>|AccessTokenRequest|null $data */
     public function createAccessToken(string $accountId, array|AccessTokenRequest|null $data = null): AsaasResult
     {

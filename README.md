@@ -822,11 +822,58 @@ Asaas::accounts()->create(array|AccountRequest $data): AsaasResult
 Asaas::accounts()->find(string $id): AsaasResult
 Asaas::accounts()->list(array $query = []): AsaasPaginatedResult
 Asaas::accounts()->listAccessTokens(string $accountId): AsaasResult
+Asaas::accounts()->findAccessToken(string $accountId, string $tokenId): AsaasResult
 Asaas::accounts()->createAccessToken(string $accountId, array|AccessTokenRequest|null $data = null): AsaasResult
 Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
 Asaas::accounts()->deleteAccessToken(string $accountId, string $tokenId): AsaasResult
 Asaas::accounts()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
+
+#### Subaccount API key permissions
+
+By default, Asaas issues a brand-new subaccount key with **all permissions in `READ_WRITE`** (which is fine for most cases). To start a subaccount locked down to a narrow scope — or to widen/shrink an existing key later — pass `accessTokenConfig` on creation, or `permissions` on update:
+
+```php
+use OwnerPro\Asaas\Account\AccessTokenPermission;
+use OwnerPro\Asaas\Account\AccessTokenScope;
+use OwnerPro\Asaas\Account\Request\AccessTokenConfig;
+use OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig;
+use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
+use OwnerPro\Asaas\Account\Request\AccountRequest;
+
+// On subaccount creation — initial key with a curated scope
+$result = Asaas::accounts()->create(new AccountRequest(
+    name: 'Subconta Integrada',
+    email: 'integrator@example.com',
+    cpfCnpj: '12345678000199',
+    mobilePhone: '11999999999',
+    incomeValue: 25000.0,
+    address: 'Av Paulista',
+    addressNumber: '1000',
+    province: 'Bela Vista',
+    postalCode: '01310100',
+    accessTokenConfig: new AccessTokenConfig(
+        name: 'Chave de Integração',
+        permissions: [
+            new AccessTokenPermissionConfig(name: AccessTokenPermission::Payment, scope: AccessTokenScope::ReadWrite),
+            new AccessTokenPermissionConfig(name: AccessTokenPermission::Transfer, scope: AccessTokenScope::ReadWrite),
+            new AccessTokenPermissionConfig(name: AccessTokenPermission::Webhook,  scope: AccessTokenScope::ReadWrite),
+        ],
+    ),
+));
+
+// Later — widen an existing key's permissions
+Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new AccessTokenRequest(
+    name: 'Chave de Integração',
+    enabled: true,
+    expirationDate: '2026-12-31 23:59:59',
+    permissions: [
+        new AccessTokenPermissionConfig(name: 'TRANSFER', scope: 'READ_WRITE'),
+    ],
+));
+```
+
+`AccessTokenPermission` covers all 33 permission codes documented by Asaas (`PAYMENT`, `TRANSFER`, `WEBHOOK`, `PIX_*`, `INVOICE`, `BILL`, etc.); `AccessTokenScope` is `READ` or `READ_WRITE`. Both DTOs accept the enum **or** the raw string for forward-compat.
 
 ### My Account (`myAccount()`)
 

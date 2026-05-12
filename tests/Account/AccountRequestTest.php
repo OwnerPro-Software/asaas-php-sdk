@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use OwnerPro\Asaas\Account\AccessTokenPermission;
+use OwnerPro\Asaas\Account\AccessTokenScope;
+use OwnerPro\Asaas\Account\Request\AccessTokenConfig;
+use OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig;
 use OwnerPro\Asaas\Account\Request\AccountRequest;
 use OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest;
 
@@ -250,6 +254,62 @@ it('serializes loginEmail and webhooks in toArray when set', function (): void {
         'email' => 'a@b.com',
         'interrupted' => false,
     ]]);
+});
+
+it('accepts accessTokenConfig as raw array and coerces nested permissions', function (): void {
+    $request = AccountRequest::fromArray([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'cpfCnpj' => '12345678901',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua',
+        'addressNumber' => '1',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'accessTokenConfig' => [
+            'name' => 'Onboarding',
+            'permissions' => [
+                ['name' => 'TRANSFER', 'scope' => 'READ_WRITE'],
+                ['name' => 'WEBHOOK', 'scope' => 'READ'],
+            ],
+        ],
+    ]);
+
+    expect($request->accessTokenConfig)->toBeInstanceOf(AccessTokenConfig::class);
+    expect($request->accessTokenConfig->name)->toBe('Onboarding');
+    expect($request->accessTokenConfig->permissions)->toHaveCount(2);
+    expect($request->accessTokenConfig->permissions[0])->toBeInstanceOf(AccessTokenPermissionConfig::class);
+});
+
+it('serializes accessTokenConfig to the documented Asaas wire shape', function (): void {
+    $request = new AccountRequest(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        mobilePhone: '11999999999',
+        incomeValue: 5000.00,
+        address: 'Rua',
+        addressNumber: '1',
+        province: 'Centro',
+        postalCode: '01001000',
+        accessTokenConfig: new AccessTokenConfig(
+            name: 'Onboarding',
+            permissions: [
+                new AccessTokenPermissionConfig(
+                    name: AccessTokenPermission::Transfer,
+                    scope: AccessTokenScope::ReadWrite,
+                ),
+            ],
+        ),
+    );
+
+    expect($request->toArray()['accessTokenConfig'])->toBe([
+        'permissions' => [
+            ['name' => 'TRANSFER', 'scope' => 'READ_WRITE'],
+        ],
+        'name' => 'Onboarding',
+    ]);
 });
 
 it('cannot be serialized', function (): void {
