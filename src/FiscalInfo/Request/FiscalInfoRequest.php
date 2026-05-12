@@ -20,6 +20,16 @@ use SensitiveParameter;
  * Caller responsibility: on the **first** save for a subaccount, provide both
  * `email` and `simplesNacional`. The SDK does not enforce this because doing so
  * would break the legitimate re-save flow.
+ *
+ * **Server-side defaults (applied when the field is omitted from the body):**
+ *  - `simplesNacional` → `true`
+ *  - `culturalProjectsPromoter` → `true`
+ *
+ * Both defaults live on Asaas, not in this DTO — the SDK deliberately omits
+ * the field so a partial re-save never silently overwrites a user's previous
+ * choice. If Asaas changes the server-side default in the future, accounts
+ * that never explicitly set the field will follow the new behaviour; pin the
+ * value at the call site if you need stability across releases.
  */
 final readonly class FiscalInfoRequest implements JsonSerializable
 {

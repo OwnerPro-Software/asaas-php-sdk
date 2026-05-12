@@ -95,6 +95,11 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   validates server-side.
 - PHPDoc — partial-update semantics documented on `FiscalInfoRequest` and
   `UpdatePaymentRequest`; legacy-flow note on `TransferRequest::$walletId`.
+- PHPDoc + README — server-side defaults for `FiscalInfoRequest`
+  (`simplesNacional=true`, `culturalProjectsPromoter=true`): the SDK omits the
+  field on partial updates so a re-save never silently overwrites the
+  consumer's previous choice. Pin at the call site if you need stability
+  across Asaas-side default changes.
 - Wire tests pin all 12 `DocumentType` cases on the multipart body of
   `MyAccountResource::uploadDocumentFile()` and the 204 No Content path on
   both `deleteAccessToken` and `removeBackoff`.

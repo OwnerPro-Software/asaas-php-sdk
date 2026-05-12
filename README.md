@@ -1099,7 +1099,9 @@ Asaas::fiscalInfo()->taxSituationCodes(array $query = []): AsaasPaginatedResult
 Asaas::fiscalInfo()->configureNationalPortal(bool $enabled): AsaasResult
 ```
 
-`save()` is a `multipart/form-data` POST. Pass `$certificateFile` (binary string or file resource) only when uploading an A1 digital certificate; the form-only call works the same way without it. `email` and `simplesNacional` are the only required fields on `FiscalInfoRequest`.
+`save()` is a `multipart/form-data` POST. Pass `$certificateFile` (binary string or file resource) only when uploading an A1 digital certificate; the form-only call works the same way without it. `email` and `simplesNacional` are the only required fields on `FiscalInfoRequest` for a **first save**; re-saves accept any subset (`FiscalInfoRequest` is a partial-update DTO — omitted fields never reach the wire).
+
+> **Server-side defaults.** `simplesNacional` and `culturalProjectsPromoter` default to `true` on Asaas when the field is omitted from the body. The SDK deliberately omits them on partial updates so a re-save never silently overwrites a value the consumer set in a previous call. If you need stability across Asaas-side default changes, pin the value at every call site instead of relying on the omission semantics.
 
 ## Date formats
 
