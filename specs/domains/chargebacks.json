@@ -1,0 +1,932 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Chargeback"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/chargebacks/{id}/dispute": {
+      "post": {
+        "tags": [
+          "Chargeback"
+        ],
+        "summary": "Criar disputa de chargeback",
+        "description": "",
+        "operationId": "criar-disputa-de-chargeback",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do chargeback para o qual a disputa será criada.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "8e784c3e-afe8-4844-bb93-6b445763"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "files"
+                ],
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "type": "string",
+                    "description": "Arquivos para criar a disputa (Máximo: 11).",
+                    "format": "binary",
+                    "nullable": false,
+                    "deprecated": false,
+                    "example": null
+                  }
+                },
+                "x-readme-ref-name": "ChargebackSaveDisputeRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "chargebackId": {
+                      "type": "string",
+                      "description": "Identificador único do chargeback para o qual a disputa será criada.",
+                      "example": "2765d086-c7c5-5cca-898a-4262d212587c",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da disputa.",
+                      "example": "REQUESTED",
+                      "deprecated": false,
+                      "enum": [
+                        "REQUESTED",
+                        "ACCEPTED",
+                        "REJECTED"
+                      ],
+                      "x-readme-ref-name": "ChargebackSaveDisputeResponseChargebackDisputeStatus"
+                    },
+                    "files": {
+                      "type": "array",
+                      "description": "Nome dos arquivos enviados para a disputa.",
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Nome dos arquivos enviados para a disputa.",
+                        "deprecated": false,
+                        "example": null
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ChargebackSaveDisputeResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_object",
+                      "description": "A extensão do arquivo 'file.png' é inválida."
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/chargebacks/": {
+      "get": {
+        "tags": [
+          "Chargeback"
+        ],
+        "summary": "Listar chargebacks",
+        "description": "Este método retorna uma lista paginada com todos os chargebacks para o(s) filtro(s) informado(s).",
+        "operationId": "listar-chargebacks",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "creditCardBrand",
+            "in": "query",
+            "description": "Filtrar por bandeira do cartão utilizado.",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por bandeira do cartão utilizado.",
+              "example": "VISA",
+              "deprecated": false,
+              "enum": [
+                "VISA",
+                "MASTERCARD",
+                "ELO",
+                "DINERS",
+                "DISCOVER",
+                "AMEX",
+                "CABAL",
+                "BANESCARD",
+                "CREDZ",
+                "SOROCRED",
+                "CREDSYSTEM",
+                "JCB",
+                "UNKNOWN"
+              ],
+              "x-readme-ref-name": "ChargebackListRequestCreditCardBrand"
+            }
+          },
+          {
+            "name": "originDisputeDate[le]",
+            "in": "query",
+            "description": "Filtrar até uma data de abertura de chargeback.",
+            "schema": {
+              "type": "string",
+              "example": "2024-12-05"
+            }
+          },
+          {
+            "name": "originDisputeDate[ge]",
+            "in": "query",
+            "description": "Filtrar a partir de uma data de abertura de chargeback.",
+            "schema": {
+              "type": "string",
+              "example": "2023-11-01"
+            }
+          },
+          {
+            "name": "originTransactionDate[le]",
+            "in": "query",
+            "description": "Filtrar até uma data de transação.",
+            "schema": {
+              "type": "string",
+              "example": "2024-12-05"
+            }
+          },
+          {
+            "name": "originTransactionDate[ge]",
+            "in": "query",
+            "description": "Filtrar a partir de uma data de transação.",
+            "schema": {
+              "type": "string",
+              "example": "2024-10-10"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar por status do chargeback.",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por status do chargeback.",
+              "example": "REQUESTED",
+              "deprecated": false,
+              "enum": [
+                "REQUESTED",
+                "IN_DISPUTE",
+                "DISPUTE_LOST",
+                "REVERSED",
+                "DONE"
+              ],
+              "x-readme-ref-name": "ChargebackListRequestChargebackStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único do chargeback.",
+                            "example": "8e784c3e-afe8-4844-bb93-6b445763",
+                            "deprecated": false
+                          },
+                          "payment": {
+                            "type": "string",
+                            "description": "Identificador único da cobrança no Asaas",
+                            "example": "pay_pBtDdshgBD2Rt",
+                            "deprecated": false
+                          },
+                          "installment": {
+                            "type": "string",
+                            "description": "Identificador único do parcelamento no Asaas",
+                            "example": "b8dd74c-d078-40a0-9ae1-61a66c61a204",
+                            "deprecated": false
+                          },
+                          "customerAccount": {
+                            "type": "string",
+                            "description": "Identificador único do cliente ao qual o chargeback está vinculado.",
+                            "example": "cus_000000004085",
+                            "deprecated": false
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status do chargeback",
+                            "example": "DONE",
+                            "deprecated": false,
+                            "enum": [
+                              "REQUESTED",
+                              "IN_DISPUTE",
+                              "DISPUTE_LOST",
+                              "REVERSED",
+                              "DONE"
+                            ],
+                            "x-readme-ref-name": "PaymentChargebackResponseChargebackStatus"
+                          },
+                          "reason": {
+                            "type": "string",
+                            "description": "Razão do chargeback",
+                            "example": "COMMERCIAL_DISAGREEMENT",
+                            "deprecated": false,
+                            "enum": [
+                              "ABSENCE_OF_PRINT",
+                              "ABSENT_CARD_FRAUD",
+                              "CARD_ACTIVATED_PHONE_TRANSACTION",
+                              "CARD_FRAUD",
+                              "CARD_RECOVERY_BULLETIN",
+                              "COMMERCIAL_DISAGREEMENT",
+                              "COPY_NOT_RECEIVED",
+                              "CREDIT_OR_DEBIT_PRESENTATION_ERROR",
+                              "DIFFERENT_PAY_METHOD",
+                              "FRAUD",
+                              "INCORRECT_TRANSACTION_VALUE",
+                              "INVALID_CURRENCY",
+                              "INVALID_DATA",
+                              "LATE_PRESENTATION",
+                              "LOCAL_REGULATORY_OR_LEGAL_DISPUTE",
+                              "MULTIPLE_ROCS",
+                              "ORIGINAL_CREDIT_TRANSACTION_NOT_ACCEPTED",
+                              "OTHER_ABSENT_CARD_FRAUD",
+                              "PROCESS_ERROR",
+                              "RECEIVED_COPY_ILLEGIBLE_OR_INCOMPLETE",
+                              "RECURRENCE_CANCELED",
+                              "REQUIRED_AUTHORIZATION_NOT_GRANTED",
+                              "RIGHT_OF_FULL_RECOURSE_FOR_FRAUD",
+                              "SALE_CANCELED",
+                              "SERVICE_DISAGREEMENT_OR_DEFECTIVE_PRODUCT",
+                              "SERVICE_NOT_RECEIVED",
+                              "SPLIT_SALE",
+                              "TRANSFERS_OF_DIVERSE_RESPONSIBILITIES",
+                              "UNQUALIFIED_CAR_RENTAL_DEBIT",
+                              "USA_CARDHOLDER_DISPUTE",
+                              "VISA_FRAUD_MONITORING_PROGRAM",
+                              "WARNING_BULLETIN_FILE"
+                            ],
+                            "x-readme-ref-name": "PaymentChargebackResponseChargebackReason"
+                          },
+                          "disputeStartDate": {
+                            "type": "string",
+                            "description": "Data de abertura do chargeback.",
+                            "format": "date",
+                            "example": "2024-11-10",
+                            "deprecated": false
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor do chargeback.",
+                            "example": 2323.45,
+                            "deprecated": false
+                          },
+                          "paymentDate": {
+                            "type": "string",
+                            "description": "Data de liquidação da cobrança no Asaas",
+                            "format": "date",
+                            "example": "2024-03-10",
+                            "deprecated": false
+                          },
+                          "creditCard": {
+                            "type": "object",
+                            "properties": {
+                              "number": {
+                                "type": "string",
+                                "description": "Últimos 4 dígitos do cartão utilizado",
+                                "example": "8829",
+                                "deprecated": false
+                              },
+                              "brand": {
+                                "type": "string",
+                                "description": "Bandeira do cartão utilizado",
+                                "example": "VISA",
+                                "deprecated": false,
+                                "enum": [
+                                  "VISA",
+                                  "MASTERCARD",
+                                  "ELO",
+                                  "DINERS",
+                                  "DISCOVER",
+                                  "AMEX",
+                                  "CABAL",
+                                  "BANESCARD",
+                                  "CREDZ",
+                                  "SOROCRED",
+                                  "CREDSYSTEM",
+                                  "JCB",
+                                  "UNKNOWN"
+                                ],
+                                "x-readme-ref-name": "ChargebackCreditCardResponseCreditCardBrand"
+                              }
+                            },
+                            "description": "Informações do cartão de crédito",
+                            "deprecated": false,
+                            "x-readme-ref-name": "ChargebackCreditCardResponseDTO"
+                          },
+                          "disputeStatus": {
+                            "type": "string",
+                            "description": "Status da disputa do chargeback.",
+                            "example": "ACCEPTED",
+                            "deprecated": false,
+                            "enum": [
+                              "REQUESTED",
+                              "ACCEPTED",
+                              "REJECTED"
+                            ],
+                            "x-readme-ref-name": "PaymentChargebackResponseChargebackDisputeStatus"
+                          },
+                          "deadlineToSendDisputeDocuments": {
+                            "type": "string",
+                            "description": "Data limite para envio de documentos de disputa.",
+                            "format": "date",
+                            "example": "2024-12-10",
+                            "deprecated": false
+                          }
+                        },
+                        "x-readme-ref-name": "PaymentChargebackResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ChargebackListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/payments/{id}/chargeback": {
+      "get": {
+        "tags": [
+          "Chargeback"
+        ],
+        "summary": "Recuperar um único chargeback",
+        "description": "Este endpoint recupera um chargeback específico a partir do ID de uma cobrança ou parcelamento.",
+        "operationId": "recuperar-um-unico-chargeback",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do pagamento ou do parcelamento para o qual o chargeback será recuperado.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "pay_s02s330x4pox1x0y"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do chargeback.",
+                      "example": "8e784c3e-afe8-4844-bb93-6b445763",
+                      "deprecated": false
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança no Asaas",
+                      "example": "pay_pBtDdshgBD2Rt",
+                      "deprecated": false
+                    },
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento no Asaas",
+                      "example": "b8dd74c-d078-40a0-9ae1-61a66c61a204",
+                      "deprecated": false
+                    },
+                    "customerAccount": {
+                      "type": "string",
+                      "description": "Identificador único do cliente ao qual o chargeback está vinculado.",
+                      "example": "cus_000000004085",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status do chargeback",
+                      "example": "DONE",
+                      "deprecated": false,
+                      "enum": [
+                        "REQUESTED",
+                        "IN_DISPUTE",
+                        "DISPUTE_LOST",
+                        "REVERSED",
+                        "DONE"
+                      ],
+                      "x-readme-ref-name": "PaymentChargebackResponseChargebackStatus"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "Razão do chargeback",
+                      "example": "COMMERCIAL_DISAGREEMENT",
+                      "deprecated": false,
+                      "enum": [
+                        "ABSENCE_OF_PRINT",
+                        "ABSENT_CARD_FRAUD",
+                        "CARD_ACTIVATED_PHONE_TRANSACTION",
+                        "CARD_FRAUD",
+                        "CARD_RECOVERY_BULLETIN",
+                        "COMMERCIAL_DISAGREEMENT",
+                        "COPY_NOT_RECEIVED",
+                        "CREDIT_OR_DEBIT_PRESENTATION_ERROR",
+                        "DIFFERENT_PAY_METHOD",
+                        "FRAUD",
+                        "INCORRECT_TRANSACTION_VALUE",
+                        "INVALID_CURRENCY",
+                        "INVALID_DATA",
+                        "LATE_PRESENTATION",
+                        "LOCAL_REGULATORY_OR_LEGAL_DISPUTE",
+                        "MULTIPLE_ROCS",
+                        "ORIGINAL_CREDIT_TRANSACTION_NOT_ACCEPTED",
+                        "OTHER_ABSENT_CARD_FRAUD",
+                        "PROCESS_ERROR",
+                        "RECEIVED_COPY_ILLEGIBLE_OR_INCOMPLETE",
+                        "RECURRENCE_CANCELED",
+                        "REQUIRED_AUTHORIZATION_NOT_GRANTED",
+                        "RIGHT_OF_FULL_RECOURSE_FOR_FRAUD",
+                        "SALE_CANCELED",
+                        "SERVICE_DISAGREEMENT_OR_DEFECTIVE_PRODUCT",
+                        "SERVICE_NOT_RECEIVED",
+                        "SPLIT_SALE",
+                        "TRANSFERS_OF_DIVERSE_RESPONSIBILITIES",
+                        "UNQUALIFIED_CAR_RENTAL_DEBIT",
+                        "USA_CARDHOLDER_DISPUTE",
+                        "VISA_FRAUD_MONITORING_PROGRAM",
+                        "WARNING_BULLETIN_FILE"
+                      ],
+                      "x-readme-ref-name": "PaymentChargebackResponseChargebackReason"
+                    },
+                    "disputeStartDate": {
+                      "type": "string",
+                      "description": "Data de abertura do chargeback.",
+                      "format": "date",
+                      "example": "2024-11-10",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor do chargeback.",
+                      "example": 2323.45,
+                      "deprecated": false
+                    },
+                    "paymentDate": {
+                      "type": "string",
+                      "description": "Data de liquidação da cobrança no Asaas",
+                      "format": "date",
+                      "example": "2024-03-10",
+                      "deprecated": false
+                    },
+                    "creditCard": {
+                      "type": "object",
+                      "properties": {
+                        "number": {
+                          "type": "string",
+                          "description": "Últimos 4 dígitos do cartão utilizado",
+                          "example": "8829",
+                          "deprecated": false
+                        },
+                        "brand": {
+                          "type": "string",
+                          "description": "Bandeira do cartão utilizado",
+                          "example": "VISA",
+                          "deprecated": false,
+                          "enum": [
+                            "VISA",
+                            "MASTERCARD",
+                            "ELO",
+                            "DINERS",
+                            "DISCOVER",
+                            "AMEX",
+                            "CABAL",
+                            "BANESCARD",
+                            "CREDZ",
+                            "SOROCRED",
+                            "CREDSYSTEM",
+                            "JCB",
+                            "UNKNOWN"
+                          ],
+                          "x-readme-ref-name": "ChargebackCreditCardResponseCreditCardBrand"
+                        }
+                      },
+                      "description": "Informações do cartão de crédito",
+                      "deprecated": false,
+                      "x-readme-ref-name": "ChargebackCreditCardResponseDTO"
+                    },
+                    "disputeStatus": {
+                      "type": "string",
+                      "description": "Status da disputa do chargeback.",
+                      "example": "ACCEPTED",
+                      "deprecated": false,
+                      "enum": [
+                        "REQUESTED",
+                        "ACCEPTED",
+                        "REJECTED"
+                      ],
+                      "x-readme-ref-name": "PaymentChargebackResponseChargebackDisputeStatus"
+                    },
+                    "deadlineToSendDisputeDocuments": {
+                      "type": "string",
+                      "description": "Data limite para envio de documentos de disputa.",
+                      "format": "date",
+                      "example": "2024-12-10",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentChargebackResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

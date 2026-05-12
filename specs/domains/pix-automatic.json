@@ -1,0 +1,1821 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Pix Automático"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/pix/automatic/authorizations": {
+      "post": {
+        "tags": [
+          "Pix Automático"
+        ],
+        "summary": "Criar uma autorização",
+        "description": "",
+        "operationId": "criar-uma-autorizacao-pix-automatico",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "frequency",
+                  "contractId",
+                  "startDate",
+                  "customerId",
+                  "immediateQrCode"
+                ],
+                "type": "object",
+                "properties": {
+                  "frequency": {
+                    "type": "string",
+                    "description": "Frequência dos pagamentos periódicos",
+                    "nullable": false,
+                    "example": "MONTHLY",
+                    "deprecated": false,
+                    "enum": [
+                      "WEEKLY",
+                      "MONTHLY",
+                      "QUARTERLY",
+                      "SEMIANNUALLY",
+                      "ANNUALLY"
+                    ],
+                    "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationSaveRequestPixAutomaticRecurringFrequency"
+                  },
+                  "contractId": {
+                    "maxLength": 35,
+                    "type": "string",
+                    "description": "Número, identificador, ou código que representa o objeto da autorização",
+                    "nullable": false,
+                    "example": "CONTRACT-123",
+                    "deprecated": false
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "description": "Inicio da vigência da autorização e dos pagamentos",
+                    "format": "date",
+                    "nullable": false,
+                    "example": "2024-01-01",
+                    "deprecated": false
+                  },
+                  "finishDate": {
+                    "type": "string",
+                    "description": "Fim da vigência da autorização. Opcional caso o Pix Automático seja de prazo indeterminado",
+                    "format": "date",
+                    "example": "2024-12-31",
+                    "deprecated": false
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Valor fixo para as cobranças periódicas.",
+                    "example": 100,
+                    "deprecated": false
+                  },
+                  "description": {
+                    "maxLength": 35,
+                    "type": "string",
+                    "description": "Descrição",
+                    "example": "Serviços de Streaming de Música e Filmes",
+                    "deprecated": false
+                  },
+                  "customerId": {
+                    "type": "string",
+                    "description": "Identificador único do cliente",
+                    "nullable": false,
+                    "example": "cus_000005735721",
+                    "deprecated": false
+                  },
+                  "immediateQrCode": {
+                    "required": [
+                      "expirationSeconds",
+                      "originalValue"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "pixKey": {
+                        "type": "string",
+                        "description": "Chave Pix atrelada a primeira cobrança",
+                        "example": "b6295ee1-f054-47d1-9e90-ee57b74f60d9",
+                        "deprecated": false
+                      },
+                      "expirationSeconds": {
+                        "type": "integer",
+                        "description": "Tempo de expiração em segundos para a primeira cobrança",
+                        "format": "int32",
+                        "nullable": false,
+                        "example": 3600,
+                        "deprecated": false
+                      },
+                      "originalValue": {
+                        "type": "number",
+                        "description": "Valor original da primeira cobrança",
+                        "nullable": false,
+                        "example": 100,
+                        "deprecated": false
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Descrição da primeira cobrança",
+                        "example": "Taxa de criação de conta",
+                        "deprecated": false
+                      }
+                    },
+                    "description": "Cobrança imediata atrelada a ativação da autorização",
+                    "nullable": false,
+                    "deprecated": false,
+                    "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationImmediateQrCodeRequestDTO"
+                  },
+                  "minLimitValue": {
+                    "type": "number",
+                    "description": "Se o usuário pagador atribuir um valor máximo para os pagamentos daquela autorização, ele não poderá ser inferior ao piso definido pelo usuário recebedor. Não pode ser preenchido nas autorizações de valor fixo, ou seja, com campo valor preenchido",
+                    "example": 50,
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da autorização de Pix Automático no Asaas",
+                      "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa",
+                      "deprecated": false
+                    },
+                    "minLimitValue": {
+                      "type": "number",
+                      "description": "Se o usuário pagador atribuir um valor máximo para os pagamentos daquela autorização, ele não poderá ser inferior ao piso definido pelo usuário recebedor. Não pode ser preenchido nas autorizações de valor fixo, ou seja, com campo valor preenchido",
+                      "example": 50,
+                      "deprecated": false
+                    },
+                    "cancellationDate": {
+                      "type": "string",
+                      "description": "Data de cancelamento da autorização",
+                      "format": "date",
+                      "example": "2024-12-31",
+                      "deprecated": false
+                    },
+                    "cancellationReason": {
+                      "type": "string",
+                      "description": "Motivo do cancelamento",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "contractId": {
+                      "type": "string",
+                      "description": "Número, identificador, ou código que representa o objeto da autorização",
+                      "example": "XXXYYYY1234",
+                      "deprecated": false
+                    },
+                    "customerId": {
+                      "type": "string",
+                      "description": "Identificador único do cliente",
+                      "example": "cus_000005735721",
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição da autorização",
+                      "example": "Serviços de Streaming de Música e Filmes",
+                      "deprecated": false
+                    },
+                    "finishDate": {
+                      "type": "string",
+                      "description": "Fim da vigência da autorização",
+                      "format": "date",
+                      "example": "2024-12-31",
+                      "deprecated": false
+                    },
+                    "frequency": {
+                      "type": "string",
+                      "description": "Frequência dos pagamentos periódicos",
+                      "example": "MONTHLY",
+                      "deprecated": false,
+                      "enum": [
+                        "WEEKLY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "SEMIANNUALLY",
+                        "ANNUALLY"
+                      ],
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixAutomaticRecurringFrequency"
+                    },
+                    "endToEndIdentifier": {
+                      "type": "string",
+                      "description": "Identificador fim a fim",
+                      "example": "RR1234567820240115abcdefghijk",
+                      "deprecated": false
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "description": "Inicio da vigência da autorização e dos pagamentos",
+                      "format": "date",
+                      "example": "2024-01-01",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da autorização",
+                      "example": "ACTIVE",
+                      "deprecated": false,
+                      "enum": [
+                        "CREATED",
+                        "ACTIVE",
+                        "CANCELLED",
+                        "REFUSED",
+                        "EXPIRED"
+                      ],
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixReceiverAutomaticRecurringAuthorizationStatus"
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor fixo para as cobranças periódicas",
+                      "example": 100,
+                      "deprecated": false
+                    },
+                    "payload": {
+                      "type": "string",
+                      "description": "Payload do QR Code",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "encodedImage": {
+                      "type": "string",
+                      "description": "Imagem do QR Code em base64",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "immediateQrCode": {
+                      "type": "object",
+                      "properties": {
+                        "conciliationIdentifier": {
+                          "type": "string",
+                          "description": "Identificador de conciliação",
+                          "example": "E12345678202401011234567890123456",
+                          "deprecated": false
+                        },
+                        "expirationDate": {
+                          "type": "string",
+                          "description": "Data de expiração da primeira cobrança",
+                          "format": "date-time",
+                          "example": "2024-01-01 12:00:00",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações da cobrança imediata",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationImmediateQrCodeResponseDTO"
+                    },
+                    "originType": {
+                      "type": "string",
+                      "description": "Tipo de origem da autorização",
+                      "example": "IMMEDIATE_PAYMENT_AND_RECURRING_QR_CODE",
+                      "deprecated": false,
+                      "enum": [
+                        "IMMEDIATE_PAYMENT_AND_RECURRING_QR_CODE",
+                        "PAYMENT_AND_RECURRING_OFFER_QR_CODE"
+                      ],
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixAutomaticRecurringOriginType"
+                    },
+                    "subscriptionId": {
+                      "type": "string",
+                      "description": "Identificador único da assinatura vinculada",
+                      "example": "sub_000005735721",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Pix Automático"
+        ],
+        "summary": "Listar autorizações",
+        "description": "",
+        "operationId": "listar-autorizacoes-pix-automatico",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar pelo status atual da autorização",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar pelo status atual da autorização",
+              "example": "CREATED",
+              "deprecated": false,
+              "enum": [
+                "CREATED",
+                "ACTIVE",
+                "CANCELLED",
+                "REFUSED",
+                "EXPIRED"
+              ],
+              "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationListRequestPixReceiverAutomaticRecurringAuthorizationStatus"
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "query",
+            "description": "Filtrar pelo identificador único do cliente",
+            "schema": {
+              "type": "string",
+              "example": "cus_000005735721"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de autorizações de Pix Automático",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da autorização de Pix Automático no Asaas",
+                            "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa",
+                            "deprecated": false
+                          },
+                          "minLimitValue": {
+                            "type": "number",
+                            "description": "Se o usuário pagador atribuir um valor máximo para os pagamentos daquela autorização, ele não poderá ser inferior ao piso definido pelo usuário recebedor. Não pode ser preenchido nas autorizações de valor fixo, ou seja, com campo valor preenchido",
+                            "example": 50,
+                            "deprecated": false
+                          },
+                          "cancellationDate": {
+                            "type": "string",
+                            "description": "Data de cancelamento da autorização",
+                            "format": "date",
+                            "example": "2024-12-31",
+                            "deprecated": false
+                          },
+                          "cancellationReason": {
+                            "type": "string",
+                            "description": "Motivo do cancelamento",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "contractId": {
+                            "type": "string",
+                            "description": "Número, identificador, ou código que representa o objeto da autorização",
+                            "example": "XXXYYYY1234",
+                            "deprecated": false
+                          },
+                          "customerId": {
+                            "type": "string",
+                            "description": "Identificador único do cliente",
+                            "example": "cus_000005735721",
+                            "deprecated": false
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição da autorização",
+                            "example": "Serviços de Streaming de Música e Filmes",
+                            "deprecated": false
+                          },
+                          "finishDate": {
+                            "type": "string",
+                            "description": "Fim da vigência da autorização",
+                            "format": "date",
+                            "example": "2024-12-31",
+                            "deprecated": false
+                          },
+                          "frequency": {
+                            "type": "string",
+                            "description": "Frequência dos pagamentos periódicos",
+                            "example": "MONTHLY",
+                            "deprecated": false,
+                            "enum": [
+                              "WEEKLY",
+                              "MONTHLY",
+                              "QUARTERLY",
+                              "SEMIANNUALLY",
+                              "ANNUALLY"
+                            ],
+                            "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixAutomaticRecurringFrequency"
+                          },
+                          "endToEndIdentifier": {
+                            "type": "string",
+                            "description": "Identificador fim a fim",
+                            "example": "RR1234567820240115abcdefghijk",
+                            "deprecated": false
+                          },
+                          "startDate": {
+                            "type": "string",
+                            "description": "Inicio da vigência da autorização e dos pagamentos",
+                            "format": "date",
+                            "example": "2024-01-01",
+                            "deprecated": false
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status da autorização",
+                            "example": "ACTIVE",
+                            "deprecated": false,
+                            "enum": [
+                              "CREATED",
+                              "ACTIVE",
+                              "CANCELLED",
+                              "REFUSED",
+                              "EXPIRED"
+                            ],
+                            "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixReceiverAutomaticRecurringAuthorizationStatus"
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor fixo para as cobranças periódicas",
+                            "example": 100,
+                            "deprecated": false
+                          },
+                          "payload": {
+                            "type": "string",
+                            "description": "Payload do QR Code",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "encodedImage": {
+                            "type": "string",
+                            "description": "Imagem do QR Code em base64",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "immediateQrCode": {
+                            "type": "object",
+                            "properties": {
+                              "conciliationIdentifier": {
+                                "type": "string",
+                                "description": "Identificador de conciliação",
+                                "example": "E12345678202401011234567890123456",
+                                "deprecated": false
+                              },
+                              "expirationDate": {
+                                "type": "string",
+                                "description": "Data de expiração da primeira cobrança",
+                                "format": "date-time",
+                                "example": "2024-01-01 12:00:00",
+                                "deprecated": false
+                              }
+                            },
+                            "description": "Informações da cobrança imediata",
+                            "deprecated": false,
+                            "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationImmediateQrCodeResponseDTO"
+                          },
+                          "originType": {
+                            "type": "string",
+                            "description": "Tipo de origem da autorização",
+                            "example": "IMMEDIATE_PAYMENT_AND_RECURRING_QR_CODE",
+                            "deprecated": false,
+                            "enum": [
+                              "IMMEDIATE_PAYMENT_AND_RECURRING_QR_CODE",
+                              "PAYMENT_AND_RECURRING_OFFER_QR_CODE"
+                            ],
+                            "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixAutomaticRecurringOriginType"
+                          },
+                          "subscriptionId": {
+                            "type": "string",
+                            "description": "Identificador único da assinatura vinculada",
+                            "example": "sub_000005735721",
+                            "deprecated": false
+                          }
+                        },
+                        "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/pix/automatic/authorizations/{id}": {
+      "get": {
+        "tags": [
+          "Pix Automático"
+        ],
+        "summary": "Recuperar uma única autorização",
+        "description": "",
+        "operationId": "recuperar-uma-unica-autorizacao-pix-automatico",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da autorização de Pix Automático no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da autorização de Pix Automático no Asaas",
+                      "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa",
+                      "deprecated": false
+                    },
+                    "minLimitValue": {
+                      "type": "number",
+                      "description": "Se o usuário pagador atribuir um valor máximo para os pagamentos daquela autorização, ele não poderá ser inferior ao piso definido pelo usuário recebedor. Não pode ser preenchido nas autorizações de valor fixo, ou seja, com campo valor preenchido",
+                      "example": 50,
+                      "deprecated": false
+                    },
+                    "cancellationDate": {
+                      "type": "string",
+                      "description": "Data de cancelamento da autorização",
+                      "format": "date",
+                      "example": "2024-12-31",
+                      "deprecated": false
+                    },
+                    "cancellationReason": {
+                      "type": "string",
+                      "description": "Motivo do cancelamento",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "contractId": {
+                      "type": "string",
+                      "description": "Número, identificador, ou código que representa o objeto da autorização",
+                      "example": "XXXYYYY1234",
+                      "deprecated": false
+                    },
+                    "customerId": {
+                      "type": "string",
+                      "description": "Identificador único do cliente",
+                      "example": "cus_000005735721",
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição da autorização",
+                      "example": "Serviços de Streaming de Música e Filmes",
+                      "deprecated": false
+                    },
+                    "finishDate": {
+                      "type": "string",
+                      "description": "Fim da vigência da autorização",
+                      "format": "date",
+                      "example": "2024-12-31",
+                      "deprecated": false
+                    },
+                    "frequency": {
+                      "type": "string",
+                      "description": "Frequência dos pagamentos periódicos",
+                      "example": "MONTHLY",
+                      "deprecated": false,
+                      "enum": [
+                        "WEEKLY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "SEMIANNUALLY",
+                        "ANNUALLY"
+                      ],
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixAutomaticRecurringFrequency"
+                    },
+                    "endToEndIdentifier": {
+                      "type": "string",
+                      "description": "Identificador fim a fim",
+                      "example": "RR1234567820240115abcdefghijk",
+                      "deprecated": false
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "description": "Inicio da vigência da autorização e dos pagamentos",
+                      "format": "date",
+                      "example": "2024-01-01",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da autorização",
+                      "example": "ACTIVE",
+                      "deprecated": false,
+                      "enum": [
+                        "CREATED",
+                        "ACTIVE",
+                        "CANCELLED",
+                        "REFUSED",
+                        "EXPIRED"
+                      ],
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixReceiverAutomaticRecurringAuthorizationStatus"
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor fixo para as cobranças periódicas",
+                      "example": 100,
+                      "deprecated": false
+                    },
+                    "payload": {
+                      "type": "string",
+                      "description": "Payload do QR Code",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "encodedImage": {
+                      "type": "string",
+                      "description": "Imagem do QR Code em base64",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "immediateQrCode": {
+                      "type": "object",
+                      "properties": {
+                        "conciliationIdentifier": {
+                          "type": "string",
+                          "description": "Identificador de conciliação",
+                          "example": "E12345678202401011234567890123456",
+                          "deprecated": false
+                        },
+                        "expirationDate": {
+                          "type": "string",
+                          "description": "Data de expiração da primeira cobrança",
+                          "format": "date-time",
+                          "example": "2024-01-01 12:00:00",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações da cobrança imediata",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationImmediateQrCodeResponseDTO"
+                    },
+                    "originType": {
+                      "type": "string",
+                      "description": "Tipo de origem da autorização",
+                      "example": "IMMEDIATE_PAYMENT_AND_RECURRING_QR_CODE",
+                      "deprecated": false,
+                      "enum": [
+                        "IMMEDIATE_PAYMENT_AND_RECURRING_QR_CODE",
+                        "PAYMENT_AND_RECURRING_OFFER_QR_CODE"
+                      ],
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixAutomaticRecurringOriginType"
+                    },
+                    "subscriptionId": {
+                      "type": "string",
+                      "description": "Identificador único da assinatura vinculada",
+                      "example": "sub_000005735721",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Pix Automático"
+        ],
+        "summary": "Cancelar uma autorização",
+        "description": "",
+        "operationId": "cancelar-uma-autorizacao-pix-automatico",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da autorização de Pix Automático no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da autorização de Pix Automático no Asaas",
+                      "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa",
+                      "deprecated": false
+                    },
+                    "minLimitValue": {
+                      "type": "number",
+                      "description": "Se o usuário pagador atribuir um valor máximo para os pagamentos daquela autorização, ele não poderá ser inferior ao piso definido pelo usuário recebedor. Não pode ser preenchido nas autorizações de valor fixo, ou seja, com campo valor preenchido",
+                      "example": 50,
+                      "deprecated": false
+                    },
+                    "cancellationDate": {
+                      "type": "string",
+                      "description": "Data de cancelamento da autorização",
+                      "format": "date",
+                      "example": "2024-12-31",
+                      "deprecated": false
+                    },
+                    "cancellationReason": {
+                      "type": "string",
+                      "description": "Motivo do cancelamento",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "contractId": {
+                      "type": "string",
+                      "description": "Número, identificador, ou código que representa o objeto da autorização",
+                      "example": "XXXYYYY1234",
+                      "deprecated": false
+                    },
+                    "customerId": {
+                      "type": "string",
+                      "description": "Identificador único do cliente",
+                      "example": "cus_000005735721",
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição da autorização",
+                      "example": "Serviços de Streaming de Música e Filmes",
+                      "deprecated": false
+                    },
+                    "finishDate": {
+                      "type": "string",
+                      "description": "Fim da vigência da autorização",
+                      "format": "date",
+                      "example": "2024-12-31",
+                      "deprecated": false
+                    },
+                    "frequency": {
+                      "type": "string",
+                      "description": "Frequência dos pagamentos periódicos",
+                      "example": "MONTHLY",
+                      "deprecated": false,
+                      "enum": [
+                        "WEEKLY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "SEMIANNUALLY",
+                        "ANNUALLY"
+                      ],
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixAutomaticRecurringFrequency"
+                    },
+                    "endToEndIdentifier": {
+                      "type": "string",
+                      "description": "Identificador fim a fim",
+                      "example": "RR1234567820240115abcdefghijk",
+                      "deprecated": false
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "description": "Inicio da vigência da autorização e dos pagamentos",
+                      "format": "date",
+                      "example": "2024-01-01",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da autorização",
+                      "example": "ACTIVE",
+                      "deprecated": false,
+                      "enum": [
+                        "CREATED",
+                        "ACTIVE",
+                        "CANCELLED",
+                        "REFUSED",
+                        "EXPIRED"
+                      ],
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixReceiverAutomaticRecurringAuthorizationStatus"
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor fixo para as cobranças periódicas",
+                      "example": 100,
+                      "deprecated": false
+                    },
+                    "payload": {
+                      "type": "string",
+                      "description": "Payload do QR Code",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "encodedImage": {
+                      "type": "string",
+                      "description": "Imagem do QR Code em base64",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "immediateQrCode": {
+                      "type": "object",
+                      "properties": {
+                        "conciliationIdentifier": {
+                          "type": "string",
+                          "description": "Identificador de conciliação",
+                          "example": "E12345678202401011234567890123456",
+                          "deprecated": false
+                        },
+                        "expirationDate": {
+                          "type": "string",
+                          "description": "Data de expiração da primeira cobrança",
+                          "format": "date-time",
+                          "example": "2024-01-01 12:00:00",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações da cobrança imediata",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationImmediateQrCodeResponseDTO"
+                    },
+                    "originType": {
+                      "type": "string",
+                      "description": "Tipo de origem da autorização",
+                      "example": "IMMEDIATE_PAYMENT_AND_RECURRING_QR_CODE",
+                      "deprecated": false,
+                      "enum": [
+                        "IMMEDIATE_PAYMENT_AND_RECURRING_QR_CODE",
+                        "PAYMENT_AND_RECURRING_OFFER_QR_CODE"
+                      ],
+                      "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponsePixAutomaticRecurringOriginType"
+                    },
+                    "subscriptionId": {
+                      "type": "string",
+                      "description": "Identificador único da assinatura vinculada",
+                      "example": "sub_000005735721",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PixReceiverAutomaticRecurringAuthorizationGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/pix/automatic/paymentInstructions/{id}": {
+      "get": {
+        "tags": [
+          "Pix Automático"
+        ],
+        "summary": "Recuperar uma única instrução de pagamento",
+        "description": "",
+        "operationId": "recuperar-uma-unica-instrucao-de-pagamento-pix-automatico",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da instrução de pagamento de Pix Automático no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "cbfdf6ef-9bd8-48ba-b8cd-efd61a9f614c"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da instrução de pagamento de Pix Automático no Asaas",
+                      "example": "d1c9c4b2-6a97-4573-9d6d-26bb64f04c28",
+                      "deprecated": false
+                    },
+                    "endToEndIdentifier": {
+                      "type": "string",
+                      "description": "Identificador fim a fim",
+                      "example": "E00416968202111161635q5bk0brYk2C",
+                      "deprecated": false
+                    },
+                    "authorization": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Identificador único da autorização do Pix Automático vinculada",
+                          "example": "35363f6e-93e2-11ec-b9d9-96f4053b1bd4",
+                          "deprecated": false
+                        },
+                        "endToEndIdentifier": {
+                          "type": "string",
+                          "description": "Identificador fim a fim da autorização do Pix Automático vinculada",
+                          "example": "RR1234567820240115abcdefghijk",
+                          "deprecated": false
+                        },
+                        "customerId": {
+                          "type": "string",
+                          "description": "Identificador único do cliente",
+                          "example": "cus_000005735721",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Autorização do Pix Automático vinculada",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PixAutomaticRecurringPaymentInstructionAuthorizationResponseDTO"
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "description": "Data de vencimento da instrução de pagamento",
+                      "format": "date",
+                      "example": "2020-01-31",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da instrução de pagamento",
+                      "example": "SCHEDULED",
+                      "deprecated": false,
+                      "enum": [
+                        "AWAITING_REQUEST",
+                        "SCHEDULED",
+                        "DONE",
+                        "CANCELLED",
+                        "REFUSED"
+                      ]
+                    },
+                    "paymentId": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança vinculada",
+                      "example": "pay_tsp88gie3b5e6o2p",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PixAutomaticRecurringPaymentInstructionGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/pix/automatic/paymentInstructions": {
+      "get": {
+        "tags": [
+          "Pix Automático"
+        ],
+        "summary": "Listar instruções de pagamento",
+        "description": "",
+        "operationId": "listar-instrucoes-de-pagamento-pix-automatico",
+        "parameters": [
+          {
+            "name": "authorizationId",
+            "in": "query",
+            "description": "Filtrar pelo identificador único da autorização da instrução",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "query",
+            "description": "Filtrar pelo identificador único do cliente",
+            "schema": {
+              "type": "string",
+              "example": "cus_000005735721"
+            }
+          },
+          {
+            "name": "paymentId",
+            "in": "query",
+            "description": "Filtrar pelo identificador único da cobrança",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar pelo status da instrução",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar pelo status da instrução",
+              "example": "AWAITING_REQUEST",
+              "deprecated": false,
+              "enum": [
+                "AWAITING_REQUEST",
+                "SCHEDULED",
+                "DONE",
+                "CANCELLED",
+                "REFUSED"
+              ],
+              "x-readme-ref-name": "PixAutomaticRecurringPaymentInstructionListRequestPixAutomaticRecurringPaymentInstructionStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da instrução de pagamento de Pix Automático no Asaas",
+                            "example": "d1c9c4b2-6a97-4573-9d6d-26bb64f04c28",
+                            "deprecated": false
+                          },
+                          "endToEndIdentifier": {
+                            "type": "string",
+                            "description": "Identificador fim a fim",
+                            "example": "E00416968202111161635q5bk0brYk2C",
+                            "deprecated": false
+                          },
+                          "authorization": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "Identificador único da autorização do Pix Automático vinculada",
+                                "example": "35363f6e-93e2-11ec-b9d9-96f4053b1bd4",
+                                "deprecated": false
+                              },
+                              "endToEndIdentifier": {
+                                "type": "string",
+                                "description": "Identificador fim a fim da autorização do Pix Automático vinculada",
+                                "example": "RR1234567820240115abcdefghijk",
+                                "deprecated": false
+                              },
+                              "customerId": {
+                                "type": "string",
+                                "description": "Identificador único do cliente",
+                                "example": "cus_000005735721",
+                                "deprecated": false
+                              }
+                            },
+                            "description": "Autorização do Pix Automático vinculada",
+                            "deprecated": false,
+                            "x-readme-ref-name": "PixAutomaticRecurringPaymentInstructionAuthorizationResponseDTO"
+                          },
+                          "dueDate": {
+                            "type": "string",
+                            "description": "Data de vencimento da instrução de pagamento",
+                            "format": "date",
+                            "example": "2020-01-31",
+                            "deprecated": false
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status da instrução de pagamento",
+                            "example": "SCHEDULED",
+                            "deprecated": false,
+                            "enum": [
+                              "AWAITING_REQUEST",
+                              "SCHEDULED",
+                              "DONE",
+                              "CANCELLED",
+                              "REFUSED"
+                            ]
+                          },
+                          "paymentId": {
+                            "type": "string",
+                            "description": "Identificador único da cobrança vinculada",
+                            "example": "pay_tsp88gie3b5e6o2p",
+                            "deprecated": false
+                          }
+                        },
+                        "x-readme-ref-name": "PixAutomaticRecurringPaymentInstructionGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PixAutomaticRecurringPaymentInstructionListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

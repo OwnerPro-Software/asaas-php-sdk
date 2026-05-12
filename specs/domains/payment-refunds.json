@@ -1,0 +1,450 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Estornos"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/payments/{id}/refunds": {
+      "get": {
+        "tags": [
+          "Estornos"
+        ],
+        "summary": "Listar estornos de uma cobrança",
+        "description": "",
+        "operationId": "listar-estornos-de-uma-cobranca",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da cobrança no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "dateCreated": {
+                            "type": "string",
+                            "description": "Data da criação do estorno",
+                            "format": "date-time",
+                            "example": "2024-10-18 10:19:06",
+                            "deprecated": false
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status do estorno",
+                            "example": "DONE",
+                            "deprecated": false,
+                            "enum": [
+                              "PENDING",
+                              "AWAITING_CRITICAL_ACTION_AUTHORIZATION",
+                              "AWAITING_CUSTOMER_EXTERNAL_AUTHORIZATION",
+                              "CANCELLED",
+                              "DONE"
+                            ],
+                            "x-readme-ref-name": "PaymentRefundGetResponsePaymentRefundStatus"
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor do estorno",
+                            "example": 40,
+                            "deprecated": false
+                          },
+                          "endToEndIdentifier": {
+                            "type": "string",
+                            "description": "(Apenas pix) Identificador da transação Pix no Banco Central",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do estorno",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "effectiveDate": {
+                            "type": "string",
+                            "description": "(Apenas pix) Data de efetivação do estorno",
+                            "format": "date-time",
+                            "example": "2024-10-19 10:19:06",
+                            "deprecated": false
+                          },
+                          "transactionReceiptUrl": {
+                            "type": "string",
+                            "description": "Link do recibo da transação",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "refundedSplits": {
+                            "type": "array",
+                            "description": "Lista de splits estornados, se houver",
+                            "deprecated": false,
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "description": "Identificador único do split",
+                                  "example": "cff860dd-148e-48ca-ac8e-849684175158",
+                                  "deprecated": false
+                                },
+                                "value": {
+                                  "type": "number",
+                                  "description": "Valor estornado",
+                                  "example": 10,
+                                  "deprecated": false
+                                },
+                                "done": {
+                                  "type": "boolean",
+                                  "description": "Indica se o split foi estornado",
+                                  "example": true,
+                                  "deprecated": false
+                                }
+                              },
+                              "description": "Lista de splits estornados, se houver",
+                              "deprecated": false,
+                              "x-readme-ref-name": "PaymentRefundedSplitResponseDTO"
+                            }
+                          }
+                        },
+                        "description": "Informações de estorno",
+                        "deprecated": false,
+                        "x-readme-ref-name": "PaymentRefundGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentRefundListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/payments/{id}/bankSlip/refund": {
+      "post": {
+        "tags": [
+          "Estornos"
+        ],
+        "summary": "Estornar boleto",
+        "description": "",
+        "operationId": "estornar-boleto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da cobrança no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "PaymentPathIdRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestUrl": {
+                      "type": "string",
+                      "description": "Link para informar os dados de estorno",
+                      "example": "https://sandbox.asaas.com/solicitar-estorno/37ij5mdxwo1234",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentBankSlipRefundResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

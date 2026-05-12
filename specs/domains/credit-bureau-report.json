@@ -1,0 +1,627 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Consulta Serasa"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/creditBureauReport": {
+      "post": {
+        "tags": [
+          "Consulta Serasa"
+        ],
+        "summary": "Realizar consulta",
+        "description": "",
+        "operationId": "realizar-consulta",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customer": {
+                    "type": "string",
+                    "description": "Identificador único do cliente no Asaas",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "cpfCnpj": {
+                    "type": "string",
+                    "description": "CPF ou CNPJ do cliente. Informe este campo caso seu cliente não esteja cadastrado no Asaas",
+                    "example": "05666663755",
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "CreditBureauReportSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da consulta no Asaas",
+                      "example": "6c5e73fa-9efd-4a75-b60c-1cafb8d1c7ed",
+                      "deprecated": false
+                    },
+                    "dateCreated": {
+                      "type": "string",
+                      "description": "Data da realização da consulta",
+                      "format": "date",
+                      "example": "2025-05-30",
+                      "deprecated": false
+                    },
+                    "cpfCnpj": {
+                      "type": "string",
+                      "description": "CPF ou CNPJ consultado manualmente",
+                      "example": "05666663755",
+                      "deprecated": false
+                    },
+                    "customer": {
+                      "type": "string",
+                      "description": "Identificador único do cliente no Asaas",
+                      "example": "cus_000000001766",
+                      "deprecated": false
+                    },
+                    "downloadUrl": {
+                      "type": "string",
+                      "description": "Url para download da consulta. Disponível até as 23:59 do dia da consulta.",
+                      "example": "https://www.asaas.com.br/creditBureauReport/download/6c5e73fa-9efd-4a75-b60c-1cafb8d1c7ed",
+                      "deprecated": false
+                    },
+                    "reportFile": {
+                      "type": "string",
+                      "description": "PDF da consulta realizada em Base64 (este campo apenas é retornado no momento da criação da consulta)",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "CreditBureauReportGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Consulta Serasa"
+        ],
+        "summary": "Listar consultas",
+        "description": "",
+        "operationId": "listar-consultas",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Filtrar a partir da data de criação",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Filtrar até uma data de criação",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da consulta no Asaas",
+                            "example": "6c5e73fa-9efd-4a75-b60c-1cafb8d1c7ed",
+                            "deprecated": false
+                          },
+                          "dateCreated": {
+                            "type": "string",
+                            "description": "Data da realização da consulta",
+                            "format": "date",
+                            "example": "2025-05-30",
+                            "deprecated": false
+                          },
+                          "cpfCnpj": {
+                            "type": "string",
+                            "description": "CPF ou CNPJ consultado manualmente",
+                            "example": "05666663755",
+                            "deprecated": false
+                          },
+                          "customer": {
+                            "type": "string",
+                            "description": "Identificador único do cliente no Asaas",
+                            "example": "cus_000000001766",
+                            "deprecated": false
+                          },
+                          "downloadUrl": {
+                            "type": "string",
+                            "description": "Url para download da consulta. Disponível até as 23:59 do dia da consulta.",
+                            "example": "https://www.asaas.com.br/creditBureauReport/download/6c5e73fa-9efd-4a75-b60c-1cafb8d1c7ed",
+                            "deprecated": false
+                          },
+                          "reportFile": {
+                            "type": "string",
+                            "description": "PDF da consulta realizada em Base64 (este campo apenas é retornado no momento da criação da consulta)",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "x-readme-ref-name": "CreditBureauReportGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "CreditBureauReportListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/creditBureauReport/{id}": {
+      "get": {
+        "tags": [
+          "Consulta Serasa"
+        ],
+        "summary": "Recuperar uma consulta",
+        "description": "",
+        "operationId": "recuperar-uma-consulta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da consulta no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "6c5e73fa-9efd-4a75-b60c-1cafb8d1c7ed"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da consulta no Asaas",
+                      "example": "6c5e73fa-9efd-4a75-b60c-1cafb8d1c7ed",
+                      "deprecated": false
+                    },
+                    "dateCreated": {
+                      "type": "string",
+                      "description": "Data da realização da consulta",
+                      "format": "date",
+                      "example": "2025-05-30",
+                      "deprecated": false
+                    },
+                    "cpfCnpj": {
+                      "type": "string",
+                      "description": "CPF ou CNPJ consultado manualmente",
+                      "example": "05666663755",
+                      "deprecated": false
+                    },
+                    "customer": {
+                      "type": "string",
+                      "description": "Identificador único do cliente no Asaas",
+                      "example": "cus_000000001766",
+                      "deprecated": false
+                    },
+                    "downloadUrl": {
+                      "type": "string",
+                      "description": "Url para download da consulta. Disponível até as 23:59 do dia da consulta.",
+                      "example": "https://www.asaas.com.br/creditBureauReport/download/6c5e73fa-9efd-4a75-b60c-1cafb8d1c7ed",
+                      "deprecated": false
+                    },
+                    "reportFile": {
+                      "type": "string",
+                      "description": "PDF da consulta realizada em Base64 (este campo apenas é retornado no momento da criação da consulta)",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "CreditBureauReportGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

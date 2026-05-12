@@ -1,0 +1,2470 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Informações fiscais"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/fiscalInfo/municipalOptions": {
+      "get": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Listar configurações municipais",
+        "description": "",
+        "operationId": "listar-configuracoes-municipais",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authenticationType": {
+                      "type": "string",
+                      "description": "Tipo de autenticação necessária na prefeitura",
+                      "example": "CERTIFICATE",
+                      "deprecated": false,
+                      "enum": [
+                        "CERTIFICATE",
+                        "TOKEN",
+                        "USER_AND_PASSWORD"
+                      ],
+                      "x-readme-ref-name": "FiscalInfoMunicipalOptionsGetResponseEnotasTipoAutenticacao"
+                    },
+                    "supportsCancellation": {
+                      "type": "boolean",
+                      "description": "Suporta ou não o cancelamento de notas fiscais automaticamente na sua prefeitura",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "usesSpecialTaxRegimes": {
+                      "type": "boolean",
+                      "description": "Necessário informar ou não o regime especial de tributação. Caso utilize, informe-o no campo `specialTaxRegime` do **Criar ou atualizar informações fiscais** de acordo com as opções retornadas na lista `specialTaxRegimesList`",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "usesServiceListItem": {
+                      "type": "boolean",
+                      "description": "Necessário informar ou não o item da lista de serviço",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "specialTaxRegimesList": {
+                      "type": "array",
+                      "description": "Opções de regime especial de tributação",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "description": "Nome do regime especial de tributação",
+                            "example": "Microempresa Municipal",
+                            "deprecated": false
+                          },
+                          "value": {
+                            "type": "string",
+                            "description": "Identificador do regime especial de tributação",
+                            "example": "1",
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Opções de regime especial de tributação",
+                        "deprecated": false,
+                        "x-readme-ref-name": "FiscalInfoMunicipalOptionsSpecialTaxRegimesDTO"
+                      }
+                    },
+                    "nationalPortalTaxCalculationRegimeList": {
+                      "type": "array",
+                      "description": "Opções de regime de apuração tributária pelo Simples Nacional",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "description": "Nome do regime de apuração tributária pelo Simples Nacional",
+                            "example": "Regime de apuração dos tributos federais e municipal pelo SN",
+                            "deprecated": false
+                          },
+                          "value": {
+                            "type": "string",
+                            "description": "Identificador do regime de apuração tributária pelo Simples Nacional",
+                            "example": "0",
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Opções de regime de apuração tributária pelo Simples Nacional",
+                        "deprecated": false,
+                        "x-readme-ref-name": "FiscalInfoMunicipalOptionsNationalPortalTaxCalculationRegimeDTO"
+                      }
+                    },
+                    "nationalPortalTaxCalculationRegimeHelp": {
+                      "type": "string",
+                      "description": "Explicação sobre o regime de apuração tributária pelo Simples Nacional",
+                      "example": "Isso identifica o regime de apuração tributária pelo Simples Nacional de sua empresa, se desejar deixar sem nenhuma opção marcada selecione a opção \"Nenhum\". Deve ser preenchido somente por empresas enquadradas como ME ou EPP optantes do Simples Nacional. Consulte a necessidade desta informação com a sua prefeitura ou a sua contabilidade.",
+                      "deprecated": false
+                    },
+                    "municipalInscriptionHelp": {
+                      "type": "string",
+                      "description": "Explicação sobre formato da inscrição municipal",
+                      "example": "Informe somente os números sem ponto nem formatação (se contiver letras, insira sempre em maiúscula).\r\n\r\nExemplos válidos: 4301000010 ou 131436001X",
+                      "deprecated": false
+                    },
+                    "specialTaxRegimeHelp": {
+                      "type": "string",
+                      "description": "Explicação sobre o regime especial de tributação",
+                      "example": "Isso identifica o regime de tributação de sua empresa, se desejar deixar sem nenhuma opção marcada selecione o traço (\"-\").\r\n \r\n Empresas do simples nacional geralmente optam pelo ME ou ME EPP",
+                      "deprecated": false
+                    },
+                    "serviceListItemHelp": {
+                      "type": "string",
+                      "description": "Explicação sobre formato do item da lista de serviço",
+                      "example": "Informe aqui o item da lista de serviço, é também um identificador do serviço prestado.\r\n \r\n Você precisa preencher o item da lista de serviço mantendo a formatação.\r\n Exemplos válidos: 17.02 ou 8.02",
+                      "deprecated": false
+                    },
+                    "digitalCertificatedHelp": {
+                      "type": "string",
+                      "description": "Explicação sobre certificado digital",
+                      "example": "Sua prefeitura exige a utilização de certificado digital, portanto, inclua aqui o arquivo de seu certificado A1.",
+                      "deprecated": false
+                    },
+                    "accessTokenHelp": {
+                      "type": "string",
+                      "description": "Explicação sobre token",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "municipalServiceCodeHelp": {
+                      "type": "string",
+                      "description": "Explicação sobre formato do código de serviço municipal",
+                      "example": "Informe aqui o código municipal que identifica o serviço prestado na nota fiscal. \r\nEm algumas cidades esse código é conhecido como código de tributação ou CTISS.\r\n\r\nExemplo válido: 010300388",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoMunicipalOptionsGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/fiscalInfo/": {
+      "post": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Criar e atualizar informações fiscais",
+        "description": "",
+        "operationId": "criar-e-atualizar-informacoes-fiscais",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "email",
+                  "simplesNacional"
+                ],
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "description": "Email utilizado pelo Asaas para enviar notificações e alertas de notas fiscais",
+                    "nullable": false,
+                    "example": "john.doe@asaas.com.br",
+                    "deprecated": false
+                  },
+                  "municipalInscription": {
+                    "type": "string",
+                    "description": "Inscrição municipal da empresa",
+                    "example": "21779501",
+                    "deprecated": false
+                  },
+                  "simplesNacional": {
+                    "type": "boolean",
+                    "description": "Indica se a empresa é optante pelo simples nacional",
+                    "nullable": false,
+                    "example": false,
+                    "deprecated": false,
+                    "default": true
+                  },
+                  "culturalProjectsPromoter": {
+                    "type": "boolean",
+                    "description": "Identifica se a empresa é classificada como incentivador cultural",
+                    "example": false,
+                    "deprecated": false,
+                    "default": true
+                  },
+                  "cnae": {
+                    "type": "string",
+                    "description": "Código CNAE",
+                    "example": "6209100",
+                    "deprecated": false
+                  },
+                  "specialTaxRegime": {
+                    "type": "string",
+                    "description": "Identificador do regime especial de tributação",
+                    "example": "1",
+                    "deprecated": false
+                  },
+                  "serviceListItem": {
+                    "type": "string",
+                    "description": "Item da lista de serviço, conforme http://www.planalto.gov.br/ccivil_03/leis/LCP/Lcp116.htm",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "nbsCode": {
+                    "type": "string",
+                    "description": "Código NBS (Nomenclatura Brasileira de Serviços). Deve constar na NFS-e quando exigido pela prefeitura e/ou para serviços de importação ou exportação. Consulte a necessidade desta informação com a sua prefeitura ou a sua contabilidade.",
+                    "example": "1.0101",
+                    "deprecated": false
+                  },
+                  "rpsSerie": {
+                    "type": "string",
+                    "description": "Número de Série utilizado pela sua empresa para emissão de notas fiscais. Na maioria das cidades o número de série utilizado é '1' ou 'E'",
+                    "example": "1",
+                    "deprecated": false
+                  },
+                  "rpsNumber": {
+                    "type": "integer",
+                    "description": "Número do RPS utilizado na última nota fiscal emitida pela sua empresa. Se a sua última NF emitida tem RPS igual a '100', esse campo deve ser preenchido com '101'. Se você nunca emitiu notas fiscais pelo site da sua prefeitura, informe '1' nesse campo",
+                    "format": "int32",
+                    "example": 1,
+                    "deprecated": false
+                  },
+                  "loteNumber": {
+                    "type": "integer",
+                    "description": "Número do Lote utilizado na última nota fiscal emitida pela sua empresa. Se o último lote utilizado na sua prefeitura for '25', esse campo deve ser preenchido com '26'. Informe esse campo apenas se sua prefeitura exigir a utilização de lotes",
+                    "format": "int32",
+                    "example": 1,
+                    "deprecated": false
+                  },
+                  "username": {
+                    "type": "string",
+                    "description": "Usuário para acesso ao site da prefeitura da sua cidade",
+                    "example": "johndoe",
+                    "deprecated": false
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Senha para acesso ao site da prefeitura",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "accessToken": {
+                    "type": "string",
+                    "description": "Token de acesso ao site da prefeitura (Caso o acesso ao site da sua prefeitura seja através por Token)",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "certificateFile": {
+                    "type": "string",
+                    "description": "Arquivo",
+                    "format": "binary",
+                    "nullable": false,
+                    "deprecated": false,
+                    "example": null,
+                    "x-readme-ref-name": "File"
+                  },
+                  "certificatePassword": {
+                    "type": "string",
+                    "description": "Senha do certificado digital enviado (Caso o acesso ao site da sua prefeitura através de certificado digital)",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "nationalPortalTaxCalculationRegime": {
+                    "type": "string",
+                    "description": "Identificador do regime de apuração tributária pelo Simples Nacional. Deve ser preenchido somente por empresas enquadradas como ME ou EPP optantes do Simples Nacional. Consulte a necessidade desta informação com a sua prefeitura ou a sua contabilidade.",
+                    "deprecated": false,
+                    "example": null
+                  }
+                },
+                "x-readme-ref-name": "FiscalInfoSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "customerFiscalInfo",
+                      "deprecated": false
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "Email utilizado pelo Asaas para enviar notificações e alertas de notas fiscais",
+                      "example": "john.doe@asaas.com.br",
+                      "deprecated": false
+                    },
+                    "municipalInscription": {
+                      "type": "string",
+                      "description": "Inscrição municipal da empresa",
+                      "example": "21779501",
+                      "deprecated": false
+                    },
+                    "simplesNacional": {
+                      "type": "boolean",
+                      "description": "Indica se a empresa é optante pelo simples nacional",
+                      "example": false,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "culturalProjectsPromoter": {
+                      "type": "boolean",
+                      "description": "Identifica se a empresa é classificada como incentivador cultural",
+                      "example": false,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "cnae": {
+                      "type": "string",
+                      "description": "Código CNAE",
+                      "example": "6209100",
+                      "deprecated": false
+                    },
+                    "specialTaxRegime": {
+                      "type": "string",
+                      "description": "Identificador do regime especial de tributação",
+                      "example": "1",
+                      "deprecated": false
+                    },
+                    "serviceListItem": {
+                      "type": "string",
+                      "description": "Item da lista de serviço, conforme http://www.planalto.gov.br/ccivil_03/leis/LCP/Lcp116.htm",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "nbsCode": {
+                      "type": "string",
+                      "description": "Código NBS (Nomenclatura Brasileira de Serviços). Deve constar na NFS-e quando exigido pela prefeitura e/ou para serviços de importação ou exportação. Consulte a necessidade desta informação com a sua prefeitura ou a sua contabilidade.",
+                      "example": "1.0101",
+                      "deprecated": false
+                    },
+                    "rpsSerie": {
+                      "type": "string",
+                      "description": "Número de Série cadastrado para a empresa",
+                      "example": "1",
+                      "deprecated": false
+                    },
+                    "rpsNumber": {
+                      "type": "integer",
+                      "description": "Número de RPS utilizado na última nota fiscal emitida para a sua empresa",
+                      "format": "int32",
+                      "example": 1,
+                      "deprecated": false
+                    },
+                    "loteNumber": {
+                      "type": "integer",
+                      "description": "Número do Lote utilizado na última nota fiscal emitida pela sua empresa",
+                      "format": "int32",
+                      "example": 1,
+                      "deprecated": false
+                    },
+                    "username": {
+                      "type": "string",
+                      "description": "Usuário para acesso ao site da prefeitura da sua cidade",
+                      "example": "johndoe",
+                      "deprecated": false
+                    },
+                    "passwordSent": {
+                      "type": "boolean",
+                      "description": "Indica se a senha para acesso ao site da prefeitura foi informada",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "accessTokenSent": {
+                      "type": "boolean",
+                      "description": "Indica se o token para acesso ao site da prefeitura foi informado (Caso o acesso ao site da sua prefeitura seja através por Token)",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "certificateSent": {
+                      "type": "boolean",
+                      "description": "Indica se o certificado digital para acesso ao site da prefeitura foi informado",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "nationalPortalTaxCalculationRegime": {
+                      "type": "string",
+                      "description": "Identificador do regime de apuração tributária pelo Simples Nacional",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Recuperar informações fiscais",
+        "description": "",
+        "operationId": "recuperar-informacoes-fiscais",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "customerFiscalInfo",
+                      "deprecated": false
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "Email utilizado pelo Asaas para enviar notificações e alertas de notas fiscais",
+                      "example": "john.doe@asaas.com.br",
+                      "deprecated": false
+                    },
+                    "municipalInscription": {
+                      "type": "string",
+                      "description": "Inscrição municipal da empresa",
+                      "example": "21779501",
+                      "deprecated": false
+                    },
+                    "simplesNacional": {
+                      "type": "boolean",
+                      "description": "Indica se a empresa é optante pelo simples nacional",
+                      "example": false,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "culturalProjectsPromoter": {
+                      "type": "boolean",
+                      "description": "Identifica se a empresa é classificada como incentivador cultural",
+                      "example": false,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "cnae": {
+                      "type": "string",
+                      "description": "Código CNAE",
+                      "example": "6209100",
+                      "deprecated": false
+                    },
+                    "specialTaxRegime": {
+                      "type": "string",
+                      "description": "Identificador do regime especial de tributação",
+                      "example": "1",
+                      "deprecated": false
+                    },
+                    "serviceListItem": {
+                      "type": "string",
+                      "description": "Item da lista de serviço, conforme http://www.planalto.gov.br/ccivil_03/leis/LCP/Lcp116.htm",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "nbsCode": {
+                      "type": "string",
+                      "description": "Código NBS (Nomenclatura Brasileira de Serviços). Deve constar na NFS-e quando exigido pela prefeitura e/ou para serviços de importação ou exportação. Consulte a necessidade desta informação com a sua prefeitura ou a sua contabilidade.",
+                      "example": "1.0101",
+                      "deprecated": false
+                    },
+                    "rpsSerie": {
+                      "type": "string",
+                      "description": "Número de Série cadastrado para a empresa",
+                      "example": "1",
+                      "deprecated": false
+                    },
+                    "rpsNumber": {
+                      "type": "integer",
+                      "description": "Número de RPS utilizado na última nota fiscal emitida para a sua empresa",
+                      "format": "int32",
+                      "example": 1,
+                      "deprecated": false
+                    },
+                    "loteNumber": {
+                      "type": "integer",
+                      "description": "Número do Lote utilizado na última nota fiscal emitida pela sua empresa",
+                      "format": "int32",
+                      "example": 1,
+                      "deprecated": false
+                    },
+                    "username": {
+                      "type": "string",
+                      "description": "Usuário para acesso ao site da prefeitura da sua cidade",
+                      "example": "johndoe",
+                      "deprecated": false
+                    },
+                    "passwordSent": {
+                      "type": "boolean",
+                      "description": "Indica se a senha para acesso ao site da prefeitura foi informada",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "accessTokenSent": {
+                      "type": "boolean",
+                      "description": "Indica se o token para acesso ao site da prefeitura foi informado (Caso o acesso ao site da sua prefeitura seja através por Token)",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "certificateSent": {
+                      "type": "boolean",
+                      "description": "Indica se o certificado digital para acesso ao site da prefeitura foi informado",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "nationalPortalTaxCalculationRegime": {
+                      "type": "string",
+                      "description": "Identificador do regime de apuração tributária pelo Simples Nacional",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/fiscalInfo/federalServiceCodes": {
+      "get": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Listar códigos de serviços federais",
+        "description": "",
+        "operationId": "listar-codigos-servicos-federais",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Código tributário",
+            "schema": {
+              "type": "string",
+              "example": "040801"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "Descrição",
+            "schema": {
+              "type": "string",
+              "example": "Terapia ocupacional"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código tributário",
+                            "example": "040801",
+                            "deprecated": false
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição",
+                            "example": "Terapia ocupacional",
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "FiscalInfoFederalServiceCodeResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoFederalServiceCodeListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/fiscalInfo/services": {
+      "get": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Listar serviços municipais",
+        "description": "",
+        "operationId": "listar-servicos-municipais",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "Nome do serviço",
+            "schema": {
+              "type": "string",
+              "example": "1.01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "example": [
+                        {
+                          "id": "3544",
+                          "description": "1.01 - Análise e desenvolvimento de sistemas",
+                          "issTax": 5
+                        },
+                        {
+                          "id": "2360",
+                          "description": "1.02 - Programação",
+                          "issTax": 3
+                        }
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único do serviço",
+                            "example": "3544",
+                            "deprecated": false
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do serviço",
+                            "example": "1.01 - Análise e desenvolvimento de sistemas",
+                            "deprecated": false
+                          },
+                          "issTax": {
+                            "type": "number",
+                            "description": "Taxa percentual do ISS",
+                            "example": 0.5,
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "example": [
+                          {
+                            "id": "3544",
+                            "description": "1.01 - Análise e desenvolvimento de sistemas",
+                            "issTax": 5
+                          },
+                          {
+                            "id": "2360",
+                            "description": "1.02 - Programação",
+                            "issTax": 3
+                          }
+                        ],
+                        "deprecated": false,
+                        "x-readme-ref-name": "FiscalInfoListMunicipalServicesResponseDataDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoListMunicipalServicesResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/fiscalInfo/nbsCodes": {
+      "get": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Listar códigos NBS",
+        "description": "Listagem dos possíveis códigos NBS (Nomenclatura Brasileira de Serviços)",
+        "operationId": "listar-codigos-nbs",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "codeDescription",
+            "in": "query",
+            "description": "Código NBS e descrição",
+            "schema": {
+              "type": "string",
+              "example": "1.0101.11.00 - Serviços de construção de edificações residenciais de um e dois pavimentos"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "example": [
+                        {
+                          "nbsCode": "1.0101.11.00",
+                          "codeDescription": "1.0101.11.00 - Serviços de construção de edificações residenciais de um e dois pavimentos"
+                        },
+                        {
+                          "nbsCode": "1.0102.12.00",
+                          "codeDescription": "1.0102.12.00 - Serviços de construção de ferrovias"
+                        }
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "nbsCode": {
+                            "type": "string",
+                            "description": "Código NBS (Nomenclatura Brasileira de Serviços)",
+                            "example": "1.0101.11.00",
+                            "deprecated": false
+                          },
+                          "codeDescription": {
+                            "type": "string",
+                            "description": "Código NBS e descrição",
+                            "example": "1.0101.11.00 - Serviços de construção de edificações residenciais de um e dois pavimentos",
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "example": [
+                          {
+                            "nbsCode": "1.0101.11.00",
+                            "codeDescription": "1.0101.11.00 - Serviços de construção de edificações residenciais de um e dois pavimentos"
+                          },
+                          {
+                            "nbsCode": "1.0102.12.00",
+                            "codeDescription": "1.0102.12.00 - Serviços de construção de ferrovias"
+                          }
+                        ],
+                        "deprecated": false,
+                        "x-readme-ref-name": "FiscalInfoListInvoiceNbsCodesResponseDataDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoListInvoiceNbsCodesResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/fiscalInfo/operationIndicatorCodes": {
+      "get": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Listar códigos de indicadores de operações",
+        "description": "",
+        "operationId": "listar-codigos-de-operadores-de-indicacoes",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Código do indicador da operação",
+            "schema": {
+              "type": "string",
+              "example": "020101"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "Descrição",
+            "schema": {
+              "type": "string",
+              "example": "Execução de operações com bem imóvel, bem imaterial, inclusive direito, relacionado a bem imóvel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do indicador da operação",
+                            "example": "020101",
+                            "deprecated": false
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição",
+                            "example": "Execução de operações com bem imóvel, bem imaterial, inclusive direito, relacionado a bem imóvel",
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "FiscalInfoOperationIndicatorCodeResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoOperationIndicatorCodeListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/fiscalInfo/taxClassificationCodes": {
+      "get": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Listar códigos de classificações tributárias",
+        "description": "",
+        "operationId": "listar-codigos-de-classificacoes-tributarias",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Código da classificação tributária",
+            "schema": {
+              "type": "string",
+              "example": "011001"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "Descrição",
+            "schema": {
+              "type": "string",
+              "example": "Situações tributadas integralmente pela IBS e pela CBS"
+            }
+          },
+          {
+            "name": "taxSituationCode",
+            "in": "query",
+            "description": "Código da situação tributária",
+            "schema": {
+              "type": "string",
+              "example": "011"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código da classificação tributária",
+                            "example": "011001",
+                            "deprecated": false
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição",
+                            "example": "Situações tributadas integralmente pela IBS e pela CBS",
+                            "deprecated": false
+                          },
+                          "effectiveStartDate": {
+                            "type": "string",
+                            "description": "Data de início da vigência",
+                            "example": "2026-01-01",
+                            "deprecated": false
+                          },
+                          "expirationDate": {
+                            "type": "string",
+                            "description": "Data de término da vigência",
+                            "example": "2030-01-01",
+                            "deprecated": false
+                          },
+                          "isSubjectRegularTaxation": {
+                            "type": "boolean",
+                            "description": "Defina se está sujeito à tributação regular",
+                            "example": false,
+                            "deprecated": false
+                          },
+                          "cbsPercentage": {
+                            "type": "number",
+                            "description": "Alíquota do CBS",
+                            "example": 0.9,
+                            "deprecated": false
+                          },
+                          "municipalIbsTaxPercentage": {
+                            "type": "number",
+                            "description": "Alíquota municipal do IBS",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "stateIbsTaxPercentage": {
+                            "type": "number",
+                            "description": "Alíquota estadual do IBS",
+                            "example": 0.1,
+                            "deprecated": false
+                          },
+                          "cbsTaxReductionPercentage": {
+                            "type": "number",
+                            "description": "Percentual de redução da alíquota do CBS",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "ibsTaxReductionPercentage": {
+                            "type": "number",
+                            "description": "Percentual de redução da alíquota do IBS",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "taxRegimeType": {
+                            "type": "string",
+                            "description": "Tipo do regime de tributação",
+                            "example": "STANDARD",
+                            "deprecated": false
+                          },
+                          "taxSituation": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "description": "Código da situação tributária",
+                                "example": "200001",
+                                "deprecated": false
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "Descrição",
+                                "example": "Tributação com alíquotas uniformes reduzidas",
+                                "deprecated": false
+                              },
+                              "isSubjectToIbsCbsTaxation": {
+                                "type": "boolean",
+                                "description": "Define se está sujeito à tributação IBS e CBS",
+                                "example": true,
+                                "deprecated": false
+                              },
+                              "isBaseReductionPercentApplicable": {
+                                "type": "boolean",
+                                "description": "Define se a porcentagem de redução da base é aplicável",
+                                "example": false,
+                                "deprecated": false
+                              },
+                              "isDefermentApplicable": {
+                                "type": "boolean",
+                                "description": "Define se aplica-se diferimento",
+                                "example": false,
+                                "deprecated": false
+                              }
+                            },
+                            "description": "Lista de objetos",
+                            "deprecated": false,
+                            "x-readme-ref-name": "FiscalInfoTaxSituationCodeResponseDTO"
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "FiscalInfoTaxClassificationCodeResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoTaxClassificationCodeListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/fiscalInfo/taxSituationCodes": {
+      "get": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Listar códigos de situações tributárias",
+        "description": "",
+        "operationId": "listar-codigos-de-situacoes-tributarias",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Código da situação tributária",
+            "schema": {
+              "type": "string",
+              "example": "200001"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "Descrição",
+            "schema": {
+              "type": "string",
+              "example": "Tributação com alíquotas uniformes reduzidas"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código da situação tributária",
+                            "example": "200001",
+                            "deprecated": false
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição",
+                            "example": "Tributação com alíquotas uniformes reduzidas",
+                            "deprecated": false
+                          },
+                          "isSubjectToIbsCbsTaxation": {
+                            "type": "boolean",
+                            "description": "Define se está sujeito à tributação IBS e CBS",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "isBaseReductionPercentApplicable": {
+                            "type": "boolean",
+                            "description": "Define se a porcentagem de redução da base é aplicável",
+                            "example": false,
+                            "deprecated": false
+                          },
+                          "isDefermentApplicable": {
+                            "type": "boolean",
+                            "description": "Define se aplica-se diferimento",
+                            "example": false,
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "FiscalInfoTaxSituationCodeResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoTaxSituationCodeListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/fiscalInfo/nationalPortal": {
+      "post": {
+        "tags": [
+          "Informações fiscais"
+        ],
+        "summary": "Configurar portal emissor de notas fiscais",
+        "description": "Aqui é possível habilitar ou desabilitar o uso do portal nacional como emissor de notas fiscais.",
+        "operationId": "configurar-portal-emissor-de-notas-fiscais",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "enabled"
+                ],
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Indica se a emissão de notas fiscais pelo portal nacional deve ser habilitada ou não.",
+                    "nullable": false,
+                    "example": true,
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "FiscalInfoUpdateUseNationalPortalRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Estado da requisição para alteração da habilitação do uso do portal nacional para emissão de notas fiscais.",
+                      "example": true,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "FiscalInfoUpdateUseNationalPortalResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

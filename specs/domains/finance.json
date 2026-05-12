@@ -1,0 +1,556 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Informações financeiras"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/finance/balance": {
+      "get": {
+        "tags": [
+          "Informações financeiras"
+        ],
+        "summary": "Recuperar saldo da conta",
+        "description": "",
+        "operationId": "recuperar-saldo-da-conta",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balance": {
+                      "type": "number",
+                      "description": "Saldo da conta",
+                      "example": 5210.96,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "FinanceBalanceResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/finance/payment/statistics": {
+      "get": {
+        "tags": [
+          "Informações financeiras"
+        ],
+        "summary": "Estatísticas de cobranças",
+        "description": "Retorna valores totais das cobranças da sua conta Asaas de acordo com os filtros informados.\n ### Exemplos de filtros: \n Valor total a receber: `GET https://api.asaas.com/v3/finance/payment/statistics?status=PENDING` \n\n Valor total a receber com cobranças por boleto bancário: `GET https://api.asaas.com/v3/finance/payment/statistics?billingType=BOLETO&status=PENDING`\n\n Valor total recebido por cobranças por cartão de crédito: `GET https://api.asaas.com/v3/finance/payment/statistics?billingType=CREDIT_CARD&status=RECEIVED`",
+        "operationId": "estatisticas-de-cobrancas",
+        "parameters": [
+          {
+            "name": "customer",
+            "in": "query",
+            "description": "Filtrar pelo identificador único do cliente",
+            "schema": {
+              "type": "string",
+              "example": "cus_3EZfkUThUMAt"
+            }
+          },
+          {
+            "name": "billingType",
+            "in": "query",
+            "description": "Filtrar por forma de pagamento",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por forma de pagamento",
+              "example": "BOLETO",
+              "deprecated": false,
+              "enum": [
+                "BOLETO",
+                "CREDIT_CARD",
+                "TRANSFER",
+                "DEPOSIT",
+                "DEBIT_CARD",
+                "PIX"
+              ],
+              "x-readme-ref-name": "FinanceGetPaymentStatisticsRequestBillingType"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar por status",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por status",
+              "example": "CONFIRMED",
+              "deprecated": false,
+              "enum": [
+                "PENDING",
+                "RECEIVED",
+                "CONFIRMED",
+                "OVERDUE"
+              ],
+              "x-readme-ref-name": "FinanceGetPaymentStatisticsRequestPaymentStatus"
+            }
+          },
+          {
+            "name": "anticipated",
+            "in": "query",
+            "description": "Filtrar registros antecipados ou não",
+            "schema": {
+              "type": "boolean",
+              "example": false
+            }
+          },
+          {
+            "name": "dateCreated[ge]",
+            "in": "query",
+            "description": "Filtrar a partir da data de criação inicial",
+            "schema": {
+              "type": "string",
+              "example": "2023-01-01"
+            }
+          },
+          {
+            "name": "dateCreated[le]",
+            "in": "query",
+            "description": "Filtrar a partir da data de criação final",
+            "schema": {
+              "type": "string",
+              "example": "2023-01-01"
+            }
+          },
+          {
+            "name": "dueDate[ge]",
+            "in": "query",
+            "description": "Filtrar a partir da data de vencimento inicial",
+            "schema": {
+              "type": "string",
+              "example": "2023-01-01"
+            }
+          },
+          {
+            "name": "dueDate[le]",
+            "in": "query",
+            "description": "Filtrar a partir da data de vencimento final",
+            "schema": {
+              "type": "string",
+              "example": "2023-01-01"
+            }
+          },
+          {
+            "name": "estimatedCreditDate[ge]",
+            "in": "query",
+            "description": "Filtrar a partir da data estimada de crédito inicial",
+            "schema": {
+              "type": "string",
+              "example": "2023-01-01"
+            }
+          },
+          {
+            "name": "estimatedCreditDate[le]",
+            "in": "query",
+            "description": "Filtrar a partir da data estimada de crédito final",
+            "schema": {
+              "type": "string",
+              "example": "2023-01-01"
+            }
+          },
+          {
+            "name": "externalReference",
+            "in": "query",
+            "description": "Filtrar pelo identificador do seu sistema",
+            "schema": {
+              "type": "string",
+              "example": "056984"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "quantity": {
+                      "type": "integer",
+                      "description": "Quantidade de cobranças",
+                      "format": "int32",
+                      "example": 23,
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor total",
+                      "example": 9270.4,
+                      "deprecated": false
+                    },
+                    "netValue": {
+                      "type": "number",
+                      "description": "Valor líquido total",
+                      "example": 9121.54,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "FinanceGetPaymentStatisticsResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/finance/split/statistics": {
+      "get": {
+        "tags": [
+          "Informações financeiras"
+        ],
+        "summary": "Recuperar valores de split",
+        "description": "",
+        "operationId": "recuperar-valores-de-split",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "income": {
+                      "type": "number",
+                      "description": "Valores a receber",
+                      "example": 5210.96,
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valores a serem enviados",
+                      "example": 9270.4,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "FinanceGetSplitStatisticsResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

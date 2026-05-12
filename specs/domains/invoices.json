@@ -1,0 +1,3111 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Notas fiscais"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/invoices": {
+      "post": {
+        "tags": [
+          "Notas fiscais"
+        ],
+        "summary": "Agendar nota fiscal",
+        "description": "",
+        "operationId": "agendar-nota-fiscal",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "serviceDescription",
+                  "observations",
+                  "value",
+                  "deductions",
+                  "effectiveDate",
+                  "municipalServiceName",
+                  "taxes"
+                ],
+                "type": "object",
+                "properties": {
+                  "payment": {
+                    "type": "string",
+                    "description": "Identificador único da cobrança no Asaas",
+                    "example": "pay_637959110194",
+                    "deprecated": false
+                  },
+                  "installment": {
+                    "type": "string",
+                    "description": "Identificador único do parcelamento no Asaas",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "customer": {
+                    "type": "string",
+                    "description": "Identificador único do cliente no Asaas",
+                    "example": "cus_000000002750",
+                    "deprecated": false
+                  },
+                  "serviceDescription": {
+                    "type": "string",
+                    "description": "Descrição dos serviços da nota fiscal",
+                    "nullable": false,
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "observations": {
+                    "type": "string",
+                    "description": "Observações adicionais",
+                    "nullable": false,
+                    "example": "Mensal referente aos trabalhos de Junho.",
+                    "deprecated": false
+                  },
+                  "externalReference": {
+                    "type": "string",
+                    "description": "Identificador da nota fiscal no seu sistema",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Valor total",
+                    "nullable": false,
+                    "example": 300,
+                    "deprecated": false
+                  },
+                  "deductions": {
+                    "type": "number",
+                    "description": "Deduções. As deduções não alteram o valor total da nota fiscal, mas alteram a base de cálculo do ISS",
+                    "nullable": false,
+                    "example": 10,
+                    "deprecated": false
+                  },
+                  "effectiveDate": {
+                    "type": "string",
+                    "description": "Data de emissão da nota fiscal",
+                    "format": "date",
+                    "nullable": false,
+                    "example": "2024-08-20",
+                    "deprecated": false
+                  },
+                  "municipalServiceId": {
+                    "type": "string",
+                    "description": "Identificador único do serviço municipal",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "municipalServiceCode": {
+                    "type": "string",
+                    "description": "Código de serviço municipal",
+                    "example": "1.01",
+                    "deprecated": false
+                  },
+                  "municipalServiceName": {
+                    "type": "string",
+                    "description": "Nome do serviço municipal. Se não for informado, será utilizado o atributo municipalServiceCode como nome para identificação.",
+                    "nullable": false,
+                    "example": "Análise e desenvolvimento de sistemas",
+                    "deprecated": false
+                  },
+                  "updatePayment": {
+                    "type": "boolean",
+                    "description": "Atualizar o valor da cobrança com os impostos da nota já descontados.",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "taxes": {
+                    "required": [
+                      "retainIss",
+                      "iss",
+                      "pis",
+                      "cofins",
+                      "csll",
+                      "inss",
+                      "ir"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "nbsCode": {
+                        "type": "string",
+                        "description": "Código NBS (Nomenclatura Brasileira de Serviços)",
+                        "example": "01.01",
+                        "deprecated": false
+                      },
+                      "taxSituationCode": {
+                        "type": "string",
+                        "description": "Código de situação tributária",
+                        "example": "011",
+                        "deprecated": false
+                      },
+                      "taxClassificationCode": {
+                        "type": "string",
+                        "description": "Código de classificação tributária",
+                        "example": "011001",
+                        "deprecated": false
+                      },
+                      "operationIndicatorCode": {
+                        "type": "string",
+                        "description": "Código do indicador de operação",
+                        "example": "020101",
+                        "deprecated": false
+                      },
+                      "retainIss": {
+                        "type": "boolean",
+                        "description": "Tomador da nota fiscal deve reter ISS ou não",
+                        "nullable": false,
+                        "example": true,
+                        "deprecated": false
+                      },
+                      "iss": {
+                        "type": "number",
+                        "description": "Alíquota ISS",
+                        "nullable": false,
+                        "example": 2,
+                        "deprecated": false
+                      },
+                      "pisCofinsRetentionType": {
+                        "type": "string",
+                        "description": "Tipo de retenção do PIS/COFINS",
+                        "example": "NOT_WITHHELD",
+                        "deprecated": false
+                      },
+                      "pisCofinsTaxStatus": {
+                        "type": "string",
+                        "description": "Situação tributária do PIS/COFINS",
+                        "example": "STANDARD_TAXABLE_OPERATION",
+                        "deprecated": false
+                      },
+                      "pis": {
+                        "type": "number",
+                        "description": "Alíquota PIS",
+                        "nullable": false,
+                        "example": 0.65,
+                        "deprecated": false
+                      },
+                      "cofins": {
+                        "type": "number",
+                        "description": "Alíquota COFINS",
+                        "nullable": false,
+                        "example": 3,
+                        "deprecated": false
+                      },
+                      "csll": {
+                        "type": "number",
+                        "description": "Alíquota CSLL",
+                        "nullable": false,
+                        "example": 9,
+                        "deprecated": false
+                      },
+                      "inss": {
+                        "type": "number",
+                        "description": "Alíquota INSS",
+                        "nullable": false,
+                        "example": 11,
+                        "deprecated": false
+                      },
+                      "ir": {
+                        "type": "number",
+                        "description": "Alíquota IR",
+                        "nullable": false,
+                        "example": 1.5,
+                        "deprecated": false
+                      }
+                    },
+                    "description": "Impostos da nota fiscal",
+                    "nullable": false,
+                    "deprecated": false,
+                    "x-readme-ref-name": "InvoiceTaxesRequestDTO"
+                  }
+                },
+                "x-readme-ref-name": "InvoiceSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "invoice",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da nota fiscal no Asaas",
+                      "example": "inv_000000000232",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da nota fiscal",
+                      "example": "SCHEDULED",
+                      "deprecated": false,
+                      "enum": [
+                        "SCHEDULED",
+                        "AUTHORIZED",
+                        "PROCESSING_CANCELLATION",
+                        "CANCELED",
+                        "CANCELLATION_DENIED",
+                        "ERROR"
+                      ],
+                      "x-readme-ref-name": "InvoiceGetResponseInvoiceStatus"
+                    },
+                    "customer": {
+                      "type": "string",
+                      "description": "Identificador único do cliente no Asaas",
+                      "example": "cus_000000002750",
+                      "deprecated": false
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança no Asaas",
+                      "example": "pay_145059895800",
+                      "deprecated": false
+                    },
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento no Asaas",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de nota fiscal",
+                      "example": "NFS-e",
+                      "deprecated": false,
+                      "enum": [
+                        "NFS-e"
+                      ]
+                    },
+                    "statusDescription": {
+                      "type": "string",
+                      "description": "Descrição da situação atual da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "serviceDescription": {
+                      "type": "string",
+                      "description": "Descrição dos serviços da nota fiscal",
+                      "example": "Nota fiscal da Fatura 101940. \nDescrição dos Serviços: ANÁLISE E DESENVOLVIMENTO DE SISTEMAS",
+                      "deprecated": false
+                    },
+                    "pdfUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo pdf da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "xmlUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo xml da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsSerie": {
+                      "type": "string",
+                      "description": "Série da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsNumber": {
+                      "type": "string",
+                      "description": "RPS convertido para a nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "number": {
+                      "type": "string",
+                      "description": "Número da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "validationCode": {
+                      "type": "string",
+                      "description": "Código de verificação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor total",
+                      "example": 300,
+                      "deprecated": false
+                    },
+                    "deductions": {
+                      "type": "number",
+                      "description": "Deduções. As deduções não alteram o valor total da nota fiscal, mas alteram a base de cálculo do ISS",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "effectiveDate": {
+                      "type": "string",
+                      "description": "Data de emissão da nota fiscal",
+                      "format": "date",
+                      "example": "2024-08-15",
+                      "deprecated": false
+                    },
+                    "observations": {
+                      "type": "string",
+                      "description": "Observações adicionais",
+                      "example": "Mensal referente aos trabalhos de Junho.",
+                      "deprecated": false
+                    },
+                    "estimatedTaxesDescription": {
+                      "type": "string",
+                      "description": "Impostos estimados da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador da nota fiscal no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "taxes": {
+                      "required": [
+                        "retainIss",
+                        "iss",
+                        "pis",
+                        "cofins",
+                        "csll",
+                        "inss",
+                        "ir"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "nbsCode": {
+                          "type": "string",
+                          "description": "Código NBS (Nomenclatura Brasileira de Serviços)",
+                          "example": "01.01",
+                          "deprecated": false
+                        },
+                        "taxSituationCode": {
+                          "type": "string",
+                          "description": "Código de situação tributária",
+                          "example": "011",
+                          "deprecated": false
+                        },
+                        "taxClassificationCode": {
+                          "type": "string",
+                          "description": "Código de classificação tributária",
+                          "example": "011001",
+                          "deprecated": false
+                        },
+                        "operationIndicatorCode": {
+                          "type": "string",
+                          "description": "Código do indicador de operação",
+                          "example": "020101",
+                          "deprecated": false
+                        },
+                        "retainIss": {
+                          "type": "boolean",
+                          "description": "Tomador da nota fiscal deve reter ISS ou não",
+                          "nullable": false,
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "iss": {
+                          "type": "number",
+                          "description": "Alíquota ISS",
+                          "nullable": false,
+                          "example": 2,
+                          "deprecated": false
+                        },
+                        "pisCofinsRetentionType": {
+                          "type": "string",
+                          "description": "Tipo de retenção do PIS/COFINS",
+                          "example": "NOT_WITHHELD",
+                          "deprecated": false
+                        },
+                        "pisCofinsTaxStatus": {
+                          "type": "string",
+                          "description": "Situação tributária do PIS/COFINS",
+                          "example": "STANDARD_TAXABLE_OPERATION",
+                          "deprecated": false
+                        },
+                        "pis": {
+                          "type": "number",
+                          "description": "Alíquota PIS",
+                          "nullable": false,
+                          "example": 0.65,
+                          "deprecated": false
+                        },
+                        "cofins": {
+                          "type": "number",
+                          "description": "Alíquota COFINS",
+                          "nullable": false,
+                          "example": 3,
+                          "deprecated": false
+                        },
+                        "csll": {
+                          "type": "number",
+                          "description": "Alíquota CSLL",
+                          "nullable": false,
+                          "example": 9,
+                          "deprecated": false
+                        },
+                        "inss": {
+                          "type": "number",
+                          "description": "Alíquota INSS",
+                          "nullable": false,
+                          "example": 11,
+                          "deprecated": false
+                        },
+                        "ir": {
+                          "type": "number",
+                          "description": "Alíquota IR",
+                          "nullable": false,
+                          "example": 1.5,
+                          "deprecated": false
+                        },
+                        "stateIbs": {
+                          "type": "number",
+                          "description": "Alíquota estadual IBS",
+                          "example": 0.1,
+                          "deprecated": false
+                        },
+                        "stateIbsValue": {
+                          "type": "number",
+                          "description": "Valor estadual IBS",
+                          "example": 0.3,
+                          "deprecated": false
+                        },
+                        "municipalIbs": {
+                          "type": "number",
+                          "description": "Alíquota municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "municipalIbsValue": {
+                          "type": "number",
+                          "description": "Valor municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "cbs": {
+                          "type": "number",
+                          "description": "Alíquota CBS",
+                          "example": 0.9,
+                          "deprecated": false
+                        },
+                        "cbsValue": {
+                          "type": "number",
+                          "description": "Valor CBS",
+                          "example": 2.7,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Impostos da nota fiscal",
+                      "deprecated": false,
+                      "x-readme-ref-name": "InvoiceTaxesResponseDTO"
+                    },
+                    "municipalServiceId": {
+                      "type": "string",
+                      "description": "Identificador único do serviço municipal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "municipalServiceCode": {
+                      "type": "string",
+                      "description": "Código de serviço municipal",
+                      "example": "1.01",
+                      "deprecated": false
+                    },
+                    "municipalServiceName": {
+                      "type": "string",
+                      "description": "Nome do serviço municipal",
+                      "example": "Análise e desenvolvimento de sistemas",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "InvoiceGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Notas fiscais"
+        ],
+        "summary": "Listar notas fiscais",
+        "description": "",
+        "operationId": "listar-notas-fiscais",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "effectiveDate[Ge]",
+            "in": "query",
+            "description": "Filtrar a partir de uma data de emissão",
+            "schema": {
+              "type": "string",
+              "example": "2024-08-03"
+            }
+          },
+          {
+            "name": "effectiveDate[Le]",
+            "in": "query",
+            "description": "Filtrar até uma data de emissão",
+            "schema": {
+              "type": "string",
+              "example": "2024-09-03"
+            }
+          },
+          {
+            "name": "payment",
+            "in": "query",
+            "description": "Filtrar pelo identificador único da cobrança",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "installment",
+            "in": "query",
+            "description": "Filtrar pelo identificador único do parcelamento",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "externalReference",
+            "in": "query",
+            "description": "Filtrar pelo identificador da nota fiscal no seu sistema",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar por situação",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por situação",
+              "example": "SCHEDULED",
+              "deprecated": false,
+              "enum": [
+                "SCHEDULED",
+                "AUTHORIZED",
+                "PROCESSING_CANCELLATION",
+                "CANCELED",
+                "CANCELLATION_DENIED",
+                "ERROR"
+              ],
+              "x-readme-ref-name": "InvoiceListRequestInvoiceStatus"
+            }
+          },
+          {
+            "name": "customer",
+            "in": "query",
+            "description": "Filtrar pelo identificador único do cliente",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "description": "Tipo de objeto",
+                            "example": "invoice",
+                            "deprecated": false
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da nota fiscal no Asaas",
+                            "example": "inv_000000000232",
+                            "deprecated": false
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status da nota fiscal",
+                            "example": "SCHEDULED",
+                            "deprecated": false,
+                            "enum": [
+                              "SCHEDULED",
+                              "AUTHORIZED",
+                              "PROCESSING_CANCELLATION",
+                              "CANCELED",
+                              "CANCELLATION_DENIED",
+                              "ERROR"
+                            ],
+                            "x-readme-ref-name": "InvoiceGetResponseInvoiceStatus"
+                          },
+                          "customer": {
+                            "type": "string",
+                            "description": "Identificador único do cliente no Asaas",
+                            "example": "cus_000000002750",
+                            "deprecated": false
+                          },
+                          "payment": {
+                            "type": "string",
+                            "description": "Identificador único da cobrança no Asaas",
+                            "example": "pay_145059895800",
+                            "deprecated": false
+                          },
+                          "installment": {
+                            "type": "string",
+                            "description": "Identificador único do parcelamento no Asaas",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Tipo de nota fiscal",
+                            "example": "NFS-e",
+                            "deprecated": false,
+                            "enum": [
+                              "NFS-e"
+                            ]
+                          },
+                          "statusDescription": {
+                            "type": "string",
+                            "description": "Descrição da situação atual da nota fiscal",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "serviceDescription": {
+                            "type": "string",
+                            "description": "Descrição dos serviços da nota fiscal",
+                            "example": "Nota fiscal da Fatura 101940. \nDescrição dos Serviços: ANÁLISE E DESENVOLVIMENTO DE SISTEMAS",
+                            "deprecated": false
+                          },
+                          "pdfUrl": {
+                            "type": "string",
+                            "description": "Link para arquivo pdf da nota fiscal emitida",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "xmlUrl": {
+                            "type": "string",
+                            "description": "Link para arquivo xml da nota fiscal emitida",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "rpsSerie": {
+                            "type": "string",
+                            "description": "Série da nota fiscal",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "rpsNumber": {
+                            "type": "string",
+                            "description": "RPS convertido para a nota fiscal",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "number": {
+                            "type": "string",
+                            "description": "Número da nota fiscal",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "validationCode": {
+                            "type": "string",
+                            "description": "Código de verificação",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor total",
+                            "example": 300,
+                            "deprecated": false
+                          },
+                          "deductions": {
+                            "type": "number",
+                            "description": "Deduções. As deduções não alteram o valor total da nota fiscal, mas alteram a base de cálculo do ISS",
+                            "example": 10,
+                            "deprecated": false
+                          },
+                          "effectiveDate": {
+                            "type": "string",
+                            "description": "Data de emissão da nota fiscal",
+                            "format": "date",
+                            "example": "2024-08-15",
+                            "deprecated": false
+                          },
+                          "observations": {
+                            "type": "string",
+                            "description": "Observações adicionais",
+                            "example": "Mensal referente aos trabalhos de Junho.",
+                            "deprecated": false
+                          },
+                          "estimatedTaxesDescription": {
+                            "type": "string",
+                            "description": "Impostos estimados da nota fiscal",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "externalReference": {
+                            "type": "string",
+                            "description": "Identificador da nota fiscal no seu sistema",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "taxes": {
+                            "required": [
+                              "retainIss",
+                              "iss",
+                              "pis",
+                              "cofins",
+                              "csll",
+                              "inss",
+                              "ir"
+                            ],
+                            "type": "object",
+                            "properties": {
+                              "nbsCode": {
+                                "type": "string",
+                                "description": "Código NBS (Nomenclatura Brasileira de Serviços)",
+                                "example": "01.01",
+                                "deprecated": false
+                              },
+                              "taxSituationCode": {
+                                "type": "string",
+                                "description": "Código de situação tributária",
+                                "example": "011",
+                                "deprecated": false
+                              },
+                              "taxClassificationCode": {
+                                "type": "string",
+                                "description": "Código de classificação tributária",
+                                "example": "011001",
+                                "deprecated": false
+                              },
+                              "operationIndicatorCode": {
+                                "type": "string",
+                                "description": "Código do indicador de operação",
+                                "example": "020101",
+                                "deprecated": false
+                              },
+                              "retainIss": {
+                                "type": "boolean",
+                                "description": "Tomador da nota fiscal deve reter ISS ou não",
+                                "nullable": false,
+                                "example": true,
+                                "deprecated": false
+                              },
+                              "iss": {
+                                "type": "number",
+                                "description": "Alíquota ISS",
+                                "nullable": false,
+                                "example": 2,
+                                "deprecated": false
+                              },
+                              "pisCofinsRetentionType": {
+                                "type": "string",
+                                "description": "Tipo de retenção do PIS/COFINS",
+                                "example": "NOT_WITHHELD",
+                                "deprecated": false
+                              },
+                              "pisCofinsTaxStatus": {
+                                "type": "string",
+                                "description": "Situação tributária do PIS/COFINS",
+                                "example": "STANDARD_TAXABLE_OPERATION",
+                                "deprecated": false
+                              },
+                              "pis": {
+                                "type": "number",
+                                "description": "Alíquota PIS",
+                                "nullable": false,
+                                "example": 0.65,
+                                "deprecated": false
+                              },
+                              "cofins": {
+                                "type": "number",
+                                "description": "Alíquota COFINS",
+                                "nullable": false,
+                                "example": 3,
+                                "deprecated": false
+                              },
+                              "csll": {
+                                "type": "number",
+                                "description": "Alíquota CSLL",
+                                "nullable": false,
+                                "example": 9,
+                                "deprecated": false
+                              },
+                              "inss": {
+                                "type": "number",
+                                "description": "Alíquota INSS",
+                                "nullable": false,
+                                "example": 11,
+                                "deprecated": false
+                              },
+                              "ir": {
+                                "type": "number",
+                                "description": "Alíquota IR",
+                                "nullable": false,
+                                "example": 1.5,
+                                "deprecated": false
+                              },
+                              "stateIbs": {
+                                "type": "number",
+                                "description": "Alíquota estadual IBS",
+                                "example": 0.1,
+                                "deprecated": false
+                              },
+                              "stateIbsValue": {
+                                "type": "number",
+                                "description": "Valor estadual IBS",
+                                "example": 0.3,
+                                "deprecated": false
+                              },
+                              "municipalIbs": {
+                                "type": "number",
+                                "description": "Alíquota municipal IBS",
+                                "example": 0,
+                                "deprecated": false
+                              },
+                              "municipalIbsValue": {
+                                "type": "number",
+                                "description": "Valor municipal IBS",
+                                "example": 0,
+                                "deprecated": false
+                              },
+                              "cbs": {
+                                "type": "number",
+                                "description": "Alíquota CBS",
+                                "example": 0.9,
+                                "deprecated": false
+                              },
+                              "cbsValue": {
+                                "type": "number",
+                                "description": "Valor CBS",
+                                "example": 2.7,
+                                "deprecated": false
+                              }
+                            },
+                            "description": "Impostos da nota fiscal",
+                            "deprecated": false,
+                            "x-readme-ref-name": "InvoiceTaxesResponseDTO"
+                          },
+                          "municipalServiceId": {
+                            "type": "string",
+                            "description": "Identificador único do serviço municipal",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "municipalServiceCode": {
+                            "type": "string",
+                            "description": "Código de serviço municipal",
+                            "example": "1.01",
+                            "deprecated": false
+                          },
+                          "municipalServiceName": {
+                            "type": "string",
+                            "description": "Nome do serviço municipal",
+                            "example": "Análise e desenvolvimento de sistemas",
+                            "deprecated": false
+                          }
+                        },
+                        "x-readme-ref-name": "InvoiceGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "InvoiceListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/invoices/{id}": {
+      "put": {
+        "tags": [
+          "Notas fiscais"
+        ],
+        "summary": "Atualizar nota fiscal",
+        "description": "",
+        "operationId": "atualizar-nota-fiscal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da nota fiscal no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "inv_000000000232"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "serviceDescription": {
+                    "type": "string",
+                    "description": "Descrição dos serviços da nota fiscal",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "observations": {
+                    "type": "string",
+                    "description": "Observações adicionais",
+                    "example": "Mensal referente aos trabalhos de Junho.",
+                    "deprecated": false
+                  },
+                  "externalReference": {
+                    "type": "string",
+                    "description": "Identificador da nota fiscal no seu sistema",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Valor total",
+                    "example": 300,
+                    "deprecated": false
+                  },
+                  "deductions": {
+                    "type": "number",
+                    "description": "Deduções. As deduções não alteram o valor total da nota fiscal, mas alteram a base de cálculo do ISS",
+                    "example": 10,
+                    "deprecated": false
+                  },
+                  "effectiveDate": {
+                    "type": "string",
+                    "description": "Data de emissão da nota fiscal",
+                    "format": "date",
+                    "example": "2024-08-20",
+                    "deprecated": false
+                  },
+                  "updatePayment": {
+                    "type": "boolean",
+                    "description": "Atualizar o valor da cobrança com os impostos da nota já descontados.",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "taxes": {
+                    "required": [
+                      "retainIss",
+                      "iss",
+                      "pis",
+                      "cofins",
+                      "csll",
+                      "inss",
+                      "ir"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "nbsCode": {
+                        "type": "string",
+                        "description": "Código NBS (Nomenclatura Brasileira de Serviços)",
+                        "example": "01.01",
+                        "deprecated": false
+                      },
+                      "taxSituationCode": {
+                        "type": "string",
+                        "description": "Código de situação tributária",
+                        "example": "011",
+                        "deprecated": false
+                      },
+                      "taxClassificationCode": {
+                        "type": "string",
+                        "description": "Código de classificação tributária",
+                        "example": "011001",
+                        "deprecated": false
+                      },
+                      "operationIndicatorCode": {
+                        "type": "string",
+                        "description": "Código do indicador de operação",
+                        "example": "020101",
+                        "deprecated": false
+                      },
+                      "retainIss": {
+                        "type": "boolean",
+                        "description": "Tomador da nota fiscal deve reter ISS ou não",
+                        "nullable": false,
+                        "example": true,
+                        "deprecated": false
+                      },
+                      "iss": {
+                        "type": "number",
+                        "description": "Alíquota ISS",
+                        "nullable": false,
+                        "example": 2,
+                        "deprecated": false
+                      },
+                      "pisCofinsRetentionType": {
+                        "type": "string",
+                        "description": "Tipo de retenção do PIS/COFINS",
+                        "example": "NOT_WITHHELD",
+                        "deprecated": false
+                      },
+                      "pisCofinsTaxStatus": {
+                        "type": "string",
+                        "description": "Situação tributária do PIS/COFINS",
+                        "example": "STANDARD_TAXABLE_OPERATION",
+                        "deprecated": false
+                      },
+                      "pis": {
+                        "type": "number",
+                        "description": "Alíquota PIS",
+                        "nullable": false,
+                        "example": 0.65,
+                        "deprecated": false
+                      },
+                      "cofins": {
+                        "type": "number",
+                        "description": "Alíquota COFINS",
+                        "nullable": false,
+                        "example": 3,
+                        "deprecated": false
+                      },
+                      "csll": {
+                        "type": "number",
+                        "description": "Alíquota CSLL",
+                        "nullable": false,
+                        "example": 9,
+                        "deprecated": false
+                      },
+                      "inss": {
+                        "type": "number",
+                        "description": "Alíquota INSS",
+                        "nullable": false,
+                        "example": 11,
+                        "deprecated": false
+                      },
+                      "ir": {
+                        "type": "number",
+                        "description": "Alíquota IR",
+                        "nullable": false,
+                        "example": 1.5,
+                        "deprecated": false
+                      }
+                    },
+                    "description": "Impostos da nota fiscal",
+                    "nullable": false,
+                    "deprecated": false,
+                    "x-readme-ref-name": "InvoiceTaxesRequestDTO"
+                  }
+                },
+                "x-readme-ref-name": "InvoiceUpdateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "invoice",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da nota fiscal no Asaas",
+                      "example": "inv_000000000232",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da nota fiscal",
+                      "example": "SCHEDULED",
+                      "deprecated": false,
+                      "enum": [
+                        "SCHEDULED",
+                        "AUTHORIZED",
+                        "PROCESSING_CANCELLATION",
+                        "CANCELED",
+                        "CANCELLATION_DENIED",
+                        "ERROR"
+                      ],
+                      "x-readme-ref-name": "InvoiceGetResponseInvoiceStatus"
+                    },
+                    "customer": {
+                      "type": "string",
+                      "description": "Identificador único do cliente no Asaas",
+                      "example": "cus_000000002750",
+                      "deprecated": false
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança no Asaas",
+                      "example": "pay_145059895800",
+                      "deprecated": false
+                    },
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento no Asaas",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de nota fiscal",
+                      "example": "NFS-e",
+                      "deprecated": false,
+                      "enum": [
+                        "NFS-e"
+                      ]
+                    },
+                    "statusDescription": {
+                      "type": "string",
+                      "description": "Descrição da situação atual da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "serviceDescription": {
+                      "type": "string",
+                      "description": "Descrição dos serviços da nota fiscal",
+                      "example": "Nota fiscal da Fatura 101940. \nDescrição dos Serviços: ANÁLISE E DESENVOLVIMENTO DE SISTEMAS",
+                      "deprecated": false
+                    },
+                    "pdfUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo pdf da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "xmlUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo xml da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsSerie": {
+                      "type": "string",
+                      "description": "Série da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsNumber": {
+                      "type": "string",
+                      "description": "RPS convertido para a nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "number": {
+                      "type": "string",
+                      "description": "Número da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "validationCode": {
+                      "type": "string",
+                      "description": "Código de verificação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor total",
+                      "example": 300,
+                      "deprecated": false
+                    },
+                    "deductions": {
+                      "type": "number",
+                      "description": "Deduções. As deduções não alteram o valor total da nota fiscal, mas alteram a base de cálculo do ISS",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "effectiveDate": {
+                      "type": "string",
+                      "description": "Data de emissão da nota fiscal",
+                      "format": "date",
+                      "example": "2024-08-15",
+                      "deprecated": false
+                    },
+                    "observations": {
+                      "type": "string",
+                      "description": "Observações adicionais",
+                      "example": "Mensal referente aos trabalhos de Junho.",
+                      "deprecated": false
+                    },
+                    "estimatedTaxesDescription": {
+                      "type": "string",
+                      "description": "Impostos estimados da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador da nota fiscal no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "taxes": {
+                      "required": [
+                        "retainIss",
+                        "iss",
+                        "pis",
+                        "cofins",
+                        "csll",
+                        "inss",
+                        "ir"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "nbsCode": {
+                          "type": "string",
+                          "description": "Código NBS (Nomenclatura Brasileira de Serviços)",
+                          "example": "01.01",
+                          "deprecated": false
+                        },
+                        "taxSituationCode": {
+                          "type": "string",
+                          "description": "Código de situação tributária",
+                          "example": "011",
+                          "deprecated": false
+                        },
+                        "taxClassificationCode": {
+                          "type": "string",
+                          "description": "Código de classificação tributária",
+                          "example": "011001",
+                          "deprecated": false
+                        },
+                        "operationIndicatorCode": {
+                          "type": "string",
+                          "description": "Código do indicador de operação",
+                          "example": "020101",
+                          "deprecated": false
+                        },
+                        "retainIss": {
+                          "type": "boolean",
+                          "description": "Tomador da nota fiscal deve reter ISS ou não",
+                          "nullable": false,
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "iss": {
+                          "type": "number",
+                          "description": "Alíquota ISS",
+                          "nullable": false,
+                          "example": 2,
+                          "deprecated": false
+                        },
+                        "pisCofinsRetentionType": {
+                          "type": "string",
+                          "description": "Tipo de retenção do PIS/COFINS",
+                          "example": "NOT_WITHHELD",
+                          "deprecated": false
+                        },
+                        "pisCofinsTaxStatus": {
+                          "type": "string",
+                          "description": "Situação tributária do PIS/COFINS",
+                          "example": "STANDARD_TAXABLE_OPERATION",
+                          "deprecated": false
+                        },
+                        "pis": {
+                          "type": "number",
+                          "description": "Alíquota PIS",
+                          "nullable": false,
+                          "example": 0.65,
+                          "deprecated": false
+                        },
+                        "cofins": {
+                          "type": "number",
+                          "description": "Alíquota COFINS",
+                          "nullable": false,
+                          "example": 3,
+                          "deprecated": false
+                        },
+                        "csll": {
+                          "type": "number",
+                          "description": "Alíquota CSLL",
+                          "nullable": false,
+                          "example": 9,
+                          "deprecated": false
+                        },
+                        "inss": {
+                          "type": "number",
+                          "description": "Alíquota INSS",
+                          "nullable": false,
+                          "example": 11,
+                          "deprecated": false
+                        },
+                        "ir": {
+                          "type": "number",
+                          "description": "Alíquota IR",
+                          "nullable": false,
+                          "example": 1.5,
+                          "deprecated": false
+                        },
+                        "stateIbs": {
+                          "type": "number",
+                          "description": "Alíquota estadual IBS",
+                          "example": 0.1,
+                          "deprecated": false
+                        },
+                        "stateIbsValue": {
+                          "type": "number",
+                          "description": "Valor estadual IBS",
+                          "example": 0.3,
+                          "deprecated": false
+                        },
+                        "municipalIbs": {
+                          "type": "number",
+                          "description": "Alíquota municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "municipalIbsValue": {
+                          "type": "number",
+                          "description": "Valor municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "cbs": {
+                          "type": "number",
+                          "description": "Alíquota CBS",
+                          "example": 0.9,
+                          "deprecated": false
+                        },
+                        "cbsValue": {
+                          "type": "number",
+                          "description": "Valor CBS",
+                          "example": 2.7,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Impostos da nota fiscal",
+                      "deprecated": false,
+                      "x-readme-ref-name": "InvoiceTaxesResponseDTO"
+                    },
+                    "municipalServiceId": {
+                      "type": "string",
+                      "description": "Identificador único do serviço municipal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "municipalServiceCode": {
+                      "type": "string",
+                      "description": "Código de serviço municipal",
+                      "example": "1.01",
+                      "deprecated": false
+                    },
+                    "municipalServiceName": {
+                      "type": "string",
+                      "description": "Nome do serviço municipal",
+                      "example": "Análise e desenvolvimento de sistemas",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "InvoiceGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Notas fiscais"
+        ],
+        "summary": "Recuperar uma única nota fiscal",
+        "description": "",
+        "operationId": "recuperar-uma-nota-fiscal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da nota fiscal no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "inv_000000000232"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "invoice",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da nota fiscal no Asaas",
+                      "example": "inv_000000000232",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da nota fiscal",
+                      "example": "SCHEDULED",
+                      "deprecated": false,
+                      "enum": [
+                        "SCHEDULED",
+                        "AUTHORIZED",
+                        "PROCESSING_CANCELLATION",
+                        "CANCELED",
+                        "CANCELLATION_DENIED",
+                        "ERROR"
+                      ],
+                      "x-readme-ref-name": "InvoiceGetResponseInvoiceStatus"
+                    },
+                    "customer": {
+                      "type": "string",
+                      "description": "Identificador único do cliente no Asaas",
+                      "example": "cus_000000002750",
+                      "deprecated": false
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança no Asaas",
+                      "example": "pay_145059895800",
+                      "deprecated": false
+                    },
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento no Asaas",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de nota fiscal",
+                      "example": "NFS-e",
+                      "deprecated": false,
+                      "enum": [
+                        "NFS-e"
+                      ]
+                    },
+                    "statusDescription": {
+                      "type": "string",
+                      "description": "Descrição da situação atual da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "serviceDescription": {
+                      "type": "string",
+                      "description": "Descrição dos serviços da nota fiscal",
+                      "example": "Nota fiscal da Fatura 101940. \nDescrição dos Serviços: ANÁLISE E DESENVOLVIMENTO DE SISTEMAS",
+                      "deprecated": false
+                    },
+                    "pdfUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo pdf da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "xmlUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo xml da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsSerie": {
+                      "type": "string",
+                      "description": "Série da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsNumber": {
+                      "type": "string",
+                      "description": "RPS convertido para a nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "number": {
+                      "type": "string",
+                      "description": "Número da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "validationCode": {
+                      "type": "string",
+                      "description": "Código de verificação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor total",
+                      "example": 300,
+                      "deprecated": false
+                    },
+                    "deductions": {
+                      "type": "number",
+                      "description": "Deduções. As deduções não alteram o valor total da nota fiscal, mas alteram a base de cálculo do ISS",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "effectiveDate": {
+                      "type": "string",
+                      "description": "Data de emissão da nota fiscal",
+                      "format": "date",
+                      "example": "2024-08-15",
+                      "deprecated": false
+                    },
+                    "observations": {
+                      "type": "string",
+                      "description": "Observações adicionais",
+                      "example": "Mensal referente aos trabalhos de Junho.",
+                      "deprecated": false
+                    },
+                    "estimatedTaxesDescription": {
+                      "type": "string",
+                      "description": "Impostos estimados da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador da nota fiscal no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "taxes": {
+                      "required": [
+                        "retainIss",
+                        "iss",
+                        "pis",
+                        "cofins",
+                        "csll",
+                        "inss",
+                        "ir"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "nbsCode": {
+                          "type": "string",
+                          "description": "Código NBS (Nomenclatura Brasileira de Serviços)",
+                          "example": "01.01",
+                          "deprecated": false
+                        },
+                        "taxSituationCode": {
+                          "type": "string",
+                          "description": "Código de situação tributária",
+                          "example": "011",
+                          "deprecated": false
+                        },
+                        "taxClassificationCode": {
+                          "type": "string",
+                          "description": "Código de classificação tributária",
+                          "example": "011001",
+                          "deprecated": false
+                        },
+                        "operationIndicatorCode": {
+                          "type": "string",
+                          "description": "Código do indicador de operação",
+                          "example": "020101",
+                          "deprecated": false
+                        },
+                        "retainIss": {
+                          "type": "boolean",
+                          "description": "Tomador da nota fiscal deve reter ISS ou não",
+                          "nullable": false,
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "iss": {
+                          "type": "number",
+                          "description": "Alíquota ISS",
+                          "nullable": false,
+                          "example": 2,
+                          "deprecated": false
+                        },
+                        "pisCofinsRetentionType": {
+                          "type": "string",
+                          "description": "Tipo de retenção do PIS/COFINS",
+                          "example": "NOT_WITHHELD",
+                          "deprecated": false
+                        },
+                        "pisCofinsTaxStatus": {
+                          "type": "string",
+                          "description": "Situação tributária do PIS/COFINS",
+                          "example": "STANDARD_TAXABLE_OPERATION",
+                          "deprecated": false
+                        },
+                        "pis": {
+                          "type": "number",
+                          "description": "Alíquota PIS",
+                          "nullable": false,
+                          "example": 0.65,
+                          "deprecated": false
+                        },
+                        "cofins": {
+                          "type": "number",
+                          "description": "Alíquota COFINS",
+                          "nullable": false,
+                          "example": 3,
+                          "deprecated": false
+                        },
+                        "csll": {
+                          "type": "number",
+                          "description": "Alíquota CSLL",
+                          "nullable": false,
+                          "example": 9,
+                          "deprecated": false
+                        },
+                        "inss": {
+                          "type": "number",
+                          "description": "Alíquota INSS",
+                          "nullable": false,
+                          "example": 11,
+                          "deprecated": false
+                        },
+                        "ir": {
+                          "type": "number",
+                          "description": "Alíquota IR",
+                          "nullable": false,
+                          "example": 1.5,
+                          "deprecated": false
+                        },
+                        "stateIbs": {
+                          "type": "number",
+                          "description": "Alíquota estadual IBS",
+                          "example": 0.1,
+                          "deprecated": false
+                        },
+                        "stateIbsValue": {
+                          "type": "number",
+                          "description": "Valor estadual IBS",
+                          "example": 0.3,
+                          "deprecated": false
+                        },
+                        "municipalIbs": {
+                          "type": "number",
+                          "description": "Alíquota municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "municipalIbsValue": {
+                          "type": "number",
+                          "description": "Valor municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "cbs": {
+                          "type": "number",
+                          "description": "Alíquota CBS",
+                          "example": 0.9,
+                          "deprecated": false
+                        },
+                        "cbsValue": {
+                          "type": "number",
+                          "description": "Valor CBS",
+                          "example": 2.7,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Impostos da nota fiscal",
+                      "deprecated": false,
+                      "x-readme-ref-name": "InvoiceTaxesResponseDTO"
+                    },
+                    "municipalServiceId": {
+                      "type": "string",
+                      "description": "Identificador único do serviço municipal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "municipalServiceCode": {
+                      "type": "string",
+                      "description": "Código de serviço municipal",
+                      "example": "1.01",
+                      "deprecated": false
+                    },
+                    "municipalServiceName": {
+                      "type": "string",
+                      "description": "Nome do serviço municipal",
+                      "example": "Análise e desenvolvimento de sistemas",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "InvoiceGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/invoices/{id}/authorize": {
+      "post": {
+        "tags": [
+          "Notas fiscais"
+        ],
+        "summary": "Emitir uma nota fiscal",
+        "description": "",
+        "operationId": "emitir-uma-nota-fiscal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da nota fiscal no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "inv_000000000232"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "InvoicePathIdRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "invoice",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da nota fiscal no Asaas",
+                      "example": "inv_000000000232",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da nota fiscal",
+                      "example": "SCHEDULED",
+                      "deprecated": false,
+                      "enum": [
+                        "SCHEDULED",
+                        "AUTHORIZED",
+                        "PROCESSING_CANCELLATION",
+                        "CANCELED",
+                        "CANCELLATION_DENIED",
+                        "ERROR"
+                      ],
+                      "x-readme-ref-name": "InvoiceGetResponseInvoiceStatus"
+                    },
+                    "customer": {
+                      "type": "string",
+                      "description": "Identificador único do cliente no Asaas",
+                      "example": "cus_000000002750",
+                      "deprecated": false
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança no Asaas",
+                      "example": "pay_145059895800",
+                      "deprecated": false
+                    },
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento no Asaas",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de nota fiscal",
+                      "example": "NFS-e",
+                      "deprecated": false,
+                      "enum": [
+                        "NFS-e"
+                      ]
+                    },
+                    "statusDescription": {
+                      "type": "string",
+                      "description": "Descrição da situação atual da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "serviceDescription": {
+                      "type": "string",
+                      "description": "Descrição dos serviços da nota fiscal",
+                      "example": "Nota fiscal da Fatura 101940. \nDescrição dos Serviços: ANÁLISE E DESENVOLVIMENTO DE SISTEMAS",
+                      "deprecated": false
+                    },
+                    "pdfUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo pdf da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "xmlUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo xml da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsSerie": {
+                      "type": "string",
+                      "description": "Série da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsNumber": {
+                      "type": "string",
+                      "description": "RPS convertido para a nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "number": {
+                      "type": "string",
+                      "description": "Número da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "validationCode": {
+                      "type": "string",
+                      "description": "Código de verificação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor total",
+                      "example": 300,
+                      "deprecated": false
+                    },
+                    "deductions": {
+                      "type": "number",
+                      "description": "Deduções. As deduções não alteram o valor total da nota fiscal, mas alteram a base de cálculo do ISS",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "effectiveDate": {
+                      "type": "string",
+                      "description": "Data de emissão da nota fiscal",
+                      "format": "date",
+                      "example": "2024-08-15",
+                      "deprecated": false
+                    },
+                    "observations": {
+                      "type": "string",
+                      "description": "Observações adicionais",
+                      "example": "Mensal referente aos trabalhos de Junho.",
+                      "deprecated": false
+                    },
+                    "estimatedTaxesDescription": {
+                      "type": "string",
+                      "description": "Impostos estimados da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador da nota fiscal no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "taxes": {
+                      "required": [
+                        "retainIss",
+                        "iss",
+                        "pis",
+                        "cofins",
+                        "csll",
+                        "inss",
+                        "ir"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "nbsCode": {
+                          "type": "string",
+                          "description": "Código NBS (Nomenclatura Brasileira de Serviços)",
+                          "example": "01.01",
+                          "deprecated": false
+                        },
+                        "taxSituationCode": {
+                          "type": "string",
+                          "description": "Código de situação tributária",
+                          "example": "011",
+                          "deprecated": false
+                        },
+                        "taxClassificationCode": {
+                          "type": "string",
+                          "description": "Código de classificação tributária",
+                          "example": "011001",
+                          "deprecated": false
+                        },
+                        "operationIndicatorCode": {
+                          "type": "string",
+                          "description": "Código do indicador de operação",
+                          "example": "020101",
+                          "deprecated": false
+                        },
+                        "retainIss": {
+                          "type": "boolean",
+                          "description": "Tomador da nota fiscal deve reter ISS ou não",
+                          "nullable": false,
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "iss": {
+                          "type": "number",
+                          "description": "Alíquota ISS",
+                          "nullable": false,
+                          "example": 2,
+                          "deprecated": false
+                        },
+                        "pisCofinsRetentionType": {
+                          "type": "string",
+                          "description": "Tipo de retenção do PIS/COFINS",
+                          "example": "NOT_WITHHELD",
+                          "deprecated": false
+                        },
+                        "pisCofinsTaxStatus": {
+                          "type": "string",
+                          "description": "Situação tributária do PIS/COFINS",
+                          "example": "STANDARD_TAXABLE_OPERATION",
+                          "deprecated": false
+                        },
+                        "pis": {
+                          "type": "number",
+                          "description": "Alíquota PIS",
+                          "nullable": false,
+                          "example": 0.65,
+                          "deprecated": false
+                        },
+                        "cofins": {
+                          "type": "number",
+                          "description": "Alíquota COFINS",
+                          "nullable": false,
+                          "example": 3,
+                          "deprecated": false
+                        },
+                        "csll": {
+                          "type": "number",
+                          "description": "Alíquota CSLL",
+                          "nullable": false,
+                          "example": 9,
+                          "deprecated": false
+                        },
+                        "inss": {
+                          "type": "number",
+                          "description": "Alíquota INSS",
+                          "nullable": false,
+                          "example": 11,
+                          "deprecated": false
+                        },
+                        "ir": {
+                          "type": "number",
+                          "description": "Alíquota IR",
+                          "nullable": false,
+                          "example": 1.5,
+                          "deprecated": false
+                        },
+                        "stateIbs": {
+                          "type": "number",
+                          "description": "Alíquota estadual IBS",
+                          "example": 0.1,
+                          "deprecated": false
+                        },
+                        "stateIbsValue": {
+                          "type": "number",
+                          "description": "Valor estadual IBS",
+                          "example": 0.3,
+                          "deprecated": false
+                        },
+                        "municipalIbs": {
+                          "type": "number",
+                          "description": "Alíquota municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "municipalIbsValue": {
+                          "type": "number",
+                          "description": "Valor municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "cbs": {
+                          "type": "number",
+                          "description": "Alíquota CBS",
+                          "example": 0.9,
+                          "deprecated": false
+                        },
+                        "cbsValue": {
+                          "type": "number",
+                          "description": "Valor CBS",
+                          "example": 2.7,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Impostos da nota fiscal",
+                      "deprecated": false,
+                      "x-readme-ref-name": "InvoiceTaxesResponseDTO"
+                    },
+                    "municipalServiceId": {
+                      "type": "string",
+                      "description": "Identificador único do serviço municipal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "municipalServiceCode": {
+                      "type": "string",
+                      "description": "Código de serviço municipal",
+                      "example": "1.01",
+                      "deprecated": false
+                    },
+                    "municipalServiceName": {
+                      "type": "string",
+                      "description": "Nome do serviço municipal",
+                      "example": "Análise e desenvolvimento de sistemas",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "InvoiceGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/invoices/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Notas fiscais"
+        ],
+        "summary": "Cancelar uma nota fiscal",
+        "description": "",
+        "operationId": "cancelar-uma-nota-fiscal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da nota fiscal no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "inv_000000000232"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cancelOnlyOnAsaas": {
+                    "type": "boolean",
+                    "description": "Cancelar nota fiscal somente no Asaas",
+                    "deprecated": false,
+                    "example": null
+                  }
+                },
+                "x-readme-ref-name": "InvoiceCancelRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "invoice",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da nota fiscal no Asaas",
+                      "example": "inv_000000000232",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da nota fiscal",
+                      "example": "SCHEDULED",
+                      "deprecated": false,
+                      "enum": [
+                        "SCHEDULED",
+                        "AUTHORIZED",
+                        "PROCESSING_CANCELLATION",
+                        "CANCELED",
+                        "CANCELLATION_DENIED",
+                        "ERROR"
+                      ],
+                      "x-readme-ref-name": "InvoiceGetResponseInvoiceStatus"
+                    },
+                    "customer": {
+                      "type": "string",
+                      "description": "Identificador único do cliente no Asaas",
+                      "example": "cus_000000002750",
+                      "deprecated": false
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança no Asaas",
+                      "example": "pay_145059895800",
+                      "deprecated": false
+                    },
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento no Asaas",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de nota fiscal",
+                      "example": "NFS-e",
+                      "deprecated": false,
+                      "enum": [
+                        "NFS-e"
+                      ]
+                    },
+                    "statusDescription": {
+                      "type": "string",
+                      "description": "Descrição da situação atual da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "serviceDescription": {
+                      "type": "string",
+                      "description": "Descrição dos serviços da nota fiscal",
+                      "example": "Nota fiscal da Fatura 101940. \nDescrição dos Serviços: ANÁLISE E DESENVOLVIMENTO DE SISTEMAS",
+                      "deprecated": false
+                    },
+                    "pdfUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo pdf da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "xmlUrl": {
+                      "type": "string",
+                      "description": "Link para arquivo xml da nota fiscal emitida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsSerie": {
+                      "type": "string",
+                      "description": "Série da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "rpsNumber": {
+                      "type": "string",
+                      "description": "RPS convertido para a nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "number": {
+                      "type": "string",
+                      "description": "Número da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "validationCode": {
+                      "type": "string",
+                      "description": "Código de verificação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor total",
+                      "example": 300,
+                      "deprecated": false
+                    },
+                    "deductions": {
+                      "type": "number",
+                      "description": "Deduções. As deduções não alteram o valor total da nota fiscal, mas alteram a base de cálculo do ISS",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "effectiveDate": {
+                      "type": "string",
+                      "description": "Data de emissão da nota fiscal",
+                      "format": "date",
+                      "example": "2024-08-15",
+                      "deprecated": false
+                    },
+                    "observations": {
+                      "type": "string",
+                      "description": "Observações adicionais",
+                      "example": "Mensal referente aos trabalhos de Junho.",
+                      "deprecated": false
+                    },
+                    "estimatedTaxesDescription": {
+                      "type": "string",
+                      "description": "Impostos estimados da nota fiscal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador da nota fiscal no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "taxes": {
+                      "required": [
+                        "retainIss",
+                        "iss",
+                        "pis",
+                        "cofins",
+                        "csll",
+                        "inss",
+                        "ir"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "nbsCode": {
+                          "type": "string",
+                          "description": "Código NBS (Nomenclatura Brasileira de Serviços)",
+                          "example": "01.01",
+                          "deprecated": false
+                        },
+                        "taxSituationCode": {
+                          "type": "string",
+                          "description": "Código de situação tributária",
+                          "example": "011",
+                          "deprecated": false
+                        },
+                        "taxClassificationCode": {
+                          "type": "string",
+                          "description": "Código de classificação tributária",
+                          "example": "011001",
+                          "deprecated": false
+                        },
+                        "operationIndicatorCode": {
+                          "type": "string",
+                          "description": "Código do indicador de operação",
+                          "example": "020101",
+                          "deprecated": false
+                        },
+                        "retainIss": {
+                          "type": "boolean",
+                          "description": "Tomador da nota fiscal deve reter ISS ou não",
+                          "nullable": false,
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "iss": {
+                          "type": "number",
+                          "description": "Alíquota ISS",
+                          "nullable": false,
+                          "example": 2,
+                          "deprecated": false
+                        },
+                        "pisCofinsRetentionType": {
+                          "type": "string",
+                          "description": "Tipo de retenção do PIS/COFINS",
+                          "example": "NOT_WITHHELD",
+                          "deprecated": false
+                        },
+                        "pisCofinsTaxStatus": {
+                          "type": "string",
+                          "description": "Situação tributária do PIS/COFINS",
+                          "example": "STANDARD_TAXABLE_OPERATION",
+                          "deprecated": false
+                        },
+                        "pis": {
+                          "type": "number",
+                          "description": "Alíquota PIS",
+                          "nullable": false,
+                          "example": 0.65,
+                          "deprecated": false
+                        },
+                        "cofins": {
+                          "type": "number",
+                          "description": "Alíquota COFINS",
+                          "nullable": false,
+                          "example": 3,
+                          "deprecated": false
+                        },
+                        "csll": {
+                          "type": "number",
+                          "description": "Alíquota CSLL",
+                          "nullable": false,
+                          "example": 9,
+                          "deprecated": false
+                        },
+                        "inss": {
+                          "type": "number",
+                          "description": "Alíquota INSS",
+                          "nullable": false,
+                          "example": 11,
+                          "deprecated": false
+                        },
+                        "ir": {
+                          "type": "number",
+                          "description": "Alíquota IR",
+                          "nullable": false,
+                          "example": 1.5,
+                          "deprecated": false
+                        },
+                        "stateIbs": {
+                          "type": "number",
+                          "description": "Alíquota estadual IBS",
+                          "example": 0.1,
+                          "deprecated": false
+                        },
+                        "stateIbsValue": {
+                          "type": "number",
+                          "description": "Valor estadual IBS",
+                          "example": 0.3,
+                          "deprecated": false
+                        },
+                        "municipalIbs": {
+                          "type": "number",
+                          "description": "Alíquota municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "municipalIbsValue": {
+                          "type": "number",
+                          "description": "Valor municipal IBS",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "cbs": {
+                          "type": "number",
+                          "description": "Alíquota CBS",
+                          "example": 0.9,
+                          "deprecated": false
+                        },
+                        "cbsValue": {
+                          "type": "number",
+                          "description": "Valor CBS",
+                          "example": 2.7,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Impostos da nota fiscal",
+                      "deprecated": false,
+                      "x-readme-ref-name": "InvoiceTaxesResponseDTO"
+                    },
+                    "municipalServiceId": {
+                      "type": "string",
+                      "description": "Identificador único do serviço municipal",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "municipalServiceCode": {
+                      "type": "string",
+                      "description": "Código de serviço municipal",
+                      "example": "1.01",
+                      "deprecated": false
+                    },
+                    "municipalServiceName": {
+                      "type": "string",
+                      "description": "Nome do serviço municipal",
+                      "example": "Análise e desenvolvimento de sistemas",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "InvoiceGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

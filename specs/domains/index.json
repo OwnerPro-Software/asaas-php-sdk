@@ -1,0 +1,308 @@
+{
+  "source": "specs/asaas_openapi.json",
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "domains": [
+    {
+      "slug": "payments",
+      "tag": "Cobranças",
+      "file": "payments.json",
+      "operations": 19,
+      "paths": 16,
+      "schemas": 0,
+      "size_kb": 564.5
+    },
+    {
+      "slug": "subscriptions",
+      "tag": "Assinaturas",
+      "file": "subscriptions.json",
+      "operations": 14,
+      "paths": 8,
+      "schemas": 0,
+      "size_kb": 270.7
+    },
+    {
+      "slug": "lean-payments",
+      "tag": "Cobranças com dados resumidos",
+      "file": "lean-payments.json",
+      "operations": 11,
+      "paths": 8,
+      "schemas": 0,
+      "size_kb": 216.3
+    },
+    {
+      "slug": "payment-links",
+      "tag": "Link de pagamentos",
+      "file": "payment-links.json",
+      "operations": 11,
+      "paths": 6,
+      "schemas": 0,
+      "size_kb": 109.2
+    },
+    {
+      "slug": "installments",
+      "tag": "Parcelamentos",
+      "file": "installments.json",
+      "operations": 10,
+      "paths": 7,
+      "schemas": 0,
+      "size_kb": 225.6
+    },
+    {
+      "slug": "fiscal-info",
+      "tag": "Informações fiscais",
+      "file": "fiscal-info.json",
+      "operations": 10,
+      "paths": 9,
+      "schemas": 0,
+      "size_kb": 96.4
+    },
+    {
+      "slug": "my-account",
+      "tag": "Informações e personalização da conta",
+      "file": "my-account.json",
+      "operations": 10,
+      "paths": 8,
+      "schemas": 0,
+      "size_kb": 101.9
+    },
+    {
+      "slug": "payment-dunnings",
+      "tag": "Negativações",
+      "file": "payment-dunnings.json",
+      "operations": 9,
+      "paths": 8,
+      "schemas": 0,
+      "size_kb": 104.3
+    },
+    {
+      "slug": "anticipations",
+      "tag": "Antecipações",
+      "file": "anticipations.json",
+      "operations": 8,
+      "paths": 6,
+      "schemas": 0,
+      "size_kb": 62.4
+    },
+    {
+      "slug": "customers",
+      "tag": "Clientes",
+      "file": "customers.json",
+      "operations": 7,
+      "paths": 4,
+      "schemas": 0,
+      "size_kb": 83.9
+    },
+    {
+      "slug": "pix",
+      "tag": "Pix",
+      "file": "pix.json",
+      "operations": 7,
+      "paths": 5,
+      "schemas": 0,
+      "size_kb": 52.3
+    },
+    {
+      "slug": "accounts",
+      "tag": "Subcontas Asaas",
+      "file": "accounts.json",
+      "operations": 7,
+      "paths": 4,
+      "schemas": 0,
+      "size_kb": 97.5
+    },
+    {
+      "slug": "escrow",
+      "tag": "Conta Escrow",
+      "file": "escrow.json",
+      "operations": 6,
+      "paths": 4,
+      "schemas": 0,
+      "size_kb": 71.4
+    },
+    {
+      "slug": "invoices",
+      "tag": "Notas fiscais",
+      "file": "invoices.json",
+      "operations": 6,
+      "paths": 4,
+      "schemas": 0,
+      "size_kb": 124.2
+    },
+    {
+      "slug": "pix-automatic",
+      "tag": "Pix Automático",
+      "file": "pix-automatic.json",
+      "operations": 6,
+      "paths": 4,
+      "schemas": 0,
+      "size_kb": 73.5
+    },
+    {
+      "slug": "webhooks",
+      "tag": "Configurações de Webhooks",
+      "file": "webhooks.json",
+      "operations": 6,
+      "paths": 3,
+      "schemas": 0,
+      "size_kb": 126.1
+    },
+    {
+      "slug": "payment-documents",
+      "tag": "Documentos de cobranças",
+      "file": "payment-documents.json",
+      "operations": 5,
+      "paths": 2,
+      "schemas": 0,
+      "size_kb": 45.9
+    },
+    {
+      "slug": "pix-transactions",
+      "tag": "Transações Pix",
+      "file": "pix-transactions.json",
+      "operations": 5,
+      "paths": 5,
+      "schemas": 0,
+      "size_kb": 104.9
+    },
+    {
+      "slug": "pix-recurring",
+      "tag": "Pix Recorrente",
+      "file": "pix-recurring.json",
+      "operations": 5,
+      "paths": 5,
+      "schemas": 0,
+      "size_kb": 50.7
+    },
+    {
+      "slug": "transfers",
+      "tag": "Transferências",
+      "file": "transfers.json",
+      "operations": 5,
+      "paths": 4,
+      "schemas": 0,
+      "size_kb": 80.2
+    },
+    {
+      "slug": "bill-payments",
+      "tag": "Pagamento de contas",
+      "file": "bill-payments.json",
+      "operations": 5,
+      "paths": 4,
+      "schemas": 0,
+      "size_kb": 55.7
+    },
+    {
+      "slug": "mobile-phone-recharges",
+      "tag": "Recargas de celular",
+      "file": "mobile-phone-recharges.json",
+      "operations": 5,
+      "paths": 4,
+      "schemas": 0,
+      "size_kb": 37.1
+    },
+    {
+      "slug": "my-account-documents",
+      "tag": "Envio de documentos White Label",
+      "file": "my-account-documents.json",
+      "operations": 5,
+      "paths": 3,
+      "schemas": 0,
+      "size_kb": 36.4
+    },
+    {
+      "slug": "payment-splits",
+      "tag": "Splits",
+      "file": "payment-splits.json",
+      "operations": 4,
+      "paths": 4,
+      "schemas": 0,
+      "size_kb": 41.5
+    },
+    {
+      "slug": "credit-card",
+      "tag": "Cartão de crédito",
+      "file": "credit-card.json",
+      "operations": 3,
+      "paths": 2,
+      "schemas": 0,
+      "size_kb": 22.2
+    },
+    {
+      "slug": "chargebacks",
+      "tag": "Chargeback",
+      "file": "chargebacks.json",
+      "operations": 3,
+      "paths": 3,
+      "schemas": 0,
+      "size_kb": 35.4
+    },
+    {
+      "slug": "credit-bureau-report",
+      "tag": "Consulta Serasa",
+      "file": "credit-bureau-report.json",
+      "operations": 3,
+      "paths": 2,
+      "schemas": 0,
+      "size_kb": 22.4
+    },
+    {
+      "slug": "finance",
+      "tag": "Informações financeiras",
+      "file": "finance.json",
+      "operations": 3,
+      "paths": 3,
+      "schemas": 0,
+      "size_kb": 18.6
+    },
+    {
+      "slug": "checkouts",
+      "tag": "Checkout",
+      "file": "checkouts.json",
+      "operations": 2,
+      "paths": 2,
+      "schemas": 0,
+      "size_kb": 53.1
+    },
+    {
+      "slug": "payment-refunds",
+      "tag": "Estornos",
+      "file": "payment-refunds.json",
+      "operations": 2,
+      "paths": 2,
+      "schemas": 0,
+      "size_kb": 16.0
+    },
+    {
+      "slug": "notifications",
+      "tag": "Notificações",
+      "file": "notifications.json",
+      "operations": 2,
+      "paths": 2,
+      "schemas": 0,
+      "size_kb": 26.8
+    },
+    {
+      "slug": "sandbox",
+      "tag": "Ações em sandbox",
+      "file": "sandbox.json",
+      "operations": 2,
+      "paths": 2,
+      "schemas": 0,
+      "size_kb": 80.2
+    },
+    {
+      "slug": "financial-transactions",
+      "tag": "Extrato",
+      "file": "financial-transactions.json",
+      "operations": 1,
+      "paths": 1,
+      "schemas": 0,
+      "size_kb": 20.2
+    }
+  ]
+}

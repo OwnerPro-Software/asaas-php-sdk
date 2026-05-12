@@ -1,0 +1,671 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Notificações"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/notifications/{id}": {
+      "put": {
+        "tags": [
+          "Notificações"
+        ],
+        "summary": "Atualizar notificação existente",
+        "description": "",
+        "operationId": "atualizar-notificacao-existente",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da notificação a ser atualizada",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "not_wuGp97JeCr7G"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Habilita/desabilita a notificação",
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "emailEnabledForProvider": {
+                    "type": "boolean",
+                    "description": "habilita/desabilita o email enviado para você",
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "smsEnabledForProvider": {
+                    "type": "boolean",
+                    "description": "habilita/desabilita o SMS enviado para você",
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "emailEnabledForCustomer": {
+                    "type": "boolean",
+                    "description": "habilita/desabilita o email enviado para o seu cliente",
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "smsEnabledForCustomer": {
+                    "type": "boolean",
+                    "description": "habilita/desabilita o SMS enviado para o seu cliente",
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "phoneCallEnabledForCustomer": {
+                    "type": "boolean",
+                    "description": "habilita/desabilita a notificação por voz enviada para o seu cliente",
+                    "example": false,
+                    "deprecated": false
+                  },
+                  "whatsappEnabledForCustomer": {
+                    "type": "boolean",
+                    "description": "habilita/desabilita a mensagem de WhatsApp para seu cliente",
+                    "example": false,
+                    "deprecated": false
+                  },
+                  "scheduleOffset": {
+                    "type": "integer",
+                    "description": "Especifica quantos dias antes do vencimento a notificação deve se enviada.\n Para o evento  `PAYMENT_DUEDATE_WARNING` os valores aceitos são: `0`, `5`, `10`, `15` e `30`\n Para o evento `PAYMENT_OVERDUE` os valores aceitos são: `1`, `7`, `15` e `30`",
+                    "format": "int32",
+                    "example": 1,
+                    "deprecated": false,
+                    "enum": [
+                      0,
+                      1,
+                      5,
+                      7,
+                      10,
+                      15,
+                      30
+                    ]
+                  }
+                },
+                "x-readme-ref-name": "NotificationUpdateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo do objeto",
+                      "example": "notification",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da notificação",
+                      "example": "not_wuGp97JeCr7G",
+                      "deprecated": false
+                    },
+                    "customer": {
+                      "type": "string",
+                      "description": "Identificador único do cliente",
+                      "example": "cus_000005401844",
+                      "deprecated": false
+                    },
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Indica se a notificação está habilitada",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "emailEnabledForProvider": {
+                      "type": "boolean",
+                      "description": "Indica se o e-mail enviado para você está habilitado ou desabilitado",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "smsEnabledForProvider": {
+                      "type": "boolean",
+                      "description": "Indica se o SMS enviado para você está habilitado ou desabilitado",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "emailEnabledForCustomer": {
+                      "type": "boolean",
+                      "description": "Indica se o e-mail enviado para o cliente está habilitado ou desabilitado",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "smsEnabledForCustomer": {
+                      "type": "boolean",
+                      "description": "Indica se o SMS enviado para o cliente está habilitado ou desabilitado",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "phoneCallEnabledForCustomer": {
+                      "type": "boolean",
+                      "description": "Indica se notificação por voz para o cliente está habilitada ou desabilitada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "whatsappEnabledForCustomer": {
+                      "type": "boolean",
+                      "description": "Indica se a notificação por Whatsapp enviado para o cliente está habilitada ou desabilitada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "event": {
+                      "type": "string",
+                      "description": "Tipo de evento",
+                      "example": "PAYMENT_CREATED",
+                      "deprecated": false,
+                      "enum": [
+                        "PAYMENT_CREATED",
+                        "PAYMENT_UPDATED",
+                        "PAYMENT_RECEIVED",
+                        "PAYMENT_OVERDUE",
+                        "PAYMENT_DUEDATE_WARNING",
+                        "SEND_LINHA_DIGITAVEL"
+                      ],
+                      "x-readme-ref-name": "NotificationGetResponseNotificationEvent"
+                    },
+                    "scheduleOffset": {
+                      "type": "integer",
+                      "description": "Especifica quantos dias antes do vencimento a notificação deve se enviada. Válido para os eventos `PAYMENT_DUEDATE_WARNING` e `PAYMENT_OVERDUE`",
+                      "format": "int32",
+                      "example": 1,
+                      "deprecated": false,
+                      "enum": [
+                        0,
+                        1,
+                        5,
+                        7,
+                        10,
+                        15,
+                        30
+                      ]
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se a notificação foi deletada",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    }
+                  },
+                  "description": "Lista de informações das notificações",
+                  "deprecated": false,
+                  "x-readme-ref-name": "NotificationGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/notifications/batch": {
+      "put": {
+        "tags": [
+          "Notificações"
+        ],
+        "summary": "Atualizar notificações existentes em lote",
+        "description": "É possível personalizar várias notificações, independente do canal de comunicação que utilizar (email, SMS e voz) e quem deve receber a notificação(você e/ou seu cliente) enviando qual o id do cliente e as notificações a serem atualizadas.",
+        "operationId": "atualizar-notificacoes-existentes-em-lote",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "customer"
+                ],
+                "type": "object",
+                "properties": {
+                  "customer": {
+                    "type": "string",
+                    "description": "Identificador único do cliente no Asaas",
+                    "nullable": false,
+                    "example": "cus_000005401844",
+                    "deprecated": false
+                  },
+                  "notifications": {
+                    "type": "array",
+                    "description": "Lista de informações das notificações",
+                    "deprecated": false,
+                    "items": {
+                      "required": [
+                        "id"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Identificador único da notificação a ser atualizada",
+                          "nullable": false,
+                          "example": "not_wuGp97JeCr7G",
+                          "deprecated": false
+                        },
+                        "enabled": {
+                          "type": "boolean",
+                          "description": "Habilita/desabilita a notificação",
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "emailEnabledForProvider": {
+                          "type": "boolean",
+                          "description": "habilita/desabilita o email enviado para você",
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "smsEnabledForProvider": {
+                          "type": "boolean",
+                          "description": "habilita/desabilita o SMS enviado para você",
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "emailEnabledForCustomer": {
+                          "type": "boolean",
+                          "description": "habilita/desabilita o email enviado para o seu cliente",
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "smsEnabledForCustomer": {
+                          "type": "boolean",
+                          "description": "habilita/desabilita o SMS enviado para o seu cliente",
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "phoneCallEnabledForCustomer": {
+                          "type": "boolean",
+                          "description": "habilita/desabilita a notificação por voz enviada para o seu cliente",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "whatsappEnabledForCustomer": {
+                          "type": "boolean",
+                          "description": "habilita/desabilita a mensagem de WhatsApp para seu cliente",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "scheduleOffset": {
+                          "type": "integer",
+                          "description": "Especifica quantos dias antes do vencimento a notificação deve se enviada.\n Para o evento  `PAYMENT_DUEDATE_WARNING` os valores aceitos são: `0`, `5`, `10`, `15` e `30`\n Para o evento `PAYMENT_OVERDUE` os valores aceitos são: `1`, `7`, `15` e `30`",
+                          "format": "int32",
+                          "example": 1,
+                          "deprecated": false,
+                          "enum": [
+                            0,
+                            1,
+                            5,
+                            7,
+                            10,
+                            15,
+                            30
+                          ]
+                        }
+                      },
+                      "description": "Lista de informações das notificações",
+                      "deprecated": false,
+                      "x-readme-ref-name": "NotificationBatchUpdateItemRequestDTO"
+                    }
+                  }
+                },
+                "x-readme-ref-name": "NotificationBatchUpdateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "notifications": {
+                      "type": "array",
+                      "description": "Lista de informações das notificações",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "description": "Tipo do objeto",
+                            "example": "notification",
+                            "deprecated": false
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da notificação",
+                            "example": "not_wuGp97JeCr7G",
+                            "deprecated": false
+                          },
+                          "customer": {
+                            "type": "string",
+                            "description": "Identificador único do cliente",
+                            "example": "cus_000005401844",
+                            "deprecated": false
+                          },
+                          "enabled": {
+                            "type": "boolean",
+                            "description": "Indica se a notificação está habilitada",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "emailEnabledForProvider": {
+                            "type": "boolean",
+                            "description": "Indica se o e-mail enviado para você está habilitado ou desabilitado",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "smsEnabledForProvider": {
+                            "type": "boolean",
+                            "description": "Indica se o SMS enviado para você está habilitado ou desabilitado",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "emailEnabledForCustomer": {
+                            "type": "boolean",
+                            "description": "Indica se o e-mail enviado para o cliente está habilitado ou desabilitado",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "smsEnabledForCustomer": {
+                            "type": "boolean",
+                            "description": "Indica se o SMS enviado para o cliente está habilitado ou desabilitado",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "phoneCallEnabledForCustomer": {
+                            "type": "boolean",
+                            "description": "Indica se notificação por voz para o cliente está habilitada ou desabilitada",
+                            "example": false,
+                            "deprecated": false
+                          },
+                          "whatsappEnabledForCustomer": {
+                            "type": "boolean",
+                            "description": "Indica se a notificação por Whatsapp enviado para o cliente está habilitada ou desabilitada",
+                            "example": false,
+                            "deprecated": false
+                          },
+                          "event": {
+                            "type": "string",
+                            "description": "Tipo de evento",
+                            "example": "PAYMENT_CREATED",
+                            "deprecated": false,
+                            "enum": [
+                              "PAYMENT_CREATED",
+                              "PAYMENT_UPDATED",
+                              "PAYMENT_RECEIVED",
+                              "PAYMENT_OVERDUE",
+                              "PAYMENT_DUEDATE_WARNING",
+                              "SEND_LINHA_DIGITAVEL"
+                            ],
+                            "x-readme-ref-name": "NotificationGetResponseNotificationEvent"
+                          },
+                          "scheduleOffset": {
+                            "type": "integer",
+                            "description": "Especifica quantos dias antes do vencimento a notificação deve se enviada. Válido para os eventos `PAYMENT_DUEDATE_WARNING` e `PAYMENT_OVERDUE`",
+                            "format": "int32",
+                            "example": 1,
+                            "deprecated": false,
+                            "enum": [
+                              0,
+                              1,
+                              5,
+                              7,
+                              10,
+                              15,
+                              30
+                            ]
+                          },
+                          "deleted": {
+                            "type": "boolean",
+                            "description": "Indica se a notificação foi deletada",
+                            "example": true,
+                            "deprecated": false,
+                            "default": true
+                          }
+                        },
+                        "description": "Lista de informações das notificações",
+                        "deprecated": false,
+                        "x-readme-ref-name": "NotificationGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "NotificationBatchUpdateResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

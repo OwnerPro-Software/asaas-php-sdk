@@ -1,0 +1,2682 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Negativações"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/paymentDunnings": {
+      "post": {
+        "tags": [
+          "Negativações"
+        ],
+        "summary": "Criar uma negativação",
+        "description": "",
+        "operationId": "criar-uma-negativacao",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "payment",
+                  "type",
+                  "customerName",
+                  "customerCpfCnpj",
+                  "customerPrimaryPhone",
+                  "customerPostalCode",
+                  "customerAddress",
+                  "customerAddressNumber",
+                  "customerProvince"
+                ],
+                "type": "object",
+                "properties": {
+                  "payment": {
+                    "type": "string",
+                    "description": "Identificador único da cobrança a ser recuperada no Asaas",
+                    "nullable": false,
+                    "example": "pay_080225913252",
+                    "deprecated": false
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Tipo de negativação",
+                    "nullable": false,
+                    "example": "CREDIT_BUREAU",
+                    "deprecated": false,
+                    "enum": [
+                      "CREDIT_BUREAU"
+                    ],
+                    "x-readme-ref-name": "PaymentDunningSaveRequestPaymentDunningType"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Descrição do produto ou serviço prestado",
+                    "example": "Duas mesas com 8 cadeiras solicitadas via encomenda no dia 01/05/2018",
+                    "deprecated": false
+                  },
+                  "customerName": {
+                    "type": "string",
+                    "description": "Nome do cliente",
+                    "nullable": false,
+                    "example": "John Doe",
+                    "deprecated": false
+                  },
+                  "customerCpfCnpj": {
+                    "type": "string",
+                    "description": "CPF ou CNPJ do cliente",
+                    "nullable": false,
+                    "example": "378.285.120-07",
+                    "deprecated": false
+                  },
+                  "customerPrimaryPhone": {
+                    "type": "string",
+                    "description": "Telefone principal do cliente",
+                    "nullable": false,
+                    "example": "(11) 99999-9999",
+                    "deprecated": false
+                  },
+                  "customerSecondaryPhone": {
+                    "type": "string",
+                    "description": "Telefone secundário do cliente",
+                    "example": "(11) 99999-9999",
+                    "deprecated": false
+                  },
+                  "customerPostalCode": {
+                    "type": "string",
+                    "description": "CEP do endereço do cliente",
+                    "nullable": false,
+                    "example": "99050-460",
+                    "deprecated": false
+                  },
+                  "customerAddress": {
+                    "type": "string",
+                    "description": "Logradouro do cliente",
+                    "nullable": false,
+                    "example": "Rua Izaías Fontana",
+                    "deprecated": false
+                  },
+                  "customerAddressNumber": {
+                    "type": "string",
+                    "description": "Número do endereço do cliente",
+                    "nullable": false,
+                    "example": "123",
+                    "deprecated": false
+                  },
+                  "customerComplement": {
+                    "type": "string",
+                    "description": "Complemento do endereço do cliente",
+                    "example": "AP 101",
+                    "deprecated": false
+                  },
+                  "customerProvince": {
+                    "type": "string",
+                    "description": "Bairro do cliente",
+                    "nullable": false,
+                    "example": "Petrópolis",
+                    "deprecated": false
+                  },
+                  "documents": {
+                    "type": "string",
+                    "description": "Nota fiscal e/ou contrato com firma reconhecida em cartório",
+                    "format": "binary",
+                    "deprecated": false,
+                    "example": null
+                  }
+                },
+                "x-readme-ref-name": "PaymentDunningSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da negativação no Asaas",
+                      "example": "ce35702d-0d9f-475a-ba46-e251ad265c91",
+                      "deprecated": false
+                    },
+                    "dunningNumber": {
+                      "type": "integer",
+                      "description": "Número da negativação",
+                      "format": "int32",
+                      "example": 15,
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da negativação",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "AWAITING_APPROVAL",
+                        "AWAITING_CANCELLATION",
+                        "PROCESSED",
+                        "PAID",
+                        "PARTIALLY_PAID",
+                        "DENIED",
+                        "CANCELLED"
+                      ],
+                      "x-readme-ref-name": "PaymentDunningShowResponsePaymentDunningStatus"
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de negativação",
+                      "example": "CREDIT_BUREAU",
+                      "deprecated": false,
+                      "enum": [
+                        "CREDIT_BUREAU"
+                      ],
+                      "x-readme-ref-name": "PaymentDunningShowResponsePaymentDunningType"
+                    },
+                    "requestDate": {
+                      "type": "string",
+                      "description": "Data de solicitação",
+                      "format": "date",
+                      "example": "2020-05-26",
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição da negativação",
+                      "example": "Duas mesas com 8 cadeiras solicitadas via encomenda no dia 01/05/2018",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor da cobrança",
+                      "example": 80,
+                      "deprecated": false
+                    },
+                    "feeValue": {
+                      "type": "number",
+                      "description": "Custo e/ou taxa da negativação",
+                      "example": 8,
+                      "deprecated": false
+                    },
+                    "netValue": {
+                      "type": "number",
+                      "description": "Valor líquido a ser recuperado",
+                      "example": 72,
+                      "deprecated": false
+                    },
+                    "receivedInCashFeeValue": {
+                      "type": "number",
+                      "description": "Taxa de recebimento em dinheiro",
+                      "example": 0,
+                      "deprecated": true
+                    },
+                    "denialReason": {
+                      "type": "string",
+                      "description": "Motivo da negação da negativação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "cancellationFeeValue": {
+                      "type": "number",
+                      "description": "Taxa cobrada em caso de cancelamento",
+                      "example": 0,
+                      "deprecated": true
+                    },
+                    "canBeCancelled": {
+                      "type": "boolean",
+                      "description": "Se a negativação pode ser cancelada",
+                      "deprecated": false,
+                      "default": true,
+                      "example": null
+                    },
+                    "cannotBeCancelledReason": {
+                      "type": "string",
+                      "description": "Motivo de não ser possível solicitar o cancelamento",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "isNecessaryResendDocumentation": {
+                      "type": "boolean",
+                      "description": "Determina se é preciso reenviar a documentação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança a ser recuperada no Asaas",
+                      "example": "pay_080225913252",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDunningShowResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Negativações"
+        ],
+        "summary": "Listar negativações",
+        "description": "",
+        "operationId": "listar-negativacoes",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar por status da negativação",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por status da negativação",
+              "example": "PENDING",
+              "deprecated": false,
+              "enum": [
+                "PENDING",
+                "AWAITING_APPROVAL",
+                "AWAITING_CANCELLATION",
+                "PROCESSED",
+                "PAID",
+                "PARTIALLY_PAID",
+                "DENIED",
+                "CANCELLED"
+              ],
+              "x-readme-ref-name": "PaymentDunningListRequestPaymentDunningStatus"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filtrar por tipo de negativação",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por tipo de negativação",
+              "example": "CREDIT_BUREAU",
+              "deprecated": false,
+              "enum": [
+                "CREDIT_BUREAU",
+                "DEBT_RECOVERY_ASSISTANCE"
+              ],
+              "x-readme-ref-name": "PaymentDunningListRequestPaymentDunningType"
+            }
+          },
+          {
+            "name": "payment",
+            "in": "query",
+            "description": "Filtrar por negativações de uma determinada cobrança",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "requestStartDate",
+            "in": "query",
+            "description": "Filtrar a partir da data de solicitação inicial",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "requestEndDate",
+            "in": "query",
+            "description": "Filtrar a partir da data de solicitação final",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da negativação no Asaas",
+                            "example": "ce35702d-0d9f-475a-ba46-e251ad265c91",
+                            "deprecated": false
+                          },
+                          "dunningNumber": {
+                            "type": "integer",
+                            "description": "Número da negativação",
+                            "format": "int32",
+                            "example": 15,
+                            "deprecated": false
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status da negativação",
+                            "example": "PENDING",
+                            "deprecated": false,
+                            "enum": [
+                              "PENDING",
+                              "AWAITING_APPROVAL",
+                              "AWAITING_CANCELLATION",
+                              "PROCESSED",
+                              "PAID",
+                              "PARTIALLY_PAID",
+                              "DENIED",
+                              "CANCELLED"
+                            ],
+                            "x-readme-ref-name": "PaymentDunningShowResponsePaymentDunningStatus"
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Tipo de negativação",
+                            "example": "CREDIT_BUREAU",
+                            "deprecated": false,
+                            "enum": [
+                              "CREDIT_BUREAU"
+                            ],
+                            "x-readme-ref-name": "PaymentDunningShowResponsePaymentDunningType"
+                          },
+                          "requestDate": {
+                            "type": "string",
+                            "description": "Data de solicitação",
+                            "format": "date",
+                            "example": "2020-05-26",
+                            "deprecated": false
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição da negativação",
+                            "example": "Duas mesas com 8 cadeiras solicitadas via encomenda no dia 01/05/2018",
+                            "deprecated": false
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor da cobrança",
+                            "example": 80,
+                            "deprecated": false
+                          },
+                          "feeValue": {
+                            "type": "number",
+                            "description": "Custo e/ou taxa da negativação",
+                            "example": 8,
+                            "deprecated": false
+                          },
+                          "netValue": {
+                            "type": "number",
+                            "description": "Valor líquido a ser recuperado",
+                            "example": 72,
+                            "deprecated": false
+                          },
+                          "receivedInCashFeeValue": {
+                            "type": "number",
+                            "description": "Taxa de recebimento em dinheiro",
+                            "example": 0,
+                            "deprecated": true
+                          },
+                          "denialReason": {
+                            "type": "string",
+                            "description": "Motivo da negação da negativação",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "cancellationFeeValue": {
+                            "type": "number",
+                            "description": "Taxa cobrada em caso de cancelamento",
+                            "example": 0,
+                            "deprecated": true
+                          },
+                          "canBeCancelled": {
+                            "type": "boolean",
+                            "description": "Se a negativação pode ser cancelada",
+                            "deprecated": false,
+                            "default": true,
+                            "example": null
+                          },
+                          "cannotBeCancelledReason": {
+                            "type": "string",
+                            "description": "Motivo de não ser possível solicitar o cancelamento",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "isNecessaryResendDocumentation": {
+                            "type": "boolean",
+                            "description": "Determina se é preciso reenviar a documentação",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "payment": {
+                            "type": "string",
+                            "description": "Identificador único da cobrança a ser recuperada no Asaas",
+                            "example": "pay_080225913252",
+                            "deprecated": false
+                          }
+                        },
+                        "x-readme-ref-name": "PaymentDunningShowResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDunningListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentDunnings/simulate": {
+      "post": {
+        "tags": [
+          "Negativações"
+        ],
+        "summary": "Simular uma negativação",
+        "description": "",
+        "operationId": "simular-uma-negativacao",
+        "parameters": [
+          {
+            "name": "payment",
+            "in": "query",
+            "description": "Identificador único da cobrança a ser recuperada no Asaas",
+            "schema": {
+              "type": "string",
+              "example": "pay_080225913252"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "PaymentDunningSimulateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança a ser recuperada no Asaas",
+                      "example": "pay_080225913252",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor da cobrança",
+                      "example": 80,
+                      "deprecated": false
+                    },
+                    "typeSimulations": {
+                      "type": "array",
+                      "description": "Simulação de solicitação de negativação para cada tipo de negativação disponível",
+                      "example": [
+                        {
+                          "type": "CREDIT_BUREAU",
+                          "isAllowed": true,
+                          "feeValue": 0,
+                          "netValue": 0,
+                          "startDate": "2020-05-18"
+                        },
+                        {
+                          "type": "CREDIT_BUREAU",
+                          "isAllowed": false,
+                          "notAllowedReason": "A negativação via Serasa não está disponível para parcelamentos de cartão de crédito.",
+                          "feeValue": 0,
+                          "netValue": 0
+                        }
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "description": "Tipo de negativação",
+                            "example": "CREDIT_BUREAU",
+                            "deprecated": false,
+                            "enum": [
+                              "CREDIT_BUREAU"
+                            ],
+                            "x-readme-ref-name": "PaymentDunningSimulateResponseTypeSimulationItemPaymentDunningType"
+                          },
+                          "isAllowed": {
+                            "type": "boolean",
+                            "description": "Se é possível solicitar uma negativação deste tipo",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "notAllowedReason": {
+                            "type": "string",
+                            "description": "Motivo por não ser possível solicitar uma negativação para este tipo",
+                            "example": "A negativação via Serasa não está disponível para parcelamentos de cartão de crédito.",
+                            "deprecated": false
+                          },
+                          "feeValue": {
+                            "type": "number",
+                            "description": "Custo e/ou taxa da negativação",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "netValue": {
+                            "type": "number",
+                            "description": "Valor líquido a ser recuperado",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "startDate": {
+                            "type": "string",
+                            "description": "Data prevista de inicio da negativação",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Simulação de solicitação de negativação para cada tipo de negativação disponível",
+                        "example": [
+                          {
+                            "type": "CREDIT_BUREAU",
+                            "isAllowed": true,
+                            "feeValue": 0,
+                            "netValue": 0,
+                            "startDate": "2020-05-18"
+                          },
+                          {
+                            "type": "CREDIT_BUREAU",
+                            "isAllowed": false,
+                            "notAllowedReason": "A negativação via Serasa não está disponível para parcelamentos de cartão de crédito.",
+                            "feeValue": 0,
+                            "netValue": 0
+                          }
+                        ],
+                        "deprecated": false,
+                        "x-readme-ref-name": "PaymentDunningSimulateResponseTypeSimulationItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDunningSimulateResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentDunnings/{id}": {
+      "get": {
+        "tags": [
+          "Negativações"
+        ],
+        "summary": "Recuperar uma única negativação",
+        "description": "",
+        "operationId": "recuperar-uma-unica-negativacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da negativação no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "ce35702d-0d9f-475a-ba46-e251ad265c91"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da negativação no Asaas",
+                      "example": "ce35702d-0d9f-475a-ba46-e251ad265c91",
+                      "deprecated": false
+                    },
+                    "dunningNumber": {
+                      "type": "integer",
+                      "description": "Número da negativação",
+                      "format": "int32",
+                      "example": 15,
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da negativação",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "AWAITING_APPROVAL",
+                        "AWAITING_CANCELLATION",
+                        "PROCESSED",
+                        "PAID",
+                        "PARTIALLY_PAID",
+                        "DENIED",
+                        "CANCELLED"
+                      ],
+                      "x-readme-ref-name": "PaymentDunningShowResponsePaymentDunningStatus"
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de negativação",
+                      "example": "CREDIT_BUREAU",
+                      "deprecated": false,
+                      "enum": [
+                        "CREDIT_BUREAU"
+                      ],
+                      "x-readme-ref-name": "PaymentDunningShowResponsePaymentDunningType"
+                    },
+                    "requestDate": {
+                      "type": "string",
+                      "description": "Data de solicitação",
+                      "format": "date",
+                      "example": "2020-05-26",
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição da negativação",
+                      "example": "Duas mesas com 8 cadeiras solicitadas via encomenda no dia 01/05/2018",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor da cobrança",
+                      "example": 80,
+                      "deprecated": false
+                    },
+                    "feeValue": {
+                      "type": "number",
+                      "description": "Custo e/ou taxa da negativação",
+                      "example": 8,
+                      "deprecated": false
+                    },
+                    "netValue": {
+                      "type": "number",
+                      "description": "Valor líquido a ser recuperado",
+                      "example": 72,
+                      "deprecated": false
+                    },
+                    "receivedInCashFeeValue": {
+                      "type": "number",
+                      "description": "Taxa de recebimento em dinheiro",
+                      "example": 0,
+                      "deprecated": true
+                    },
+                    "denialReason": {
+                      "type": "string",
+                      "description": "Motivo da negação da negativação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "cancellationFeeValue": {
+                      "type": "number",
+                      "description": "Taxa cobrada em caso de cancelamento",
+                      "example": 0,
+                      "deprecated": true
+                    },
+                    "canBeCancelled": {
+                      "type": "boolean",
+                      "description": "Se a negativação pode ser cancelada",
+                      "deprecated": false,
+                      "default": true,
+                      "example": null
+                    },
+                    "cannotBeCancelledReason": {
+                      "type": "string",
+                      "description": "Motivo de não ser possível solicitar o cancelamento",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "isNecessaryResendDocumentation": {
+                      "type": "boolean",
+                      "description": "Determina se é preciso reenviar a documentação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança a ser recuperada no Asaas",
+                      "example": "pay_080225913252",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDunningShowResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentDunnings/{id}/history": {
+      "get": {
+        "tags": [
+          "Negativações"
+        ],
+        "summary": "Listar histórico de eventos",
+        "description": "Retorna uma lista paginada com os eventos que ocorreram desde do início da negativação da cobrança.",
+        "operationId": "listar-historico-de-eventos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da negativação no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "ce35702d-0d9f-475a-ba46-e251ad265c91"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "description": "Status da negociação",
+                            "example": "NEGOTIATED",
+                            "deprecated": false,
+                            "enum": [
+                              "IN_NEGOTIATION",
+                              "NEGOTIATION_FAIL",
+                              "NEGOTIATED",
+                              "PAID"
+                            ],
+                            "x-readme-ref-name": "PaymentDunningListHistoryResponseDataPaymentDunningHistoryStatus"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do evento",
+                            "example": "Negativação negociada com o cliente. O pagamento será iniciado.",
+                            "deprecated": false
+                          },
+                          "eventDate": {
+                            "type": "string",
+                            "description": "Data em que ocorreu o evento",
+                            "example": "2019-02-20",
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "PaymentDunningListHistoryResponseDataDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDunningListHistoryResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentDunnings/{id}/partialPayments": {
+      "get": {
+        "tags": [
+          "Negativações"
+        ],
+        "summary": "Listar pagamentos recebidos",
+        "description": "Retorna uma lista paginada com os pagamentos recebidos por meio da renegociação da dívida.",
+        "operationId": "listar-pagamentos-recebidos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da negativação no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "ce35702d-0d9f-475a-ba46-e251ad265c91"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "example": [
+                        {
+                          "value": 800,
+                          "description": "A quitação desta cobrança foi efetuada pelo cliente.",
+                          "paymentDate": "2020-02-10"
+                        },
+                        {
+                          "value": 800,
+                          "description": "Pagamento parcial efetuado pelo cliente. Há pagamentos pendentes para a quitação dessa cobrança.",
+                          "paymentDate": "2020-01-10"
+                        },
+                        {
+                          "value": 800,
+                          "description": "A quitação desta cobrança foi efetuada pelo cliente.",
+                          "paymentDate": "2019-12-10"
+                        }
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number",
+                            "description": "Valor pago",
+                            "example": 800,
+                            "deprecated": false
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do pagamento",
+                            "example": "A quitação desta cobrança foi efetuada pelo cliente.",
+                            "deprecated": false
+                          },
+                          "paymentDate": {
+                            "type": "string",
+                            "description": "Data do pagamento",
+                            "example": "2020-02-10",
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "example": [
+                          {
+                            "value": 800,
+                            "description": "A quitação desta cobrança foi efetuada pelo cliente.",
+                            "paymentDate": "2020-02-10"
+                          },
+                          {
+                            "value": 800,
+                            "description": "Pagamento parcial efetuado pelo cliente. Há pagamentos pendentes para a quitação dessa cobrança.",
+                            "paymentDate": "2020-01-10"
+                          },
+                          {
+                            "value": 800,
+                            "description": "A quitação desta cobrança foi efetuada pelo cliente.",
+                            "paymentDate": "2019-12-10"
+                          }
+                        ],
+                        "deprecated": false,
+                        "x-readme-ref-name": "PaymentDunningListPartialPaymentsResponseDataDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDunningListPartialPaymentsResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentDunnings/paymentsAvailableForDunning": {
+      "get": {
+        "tags": [
+          "Negativações"
+        ],
+        "summary": "Listar cobranças disponíveis para negativação",
+        "description": "Retorna uma lista paginada de cobranças possíveis de negativação em conjunto com uma simulação de valores para cada tipo de negativação.",
+        "operationId": "listar-cobrancas-disponiveis-para-negativacao",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "example": [
+                        {
+                          "payment": "pay_856437540297",
+                          "customer": "cus_000000001663",
+                          "value": 250,
+                          "status": "PENDING",
+                          "billingType": "BOLETO",
+                          "dueDate": "2020-05-18",
+                          "typeSimulations": [
+                            {
+                              "type": "CREDIT_BUREAU",
+                              "isAllowed": true,
+                              "feeValue": 0,
+                              "netValue": 0,
+                              "startDate": "2020-05-18"
+                            },
+                            {
+                              "type": "CREDIT_BUREAU",
+                              "isAllowed": false,
+                              "notAllowedReason": "A negativação via Serasa não está disponível para parcelamentos de cartão de crédito.",
+                              "feeValue": 0,
+                              "netValue": 0
+                            }
+                          ]
+                        },
+                        {
+                          "payment": "pay_4272418031993158",
+                          "customer": "cus_000000001838",
+                          "value": 23,
+                          "status": "OVERDUE",
+                          "billingType": "CREDIT_CARD",
+                          "dueDate": "2020-08-12",
+                          "typeSimulations": [
+                            {
+                              "type": "CREDIT_BUREAU",
+                              "isAllowed": true,
+                              "feeValue": 0,
+                              "netValue": 0,
+                              "startDate": "2020-05-18"
+                            },
+                            {
+                              "type": "CREDIT_BUREAU",
+                              "isAllowed": false,
+                              "notAllowedReason": "A negativação via Serasa não está disponível para parcelamentos de cartão de crédito.",
+                              "feeValue": 0,
+                              "netValue": 0
+                            }
+                          ]
+                        },
+                        {
+                          "payment": "pay_4311673768874477",
+                          "customer": "cus_000000001342",
+                          "value": 23,
+                          "status": "OVERDUE",
+                          "billingType": "CREDIT_CARD",
+                          "dueDate": "2022-12-19",
+                          "typeSimulations": [
+                            {
+                              "type": "CREDIT_BUREAU",
+                              "isAllowed": true,
+                              "feeValue": 0,
+                              "netValue": 0,
+                              "startDate": "2020-05-18"
+                            },
+                            {
+                              "type": "CREDIT_BUREAU",
+                              "isAllowed": false,
+                              "notAllowedReason": "A negativação via Serasa não está disponível para parcelamentos de cartão de crédito.",
+                              "feeValue": 0,
+                              "netValue": 0
+                            }
+                          ]
+                        }
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "payment": {
+                            "type": "string",
+                            "description": "Identificador único da cobrança a ser recuperada no Asaas",
+                            "example": "pay_856437540297",
+                            "deprecated": false
+                          },
+                          "customer": {
+                            "type": "string",
+                            "description": "Identificador único do cliente",
+                            "example": "cus_000000001663",
+                            "deprecated": false
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor da cobrança",
+                            "example": 250,
+                            "deprecated": false
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status da cobrança",
+                            "example": "PENDING",
+                            "deprecated": false,
+                            "enum": [
+                              "PENDING",
+                              "RECEIVED",
+                              "CONFIRMED",
+                              "OVERDUE"
+                            ],
+                            "x-readme-ref-name": "PaymentDunningPaymentsAvailableForDunningResponseDataPaymentStatus"
+                          },
+                          "billingType": {
+                            "type": "string",
+                            "description": "Forma de pagamento",
+                            "example": "BOLETO",
+                            "deprecated": false,
+                            "enum": [
+                              "BOLETO",
+                              "CREDIT_CARD",
+                              "TRANSFER",
+                              "DEPOSIT",
+                              "DEBIT_CARD",
+                              "PIX"
+                            ],
+                            "x-readme-ref-name": "PaymentDunningPaymentsAvailableForDunningResponseDataBillingType"
+                          },
+                          "dueDate": {
+                            "type": "string",
+                            "description": "Data de vencimento",
+                            "example": "2020-05-18",
+                            "deprecated": false
+                          },
+                          "typeSimulations": {
+                            "type": "array",
+                            "description": "Simulação de solicitação de negativação para cada tipo de negativação disponível",
+                            "deprecated": false,
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "description": "Tipo de negativação",
+                                  "example": "CREDIT_BUREAU",
+                                  "deprecated": false,
+                                  "enum": [
+                                    "CREDIT_BUREAU"
+                                  ],
+                                  "x-readme-ref-name": "PaymentDunningPaymentsAvailableForDunningResponseDataTypeSimulationItemPaymentDunningType"
+                                },
+                                "isAllowed": {
+                                  "type": "boolean",
+                                  "description": "Se é possível solicitar uma negativação deste tipo",
+                                  "deprecated": false,
+                                  "default": true,
+                                  "example": null
+                                },
+                                "notAllowedReason": {
+                                  "type": "string",
+                                  "description": "Motivo por não ser possível solicitar uma negativação para este tipo",
+                                  "deprecated": false,
+                                  "example": null
+                                },
+                                "feeValue": {
+                                  "type": "number",
+                                  "description": "Custo e/ou taxa da negativação",
+                                  "example": 0,
+                                  "deprecated": false
+                                },
+                                "netValue": {
+                                  "type": "number",
+                                  "description": "Valor líquido a ser recuperado",
+                                  "example": 0,
+                                  "deprecated": false
+                                },
+                                "startDate": {
+                                  "type": "string",
+                                  "description": "Data prevista de inicio da negativação",
+                                  "example": "2020-05-27",
+                                  "deprecated": false
+                                }
+                              },
+                              "description": "Simulação de solicitação de negativação para cada tipo de negativação disponível",
+                              "deprecated": false,
+                              "x-readme-ref-name": "PaymentDunningPaymentsAvailableForDunningResponseDataTypeSimulationItemDTO"
+                            }
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "example": [
+                          {
+                            "payment": "pay_856437540297",
+                            "customer": "cus_000000001663",
+                            "value": 250,
+                            "status": "PENDING",
+                            "billingType": "BOLETO",
+                            "dueDate": "2020-05-18",
+                            "typeSimulations": [
+                              {
+                                "type": "CREDIT_BUREAU",
+                                "isAllowed": true,
+                                "feeValue": 0,
+                                "netValue": 0,
+                                "startDate": "2020-05-18"
+                              },
+                              {
+                                "type": "CREDIT_BUREAU",
+                                "isAllowed": false,
+                                "notAllowedReason": "A negativação via Serasa não está disponível para parcelamentos de cartão de crédito.",
+                                "feeValue": 0,
+                                "netValue": 0
+                              }
+                            ]
+                          },
+                          {
+                            "payment": "pay_4272418031993158",
+                            "customer": "cus_000000001838",
+                            "value": 23,
+                            "status": "OVERDUE",
+                            "billingType": "CREDIT_CARD",
+                            "dueDate": "2020-08-12",
+                            "typeSimulations": [
+                              {
+                                "type": "CREDIT_BUREAU",
+                                "isAllowed": true,
+                                "feeValue": 0,
+                                "netValue": 0,
+                                "startDate": "2020-05-18"
+                              },
+                              {
+                                "type": "CREDIT_BUREAU",
+                                "isAllowed": false,
+                                "notAllowedReason": "A negativação via Serasa não está disponível para parcelamentos de cartão de crédito.",
+                                "feeValue": 0,
+                                "netValue": 0
+                              }
+                            ]
+                          },
+                          {
+                            "payment": "pay_4311673768874477",
+                            "customer": "cus_000000001342",
+                            "value": 23,
+                            "status": "OVERDUE",
+                            "billingType": "CREDIT_CARD",
+                            "dueDate": "2022-12-19",
+                            "typeSimulations": [
+                              {
+                                "type": "CREDIT_BUREAU",
+                                "isAllowed": true,
+                                "feeValue": 0,
+                                "netValue": 0,
+                                "startDate": "2020-05-18"
+                              },
+                              {
+                                "type": "CREDIT_BUREAU",
+                                "isAllowed": false,
+                                "notAllowedReason": "A negativação via Serasa não está disponível para parcelamentos de cartão de crédito.",
+                                "feeValue": 0,
+                                "netValue": 0
+                              }
+                            ]
+                          }
+                        ],
+                        "deprecated": false,
+                        "x-readme-ref-name": "PaymentDunningPaymentsAvailableForDunningResponseDataDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDunningPaymentsAvailableForDunningResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentDunnings/{id}/documents": {
+      "post": {
+        "tags": [
+          "Negativações"
+        ],
+        "summary": "Reenviar documentos",
+        "description": "Permite o reenvio dos documentos de uma negativação em caso de negação.\n\n Utilize a propriedade `isNecessaryResendDocumentation` retornado no objeto de negativação para verificar se é preciso o reenvio da documentação.\n\n Após o reenvio sua negativação retornará para o status de `AWAITING_APPROVAL`.",
+        "operationId": "reenviar-documentos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da negativação no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "ce35702d-0d9f-475a-ba46-e251ad265c91"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "documents"
+                ],
+                "type": "object",
+                "properties": {
+                  "documents": {
+                    "type": "string",
+                    "description": "Nota fiscal e/ou contrato com firma reconhecida em cartório",
+                    "format": "binary",
+                    "nullable": false,
+                    "deprecated": false,
+                    "example": null
+                  }
+                },
+                "x-readme-ref-name": "PaymentDunningSaveDocumentsRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da negativação no Asaas",
+                      "example": "ce35702d-0d9f-475a-ba46-e251ad265c91",
+                      "deprecated": false
+                    },
+                    "dunningNumber": {
+                      "type": "integer",
+                      "description": "Número da negativação",
+                      "format": "int32",
+                      "example": 15,
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da negativação",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "AWAITING_APPROVAL",
+                        "AWAITING_CANCELLATION",
+                        "PROCESSED",
+                        "PAID",
+                        "PARTIALLY_PAID",
+                        "DENIED",
+                        "CANCELLED"
+                      ],
+                      "x-readme-ref-name": "PaymentDunningSaveDocumentsResponsePaymentDunningStatus"
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de negativação",
+                      "example": "CREDIT_BUREAU",
+                      "deprecated": false,
+                      "enum": [
+                        "CREDIT_BUREAU"
+                      ],
+                      "x-readme-ref-name": "PaymentDunningSaveDocumentsResponsePaymentDunningType"
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança a ser recuperada no Asaas",
+                      "example": "pay_080225913252",
+                      "deprecated": false
+                    },
+                    "requestDate": {
+                      "type": "string",
+                      "description": "Data de solicitação",
+                      "format": "date",
+                      "example": "2020-05-26",
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição da negativação",
+                      "example": "Duas mesas com 8 cadeiras solicitadas via encomenda no dia 01/05/2018",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor da cobrança",
+                      "example": 80,
+                      "deprecated": false
+                    },
+                    "feeValue": {
+                      "type": "number",
+                      "description": "Custo e/ou taxa da negativação",
+                      "example": 8,
+                      "deprecated": false
+                    },
+                    "netValue": {
+                      "type": "number",
+                      "description": "Valor líquido a ser recuperado",
+                      "example": 72,
+                      "deprecated": false
+                    },
+                    "receivedInCashFeeValue": {
+                      "type": "number",
+                      "description": "Taxa de recebimento em dinheiro",
+                      "example": 0,
+                      "deprecated": true
+                    },
+                    "denialReason": {
+                      "type": "string",
+                      "description": "Motivo da negação da negativação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "cancellationFeeValue": {
+                      "type": "number",
+                      "description": "Taxa cobrada em caso de cancelamento",
+                      "example": 0,
+                      "deprecated": true
+                    },
+                    "canBeCancelled": {
+                      "type": "boolean",
+                      "description": "Se a negativação pode ser cancelada",
+                      "deprecated": false,
+                      "default": true,
+                      "example": null
+                    },
+                    "cannotBeCancelledReason": {
+                      "type": "string",
+                      "description": "Motivo de não ser possível solicitar o cancelamento",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "isNecessaryResendDocumentation": {
+                      "type": "boolean",
+                      "description": "Determina se é preciso reenviar a documentação",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDunningSaveDocumentsResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentDunnings/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Negativações"
+        ],
+        "summary": "Cancelar negativação",
+        "description": "Permite o cancelamento de uma negativação. Utilize a propriedade `canBeCancelled` retornado no objeto de negativação para verificar se a negativação pode ser cancelada.\n\nCaso a negativação já tenha sido iniciada, ao solicitar o cancelamento a negativação ficará com o status de `AWAITING_CANCELLATION` até que seja efetivamente cancelada (`CANCELLED`).",
+        "operationId": "cancelar-negativacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da negativação a ser cancelada.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "ce35702d-0d9f-475a-ba46-e251ad265c91"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "PaymentDunningCancelRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da negativação no Asaas",
+                      "example": "ce35702d-0d9f-475a-ba46-e251ad265c91",
+                      "deprecated": false
+                    },
+                    "dunningNumber": {
+                      "type": "integer",
+                      "description": "Número da negativação",
+                      "format": "int32",
+                      "example": 15,
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da negativação",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "AWAITING_APPROVAL",
+                        "AWAITING_CANCELLATION",
+                        "PROCESSED",
+                        "PAID",
+                        "PARTIALLY_PAID",
+                        "DENIED",
+                        "CANCELLED"
+                      ],
+                      "x-readme-ref-name": "PaymentDunningCancelResponsePaymentDunningStatus"
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de negativação",
+                      "example": "CREDIT_BUREAU",
+                      "deprecated": false,
+                      "enum": [
+                        "CREDIT_BUREAU"
+                      ],
+                      "x-readme-ref-name": "PaymentDunningCancelResponsePaymentDunningType"
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança a ser recuperada no Asaas",
+                      "example": "pay_080225913252",
+                      "deprecated": false
+                    },
+                    "requestDate": {
+                      "type": "string",
+                      "description": "Data de solicitação",
+                      "format": "date",
+                      "example": "2020-05-26",
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição da negativação",
+                      "example": "Duas mesas com 8 cadeiras solicitadas via encomenda no dia 01/05/2018",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor da cobrança",
+                      "example": 80,
+                      "deprecated": false
+                    },
+                    "feeValue": {
+                      "type": "number",
+                      "description": "Custo e/ou taxa da negativação",
+                      "example": 8,
+                      "deprecated": false
+                    },
+                    "netValue": {
+                      "type": "number",
+                      "description": "Valor líquido a ser recuperado",
+                      "example": 72,
+                      "deprecated": false
+                    },
+                    "receivedInCashFeeValue": {
+                      "type": "number",
+                      "description": "Taxa de recebimento em dinheiro",
+                      "example": 0,
+                      "deprecated": true
+                    },
+                    "denialReason": {
+                      "type": "string",
+                      "description": "Motivo da negação da negativação",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "cancellationFeeValue": {
+                      "type": "number",
+                      "description": "Taxa cobrada em caso de cancelamento",
+                      "example": 0,
+                      "deprecated": true
+                    },
+                    "canBeCancelled": {
+                      "type": "boolean",
+                      "description": "Se a negativação pode ser cancelada",
+                      "deprecated": false,
+                      "default": true,
+                      "example": null
+                    },
+                    "cannotBeCancelledReason": {
+                      "type": "string",
+                      "description": "Motivo de não ser possível solicitar o cancelamento",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "isNecessaryResendDocumentation": {
+                      "type": "boolean",
+                      "description": "Determina se é preciso reenviar a documentação",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDunningCancelResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

@@ -1,0 +1,1717 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Antecipações"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/anticipations": {
+      "post": {
+        "tags": [
+          "Antecipações"
+        ],
+        "summary": "Solicitar antecipação",
+        "description": "",
+        "operationId": "solicitar-antecipacao",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "installment": {
+                    "type": "string",
+                    "description": "ID do parcelamento a ser antecipado",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "payment": {
+                    "type": "string",
+                    "description": "ID da cobrança a ser antecipada",
+                    "example": "pay_626366773834",
+                    "deprecated": false
+                  },
+                  "documents": {
+                    "type": "string",
+                    "description": "Arquivo",
+                    "format": "binary",
+                    "nullable": false,
+                    "deprecated": false,
+                    "example": null,
+                    "x-readme-ref-name": "File"
+                  }
+                },
+                "x-readme-ref-name": "AnticipationSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "receivableAnticipation",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da antecipação no Asaas",
+                      "example": "9e7d8639-350f-45c0-8bc3-d4ddc5f4ebac",
+                      "deprecated": false
+                    },
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento a ser antecipado",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança a ser antecipada.",
+                      "example": "pay_626366773834",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da antecipação",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "DENIED",
+                        "CREDITED",
+                        "DEBITED",
+                        "CANCELLED",
+                        "OVERDUE",
+                        "SCHEDULED"
+                      ],
+                      "x-readme-ref-name": "AnticipationGetResponseAnticipationStatus"
+                    },
+                    "anticipationDate": {
+                      "type": "string",
+                      "description": "Data de solicitação da antecipação",
+                      "format": "date",
+                      "example": "2019-05-20",
+                      "deprecated": false
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "description": "Data de vencimento da solicitação",
+                      "format": "date",
+                      "example": "2019-05-26",
+                      "deprecated": false
+                    },
+                    "requestDate": {
+                      "type": "string",
+                      "description": "Data de solicitação da antecipação",
+                      "format": "date",
+                      "example": "2019-05-14",
+                      "deprecated": false
+                    },
+                    "fee": {
+                      "type": "number",
+                      "description": "Taxa de antecipação",
+                      "example": 2.33,
+                      "deprecated": false
+                    },
+                    "anticipationDays": {
+                      "type": "integer",
+                      "description": "Quantidade de dias que foram antecipados",
+                      "format": "int32",
+                      "example": 5,
+                      "deprecated": false
+                    },
+                    "netValue": {
+                      "type": "number",
+                      "description": "Valor líquido descontada a taxa de antecipação",
+                      "example": 73.68,
+                      "deprecated": false
+                    },
+                    "totalValue": {
+                      "type": "number",
+                      "description": "Valor total da cobrança a ser antecipada",
+                      "example": 80,
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor da antecipação",
+                      "example": 76.01,
+                      "deprecated": false
+                    },
+                    "denialObservation": {
+                      "type": "string",
+                      "description": "Motivo de rejeição da antecipação",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "AnticipationGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Antecipações"
+        ],
+        "summary": "Listar antecipações",
+        "description": "",
+        "operationId": "listar-antecipacoes",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "payment",
+            "in": "query",
+            "description": "Filtrar antecipações de uma cobrança",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "installment",
+            "in": "query",
+            "description": "Filtrar antecipações de um parcelamento",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar por status",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por status",
+              "example": "PENDING",
+              "deprecated": false,
+              "enum": [
+                "PENDING",
+                "DENIED",
+                "CREDITED",
+                "DEBITED",
+                "CANCELLED",
+                "OVERDUE",
+                "SCHEDULED"
+              ],
+              "x-readme-ref-name": "AnticipationListRequestAnticipationStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "description": "Tipo de objeto",
+                            "example": "receivableAnticipation",
+                            "deprecated": false
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da antecipação no Asaas",
+                            "example": "9e7d8639-350f-45c0-8bc3-d4ddc5f4ebac",
+                            "deprecated": false
+                          },
+                          "installment": {
+                            "type": "string",
+                            "description": "Identificador único do parcelamento a ser antecipado",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "payment": {
+                            "type": "string",
+                            "description": "Identificador único da cobrança a ser antecipada.",
+                            "example": "pay_626366773834",
+                            "deprecated": false
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status da antecipação",
+                            "example": "PENDING",
+                            "deprecated": false,
+                            "enum": [
+                              "PENDING",
+                              "DENIED",
+                              "CREDITED",
+                              "DEBITED",
+                              "CANCELLED",
+                              "OVERDUE",
+                              "SCHEDULED"
+                            ],
+                            "x-readme-ref-name": "AnticipationGetResponseAnticipationStatus"
+                          },
+                          "anticipationDate": {
+                            "type": "string",
+                            "description": "Data de solicitação da antecipação",
+                            "format": "date",
+                            "example": "2019-05-20",
+                            "deprecated": false
+                          },
+                          "dueDate": {
+                            "type": "string",
+                            "description": "Data de vencimento da solicitação",
+                            "format": "date",
+                            "example": "2019-05-26",
+                            "deprecated": false
+                          },
+                          "requestDate": {
+                            "type": "string",
+                            "description": "Data de solicitação da antecipação",
+                            "format": "date",
+                            "example": "2019-05-14",
+                            "deprecated": false
+                          },
+                          "fee": {
+                            "type": "number",
+                            "description": "Taxa de antecipação",
+                            "example": 2.33,
+                            "deprecated": false
+                          },
+                          "anticipationDays": {
+                            "type": "integer",
+                            "description": "Quantidade de dias que foram antecipados",
+                            "format": "int32",
+                            "example": 5,
+                            "deprecated": false
+                          },
+                          "netValue": {
+                            "type": "number",
+                            "description": "Valor líquido descontada a taxa de antecipação",
+                            "example": 73.68,
+                            "deprecated": false
+                          },
+                          "totalValue": {
+                            "type": "number",
+                            "description": "Valor total da cobrança a ser antecipada",
+                            "example": 80,
+                            "deprecated": false
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor da antecipação",
+                            "example": 76.01,
+                            "deprecated": false
+                          },
+                          "denialObservation": {
+                            "type": "string",
+                            "description": "Motivo de rejeição da antecipação",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "x-readme-ref-name": "AnticipationGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "AnticipationListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/anticipations/simulate": {
+      "post": {
+        "tags": [
+          "Antecipações"
+        ],
+        "summary": "Simular antecipação",
+        "description": "",
+        "operationId": "simular-antecipação",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "installment": {
+                    "type": "string",
+                    "description": "ID do parcelamento a ser antecipado",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "payment": {
+                    "type": "string",
+                    "description": "ID da cobrança a ser antecipada",
+                    "example": "pay_626366773834",
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "AnticipationSimulateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento a ser antecipado",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança a ser antecipada",
+                      "example": "pay_626366773834",
+                      "deprecated": false
+                    },
+                    "anticipationDate": {
+                      "type": "string",
+                      "description": "Data de solicitação da antecipação",
+                      "format": "date",
+                      "example": "2019-05-20",
+                      "deprecated": false
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "description": "Data de vencimento da solicitação",
+                      "format": "date",
+                      "example": "2019-05-26",
+                      "deprecated": false
+                    },
+                    "fee": {
+                      "type": "number",
+                      "description": "Taxa de antecipação",
+                      "example": 2.33,
+                      "deprecated": false
+                    },
+                    "anticipationDays": {
+                      "type": "integer",
+                      "description": "Quantidade de dias que foram antecipados",
+                      "format": "int32",
+                      "example": 6,
+                      "deprecated": false
+                    },
+                    "netValue": {
+                      "type": "number",
+                      "description": "Valor líquido descontada a taxa de antecipação",
+                      "example": 73.68,
+                      "deprecated": false
+                    },
+                    "totalValue": {
+                      "type": "number",
+                      "description": "Valor total da cobrança a ser antecipada",
+                      "example": 80,
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor da antecipação",
+                      "example": 76.01,
+                      "deprecated": false
+                    },
+                    "isDocumentationRequired": {
+                      "type": "boolean",
+                      "description": "Determina a obrigatoriedade do envio de notas fiscais eletrônicas ou contratos de prestação de serviços na solicitação da antecipação",
+                      "example": false,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "AnticipationSimulateResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/anticipations/{id}": {
+      "get": {
+        "tags": [
+          "Antecipações"
+        ],
+        "summary": "Recuperar uma única antecipação",
+        "description": "",
+        "operationId": "recuperar-uma-unica-antecipacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da antecipação no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "receivableAnticipation",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da antecipação no Asaas",
+                      "example": "9e7d8639-350f-45c0-8bc3-d4ddc5f4ebac",
+                      "deprecated": false
+                    },
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento a ser antecipado",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança a ser antecipada.",
+                      "example": "pay_626366773834",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da antecipação",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "DENIED",
+                        "CREDITED",
+                        "DEBITED",
+                        "CANCELLED",
+                        "OVERDUE",
+                        "SCHEDULED"
+                      ],
+                      "x-readme-ref-name": "AnticipationGetResponseAnticipationStatus"
+                    },
+                    "anticipationDate": {
+                      "type": "string",
+                      "description": "Data de solicitação da antecipação",
+                      "format": "date",
+                      "example": "2019-05-20",
+                      "deprecated": false
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "description": "Data de vencimento da solicitação",
+                      "format": "date",
+                      "example": "2019-05-26",
+                      "deprecated": false
+                    },
+                    "requestDate": {
+                      "type": "string",
+                      "description": "Data de solicitação da antecipação",
+                      "format": "date",
+                      "example": "2019-05-14",
+                      "deprecated": false
+                    },
+                    "fee": {
+                      "type": "number",
+                      "description": "Taxa de antecipação",
+                      "example": 2.33,
+                      "deprecated": false
+                    },
+                    "anticipationDays": {
+                      "type": "integer",
+                      "description": "Quantidade de dias que foram antecipados",
+                      "format": "int32",
+                      "example": 5,
+                      "deprecated": false
+                    },
+                    "netValue": {
+                      "type": "number",
+                      "description": "Valor líquido descontada a taxa de antecipação",
+                      "example": 73.68,
+                      "deprecated": false
+                    },
+                    "totalValue": {
+                      "type": "number",
+                      "description": "Valor total da cobrança a ser antecipada",
+                      "example": 80,
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor da antecipação",
+                      "example": 76.01,
+                      "deprecated": false
+                    },
+                    "denialObservation": {
+                      "type": "string",
+                      "description": "Motivo de rejeição da antecipação",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "AnticipationGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/anticipations/configurations": {
+      "put": {
+        "tags": [
+          "Antecipações"
+        ],
+        "summary": "Atualizar status da antecipação automática",
+        "description": "",
+        "operationId": "atualizar-status-da-antecipacao-automatica",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "creditCardAutomaticEnabled": {
+                    "type": "boolean",
+                    "description": "Definir configuração de antecipação automática",
+                    "deprecated": false,
+                    "example": null
+                  }
+                },
+                "x-readme-ref-name": "AnticipationConfigurationUpdateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "creditCardAutomaticEnabled": {
+                      "type": "boolean",
+                      "description": "Indica se a antecipação automática de cartão de crédito está habilitada",
+                      "example": false,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "AnticipationConfigurationGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Antecipações"
+        ],
+        "summary": "Recuperar status da antecipação automática",
+        "description": "",
+        "operationId": "recuperar-status-da-antecipacao-automatica",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "creditCardAutomaticEnabled": {
+                      "type": "boolean",
+                      "description": "Indica se a antecipação automática de cartão de crédito está habilitada",
+                      "example": false,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "AnticipationConfigurationGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/anticipations/limits": {
+      "get": {
+        "tags": [
+          "Antecipações"
+        ],
+        "summary": "Recuperar limites de antecipações",
+        "description": "",
+        "operationId": "recuperar-limites-de-antecipacoes",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "creditCard": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "number",
+                          "description": "Limite de antecipação liberado na conta",
+                          "example": 50000,
+                          "deprecated": false
+                        },
+                        "available": {
+                          "type": "number",
+                          "description": "Limite disponível para antecipar",
+                          "example": 35360.7,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Limites de antecipação de cartão de crédito",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AnticipationLimitsInfoResponseDTO"
+                    },
+                    "bankSlip": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "number",
+                          "description": "Limite de antecipação liberado na conta",
+                          "example": 50000,
+                          "deprecated": false
+                        },
+                        "available": {
+                          "type": "number",
+                          "description": "Limite disponível para antecipar",
+                          "example": 35360.7,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Limites de antecipação de cartão de crédito",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AnticipationLimitsInfoResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "AnticipationLimitsResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/anticipations/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Antecipações"
+        ],
+        "summary": "Cancelar antecipação",
+        "description": "",
+        "operationId": "cancelar-antecipacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da antecipação no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "AnticipationPathIdRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "receivableAnticipation",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da antecipação no Asaas",
+                      "example": "9e7d8639-350f-45c0-8bc3-d4ddc5f4ebac",
+                      "deprecated": false
+                    },
+                    "installment": {
+                      "type": "string",
+                      "description": "Identificador único do parcelamento a ser antecipado",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "payment": {
+                      "type": "string",
+                      "description": "Identificador único da cobrança a ser antecipada.",
+                      "example": "pay_626366773834",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da antecipação",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "DENIED",
+                        "CREDITED",
+                        "DEBITED",
+                        "CANCELLED",
+                        "OVERDUE",
+                        "SCHEDULED"
+                      ],
+                      "x-readme-ref-name": "AnticipationGetResponseAnticipationStatus"
+                    },
+                    "anticipationDate": {
+                      "type": "string",
+                      "description": "Data de solicitação da antecipação",
+                      "format": "date",
+                      "example": "2019-05-20",
+                      "deprecated": false
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "description": "Data de vencimento da solicitação",
+                      "format": "date",
+                      "example": "2019-05-26",
+                      "deprecated": false
+                    },
+                    "requestDate": {
+                      "type": "string",
+                      "description": "Data de solicitação da antecipação",
+                      "format": "date",
+                      "example": "2019-05-14",
+                      "deprecated": false
+                    },
+                    "fee": {
+                      "type": "number",
+                      "description": "Taxa de antecipação",
+                      "example": 2.33,
+                      "deprecated": false
+                    },
+                    "anticipationDays": {
+                      "type": "integer",
+                      "description": "Quantidade de dias que foram antecipados",
+                      "format": "int32",
+                      "example": 5,
+                      "deprecated": false
+                    },
+                    "netValue": {
+                      "type": "number",
+                      "description": "Valor líquido descontada a taxa de antecipação",
+                      "example": 73.68,
+                      "deprecated": false
+                    },
+                    "totalValue": {
+                      "type": "number",
+                      "description": "Valor total da cobrança a ser antecipada",
+                      "example": 80,
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor da antecipação",
+                      "example": 76.01,
+                      "deprecated": false
+                    },
+                    "denialObservation": {
+                      "type": "string",
+                      "description": "Motivo de rejeição da antecipação",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "AnticipationGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

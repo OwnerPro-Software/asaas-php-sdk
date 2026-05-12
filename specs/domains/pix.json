@@ -1,0 +1,1441 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Pix"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/pix/addressKeys": {
+      "post": {
+        "tags": [
+          "Pix"
+        ],
+        "summary": "Criar uma chave",
+        "description": "",
+        "operationId": "criar-uma-chave",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "type"
+                ],
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Tipo da chave Pix",
+                    "nullable": false,
+                    "example": "EVP",
+                    "deprecated": false,
+                    "enum": [
+                      "EVP"
+                    ],
+                    "x-readme-ref-name": "PixAddressKeySaveRequestPixAddressKeyType"
+                  }
+                },
+                "x-readme-ref-name": "PixAddressKeySaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da chave Pix no Asaas",
+                      "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa",
+                      "deprecated": false
+                    },
+                    "key": {
+                      "type": "string",
+                      "description": "Valor da chave",
+                      "example": "b6295ee1-f054-47d1-9e90-ee57b74f60d9",
+                      "deprecated": false
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo da chave Pix",
+                      "example": "EVP",
+                      "deprecated": false,
+                      "enum": [
+                        "EVP"
+                      ],
+                      "x-readme-ref-name": "PixAddressKeyGetResponsePixAddressKeyType"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da chave",
+                      "example": "ACTIVE",
+                      "deprecated": false,
+                      "enum": [
+                        "AWAITING_ACTIVATION",
+                        "ACTIVE",
+                        "AWAITING_DELETION",
+                        "AWAITING_ACCOUNT_DELETION",
+                        "DELETED",
+                        "ERROR"
+                      ],
+                      "x-readme-ref-name": "PixAddressKeyGetResponsePixAddressKeyStatus"
+                    },
+                    "dateCreated": {
+                      "type": "string",
+                      "description": "Data de criação da chave",
+                      "format": "date-time",
+                      "example": "2022-02-07 17:17:48",
+                      "deprecated": false
+                    },
+                    "canBeDeleted": {
+                      "type": "boolean",
+                      "description": "Determina se a chave pode ser deletada",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "cannotBeDeletedReason": {
+                      "type": "string",
+                      "description": "Motivo de não poder ser removida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "qrCode": {
+                      "type": "object",
+                      "properties": {
+                        "encodedImage": {
+                          "type": "string",
+                          "description": "Imagem do QrCode em base64",
+                          "example": "QRCODE IMAGE IN BASE64",
+                          "deprecated": false
+                        },
+                        "payload": {
+                          "type": "string",
+                          "description": "Copia e Cola do QrCode",
+                          "example": "00020126580014br.gov.bcb.pix0136a9fe43bc-164d-44d1-91c2-2f9b4d6956e95204000053039865802BR5925Joao da Silva6009Joinville62290525JOAOSILVA00000055ASA6304E62B",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "QrCode da chave Pix",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PixAddressKeyQrCodeGetResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "PixAddressKeyGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Pix"
+        ],
+        "summary": "Listar chaves",
+        "description": "",
+        "operationId": "listar-chaves",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar pelo status atual da chave",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar pelo status atual da chave",
+              "example": "AWAITING_ACTIVATION",
+              "deprecated": false,
+              "enum": [
+                "AWAITING_ACTIVATION",
+                "ACTIVE",
+                "AWAITING_DELETION",
+                "AWAITING_ACCOUNT_DELETION",
+                "DELETED",
+                "ERROR"
+              ],
+              "x-readme-ref-name": "PixAddressKeyListRequestPixAddressKeyStatus"
+            }
+          },
+          {
+            "name": "statusList",
+            "in": "query",
+            "description": "Filtrar por um ou mais status das chaves",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da chave Pix no Asaas",
+                            "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa",
+                            "deprecated": false
+                          },
+                          "key": {
+                            "type": "string",
+                            "description": "Valor da chave",
+                            "example": "b6295ee1-f054-47d1-9e90-ee57b74f60d9",
+                            "deprecated": false
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Tipo da chave Pix",
+                            "example": "EVP",
+                            "deprecated": false,
+                            "enum": [
+                              "EVP"
+                            ],
+                            "x-readme-ref-name": "PixAddressKeyGetResponsePixAddressKeyType"
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status da chave",
+                            "example": "ACTIVE",
+                            "deprecated": false,
+                            "enum": [
+                              "AWAITING_ACTIVATION",
+                              "ACTIVE",
+                              "AWAITING_DELETION",
+                              "AWAITING_ACCOUNT_DELETION",
+                              "DELETED",
+                              "ERROR"
+                            ],
+                            "x-readme-ref-name": "PixAddressKeyGetResponsePixAddressKeyStatus"
+                          },
+                          "dateCreated": {
+                            "type": "string",
+                            "description": "Data de criação da chave",
+                            "format": "date-time",
+                            "example": "2022-02-07 17:17:48",
+                            "deprecated": false
+                          },
+                          "canBeDeleted": {
+                            "type": "boolean",
+                            "description": "Determina se a chave pode ser deletada",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "cannotBeDeletedReason": {
+                            "type": "string",
+                            "description": "Motivo de não poder ser removida",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "qrCode": {
+                            "type": "object",
+                            "properties": {
+                              "encodedImage": {
+                                "type": "string",
+                                "description": "Imagem do QrCode em base64",
+                                "example": "QRCODE IMAGE IN BASE64",
+                                "deprecated": false
+                              },
+                              "payload": {
+                                "type": "string",
+                                "description": "Copia e Cola do QrCode",
+                                "example": "00020126580014br.gov.bcb.pix0136a9fe43bc-164d-44d1-91c2-2f9b4d6956e95204000053039865802BR5925Joao da Silva6009Joinville62290525JOAOSILVA00000055ASA6304E62B",
+                                "deprecated": false
+                              }
+                            },
+                            "description": "QrCode da chave Pix",
+                            "deprecated": false,
+                            "x-readme-ref-name": "PixAddressKeyQrCodeGetResponseDTO"
+                          }
+                        },
+                        "x-readme-ref-name": "PixAddressKeyGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PixAddressKeyListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/pix/addressKeys/{id}": {
+      "get": {
+        "tags": [
+          "Pix"
+        ],
+        "summary": "Recuperar uma única chave",
+        "description": "",
+        "operationId": "recuperar-uma-unica-chave",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da chave Pix no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da chave Pix no Asaas",
+                      "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa",
+                      "deprecated": false
+                    },
+                    "key": {
+                      "type": "string",
+                      "description": "Valor da chave",
+                      "example": "b6295ee1-f054-47d1-9e90-ee57b74f60d9",
+                      "deprecated": false
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo da chave Pix",
+                      "example": "EVP",
+                      "deprecated": false,
+                      "enum": [
+                        "EVP"
+                      ],
+                      "x-readme-ref-name": "PixAddressKeyGetResponsePixAddressKeyType"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da chave",
+                      "example": "ACTIVE",
+                      "deprecated": false,
+                      "enum": [
+                        "AWAITING_ACTIVATION",
+                        "ACTIVE",
+                        "AWAITING_DELETION",
+                        "AWAITING_ACCOUNT_DELETION",
+                        "DELETED",
+                        "ERROR"
+                      ],
+                      "x-readme-ref-name": "PixAddressKeyGetResponsePixAddressKeyStatus"
+                    },
+                    "dateCreated": {
+                      "type": "string",
+                      "description": "Data de criação da chave",
+                      "format": "date-time",
+                      "example": "2022-02-07 17:17:48",
+                      "deprecated": false
+                    },
+                    "canBeDeleted": {
+                      "type": "boolean",
+                      "description": "Determina se a chave pode ser deletada",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "cannotBeDeletedReason": {
+                      "type": "string",
+                      "description": "Motivo de não poder ser removida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "qrCode": {
+                      "type": "object",
+                      "properties": {
+                        "encodedImage": {
+                          "type": "string",
+                          "description": "Imagem do QrCode em base64",
+                          "example": "QRCODE IMAGE IN BASE64",
+                          "deprecated": false
+                        },
+                        "payload": {
+                          "type": "string",
+                          "description": "Copia e Cola do QrCode",
+                          "example": "00020126580014br.gov.bcb.pix0136a9fe43bc-164d-44d1-91c2-2f9b4d6956e95204000053039865802BR5925Joao da Silva6009Joinville62290525JOAOSILVA00000055ASA6304E62B",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "QrCode da chave Pix",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PixAddressKeyQrCodeGetResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "PixAddressKeyGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Pix"
+        ],
+        "summary": "Remover chave",
+        "description": "",
+        "operationId": "remover-chave",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da chave Pix no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da chave Pix no Asaas",
+                      "example": "a33047b1-fb19-4b68-9373-a7ba8a8162aa",
+                      "deprecated": false
+                    },
+                    "key": {
+                      "type": "string",
+                      "description": "Valor da chave",
+                      "example": "b6295ee1-f054-47d1-9e90-ee57b74f60d9",
+                      "deprecated": false
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo da chave Pix",
+                      "example": "EVP",
+                      "deprecated": false,
+                      "enum": [
+                        "EVP"
+                      ],
+                      "x-readme-ref-name": "PixAddressKeyGetResponsePixAddressKeyType"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status da chave",
+                      "example": "ACTIVE",
+                      "deprecated": false,
+                      "enum": [
+                        "AWAITING_ACTIVATION",
+                        "ACTIVE",
+                        "AWAITING_DELETION",
+                        "AWAITING_ACCOUNT_DELETION",
+                        "DELETED",
+                        "ERROR"
+                      ],
+                      "x-readme-ref-name": "PixAddressKeyGetResponsePixAddressKeyStatus"
+                    },
+                    "dateCreated": {
+                      "type": "string",
+                      "description": "Data de criação da chave",
+                      "format": "date-time",
+                      "example": "2022-02-07 17:17:48",
+                      "deprecated": false
+                    },
+                    "canBeDeleted": {
+                      "type": "boolean",
+                      "description": "Determina se a chave pode ser deletada",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "cannotBeDeletedReason": {
+                      "type": "string",
+                      "description": "Motivo de não poder ser removida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "qrCode": {
+                      "type": "object",
+                      "properties": {
+                        "encodedImage": {
+                          "type": "string",
+                          "description": "Imagem do QrCode em base64",
+                          "example": "QRCODE IMAGE IN BASE64",
+                          "deprecated": false
+                        },
+                        "payload": {
+                          "type": "string",
+                          "description": "Copia e Cola do QrCode",
+                          "example": "00020126580014br.gov.bcb.pix0136a9fe43bc-164d-44d1-91c2-2f9b4d6956e95204000053039865802BR5925Joao da Silva6009Joinville62290525JOAOSILVA00000055ASA6304E62B",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "QrCode da chave Pix",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PixAddressKeyQrCodeGetResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "PixAddressKeyGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/pix/qrCodes/static": {
+      "post": {
+        "tags": [
+          "Pix"
+        ],
+        "summary": "Criar QR Code estático",
+        "description": "",
+        "operationId": "criar-qrcode-estatico",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "addressKey": {
+                    "type": "string",
+                    "description": "Chave que receberá os pagamentos do QR Code",
+                    "example": "b6295ee1-f054-47d1-9e90-ee57b74f60d9",
+                    "deprecated": false
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Descrição do QrCode",
+                    "example": "Churrasco",
+                    "deprecated": false
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Valor do QrCode, caso não informado o pagador poderá escolher o valor",
+                    "example": 50,
+                    "deprecated": false
+                  },
+                  "format": {
+                    "type": "string",
+                    "description": "Formato do QR Code",
+                    "example": "ALL",
+                    "deprecated": false,
+                    "enum": [
+                      "ALL",
+                      "IMAGE",
+                      "PAYLOAD"
+                    ]
+                  },
+                  "expirationDate": {
+                    "type": "string",
+                    "description": "Data/Hora de expiração do QR Code, após desta data todos os pagamentos serão recusados.",
+                    "format": "date-time",
+                    "example": "2023-05-05 14:20:50",
+                    "deprecated": false
+                  },
+                  "expirationSeconds": {
+                    "type": "integer",
+                    "description": "Determina a data de expiração em segundos.",
+                    "format": "int32",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "allowsMultiplePayments": {
+                    "type": "boolean",
+                    "description": "Define se o QrCode pode ser pago múltiplas vezes, caso não informado o valor padrão é true.",
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "externalReference": {
+                    "maxLength": 100,
+                    "type": "string",
+                    "description": "Campo livre para busca",
+                    "deprecated": false,
+                    "example": null
+                  }
+                },
+                "x-readme-ref-name": "PixQrCodeSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Imagem do qrCode em base64",
+                      "example": "9bea9bcd126b45c7939960f577be84d6",
+                      "deprecated": false
+                    },
+                    "encodedImage": {
+                      "type": "string",
+                      "description": "Identificador do QrCode",
+                      "example": "QRCODE IMAGE IN BASE64",
+                      "deprecated": false
+                    },
+                    "payload": {
+                      "type": "string",
+                      "description": "Copia e Cola do QrCode",
+                      "example": "00020126580014br.gov.bcb.pix0136a9fe43bc-164d-44d1-91c2-2f9b4d6956e95204000053039865802BR5925Churrasco6009Joinville62290525JOAOSILVA00000055ASA6304E62B",
+                      "deprecated": false
+                    },
+                    "allowsMultiplePayments": {
+                      "type": "boolean",
+                      "description": "Indica se permite múltiplos pagamentos",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "expirationDate": {
+                      "type": "string",
+                      "description": "Data/Hora de expiração do QrCode, após desta data todos os pagamentos serão recusados",
+                      "format": "date-time",
+                      "example": "2023-05-05 14:20:5",
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Campo livre para busca",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do QrCode",
+                      "example": "Churrasco",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PixQrCodeSaveResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/pix/qrCodes/static/{id}": {
+      "delete": {
+        "tags": [
+          "Pix"
+        ],
+        "summary": "Deletar QR Code estático",
+        "description": "",
+        "operationId": "deletar-qrcode-estatico",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador do QR Code que será removido.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "ASAAS00000000000000383ASA"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador do QrCode",
+                      "example": "ASAAS00000000000000383ASA",
+                      "deprecated": false
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o QR Code foi removido",
+                      "example": true,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PixQrCodeDeleteResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/pix/tokenBucket/addressKey": {
+      "get": {
+        "tags": [
+          "Pix"
+        ],
+        "summary": "Consulta de fichas disponíveis no balde",
+        "description": "",
+        "operationId": "consulta-de-fichas-disponiveis-no-balde",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "capacity": {
+                      "type": "integer",
+                      "description": "Capacidade máxima de fichas",
+                      "format": "int32",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "remaining": {
+                      "type": "integer",
+                      "description": "Quantidade de fichas disponíveis",
+                      "format": "int32",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "x-readme-ref-name": "PixTokenBucketGetAddressKeyResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

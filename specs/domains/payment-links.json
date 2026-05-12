@@ -1,0 +1,2848 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Link de pagamentos"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/paymentLinks": {
+      "post": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Criar um link de pagamentos",
+        "description": "",
+        "operationId": "criar-um-link-de-pagamentos",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "name",
+                  "billingType",
+                  "chargeType"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nome do link de pagamentos",
+                    "nullable": false,
+                    "example": "Venda de livros",
+                    "deprecated": false
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Descrição do link de pagamentos",
+                    "example": "Qualquer livro por apenas R$: 50,00",
+                    "deprecated": false
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "description": "Data de encerramento",
+                    "example": "2024-09-05",
+                    "deprecated": false
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Valor do link de pagamentos, caso não informado o pagador poderá informar o quanto deseja pagar",
+                    "example": 50,
+                    "deprecated": false
+                  },
+                  "billingType": {
+                    "type": "string",
+                    "description": "Forma de pagamento permitida",
+                    "nullable": false,
+                    "example": "UNDEFINED",
+                    "deprecated": false,
+                    "enum": [
+                      "UNDEFINED",
+                      "BOLETO",
+                      "CREDIT_CARD",
+                      "PIX"
+                    ],
+                    "x-readme-ref-name": "PaymentLinkSaveRequestBillingType"
+                  },
+                  "chargeType": {
+                    "type": "string",
+                    "description": "Forma de cobrança",
+                    "nullable": false,
+                    "example": "DETACHED",
+                    "deprecated": false,
+                    "enum": [
+                      "DETACHED",
+                      "RECURRENT",
+                      "INSTALLMENT"
+                    ],
+                    "x-readme-ref-name": "PaymentLinkSaveRequestChargeType"
+                  },
+                  "dueDateLimitDays": {
+                    "type": "integer",
+                    "description": "Quantidade de dias úteis que o seu cliente poderá pagar após o boleto ser gerado (Para forma de pagamento como Boleto)",
+                    "format": "int32",
+                    "example": 10,
+                    "deprecated": false
+                  },
+                  "subscriptionCycle": {
+                    "type": "string",
+                    "description": "Periodicidade da cobrança, caso o chargeType seja RECURRENT",
+                    "example": "MONTHLY",
+                    "deprecated": false,
+                    "enum": [
+                      "WEEKLY",
+                      "BIWEEKLY",
+                      "MONTHLY",
+                      "BIMONTHLY",
+                      "QUARTERLY",
+                      "SEMIANNUALLY",
+                      "YEARLY"
+                    ],
+                    "x-readme-ref-name": "PaymentLinkSaveRequestCycle"
+                  },
+                  "maxInstallmentCount": {
+                    "type": "integer",
+                    "description": "Quantidade máxima de parcelas que seu cliente poderá parcelar o valor do link de pagamentos caso a forma de cobrança selecionado seja Parcelamento. Caso não informado o valor padrão será de 1 parcela",
+                    "format": "int32",
+                    "example": 1,
+                    "deprecated": false,
+                    "default": 1
+                  },
+                  "externalReference": {
+                    "type": "string",
+                    "description": "Campo livre para busca",
+                    "example": "1287",
+                    "deprecated": false
+                  },
+                  "notificationEnabled": {
+                    "type": "boolean",
+                    "description": "Define se os clientes cadastrados pelo link de pagamentos terão as notificações habilitadas. Caso não seja informado o valor padrão será true",
+                    "example": false,
+                    "deprecated": false,
+                    "default": true
+                  },
+                  "callback": {
+                    "required": [
+                      "successUrl"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "successUrl": {
+                        "maxLength": 255,
+                        "type": "string",
+                        "description": "URL que o cliente será redirecionado após o pagamento com sucesso da fatura ou link de pagamento",
+                        "nullable": false,
+                        "deprecated": false,
+                        "example": null
+                      },
+                      "autoRedirect": {
+                        "type": "boolean",
+                        "description": "Definir se o cliente será redirecionado automaticamente ou será apenas informado com um botão para retornar ao site. O padrão é true, caso queira desativar informar false",
+                        "deprecated": false,
+                        "example": null
+                      }
+                    },
+                    "description": "Informações de redirecionamento automático após pagamento do link de pagamento",
+                    "deprecated": false,
+                    "x-readme-ref-name": "PaymentCallbackRequestDTO"
+                  },
+                  "isAddressRequired": {
+                    "type": "boolean",
+                    "description": "True para tornar obrigatório o preenchimento de dados de endereço no checkout.",
+                    "example": true,
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "PaymentLinkSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do seu link de pagamentos no Asaas",
+                      "example": "725104409743",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome do link de pagamentos",
+                      "example": "Venda de livros",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor do link de pagamentos, caso não informado o pagador poderá informar o quanto deseja pagar",
+                      "example": 50,
+                      "deprecated": false
+                    },
+                    "active": {
+                      "type": "boolean",
+                      "description": "Se o link de pagamentos esta ativo",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "chargeType": {
+                      "type": "string",
+                      "description": "Forma de cobrança",
+                      "example": "DETACHED",
+                      "deprecated": false,
+                      "enum": [
+                        "DETACHED",
+                        "RECURRENT",
+                        "INSTALLMENT"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseChargeType"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "Link de acesso do link de pagamentos",
+                      "example": "https://www.asaas.com/c/291089675759",
+                      "deprecated": false
+                    },
+                    "billingType": {
+                      "type": "string",
+                      "description": "Forma de pagamento permitida",
+                      "example": "UNDEFINED",
+                      "deprecated": false,
+                      "enum": [
+                        "UNDEFINED",
+                        "BOLETO",
+                        "CREDIT_CARD",
+                        "PIX"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseBillingType"
+                    },
+                    "subscriptionCycle": {
+                      "type": "string",
+                      "description": "Periodicidade da cobrança, caso o chargeType seja RECURRENT",
+                      "example": "MONTHLY",
+                      "deprecated": false,
+                      "enum": [
+                        "WEEKLY",
+                        "BIWEEKLY",
+                        "MONTHLY",
+                        "BIMONTHLY",
+                        "QUARTERLY",
+                        "SEMIANNUALLY",
+                        "YEARLY"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseCycle"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do link de pagamentos",
+                      "example": "Qualquer livro por apenas R$: 50,00",
+                      "deprecated": false
+                    },
+                    "endDate": {
+                      "type": "string",
+                      "description": "Data de encerramento",
+                      "format": "date",
+                      "example": "2024-09-05",
+                      "deprecated": false
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o link de pagamento foi removido",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "viewCount": {
+                      "type": "integer",
+                      "description": "A quantidade de visualizações do seu link de pagamentos",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "maxInstallmentCount": {
+                      "type": "integer",
+                      "description": "Quantidade máxima de parcelas que seu cliente poderá parcelar o valor do link de pagamentos, caso seja Parcelamento.",
+                      "format": "int32",
+                      "example": 1,
+                      "deprecated": false
+                    },
+                    "dueDateLimitDays": {
+                      "type": "integer",
+                      "description": "Quantidade de dias úteis que o seu cliente poderá pagar após o boleto ser gerado (Para forma de pagamento como Boleto)",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "notificationEnabled": {
+                      "type": "boolean",
+                      "description": "Define se os clientes cadastrados pelo link de pagamentos terão as notificações habilitadas",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "isAddressRequired": {
+                      "type": "boolean",
+                      "description": "Define se o preenchimento de endereço será obrigatório nas cobranças.",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Campo livre para busca",
+                      "example": "056984",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Listar links de pagamentos",
+        "description": "",
+        "operationId": "listar-links-de-pagamentos",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "description": "Filtrar por links de pagamentos ativados ou desativados",
+            "schema": {
+              "type": "boolean",
+              "example": null
+            }
+          },
+          {
+            "name": "includeDeleted",
+            "in": "query",
+            "description": "True para recuperar também os links de pagamentos removidos",
+            "schema": {
+              "type": "boolean",
+              "example": null
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filtrar pelo nome do link de pagamentos",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "externalReference",
+            "in": "query",
+            "description": "Filtrar pelo Identificador do seu sistema",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único do seu link de pagamentos no Asaas",
+                            "example": "725104409743",
+                            "deprecated": false
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Nome do link de pagamentos",
+                            "example": "Venda de livros",
+                            "deprecated": false
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor do link de pagamentos, caso não informado o pagador poderá informar o quanto deseja pagar",
+                            "example": 50,
+                            "deprecated": false
+                          },
+                          "active": {
+                            "type": "boolean",
+                            "description": "Se o link de pagamentos esta ativo",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "chargeType": {
+                            "type": "string",
+                            "description": "Forma de cobrança",
+                            "example": "DETACHED",
+                            "deprecated": false,
+                            "enum": [
+                              "DETACHED",
+                              "RECURRENT",
+                              "INSTALLMENT"
+                            ],
+                            "x-readme-ref-name": "PaymentLinkGetResponseChargeType"
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "Link de acesso do link de pagamentos",
+                            "example": "https://www.asaas.com/c/291089675759",
+                            "deprecated": false
+                          },
+                          "billingType": {
+                            "type": "string",
+                            "description": "Forma de pagamento permitida",
+                            "example": "UNDEFINED",
+                            "deprecated": false,
+                            "enum": [
+                              "UNDEFINED",
+                              "BOLETO",
+                              "CREDIT_CARD",
+                              "PIX"
+                            ],
+                            "x-readme-ref-name": "PaymentLinkGetResponseBillingType"
+                          },
+                          "subscriptionCycle": {
+                            "type": "string",
+                            "description": "Periodicidade da cobrança, caso o chargeType seja RECURRENT",
+                            "example": "MONTHLY",
+                            "deprecated": false,
+                            "enum": [
+                              "WEEKLY",
+                              "BIWEEKLY",
+                              "MONTHLY",
+                              "BIMONTHLY",
+                              "QUARTERLY",
+                              "SEMIANNUALLY",
+                              "YEARLY"
+                            ],
+                            "x-readme-ref-name": "PaymentLinkGetResponseCycle"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do link de pagamentos",
+                            "example": "Qualquer livro por apenas R$: 50,00",
+                            "deprecated": false
+                          },
+                          "endDate": {
+                            "type": "string",
+                            "description": "Data de encerramento",
+                            "format": "date",
+                            "example": "2024-09-05",
+                            "deprecated": false
+                          },
+                          "deleted": {
+                            "type": "boolean",
+                            "description": "Indica se o link de pagamento foi removido",
+                            "example": false,
+                            "deprecated": false
+                          },
+                          "viewCount": {
+                            "type": "integer",
+                            "description": "A quantidade de visualizações do seu link de pagamentos",
+                            "format": "int32",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "maxInstallmentCount": {
+                            "type": "integer",
+                            "description": "Quantidade máxima de parcelas que seu cliente poderá parcelar o valor do link de pagamentos, caso seja Parcelamento.",
+                            "format": "int32",
+                            "example": 1,
+                            "deprecated": false
+                          },
+                          "dueDateLimitDays": {
+                            "type": "integer",
+                            "description": "Quantidade de dias úteis que o seu cliente poderá pagar após o boleto ser gerado (Para forma de pagamento como Boleto)",
+                            "format": "int32",
+                            "example": 10,
+                            "deprecated": false
+                          },
+                          "notificationEnabled": {
+                            "type": "boolean",
+                            "description": "Define se os clientes cadastrados pelo link de pagamentos terão as notificações habilitadas",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "isAddressRequired": {
+                            "type": "boolean",
+                            "description": "Define se o preenchimento de endereço será obrigatório nas cobranças.",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "externalReference": {
+                            "type": "string",
+                            "description": "Campo livre para busca",
+                            "example": "056984",
+                            "deprecated": false
+                          }
+                        },
+                        "x-readme-ref-name": "PaymentLinkGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentLinks/{id}": {
+      "put": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Atualizar um link de pagamentos",
+        "description": "",
+        "operationId": "atualizar-um-link-de-pagamentos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "725104409743"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nome do link de pagamentos",
+                    "example": "Venda de livros",
+                    "deprecated": false
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Descrição do link de pagamentos",
+                    "example": "Qualquer livro por apenas R$: 50,00",
+                    "deprecated": false
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "description": "Data de encerramento",
+                    "example": "2024-09-05",
+                    "deprecated": false
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Valor do link de pagamentos, caso não informado o pagador poderá informar o quanto deseja pagar",
+                    "example": 50,
+                    "deprecated": false
+                  },
+                  "active": {
+                    "type": "boolean",
+                    "description": "Determina se o link de pagamentos está ativo",
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "billingType": {
+                    "type": "string",
+                    "description": "Forma de pagamento permitida",
+                    "example": "UNDEFINED",
+                    "deprecated": false,
+                    "enum": [
+                      "UNDEFINED",
+                      "BOLETO",
+                      "CREDIT_CARD",
+                      "PIX"
+                    ],
+                    "x-readme-ref-name": "PaymentLinkUpdateRequestBillingType"
+                  },
+                  "chargeType": {
+                    "type": "string",
+                    "description": "Forma de cobrança",
+                    "example": "DETACHED",
+                    "deprecated": false,
+                    "enum": [
+                      "DETACHED",
+                      "RECURRENT",
+                      "INSTALLMENT"
+                    ],
+                    "x-readme-ref-name": "PaymentLinkUpdateRequestChargeType"
+                  },
+                  "dueDateLimitDays": {
+                    "type": "integer",
+                    "description": "Quantidade de dias úteis que o seu cliente poderá pagar após o boleto ser gerado (Para forma de pagamento como Boleto)",
+                    "format": "int32",
+                    "example": 10,
+                    "deprecated": false
+                  },
+                  "subscriptionCycle": {
+                    "type": "string",
+                    "description": "Periodicidade da cobrança, caso o chargeType seja RECURRENT",
+                    "example": "MONTHLY",
+                    "deprecated": false,
+                    "enum": [
+                      "WEEKLY",
+                      "BIWEEKLY",
+                      "MONTHLY",
+                      "BIMONTHLY",
+                      "QUARTERLY",
+                      "SEMIANNUALLY",
+                      "YEARLY"
+                    ],
+                    "x-readme-ref-name": "PaymentLinkUpdateRequestCycle"
+                  },
+                  "maxInstallmentCount": {
+                    "type": "integer",
+                    "description": "Quantidade máxima de parcelas que seu cliente poderá parcelar o valor do link de pagamentos caso a forma de cobrança selecionado seja Parcelamento. Caso não informado o valor padrão será de 1 parcela",
+                    "format": "int32",
+                    "example": 1,
+                    "deprecated": false,
+                    "default": 1
+                  },
+                  "externalReference": {
+                    "type": "string",
+                    "description": "Campo livre para busca",
+                    "example": "2323",
+                    "deprecated": false
+                  },
+                  "notificationEnabled": {
+                    "type": "boolean",
+                    "description": "Define se os clientes cadastrados pelo link de pagamentos terão as notificações habilitadas. Caso não seja informado o valor padrão será true",
+                    "example": false,
+                    "deprecated": false,
+                    "default": true
+                  },
+                  "callback": {
+                    "required": [
+                      "successUrl"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "successUrl": {
+                        "maxLength": 255,
+                        "type": "string",
+                        "description": "URL que o cliente será redirecionado após o pagamento com sucesso da fatura ou link de pagamento",
+                        "nullable": false,
+                        "deprecated": false,
+                        "example": null
+                      },
+                      "autoRedirect": {
+                        "type": "boolean",
+                        "description": "Definir se o cliente será redirecionado automaticamente ou será apenas informado com um botão para retornar ao site. O padrão é true, caso queira desativar informar false",
+                        "deprecated": false,
+                        "example": null
+                      }
+                    },
+                    "description": "Informações de redirecionamento automático após pagamento do link de pagamento",
+                    "deprecated": false,
+                    "x-readme-ref-name": "PaymentCallbackRequestDTO"
+                  }
+                },
+                "x-readme-ref-name": "PaymentLinkUpdateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do seu link de pagamentos no Asaas",
+                      "example": "725104409743",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome do link de pagamentos",
+                      "example": "Venda de livros",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor do link de pagamentos, caso não informado o pagador poderá informar o quanto deseja pagar",
+                      "example": 50,
+                      "deprecated": false
+                    },
+                    "active": {
+                      "type": "boolean",
+                      "description": "Se o link de pagamentos esta ativo",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "chargeType": {
+                      "type": "string",
+                      "description": "Forma de cobrança",
+                      "example": "DETACHED",
+                      "deprecated": false,
+                      "enum": [
+                        "DETACHED",
+                        "RECURRENT",
+                        "INSTALLMENT"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseChargeType"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "Link de acesso do link de pagamentos",
+                      "example": "https://www.asaas.com/c/291089675759",
+                      "deprecated": false
+                    },
+                    "billingType": {
+                      "type": "string",
+                      "description": "Forma de pagamento permitida",
+                      "example": "UNDEFINED",
+                      "deprecated": false,
+                      "enum": [
+                        "UNDEFINED",
+                        "BOLETO",
+                        "CREDIT_CARD",
+                        "PIX"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseBillingType"
+                    },
+                    "subscriptionCycle": {
+                      "type": "string",
+                      "description": "Periodicidade da cobrança, caso o chargeType seja RECURRENT",
+                      "example": "MONTHLY",
+                      "deprecated": false,
+                      "enum": [
+                        "WEEKLY",
+                        "BIWEEKLY",
+                        "MONTHLY",
+                        "BIMONTHLY",
+                        "QUARTERLY",
+                        "SEMIANNUALLY",
+                        "YEARLY"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseCycle"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do link de pagamentos",
+                      "example": "Qualquer livro por apenas R$: 50,00",
+                      "deprecated": false
+                    },
+                    "endDate": {
+                      "type": "string",
+                      "description": "Data de encerramento",
+                      "format": "date",
+                      "example": "2024-09-05",
+                      "deprecated": false
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o link de pagamento foi removido",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "viewCount": {
+                      "type": "integer",
+                      "description": "A quantidade de visualizações do seu link de pagamentos",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "maxInstallmentCount": {
+                      "type": "integer",
+                      "description": "Quantidade máxima de parcelas que seu cliente poderá parcelar o valor do link de pagamentos, caso seja Parcelamento.",
+                      "format": "int32",
+                      "example": 1,
+                      "deprecated": false
+                    },
+                    "dueDateLimitDays": {
+                      "type": "integer",
+                      "description": "Quantidade de dias úteis que o seu cliente poderá pagar após o boleto ser gerado (Para forma de pagamento como Boleto)",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "notificationEnabled": {
+                      "type": "boolean",
+                      "description": "Define se os clientes cadastrados pelo link de pagamentos terão as notificações habilitadas",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "isAddressRequired": {
+                      "type": "boolean",
+                      "description": "Define se o preenchimento de endereço será obrigatório nas cobranças.",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Campo livre para busca",
+                      "example": "056984",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Recuperar um único link de pagamentos",
+        "description": "",
+        "operationId": "recuperar-um-unico-link-de-pagamentos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "725104409743"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do seu link de pagamentos no Asaas",
+                      "example": "725104409743",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome do link de pagamentos",
+                      "example": "Venda de livros",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor do link de pagamentos, caso não informado o pagador poderá informar o quanto deseja pagar",
+                      "example": 50,
+                      "deprecated": false
+                    },
+                    "active": {
+                      "type": "boolean",
+                      "description": "Se o link de pagamentos esta ativo",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "chargeType": {
+                      "type": "string",
+                      "description": "Forma de cobrança",
+                      "example": "DETACHED",
+                      "deprecated": false,
+                      "enum": [
+                        "DETACHED",
+                        "RECURRENT",
+                        "INSTALLMENT"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseChargeType"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "Link de acesso do link de pagamentos",
+                      "example": "https://www.asaas.com/c/291089675759",
+                      "deprecated": false
+                    },
+                    "billingType": {
+                      "type": "string",
+                      "description": "Forma de pagamento permitida",
+                      "example": "UNDEFINED",
+                      "deprecated": false,
+                      "enum": [
+                        "UNDEFINED",
+                        "BOLETO",
+                        "CREDIT_CARD",
+                        "PIX"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseBillingType"
+                    },
+                    "subscriptionCycle": {
+                      "type": "string",
+                      "description": "Periodicidade da cobrança, caso o chargeType seja RECURRENT",
+                      "example": "MONTHLY",
+                      "deprecated": false,
+                      "enum": [
+                        "WEEKLY",
+                        "BIWEEKLY",
+                        "MONTHLY",
+                        "BIMONTHLY",
+                        "QUARTERLY",
+                        "SEMIANNUALLY",
+                        "YEARLY"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseCycle"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do link de pagamentos",
+                      "example": "Qualquer livro por apenas R$: 50,00",
+                      "deprecated": false
+                    },
+                    "endDate": {
+                      "type": "string",
+                      "description": "Data de encerramento",
+                      "format": "date",
+                      "example": "2024-09-05",
+                      "deprecated": false
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o link de pagamento foi removido",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "viewCount": {
+                      "type": "integer",
+                      "description": "A quantidade de visualizações do seu link de pagamentos",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "maxInstallmentCount": {
+                      "type": "integer",
+                      "description": "Quantidade máxima de parcelas que seu cliente poderá parcelar o valor do link de pagamentos, caso seja Parcelamento.",
+                      "format": "int32",
+                      "example": 1,
+                      "deprecated": false
+                    },
+                    "dueDateLimitDays": {
+                      "type": "integer",
+                      "description": "Quantidade de dias úteis que o seu cliente poderá pagar após o boleto ser gerado (Para forma de pagamento como Boleto)",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "notificationEnabled": {
+                      "type": "boolean",
+                      "description": "Define se os clientes cadastrados pelo link de pagamentos terão as notificações habilitadas",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "isAddressRequired": {
+                      "type": "boolean",
+                      "description": "Define se o preenchimento de endereço será obrigatório nas cobranças.",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Campo livre para busca",
+                      "example": "056984",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Remover um link de pagamentos",
+        "description": "",
+        "operationId": "remover-um-link-de-pagamentos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "725104409743"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o link de pagamento foi removido",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do seu link de pagamentos no Asaas",
+                      "example": "725104409743",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkDeleteResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentLinks/{id}/restore": {
+      "post": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Restaurar um link de pagamentos",
+        "description": "",
+        "operationId": "restaurar-um-link-de-pagamentos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "725104409743"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "PaymentLinkPathIdRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do seu link de pagamentos no Asaas",
+                      "example": "725104409743",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome do link de pagamentos",
+                      "example": "Venda de livros",
+                      "deprecated": false
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor do link de pagamentos, caso não informado o pagador poderá informar o quanto deseja pagar",
+                      "example": 50,
+                      "deprecated": false
+                    },
+                    "active": {
+                      "type": "boolean",
+                      "description": "Se o link de pagamentos esta ativo",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "chargeType": {
+                      "type": "string",
+                      "description": "Forma de cobrança",
+                      "example": "DETACHED",
+                      "deprecated": false,
+                      "enum": [
+                        "DETACHED",
+                        "RECURRENT",
+                        "INSTALLMENT"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseChargeType"
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "Link de acesso do link de pagamentos",
+                      "example": "https://www.asaas.com/c/291089675759",
+                      "deprecated": false
+                    },
+                    "billingType": {
+                      "type": "string",
+                      "description": "Forma de pagamento permitida",
+                      "example": "UNDEFINED",
+                      "deprecated": false,
+                      "enum": [
+                        "UNDEFINED",
+                        "BOLETO",
+                        "CREDIT_CARD",
+                        "PIX"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseBillingType"
+                    },
+                    "subscriptionCycle": {
+                      "type": "string",
+                      "description": "Periodicidade da cobrança, caso o chargeType seja RECURRENT",
+                      "example": "MONTHLY",
+                      "deprecated": false,
+                      "enum": [
+                        "WEEKLY",
+                        "BIWEEKLY",
+                        "MONTHLY",
+                        "BIMONTHLY",
+                        "QUARTERLY",
+                        "SEMIANNUALLY",
+                        "YEARLY"
+                      ],
+                      "x-readme-ref-name": "PaymentLinkGetResponseCycle"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do link de pagamentos",
+                      "example": "Qualquer livro por apenas R$: 50,00",
+                      "deprecated": false
+                    },
+                    "endDate": {
+                      "type": "string",
+                      "description": "Data de encerramento",
+                      "format": "date",
+                      "example": "2024-09-05",
+                      "deprecated": false
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o link de pagamento foi removido",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "viewCount": {
+                      "type": "integer",
+                      "description": "A quantidade de visualizações do seu link de pagamentos",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "maxInstallmentCount": {
+                      "type": "integer",
+                      "description": "Quantidade máxima de parcelas que seu cliente poderá parcelar o valor do link de pagamentos, caso seja Parcelamento.",
+                      "format": "int32",
+                      "example": 1,
+                      "deprecated": false
+                    },
+                    "dueDateLimitDays": {
+                      "type": "integer",
+                      "description": "Quantidade de dias úteis que o seu cliente poderá pagar após o boleto ser gerado (Para forma de pagamento como Boleto)",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "notificationEnabled": {
+                      "type": "boolean",
+                      "description": "Define se os clientes cadastrados pelo link de pagamentos terão as notificações habilitadas",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "isAddressRequired": {
+                      "type": "boolean",
+                      "description": "Define se o preenchimento de endereço será obrigatório nas cobranças.",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Campo livre para busca",
+                      "example": "056984",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentLinks/{id}/images": {
+      "post": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Adicionar uma imagem a um link de pagamentos",
+        "description": "",
+        "operationId": "adicionar-uma-imagem-a-um-link-de-pagamentos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "725104409743"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "main": {
+                    "type": "boolean",
+                    "description": "true para definir como a imagem principal",
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "image": {
+                    "type": "string",
+                    "description": "Arquivo",
+                    "format": "binary",
+                    "nullable": false,
+                    "deprecated": false,
+                    "example": null,
+                    "x-readme-ref-name": "File"
+                  }
+                },
+                "x-readme-ref-name": "PaymentLinkFileSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da imagem do seu link de pagamentos no Asaas",
+                      "example": "417d1fe7-f530-4368-935f-699045f2bf5d",
+                      "deprecated": false
+                    },
+                    "main": {
+                      "type": "boolean",
+                      "description": "Determina se esta é a imagem principal",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "image": {
+                      "type": "object",
+                      "properties": {
+                        "originalName": {
+                          "type": "string",
+                          "description": "Nome original da imagem",
+                          "example": "cover.png",
+                          "deprecated": false
+                        },
+                        "size": {
+                          "type": "integer",
+                          "description": "Tamanho da imagem",
+                          "format": "int32",
+                          "example": 50859,
+                          "deprecated": false
+                        },
+                        "extension": {
+                          "type": "string",
+                          "description": "Extensão da imagem",
+                          "example": "png",
+                          "deprecated": false
+                        },
+                        "previewUrl": {
+                          "type": "string",
+                          "description": "Link para download do preview da imagem",
+                          "example": "https://www.asaas.com/file/preview/XtW5OjqOBy3sskIcEMPj6yhr7T3aCLnSWEbIJd08gMNf3Rk7r5buwAXQ9xC2TNmg",
+                          "deprecated": false
+                        },
+                        "downloadUrl": {
+                          "type": "string",
+                          "description": "Link para download da imagem",
+                          "example": "https://www.asaas.com/file/public/download/XtW5OjqOBy3sskIcEMPj6yhr7T3aCLnSWEbIJd08gMNf3Rk7r5buwAXQ9xC2TNmg",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações da imagem do link de pagamentos",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PaymentLinkFileImageResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkFileGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Listar imagens de um link de pagamentos",
+        "description": "",
+        "operationId": "listar-imagens-de-um-link-de-pagamentos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "725104409743"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da imagem do seu link de pagamentos no Asaas",
+                            "example": "417d1fe7-f530-4368-935f-699045f2bf5d",
+                            "deprecated": false
+                          },
+                          "main": {
+                            "type": "boolean",
+                            "description": "Determina se esta é a imagem principal",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "image": {
+                            "type": "object",
+                            "properties": {
+                              "originalName": {
+                                "type": "string",
+                                "description": "Nome original da imagem",
+                                "example": "cover.png",
+                                "deprecated": false
+                              },
+                              "size": {
+                                "type": "integer",
+                                "description": "Tamanho da imagem",
+                                "format": "int32",
+                                "example": 50859,
+                                "deprecated": false
+                              },
+                              "extension": {
+                                "type": "string",
+                                "description": "Extensão da imagem",
+                                "example": "png",
+                                "deprecated": false
+                              },
+                              "previewUrl": {
+                                "type": "string",
+                                "description": "Link para download do preview da imagem",
+                                "example": "https://www.asaas.com/file/preview/XtW5OjqOBy3sskIcEMPj6yhr7T3aCLnSWEbIJd08gMNf3Rk7r5buwAXQ9xC2TNmg",
+                                "deprecated": false
+                              },
+                              "downloadUrl": {
+                                "type": "string",
+                                "description": "Link para download da imagem",
+                                "example": "https://www.asaas.com/file/public/download/XtW5OjqOBy3sskIcEMPj6yhr7T3aCLnSWEbIJd08gMNf3Rk7r5buwAXQ9xC2TNmg",
+                                "deprecated": false
+                              }
+                            },
+                            "description": "Informações da imagem do link de pagamentos",
+                            "deprecated": false,
+                            "x-readme-ref-name": "PaymentLinkFileImageResponseDTO"
+                          }
+                        },
+                        "x-readme-ref-name": "PaymentLinkFileGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkFileListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentLinks/{paymentLinkId}/images/{imageId}": {
+      "get": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Recuperar uma única imagem do link de pagamentos",
+        "description": "",
+        "operationId": "recuperar-uma-unica-imagem-do-link-de-pagamentos",
+        "parameters": [
+          {
+            "name": "paymentLinkId",
+            "in": "path",
+            "description": "Identificador único do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "725104409743"
+            }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "description": "Identificador único da imagem do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "417d1fe7-f530-4368-935f-699045f2bf5d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da imagem do seu link de pagamentos no Asaas",
+                      "example": "417d1fe7-f530-4368-935f-699045f2bf5d",
+                      "deprecated": false
+                    },
+                    "main": {
+                      "type": "boolean",
+                      "description": "Determina se esta é a imagem principal",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "image": {
+                      "type": "object",
+                      "properties": {
+                        "originalName": {
+                          "type": "string",
+                          "description": "Nome original da imagem",
+                          "example": "cover.png",
+                          "deprecated": false
+                        },
+                        "size": {
+                          "type": "integer",
+                          "description": "Tamanho da imagem",
+                          "format": "int32",
+                          "example": 50859,
+                          "deprecated": false
+                        },
+                        "extension": {
+                          "type": "string",
+                          "description": "Extensão da imagem",
+                          "example": "png",
+                          "deprecated": false
+                        },
+                        "previewUrl": {
+                          "type": "string",
+                          "description": "Link para download do preview da imagem",
+                          "example": "https://www.asaas.com/file/preview/XtW5OjqOBy3sskIcEMPj6yhr7T3aCLnSWEbIJd08gMNf3Rk7r5buwAXQ9xC2TNmg",
+                          "deprecated": false
+                        },
+                        "downloadUrl": {
+                          "type": "string",
+                          "description": "Link para download da imagem",
+                          "example": "https://www.asaas.com/file/public/download/XtW5OjqOBy3sskIcEMPj6yhr7T3aCLnSWEbIJd08gMNf3Rk7r5buwAXQ9xC2TNmg",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações da imagem do link de pagamentos",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PaymentLinkFileImageResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkFileGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Remover uma imagem do link de pagamentos",
+        "description": "",
+        "operationId": "remover-uma-imagem-do-link-de-pagamentos",
+        "parameters": [
+          {
+            "name": "paymentLinkId",
+            "in": "path",
+            "description": "Identificador único do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "725104409743"
+            }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "description": "Identificador único da imagem do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "417d1fe7-f530-4368-935f-699045f2bf5d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se a imagem foi removida",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da imagem do seu link de pagamentos no Asaas",
+                      "example": "417d1fe7-f530-4368-935f-699045f2bf5d",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkFileDeleteResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/paymentLinks/{paymentLinkId}/images/{imageId}/setAsMain": {
+      "put": {
+        "tags": [
+          "Link de pagamentos"
+        ],
+        "summary": "Definir imagem principal do link de pagamentos",
+        "description": "",
+        "operationId": "definir-imagem-principal-do-link-de-pagamentos",
+        "parameters": [
+          {
+            "name": "paymentLinkId",
+            "in": "path",
+            "description": "Identificador único do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "725104409743"
+            }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "description": "Identificador único da imagem do seu link de pagamentos no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "417d1fe7-f530-4368-935f-699045f2bf5d"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "PaymentLinkFilePathIdRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da imagem do seu link de pagamentos no Asaas",
+                      "example": "417d1fe7-f530-4368-935f-699045f2bf5d",
+                      "deprecated": false
+                    },
+                    "main": {
+                      "type": "boolean",
+                      "description": "Determina se esta é a imagem principal",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "image": {
+                      "type": "object",
+                      "properties": {
+                        "originalName": {
+                          "type": "string",
+                          "description": "Nome original da imagem",
+                          "example": "cover.png",
+                          "deprecated": false
+                        },
+                        "size": {
+                          "type": "integer",
+                          "description": "Tamanho da imagem",
+                          "format": "int32",
+                          "example": 50859,
+                          "deprecated": false
+                        },
+                        "extension": {
+                          "type": "string",
+                          "description": "Extensão da imagem",
+                          "example": "png",
+                          "deprecated": false
+                        },
+                        "previewUrl": {
+                          "type": "string",
+                          "description": "Link para download do preview da imagem",
+                          "example": "https://www.asaas.com/file/preview/XtW5OjqOBy3sskIcEMPj6yhr7T3aCLnSWEbIJd08gMNf3Rk7r5buwAXQ9xC2TNmg",
+                          "deprecated": false
+                        },
+                        "downloadUrl": {
+                          "type": "string",
+                          "description": "Link para download da imagem",
+                          "example": "https://www.asaas.com/file/public/download/XtW5OjqOBy3sskIcEMPj6yhr7T3aCLnSWEbIJd08gMNf3Rk7r5buwAXQ9xC2TNmg",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações da imagem do link de pagamentos",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PaymentLinkFileImageResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentLinkFileGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

@@ -1,0 +1,1305 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Checkout"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/checkouts": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Criar novo checkout",
+        "description": "",
+        "operationId": "criar-novo-checkout",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "billingTypes",
+                  "chargeTypes",
+                  "callback",
+                  "items"
+                ],
+                "type": "object",
+                "properties": {
+                  "billingTypes": {
+                    "type": "array",
+                    "description": "Formas de pagamento",
+                    "nullable": false,
+                    "example": [
+                      "CREDIT_CARD"
+                    ],
+                    "deprecated": false,
+                    "items": {
+                      "type": "string",
+                      "description": "Formas de pagamento",
+                      "nullable": false,
+                      "example": [
+                        "CREDIT_CARD"
+                      ],
+                      "deprecated": false,
+                      "enum": [
+                        "CREDIT_CARD",
+                        "PIX"
+                      ],
+                      "x-readme-ref-name": "CheckoutSessionSaveRequestBillingType"
+                    },
+                    "enum": [
+                      "CREDIT_CARD",
+                      "PIX"
+                    ]
+                  },
+                  "chargeTypes": {
+                    "type": "array",
+                    "description": "Tipos de cobrança",
+                    "nullable": false,
+                    "example": [
+                      "DETACHED"
+                    ],
+                    "deprecated": false,
+                    "items": {
+                      "type": "string",
+                      "description": "Tipos de cobrança",
+                      "nullable": false,
+                      "example": [
+                        "DETACHED"
+                      ],
+                      "deprecated": false,
+                      "enum": [
+                        "DETACHED",
+                        "RECURRENT",
+                        "INSTALLMENT"
+                      ],
+                      "x-readme-ref-name": "CheckoutSessionSaveRequestChargeType"
+                    },
+                    "enum": [
+                      "DETACHED",
+                      "RECURRENT",
+                      "INSTALLMENT"
+                    ]
+                  },
+                  "minutesToExpire": {
+                    "maximum": 1440,
+                    "minimum": 10,
+                    "type": "integer",
+                    "description": "Tempo em minutos para expiração do checkout",
+                    "format": "int32",
+                    "example": 10,
+                    "deprecated": false
+                  },
+                  "externalReference": {
+                    "maxLength": 200,
+                    "type": "string",
+                    "description": "Identificador do checkout no seu sistema",
+                    "example": "dcf4dff9-b080-425c-b234-765f2ffac0ae",
+                    "deprecated": false
+                  },
+                  "callback": {
+                    "required": [
+                      "successUrl",
+                      "cancelUrl"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "successUrl": {
+                        "type": "string",
+                        "description": "URL de direcionamento para checkout com sucesso",
+                        "nullable": false,
+                        "example": "https://example.com/asaas/checkout/success",
+                        "deprecated": false
+                      },
+                      "cancelUrl": {
+                        "type": "string",
+                        "description": "URL de direciomento para checkout cancelado",
+                        "nullable": false,
+                        "example": "https://example.com/asaas/checkout/cancel",
+                        "deprecated": false
+                      },
+                      "expiredUrl": {
+                        "type": "string",
+                        "description": "URL de direcionamento para checkout expirado",
+                        "example": "https://example.com/asaas/checkout/expired",
+                        "deprecated": false
+                      }
+                    },
+                    "description": "Informações de redirecionamento automático após pagamento na tela do checkout",
+                    "deprecated": false,
+                    "x-readme-ref-name": "CheckoutSessionCallbackDTO"
+                  },
+                  "items": {
+                    "type": "array",
+                    "description": "Lista de itens no checkout",
+                    "nullable": false,
+                    "deprecated": false,
+                    "items": {
+                      "required": [
+                        "imageBase64",
+                        "name",
+                        "quantity",
+                        "value"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "externalReference": {
+                          "type": "string",
+                          "description": "Identificador único do item no seu sistema",
+                          "example": "416d0848-fdd4-40dd-8a1a-0b31e6b422a7",
+                          "deprecated": false
+                        },
+                        "description": {
+                          "maxLength": 150,
+                          "type": "string",
+                          "description": "Descrição do item",
+                          "example": "Camisetas",
+                          "deprecated": false
+                        },
+                        "imageBase64": {
+                          "type": "string",
+                          "description": "Imagem do item em Base64",
+                          "nullable": false,
+                          "example": "IMAGE IN BASE64",
+                          "deprecated": false
+                        },
+                        "name": {
+                          "maxLength": 30,
+                          "type": "string",
+                          "description": "Nome do item",
+                          "nullable": false,
+                          "example": "Roupas",
+                          "deprecated": false
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "description": "Quantidade do item",
+                          "format": "int32",
+                          "nullable": false,
+                          "example": 2,
+                          "deprecated": false
+                        },
+                        "value": {
+                          "type": "number",
+                          "description": "Valor do item",
+                          "nullable": false,
+                          "example": 100,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Lista de itens no checkout",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionItemsDTO"
+                    }
+                  },
+                  "customerData": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Nome do cliente",
+                        "example": "John Doe",
+                        "deprecated": false
+                      },
+                      "cpfCnpj": {
+                        "type": "string",
+                        "description": "CPF ou CNPJ do cliente",
+                        "example": "24971563792",
+                        "deprecated": false
+                      },
+                      "email": {
+                        "type": "string",
+                        "description": "E-mail do cliente",
+                        "example": "john.doe@asaas.com.br",
+                        "deprecated": false
+                      },
+                      "phone": {
+                        "type": "string",
+                        "description": "Telefone do cliente",
+                        "example": "4738010919",
+                        "deprecated": false
+                      },
+                      "address": {
+                        "type": "string",
+                        "description": "Endereço do cliente",
+                        "example": "Av. Paulista",
+                        "deprecated": false
+                      },
+                      "addressNumber": {
+                        "type": "integer",
+                        "description": "Número do endereço",
+                        "format": "int32",
+                        "example": "150",
+                        "deprecated": false
+                      },
+                      "complement": {
+                        "type": "string",
+                        "description": "Complemento do endereço (máx. 255 caracteres)",
+                        "example": "Sala 201",
+                        "deprecated": false
+                      },
+                      "province": {
+                        "type": "string",
+                        "description": "Província do endereço",
+                        "example": "Centro",
+                        "deprecated": false
+                      },
+                      "postalCode": {
+                        "type": "string",
+                        "description": "Código postal do endereço",
+                        "example": "01310-000",
+                        "deprecated": false
+                      },
+                      "city": {
+                        "type": "integer",
+                        "description": "Código da cidade",
+                        "format": "int32",
+                        "example": "12987382",
+                        "deprecated": false
+                      }
+                    },
+                    "description": "Dados do cliente",
+                    "deprecated": false,
+                    "x-readme-ref-name": "CheckoutSessionCustomerDataDTO"
+                  },
+                  "subscription": {
+                    "type": "object",
+                    "properties": {
+                      "cycle": {
+                        "type": "string",
+                        "description": "Periodicidade da cobrança",
+                        "example": "MONTHLY",
+                        "deprecated": false,
+                        "enum": [
+                          "WEEKLY",
+                          "BIWEEKLY",
+                          "MONTHLY",
+                          "BIMONTHLY",
+                          "QUARTERLY",
+                          "SEMIANNUALLY",
+                          "YEARLY"
+                        ],
+                        "x-readme-ref-name": "CheckoutSessionSubscriptionCycle"
+                      },
+                      "endDate": {
+                        "type": "string",
+                        "description": "Data limite para vencimento das cobranças",
+                        "format": "date",
+                        "example": "2025-01-01",
+                        "deprecated": false
+                      },
+                      "nextDueDate": {
+                        "type": "string",
+                        "description": "Vencimento do próximo pagamento a ser gerado",
+                        "format": "date",
+                        "example": "2025-01-01",
+                        "deprecated": false
+                      }
+                    },
+                    "description": "Detalhes da assinatura, obrigatório se chargeTypes incluir `RECURRENT`",
+                    "deprecated": false,
+                    "x-readme-ref-name": "CheckoutSessionSubscriptionDTO"
+                  },
+                  "installment": {
+                    "type": "object",
+                    "properties": {
+                      "maxInstallmentCount": {
+                        "maximum": 21,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Número máximo de parcelas",
+                        "format": "int32",
+                        "example": 1,
+                        "deprecated": false
+                      }
+                    },
+                    "description": "Detalhes do parcelamento. Caso informado, será obrigatório incluir o chargeType `INSTALLMENT`",
+                    "deprecated": false,
+                    "x-readme-ref-name": "CheckoutSessionInstallmentDTO"
+                  },
+                  "splits": {
+                    "type": "array",
+                    "description": "Configurações do split",
+                    "deprecated": false,
+                    "items": {
+                      "required": [
+                        "walletId"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "walletId": {
+                          "type": "string",
+                          "description": "Identificador da carteira Asaas que receberá a transferência",
+                          "nullable": false,
+                          "example": "7bafd95a-e783-4a62-9be1-23999af742c6",
+                          "deprecated": false
+                        },
+                        "fixedValue": {
+                          "type": "number",
+                          "description": "Valor fixo a ser transferido para a conta quando a cobrança for recebida",
+                          "example": "Comissão referente ao serviço utilizado",
+                          "deprecated": false
+                        },
+                        "percentageValue": {
+                          "type": "number",
+                          "description": "Percentual sobre o valor líquido da cobrança a ser transferido quando for recebida",
+                          "example": 10,
+                          "deprecated": false
+                        },
+                        "totalFixedValue": {
+                          "type": "number",
+                          "description": "(Somente parcelamentos). Valor que será feito split referente ao valor total que será parcelado.",
+                          "example": 15,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Configurações do split",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionSplitDTO"
+                    }
+                  }
+                },
+                "x-readme-ref-name": "CheckoutSessionSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "billingTypes": {
+                      "type": "array",
+                      "description": "Formas de pagamento",
+                      "example": [
+                        "CREDIT_CARD"
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Formas de pagamento",
+                        "example": [
+                          "CREDIT_CARD"
+                        ],
+                        "deprecated": false,
+                        "enum": [
+                          "CREDIT_CARD",
+                          "PIX"
+                        ],
+                        "x-readme-ref-name": "CheckoutSessionResponseBillingType"
+                      },
+                      "enum": [
+                        "CREDIT_CARD",
+                        "PIX"
+                      ]
+                    },
+                    "chargeTypes": {
+                      "type": "array",
+                      "description": "Tipos de cobrança",
+                      "example": [
+                        "RECURRENT"
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Tipos de cobrança",
+                        "example": [
+                          "RECURRENT"
+                        ],
+                        "deprecated": false,
+                        "enum": [
+                          "DETACHED",
+                          "RECURRENT",
+                          "INSTALLMENT"
+                        ],
+                        "x-readme-ref-name": "CheckoutSessionResponseChargeType"
+                      },
+                      "enum": [
+                        "DETACHED",
+                        "RECURRENT",
+                        "INSTALLMENT"
+                      ]
+                    },
+                    "minutesToExpire": {
+                      "maximum": 1440,
+                      "minimum": 10,
+                      "type": "integer",
+                      "description": "Tempo em minutos para expiração do checkout",
+                      "format": "int32",
+                      "example": 100,
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "maxLength": 200,
+                      "type": "string",
+                      "description": "Identificador do checkout no seu sistema",
+                      "example": "dcf4dff9-b080-425c-b234-765f2ffac0ae",
+                      "deprecated": false
+                    },
+                    "callback": {
+                      "required": [
+                        "successUrl",
+                        "cancelUrl"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "successUrl": {
+                          "type": "string",
+                          "description": "URL de direcionamento para checkout com sucesso",
+                          "nullable": false,
+                          "example": "https://example.com/asaas/checkout/success",
+                          "deprecated": false
+                        },
+                        "cancelUrl": {
+                          "type": "string",
+                          "description": "URL de direciomento para checkout cancelado",
+                          "nullable": false,
+                          "example": "https://example.com/asaas/checkout/cancel",
+                          "deprecated": false
+                        },
+                        "expiredUrl": {
+                          "type": "string",
+                          "description": "URL de direcionamento para checkout expirado",
+                          "example": "https://example.com/asaas/checkout/expired",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações de redirecionamento automático após pagamento na tela do checkout",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionCallbackDTO"
+                    },
+                    "items": {
+                      "type": "array",
+                      "description": "Lista de itens no checkout",
+                      "deprecated": false,
+                      "items": {
+                        "required": [
+                          "imageBase64",
+                          "name",
+                          "quantity",
+                          "value"
+                        ],
+                        "type": "object",
+                        "properties": {
+                          "externalReference": {
+                            "type": "string",
+                            "description": "Identificador único do item no seu sistema",
+                            "example": "416d0848-fdd4-40dd-8a1a-0b31e6b422a7",
+                            "deprecated": false
+                          },
+                          "description": {
+                            "maxLength": 150,
+                            "type": "string",
+                            "description": "Descrição do item",
+                            "example": "Camisetas",
+                            "deprecated": false
+                          },
+                          "imageBase64": {
+                            "type": "string",
+                            "description": "Imagem do item em Base64",
+                            "nullable": false,
+                            "example": "IMAGE IN BASE64",
+                            "deprecated": false
+                          },
+                          "name": {
+                            "maxLength": 30,
+                            "type": "string",
+                            "description": "Nome do item",
+                            "nullable": false,
+                            "example": "Roupas",
+                            "deprecated": false
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "description": "Quantidade do item",
+                            "format": "int32",
+                            "nullable": false,
+                            "example": 2,
+                            "deprecated": false
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor do item",
+                            "nullable": false,
+                            "example": 100,
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de itens no checkout",
+                        "deprecated": false,
+                        "x-readme-ref-name": "CheckoutSessionItemsDTO"
+                      }
+                    },
+                    "customerData": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "Nome do cliente",
+                          "example": "John Doe",
+                          "deprecated": false
+                        },
+                        "cpfCnpj": {
+                          "type": "string",
+                          "description": "CPF ou CNPJ do cliente",
+                          "example": "24971563792",
+                          "deprecated": false
+                        },
+                        "email": {
+                          "type": "string",
+                          "description": "E-mail do cliente",
+                          "example": "john.doe@asaas.com.br",
+                          "deprecated": false
+                        },
+                        "phone": {
+                          "type": "string",
+                          "description": "Telefone do cliente",
+                          "example": "4738010919",
+                          "deprecated": false
+                        },
+                        "address": {
+                          "type": "string",
+                          "description": "Endereço do cliente",
+                          "example": "Av. Paulista",
+                          "deprecated": false
+                        },
+                        "addressNumber": {
+                          "type": "integer",
+                          "description": "Número do endereço",
+                          "format": "int32",
+                          "example": "150",
+                          "deprecated": false
+                        },
+                        "complement": {
+                          "type": "string",
+                          "description": "Complemento do endereço (máx. 255 caracteres)",
+                          "example": "Sala 201",
+                          "deprecated": false
+                        },
+                        "province": {
+                          "type": "string",
+                          "description": "Província do endereço",
+                          "example": "Centro",
+                          "deprecated": false
+                        },
+                        "postalCode": {
+                          "type": "string",
+                          "description": "Código postal do endereço",
+                          "example": "01310-000",
+                          "deprecated": false
+                        },
+                        "city": {
+                          "type": "integer",
+                          "description": "Código da cidade",
+                          "format": "int32",
+                          "example": "12987382",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Dados do cliente",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionCustomerDataDTO"
+                    },
+                    "subscription": {
+                      "type": "object",
+                      "properties": {
+                        "cycle": {
+                          "type": "string",
+                          "description": "Periodicidade da cobrança",
+                          "example": "MONTHLY",
+                          "deprecated": false,
+                          "enum": [
+                            "WEEKLY",
+                            "BIWEEKLY",
+                            "MONTHLY",
+                            "BIMONTHLY",
+                            "QUARTERLY",
+                            "SEMIANNUALLY",
+                            "YEARLY"
+                          ],
+                          "x-readme-ref-name": "CheckoutSessionSubscriptionCycle"
+                        },
+                        "endDate": {
+                          "type": "string",
+                          "description": "Data limite para vencimento das cobranças",
+                          "format": "date",
+                          "example": "2025-01-01",
+                          "deprecated": false
+                        },
+                        "nextDueDate": {
+                          "type": "string",
+                          "description": "Vencimento do próximo pagamento a ser gerado",
+                          "format": "date",
+                          "example": "2025-01-01",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Detalhes da assinatura, obrigatório se chargeTypes incluir `RECURRENT`",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionSubscriptionDTO"
+                    },
+                    "installment": {
+                      "type": "object",
+                      "properties": {
+                        "maxInstallmentCount": {
+                          "maximum": 21,
+                          "minimum": 1,
+                          "type": "integer",
+                          "description": "Número máximo de parcelas",
+                          "format": "int32",
+                          "example": 1,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Detalhes do parcelamento. Caso informado, será obrigatório incluir o chargeType `INSTALLMENT`",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionInstallmentDTO"
+                    },
+                    "split": {
+                      "type": "array",
+                      "description": "Configurações do split",
+                      "deprecated": false,
+                      "items": {
+                        "required": [
+                          "walletId"
+                        ],
+                        "type": "object",
+                        "properties": {
+                          "walletId": {
+                            "type": "string",
+                            "description": "Identificador da carteira Asaas que receberá a transferência",
+                            "nullable": false,
+                            "example": "7bafd95a-e783-4a62-9be1-23999af742c6",
+                            "deprecated": false
+                          },
+                          "fixedValue": {
+                            "type": "number",
+                            "description": "Valor fixo a ser transferido para a conta quando a cobrança for recebida",
+                            "example": "Comissão referente ao serviço utilizado",
+                            "deprecated": false
+                          },
+                          "percentageValue": {
+                            "type": "number",
+                            "description": "Percentual sobre o valor líquido da cobrança a ser transferido quando for recebida",
+                            "example": 10,
+                            "deprecated": false
+                          },
+                          "totalFixedValue": {
+                            "type": "number",
+                            "description": "(Somente parcelamentos). Valor que será feito split referente ao valor total que será parcelado.",
+                            "example": 15,
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Configurações do split",
+                        "deprecated": false,
+                        "x-readme-ref-name": "CheckoutSessionSplitDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "CheckoutSessionResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/checkouts/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Cancelar um checkout",
+        "description": "",
+        "operationId": "cancelar-um-checkout",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do checkout no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "131ca662-56c8-4479-b5b3-fd61a413fce7"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "CheckoutSessionCancelRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "billingTypes": {
+                      "type": "array",
+                      "description": "Formas de pagamento",
+                      "example": [
+                        "CREDIT_CARD"
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Formas de pagamento",
+                        "example": [
+                          "CREDIT_CARD"
+                        ],
+                        "deprecated": false,
+                        "enum": [
+                          "CREDIT_CARD",
+                          "PIX"
+                        ],
+                        "x-readme-ref-name": "CheckoutSessionResponseBillingType"
+                      },
+                      "enum": [
+                        "CREDIT_CARD",
+                        "PIX"
+                      ]
+                    },
+                    "chargeTypes": {
+                      "type": "array",
+                      "description": "Tipos de cobrança",
+                      "example": [
+                        "RECURRENT"
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Tipos de cobrança",
+                        "example": [
+                          "RECURRENT"
+                        ],
+                        "deprecated": false,
+                        "enum": [
+                          "DETACHED",
+                          "RECURRENT",
+                          "INSTALLMENT"
+                        ],
+                        "x-readme-ref-name": "CheckoutSessionResponseChargeType"
+                      },
+                      "enum": [
+                        "DETACHED",
+                        "RECURRENT",
+                        "INSTALLMENT"
+                      ]
+                    },
+                    "minutesToExpire": {
+                      "maximum": 1440,
+                      "minimum": 10,
+                      "type": "integer",
+                      "description": "Tempo em minutos para expiração do checkout",
+                      "format": "int32",
+                      "example": 100,
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "maxLength": 200,
+                      "type": "string",
+                      "description": "Identificador do checkout no seu sistema",
+                      "example": "dcf4dff9-b080-425c-b234-765f2ffac0ae",
+                      "deprecated": false
+                    },
+                    "callback": {
+                      "required": [
+                        "successUrl",
+                        "cancelUrl"
+                      ],
+                      "type": "object",
+                      "properties": {
+                        "successUrl": {
+                          "type": "string",
+                          "description": "URL de direcionamento para checkout com sucesso",
+                          "nullable": false,
+                          "example": "https://example.com/asaas/checkout/success",
+                          "deprecated": false
+                        },
+                        "cancelUrl": {
+                          "type": "string",
+                          "description": "URL de direciomento para checkout cancelado",
+                          "nullable": false,
+                          "example": "https://example.com/asaas/checkout/cancel",
+                          "deprecated": false
+                        },
+                        "expiredUrl": {
+                          "type": "string",
+                          "description": "URL de direcionamento para checkout expirado",
+                          "example": "https://example.com/asaas/checkout/expired",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações de redirecionamento automático após pagamento na tela do checkout",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionCallbackDTO"
+                    },
+                    "items": {
+                      "type": "array",
+                      "description": "Lista de itens no checkout",
+                      "deprecated": false,
+                      "items": {
+                        "required": [
+                          "imageBase64",
+                          "name",
+                          "quantity",
+                          "value"
+                        ],
+                        "type": "object",
+                        "properties": {
+                          "externalReference": {
+                            "type": "string",
+                            "description": "Identificador único do item no seu sistema",
+                            "example": "416d0848-fdd4-40dd-8a1a-0b31e6b422a7",
+                            "deprecated": false
+                          },
+                          "description": {
+                            "maxLength": 150,
+                            "type": "string",
+                            "description": "Descrição do item",
+                            "example": "Camisetas",
+                            "deprecated": false
+                          },
+                          "imageBase64": {
+                            "type": "string",
+                            "description": "Imagem do item em Base64",
+                            "nullable": false,
+                            "example": "IMAGE IN BASE64",
+                            "deprecated": false
+                          },
+                          "name": {
+                            "maxLength": 30,
+                            "type": "string",
+                            "description": "Nome do item",
+                            "nullable": false,
+                            "example": "Roupas",
+                            "deprecated": false
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "description": "Quantidade do item",
+                            "format": "int32",
+                            "nullable": false,
+                            "example": 2,
+                            "deprecated": false
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor do item",
+                            "nullable": false,
+                            "example": 100,
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de itens no checkout",
+                        "deprecated": false,
+                        "x-readme-ref-name": "CheckoutSessionItemsDTO"
+                      }
+                    },
+                    "customerData": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "Nome do cliente",
+                          "example": "John Doe",
+                          "deprecated": false
+                        },
+                        "cpfCnpj": {
+                          "type": "string",
+                          "description": "CPF ou CNPJ do cliente",
+                          "example": "24971563792",
+                          "deprecated": false
+                        },
+                        "email": {
+                          "type": "string",
+                          "description": "E-mail do cliente",
+                          "example": "john.doe@asaas.com.br",
+                          "deprecated": false
+                        },
+                        "phone": {
+                          "type": "string",
+                          "description": "Telefone do cliente",
+                          "example": "4738010919",
+                          "deprecated": false
+                        },
+                        "address": {
+                          "type": "string",
+                          "description": "Endereço do cliente",
+                          "example": "Av. Paulista",
+                          "deprecated": false
+                        },
+                        "addressNumber": {
+                          "type": "integer",
+                          "description": "Número do endereço",
+                          "format": "int32",
+                          "example": "150",
+                          "deprecated": false
+                        },
+                        "complement": {
+                          "type": "string",
+                          "description": "Complemento do endereço (máx. 255 caracteres)",
+                          "example": "Sala 201",
+                          "deprecated": false
+                        },
+                        "province": {
+                          "type": "string",
+                          "description": "Província do endereço",
+                          "example": "Centro",
+                          "deprecated": false
+                        },
+                        "postalCode": {
+                          "type": "string",
+                          "description": "Código postal do endereço",
+                          "example": "01310-000",
+                          "deprecated": false
+                        },
+                        "city": {
+                          "type": "integer",
+                          "description": "Código da cidade",
+                          "format": "int32",
+                          "example": "12987382",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Dados do cliente",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionCustomerDataDTO"
+                    },
+                    "subscription": {
+                      "type": "object",
+                      "properties": {
+                        "cycle": {
+                          "type": "string",
+                          "description": "Periodicidade da cobrança",
+                          "example": "MONTHLY",
+                          "deprecated": false,
+                          "enum": [
+                            "WEEKLY",
+                            "BIWEEKLY",
+                            "MONTHLY",
+                            "BIMONTHLY",
+                            "QUARTERLY",
+                            "SEMIANNUALLY",
+                            "YEARLY"
+                          ],
+                          "x-readme-ref-name": "CheckoutSessionSubscriptionCycle"
+                        },
+                        "endDate": {
+                          "type": "string",
+                          "description": "Data limite para vencimento das cobranças",
+                          "format": "date",
+                          "example": "2025-01-01",
+                          "deprecated": false
+                        },
+                        "nextDueDate": {
+                          "type": "string",
+                          "description": "Vencimento do próximo pagamento a ser gerado",
+                          "format": "date",
+                          "example": "2025-01-01",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Detalhes da assinatura, obrigatório se chargeTypes incluir `RECURRENT`",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionSubscriptionDTO"
+                    },
+                    "installment": {
+                      "type": "object",
+                      "properties": {
+                        "maxInstallmentCount": {
+                          "maximum": 21,
+                          "minimum": 1,
+                          "type": "integer",
+                          "description": "Número máximo de parcelas",
+                          "format": "int32",
+                          "example": 1,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Detalhes do parcelamento. Caso informado, será obrigatório incluir o chargeType `INSTALLMENT`",
+                      "deprecated": false,
+                      "x-readme-ref-name": "CheckoutSessionInstallmentDTO"
+                    },
+                    "split": {
+                      "type": "array",
+                      "description": "Configurações do split",
+                      "deprecated": false,
+                      "items": {
+                        "required": [
+                          "walletId"
+                        ],
+                        "type": "object",
+                        "properties": {
+                          "walletId": {
+                            "type": "string",
+                            "description": "Identificador da carteira Asaas que receberá a transferência",
+                            "nullable": false,
+                            "example": "7bafd95a-e783-4a62-9be1-23999af742c6",
+                            "deprecated": false
+                          },
+                          "fixedValue": {
+                            "type": "number",
+                            "description": "Valor fixo a ser transferido para a conta quando a cobrança for recebida",
+                            "example": "Comissão referente ao serviço utilizado",
+                            "deprecated": false
+                          },
+                          "percentageValue": {
+                            "type": "number",
+                            "description": "Percentual sobre o valor líquido da cobrança a ser transferido quando for recebida",
+                            "example": 10,
+                            "deprecated": false
+                          },
+                          "totalFixedValue": {
+                            "type": "number",
+                            "description": "(Somente parcelamentos). Valor que será feito split referente ao valor total que será parcelado.",
+                            "example": 15,
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Configurações do split",
+                        "deprecated": false,
+                        "x-readme-ref-name": "CheckoutSessionSplitDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "CheckoutSessionResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

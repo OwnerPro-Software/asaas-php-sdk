@@ -1,0 +1,2411 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Subcontas Asaas"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/accounts": {
+      "post": {
+        "tags": [
+          "Subcontas Asaas"
+        ],
+        "summary": "Criar subconta",
+        "description": "",
+        "operationId": "criar-subconta",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "name",
+                  "email",
+                  "cpfCnpj",
+                  "mobilePhone",
+                  "incomeValue",
+                  "address",
+                  "addressNumber",
+                  "province",
+                  "postalCode"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nome da subconta",
+                    "nullable": false,
+                    "example": "John Doe",
+                    "deprecated": false
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "Email da subconta",
+                    "nullable": false,
+                    "example": "john.doe@asaas.com.br",
+                    "deprecated": false
+                  },
+                  "loginEmail": {
+                    "type": "string",
+                    "description": "Email para login da subconta, caso não informado será utilizado o email da subconta",
+                    "example": "johndoe@asaas.com.br",
+                    "deprecated": false
+                  },
+                  "cpfCnpj": {
+                    "type": "string",
+                    "description": "CPF ou CNPJ do proprietário da subconta",
+                    "nullable": false,
+                    "example": "35381637000150",
+                    "deprecated": false
+                  },
+                  "birthDate": {
+                    "type": "string",
+                    "description": "Data de nascimento (somente quando Pessoa Física)",
+                    "format": "date",
+                    "example": "1995-04-12",
+                    "deprecated": false
+                  },
+                  "companyType": {
+                    "type": "string",
+                    "description": "Tipo da empresa (somente quando Pessoa Jurídica)",
+                    "example": "MEI",
+                    "deprecated": false,
+                    "enum": [
+                      "MEI",
+                      "LIMITED",
+                      "INDIVIDUAL",
+                      "ASSOCIATION"
+                    ],
+                    "x-readme-ref-name": "AccountSaveRequestCompanyType"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Telefone Fixo",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "mobilePhone": {
+                    "type": "string",
+                    "description": "Telefone Celular",
+                    "nullable": false,
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "site": {
+                    "type": "string",
+                    "description": "URL of the subbacount website",
+                    "example": "https://www.example.com",
+                    "deprecated": false
+                  },
+                  "incomeValue": {
+                    "type": "number",
+                    "description": "Faturamento/Renda mensal",
+                    "nullable": false,
+                    "example": 25000,
+                    "deprecated": false
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Logradouro",
+                    "nullable": false,
+                    "example": "Rua Fernando Orlandi",
+                    "deprecated": false
+                  },
+                  "addressNumber": {
+                    "type": "string",
+                    "description": "Número do endereço",
+                    "nullable": false,
+                    "example": "544",
+                    "deprecated": false
+                  },
+                  "complement": {
+                    "type": "string",
+                    "description": "Complemento do endereço",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "province": {
+                    "type": "string",
+                    "description": "Bairro",
+                    "nullable": false,
+                    "example": "Jardim Pedra Branca",
+                    "deprecated": false
+                  },
+                  "postalCode": {
+                    "type": "string",
+                    "description": "CEP do endereço",
+                    "nullable": false,
+                    "example": "14079-452",
+                    "deprecated": false
+                  },
+                  "webhooks": {
+                    "type": "array",
+                    "description": "Array com as configurações de Webhooks desejadas",
+                    "deprecated": false,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "Nome do Webhook",
+                          "example": "Nome exemplo",
+                          "deprecated": false
+                        },
+                        "url": {
+                          "type": "string",
+                          "description": "URL de destino dos eventos",
+                          "example": "https://www.example.com/webhook/asaas",
+                          "deprecated": false
+                        },
+                        "email": {
+                          "type": "string",
+                          "description": "E-mail que receberá notificações sobre o Webhook",
+                          "example": "john.doe@asaas.com.br",
+                          "deprecated": false
+                        },
+                        "enabled": {
+                          "type": "boolean",
+                          "description": "Definir se o Webhook está ativo",
+                          "example": true,
+                          "deprecated": false
+                        },
+                        "interrupted": {
+                          "type": "boolean",
+                          "description": "Definir se a fila de sincronização está interrompida",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "apiVersion": {
+                          "type": "integer",
+                          "description": "Versão da API",
+                          "format": "int32",
+                          "example": 3,
+                          "deprecated": false
+                        },
+                        "authToken": {
+                          "type": "string",
+                          "description": "Token de autenticação do Webhook",
+                          "example": "5tLxsL6uoN",
+                          "deprecated": false
+                        },
+                        "sendType": {
+                          "type": "string",
+                          "description": "Sequencial (SEQUENTIALLY) ou não sequencial (NON_SEQUENTIALLY)",
+                          "example": "SEQUENTIALLY",
+                          "deprecated": false,
+                          "enum": [
+                            "NON_SEQUENTIALLY",
+                            "SEQUENTIALLY"
+                          ],
+                          "x-readme-ref-name": "WebhookConfigSaveRequestWebhookSendType"
+                        },
+                        "events": {
+                          "type": "array",
+                          "description": "Lista de eventos enviados pelo Webhook",
+                          "example": [
+                            "PAYMENT_RECEIVED",
+                            "PAYMENT_CONFIRMED"
+                          ],
+                          "deprecated": false,
+                          "items": {
+                            "type": "string",
+                            "description": "Lista de eventos enviados pelo Webhook",
+                            "example": [
+                              "PAYMENT_RECEIVED",
+                              "PAYMENT_CONFIRMED"
+                            ],
+                            "deprecated": false,
+                            "enum": [
+                              "PAYMENT_AUTHORIZED",
+                              "PAYMENT_AWAITING_RISK_ANALYSIS",
+                              "PAYMENT_APPROVED_BY_RISK_ANALYSIS",
+                              "PAYMENT_REPROVED_BY_RISK_ANALYSIS",
+                              "PAYMENT_CREATED",
+                              "PAYMENT_UPDATED",
+                              "PAYMENT_CONFIRMED",
+                              "PAYMENT_RECEIVED",
+                              "PAYMENT_ANTICIPATED",
+                              "PAYMENT_OVERDUE",
+                              "PAYMENT_DELETED",
+                              "PAYMENT_RESTORED",
+                              "PAYMENT_REFUNDED",
+                              "PAYMENT_REFUND_IN_PROGRESS",
+                              "PAYMENT_REFUND_DENIED",
+                              "PAYMENT_RECEIVED_IN_CASH_UNDONE",
+                              "PAYMENT_CHARGEBACK_REQUESTED",
+                              "PAYMENT_CHARGEBACK_DISPUTE",
+                              "PAYMENT_AWAITING_CHARGEBACK_REVERSAL",
+                              "PAYMENT_DUNNING_RECEIVED",
+                              "PAYMENT_DUNNING_REQUESTED",
+                              "PAYMENT_BANK_SLIP_CANCELLED",
+                              "PAYMENT_BANK_SLIP_VIEWED",
+                              "PAYMENT_CHECKOUT_VIEWED",
+                              "PAYMENT_CREDIT_CARD_CAPTURE_REFUSED",
+                              "PAYMENT_PARTIALLY_REFUNDED",
+                              "PAYMENT_SPLIT_CANCELLED",
+                              "PAYMENT_SPLIT_DIVERGENCE_BLOCK",
+                              "PAYMENT_SPLIT_DIVERGENCE_BLOCK_FINISHED",
+                              "INVOICE_CREATED",
+                              "INVOICE_UPDATED",
+                              "INVOICE_SYNCHRONIZED",
+                              "INVOICE_AUTHORIZED",
+                              "INVOICE_PROCESSING_CANCELLATION",
+                              "INVOICE_CANCELED",
+                              "INVOICE_CANCELLATION_DENIED",
+                              "INVOICE_ERROR",
+                              "TRANSFER_CREATED",
+                              "TRANSFER_PENDING",
+                              "TRANSFER_IN_BANK_PROCESSING",
+                              "TRANSFER_BLOCKED",
+                              "TRANSFER_DONE",
+                              "TRANSFER_FAILED",
+                              "TRANSFER_CANCELLED",
+                              "BILL_CREATED",
+                              "BILL_PENDING",
+                              "BILL_BANK_PROCESSING",
+                              "BILL_PAID",
+                              "BILL_CANCELLED",
+                              "BILL_FAILED",
+                              "BILL_REFUNDED",
+                              "RECEIVABLE_ANTICIPATION_CANCELLED",
+                              "RECEIVABLE_ANTICIPATION_SCHEDULED",
+                              "RECEIVABLE_ANTICIPATION_PENDING",
+                              "RECEIVABLE_ANTICIPATION_CREDITED",
+                              "RECEIVABLE_ANTICIPATION_DEBITED",
+                              "RECEIVABLE_ANTICIPATION_DENIED",
+                              "RECEIVABLE_ANTICIPATION_OVERDUE",
+                              "MOBILE_PHONE_RECHARGE_PENDING",
+                              "MOBILE_PHONE_RECHARGE_CANCELLED",
+                              "MOBILE_PHONE_RECHARGE_CONFIRMED",
+                              "MOBILE_PHONE_RECHARGE_REFUNDED",
+                              "ACCOUNT_STATUS_BANK_ACCOUNT_INFO_APPROVED",
+                              "ACCOUNT_STATUS_BANK_ACCOUNT_INFO_AWAITING_APPROVAL",
+                              "ACCOUNT_STATUS_BANK_ACCOUNT_INFO_PENDING",
+                              "ACCOUNT_STATUS_BANK_ACCOUNT_INFO_REJECTED",
+                              "ACCOUNT_STATUS_COMMERCIAL_INFO_APPROVED",
+                              "ACCOUNT_STATUS_COMMERCIAL_INFO_AWAITING_APPROVAL",
+                              "ACCOUNT_STATUS_COMMERCIAL_INFO_EXPIRED",
+                              "ACCOUNT_STATUS_COMMERCIAL_INFO_EXPIRING_SOON",
+                              "ACCOUNT_STATUS_COMMERCIAL_INFO_PENDING",
+                              "ACCOUNT_STATUS_COMMERCIAL_INFO_REJECTED",
+                              "ACCOUNT_STATUS_DOCUMENT_APPROVED",
+                              "ACCOUNT_STATUS_DOCUMENT_AWAITING_APPROVAL",
+                              "ACCOUNT_STATUS_DOCUMENT_PENDING",
+                              "ACCOUNT_STATUS_DOCUMENT_REJECTED",
+                              "ACCOUNT_STATUS_GENERAL_APPROVAL_APPROVED",
+                              "ACCOUNT_STATUS_GENERAL_APPROVAL_AWAITING_APPROVAL",
+                              "ACCOUNT_STATUS_GENERAL_APPROVAL_PENDING",
+                              "ACCOUNT_STATUS_GENERAL_APPROVAL_REJECTED",
+                              "SUBSCRIPTION_CREATED",
+                              "SUBSCRIPTION_UPDATED",
+                              "SUBSCRIPTION_INACTIVATED",
+                              "SUBSCRIPTION_DELETED",
+                              "SUBSCRIPTION_SPLIT_DISABLED",
+                              "SUBSCRIPTION_SPLIT_DIVERGENCE_BLOCK",
+                              "SUBSCRIPTION_SPLIT_DIVERGENCE_BLOCK_FINISHED",
+                              "CHECKOUT_CREATED",
+                              "CHECKOUT_CANCELED",
+                              "CHECKOUT_EXPIRED",
+                              "CHECKOUT_PAID",
+                              "BALANCE_VALUE_BLOCKED",
+                              "BALANCE_VALUE_UNBLOCKED",
+                              "INTERNAL_TRANSFER_CREDIT",
+                              "INTERNAL_TRANSFER_DEBIT",
+                              "ACCESS_TOKEN_CREATED",
+                              "ACCESS_TOKEN_DELETED",
+                              "ACCESS_TOKEN_DISABLED",
+                              "ACCESS_TOKEN_ENABLED",
+                              "ACCESS_TOKEN_EXPIRED",
+                              "ACCESS_TOKEN_EXPIRING_SOON",
+                              "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CREATED",
+                              "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED",
+                              "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CANCELLED",
+                              "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_EXPIRED",
+                              "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_REFUSED",
+                              "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_CREATED",
+                              "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_SCHEDULED",
+                              "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_REFUSED",
+                              "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_CANCELLED",
+                              "PIX_AUTOMATIC_RECURRING_ELIGIBILITY_UPDATED"
+                            ],
+                            "x-readme-ref-name": "WebhookConfigSaveRequestWebhookEvent"
+                          },
+                          "enum": [
+                            "PAYMENT_AUTHORIZED",
+                            "PAYMENT_AWAITING_RISK_ANALYSIS",
+                            "PAYMENT_APPROVED_BY_RISK_ANALYSIS",
+                            "PAYMENT_REPROVED_BY_RISK_ANALYSIS",
+                            "PAYMENT_CREATED",
+                            "PAYMENT_UPDATED",
+                            "PAYMENT_CONFIRMED",
+                            "PAYMENT_RECEIVED",
+                            "PAYMENT_ANTICIPATED",
+                            "PAYMENT_OVERDUE",
+                            "PAYMENT_DELETED",
+                            "PAYMENT_RESTORED",
+                            "PAYMENT_REFUNDED",
+                            "PAYMENT_REFUND_IN_PROGRESS",
+                            "PAYMENT_REFUND_DENIED",
+                            "PAYMENT_RECEIVED_IN_CASH_UNDONE",
+                            "PAYMENT_CHARGEBACK_REQUESTED",
+                            "PAYMENT_CHARGEBACK_DISPUTE",
+                            "PAYMENT_AWAITING_CHARGEBACK_REVERSAL",
+                            "PAYMENT_DUNNING_RECEIVED",
+                            "PAYMENT_DUNNING_REQUESTED",
+                            "PAYMENT_BANK_SLIP_CANCELLED",
+                            "PAYMENT_BANK_SLIP_VIEWED",
+                            "PAYMENT_CHECKOUT_VIEWED",
+                            "PAYMENT_CREDIT_CARD_CAPTURE_REFUSED",
+                            "PAYMENT_PARTIALLY_REFUNDED",
+                            "PAYMENT_SPLIT_CANCELLED",
+                            "PAYMENT_SPLIT_DIVERGENCE_BLOCK",
+                            "PAYMENT_SPLIT_DIVERGENCE_BLOCK_FINISHED",
+                            "INVOICE_CREATED",
+                            "INVOICE_UPDATED",
+                            "INVOICE_SYNCHRONIZED",
+                            "INVOICE_AUTHORIZED",
+                            "INVOICE_PROCESSING_CANCELLATION",
+                            "INVOICE_CANCELED",
+                            "INVOICE_CANCELLATION_DENIED",
+                            "INVOICE_ERROR",
+                            "TRANSFER_CREATED",
+                            "TRANSFER_PENDING",
+                            "TRANSFER_IN_BANK_PROCESSING",
+                            "TRANSFER_BLOCKED",
+                            "TRANSFER_DONE",
+                            "TRANSFER_FAILED",
+                            "TRANSFER_CANCELLED",
+                            "BILL_CREATED",
+                            "BILL_PENDING",
+                            "BILL_BANK_PROCESSING",
+                            "BILL_PAID",
+                            "BILL_CANCELLED",
+                            "BILL_FAILED",
+                            "BILL_REFUNDED",
+                            "RECEIVABLE_ANTICIPATION_CANCELLED",
+                            "RECEIVABLE_ANTICIPATION_SCHEDULED",
+                            "RECEIVABLE_ANTICIPATION_PENDING",
+                            "RECEIVABLE_ANTICIPATION_CREDITED",
+                            "RECEIVABLE_ANTICIPATION_DEBITED",
+                            "RECEIVABLE_ANTICIPATION_DENIED",
+                            "RECEIVABLE_ANTICIPATION_OVERDUE",
+                            "MOBILE_PHONE_RECHARGE_PENDING",
+                            "MOBILE_PHONE_RECHARGE_CANCELLED",
+                            "MOBILE_PHONE_RECHARGE_CONFIRMED",
+                            "MOBILE_PHONE_RECHARGE_REFUNDED",
+                            "ACCOUNT_STATUS_BANK_ACCOUNT_INFO_APPROVED",
+                            "ACCOUNT_STATUS_BANK_ACCOUNT_INFO_AWAITING_APPROVAL",
+                            "ACCOUNT_STATUS_BANK_ACCOUNT_INFO_PENDING",
+                            "ACCOUNT_STATUS_BANK_ACCOUNT_INFO_REJECTED",
+                            "ACCOUNT_STATUS_COMMERCIAL_INFO_APPROVED",
+                            "ACCOUNT_STATUS_COMMERCIAL_INFO_AWAITING_APPROVAL",
+                            "ACCOUNT_STATUS_COMMERCIAL_INFO_EXPIRED",
+                            "ACCOUNT_STATUS_COMMERCIAL_INFO_EXPIRING_SOON",
+                            "ACCOUNT_STATUS_COMMERCIAL_INFO_PENDING",
+                            "ACCOUNT_STATUS_COMMERCIAL_INFO_REJECTED",
+                            "ACCOUNT_STATUS_DOCUMENT_APPROVED",
+                            "ACCOUNT_STATUS_DOCUMENT_AWAITING_APPROVAL",
+                            "ACCOUNT_STATUS_DOCUMENT_PENDING",
+                            "ACCOUNT_STATUS_DOCUMENT_REJECTED",
+                            "ACCOUNT_STATUS_GENERAL_APPROVAL_APPROVED",
+                            "ACCOUNT_STATUS_GENERAL_APPROVAL_AWAITING_APPROVAL",
+                            "ACCOUNT_STATUS_GENERAL_APPROVAL_PENDING",
+                            "ACCOUNT_STATUS_GENERAL_APPROVAL_REJECTED",
+                            "SUBSCRIPTION_CREATED",
+                            "SUBSCRIPTION_UPDATED",
+                            "SUBSCRIPTION_INACTIVATED",
+                            "SUBSCRIPTION_DELETED",
+                            "SUBSCRIPTION_SPLIT_DISABLED",
+                            "SUBSCRIPTION_SPLIT_DIVERGENCE_BLOCK",
+                            "SUBSCRIPTION_SPLIT_DIVERGENCE_BLOCK_FINISHED",
+                            "CHECKOUT_CREATED",
+                            "CHECKOUT_CANCELED",
+                            "CHECKOUT_EXPIRED",
+                            "CHECKOUT_PAID",
+                            "BALANCE_VALUE_BLOCKED",
+                            "BALANCE_VALUE_UNBLOCKED",
+                            "INTERNAL_TRANSFER_CREDIT",
+                            "INTERNAL_TRANSFER_DEBIT",
+                            "ACCESS_TOKEN_CREATED",
+                            "ACCESS_TOKEN_DELETED",
+                            "ACCESS_TOKEN_DISABLED",
+                            "ACCESS_TOKEN_ENABLED",
+                            "ACCESS_TOKEN_EXPIRED",
+                            "ACCESS_TOKEN_EXPIRING_SOON",
+                            "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CREATED",
+                            "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED",
+                            "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CANCELLED",
+                            "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_EXPIRED",
+                            "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_REFUSED",
+                            "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_CREATED",
+                            "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_SCHEDULED",
+                            "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_REFUSED",
+                            "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_CANCELLED",
+                            "PIX_AUTOMATIC_RECURRING_ELIGIBILITY_UPDATED"
+                          ]
+                        }
+                      },
+                      "description": "Array com as configurações de Webhooks desejadas",
+                      "deprecated": false,
+                      "x-readme-ref-name": "WebhookConfigSaveRequestDTO"
+                    }
+                  }
+                },
+                "x-readme-ref-name": "AccountSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "account",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da subconta no Asaas",
+                      "example": "4f468235-cec3-482f-b3d0-348af4c7194",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome da subconta",
+                      "example": "John Doe",
+                      "deprecated": false
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "Email da subconta",
+                      "example": "john.doe@asaas.com.br",
+                      "deprecated": false
+                    },
+                    "loginEmail": {
+                      "type": "string",
+                      "description": "Email para login da subconta, caso não informado será utilizado o email da subconta",
+                      "example": "john.doe@asaas.com.br",
+                      "deprecated": false
+                    },
+                    "phone": {
+                      "type": "string",
+                      "description": "Telefone Fixo",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "mobilePhone": {
+                      "type": "string",
+                      "description": "Telefone Celular",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "address": {
+                      "type": "string",
+                      "description": "Logradouro",
+                      "example": "Rua Fernando Orlandi",
+                      "deprecated": false
+                    },
+                    "addressNumber": {
+                      "type": "string",
+                      "description": "Número do endereço",
+                      "example": "544",
+                      "deprecated": false
+                    },
+                    "complement": {
+                      "type": "string",
+                      "description": "Complemento do endereço",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "province": {
+                      "type": "string",
+                      "description": "Bairro",
+                      "example": "Jardim Pedra Branca",
+                      "deprecated": false
+                    },
+                    "postalCode": {
+                      "type": "string",
+                      "description": "CEP do endereço",
+                      "example": "14079-452",
+                      "deprecated": false
+                    },
+                    "cpfCnpj": {
+                      "type": "string",
+                      "description": "CPF ou CNPJ do proprietário da subconta",
+                      "example": "35381637000150",
+                      "deprecated": false
+                    },
+                    "birthDate": {
+                      "type": "string",
+                      "description": "Data de nascimento (somente quando Pessoa Física)",
+                      "format": "date",
+                      "example": "1995-04-12",
+                      "deprecated": false
+                    },
+                    "personType": {
+                      "type": "string",
+                      "description": "Tipo de Pessoa",
+                      "example": "JURIDICA",
+                      "deprecated": false,
+                      "enum": [
+                        "JURIDICA",
+                        "FISICA"
+                      ],
+                      "x-readme-ref-name": "AccountSaveResponsePersonType"
+                    },
+                    "companyType": {
+                      "type": "string",
+                      "description": "Tipo da empresa (somente quando Pessoa Jurídica)",
+                      "example": "MEI",
+                      "deprecated": false,
+                      "enum": [
+                        "MEI",
+                        "LIMITED",
+                        "INDIVIDUAL",
+                        "ASSOCIATION"
+                      ],
+                      "x-readme-ref-name": "AccountSaveResponseCompanyType"
+                    },
+                    "city": {
+                      "type": "integer",
+                      "description": "Identificador único da cidade no Asaas",
+                      "format": "int32",
+                      "example": 15478,
+                      "deprecated": false
+                    },
+                    "state": {
+                      "type": "string",
+                      "description": "Sigla do Estado (SP, RJ, SC, ...)",
+                      "example": "SP",
+                      "deprecated": false
+                    },
+                    "country": {
+                      "type": "string",
+                      "description": "País (Fixo Brasil)",
+                      "example": "Brasil",
+                      "deprecated": false
+                    },
+                    "tradingName": {
+                      "type": "string",
+                      "description": "Nome de exibição (preenchido automaticamente)",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "site": {
+                      "type": "string",
+                      "description": "URL of the subbacount website",
+                      "example": "https://www.example.com",
+                      "deprecated": false
+                    },
+                    "walletId": {
+                      "type": "string",
+                      "description": "Unique wallet identifier to split charges or transfer between Asaas accounts",
+                      "example": "c0c1688f-636b-42c0-b6ee-7339182276b7",
+                      "deprecated": false
+                    },
+                    "accountNumber": {
+                      "type": "object",
+                      "properties": {
+                        "agency": {
+                          "type": "string",
+                          "description": "Account agency",
+                          "example": "0001",
+                          "deprecated": false
+                        },
+                        "account": {
+                          "type": "string",
+                          "description": "Account number",
+                          "example": "3514",
+                          "deprecated": false
+                        },
+                        "accountDigit": {
+                          "type": "string",
+                          "description": "Account digit",
+                          "example": "3",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Subaccount number in Asaas",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AccountNumberDTO"
+                    },
+                    "commercialInfoExpiration": {
+                      "type": "object",
+                      "properties": {
+                        "isExpired": {
+                          "type": "boolean",
+                          "description": "Informa se os dados comerciais estão expirados",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "scheduledDate": {
+                          "type": "string",
+                          "description": "Informa a data de expiração dos dados comerciais",
+                          "format": "date-time",
+                          "example": "2025-05-05 00:00:00",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações sobre a expiração dos dados comerciais",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AccountInfoCommercialInfoExpirationResponseDTO"
+                    },
+                    "accessToken": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "ID da chave de API",
+                          "example": "b6bff0c5-38c6-496a-a3a8-105b31d5bcfe",
+                          "deprecated": false
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Nome da chave de API",
+                          "example": "My API Access Token",
+                          "deprecated": false
+                        },
+                        "enabled": {
+                          "type": "boolean",
+                          "description": "Indica se a chave de API está habilitada",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "expirationDate": {
+                          "type": "string",
+                          "description": "Data de expiração da chave de API",
+                          "format": "date-time",
+                          "example": "2026-12-31 12:30:50",
+                          "deprecated": false
+                        },
+                        "dateCreated": {
+                          "type": "string",
+                          "description": "Data de criação da chave de API",
+                          "format": "date-time",
+                          "example": "2026-01-01 08:00:00",
+                          "deprecated": false
+                        },
+                        "projectedExpirationDateByLackOfUse": {
+                          "type": "string",
+                          "description": "Data prevista de expiração por falta de uso da chave de API",
+                          "format": "date",
+                          "example": "2026-06-01",
+                          "deprecated": false
+                        }
+                      },
+                      "x-readme-ref-name": "CustomerApiAccessTokenBaseResponseDTO"
+                    },
+                    "apiKey": {
+                      "type": "string",
+                      "description": "Chave de API",
+                      "example": "$aact_hmlg_xxxxx",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "AccountSaveResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Subcontas Asaas"
+        ],
+        "summary": "Listar subcontas",
+        "description": "",
+        "operationId": "listar-subcontas",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "cpfCnpj",
+            "in": "query",
+            "description": "Filtrar pelo cpf ou cnpj da subconta",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "Filtrar pelo email da subconta",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filtrar pelo nome da subconta",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "walletId",
+            "in": "query",
+            "description": "Filtrar pelo walletId da subconta",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "description": "Tipo de objeto",
+                            "example": "account",
+                            "deprecated": false
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único da subconta no Asaas",
+                            "example": "4f468235-cec3-482f-b3d0-348af4c7194",
+                            "deprecated": false
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Nome da subconta",
+                            "example": "John Doe",
+                            "deprecated": false
+                          },
+                          "email": {
+                            "type": "string",
+                            "description": "Email da subconta",
+                            "example": "john.doe@asaas.com.br",
+                            "deprecated": false
+                          },
+                          "loginEmail": {
+                            "type": "string",
+                            "description": "Email para login da subconta, caso não informado será utilizado o email da subconta",
+                            "example": "john.doe@asaas.com.br",
+                            "deprecated": false
+                          },
+                          "phone": {
+                            "type": "string",
+                            "description": "Telefone Fixo",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "mobilePhone": {
+                            "type": "string",
+                            "description": "Telefone Celular",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "address": {
+                            "type": "string",
+                            "description": "Logradouro",
+                            "example": "Rua Fernando Orlandi",
+                            "deprecated": false
+                          },
+                          "addressNumber": {
+                            "type": "string",
+                            "description": "Número do endereço",
+                            "example": "544",
+                            "deprecated": false
+                          },
+                          "complement": {
+                            "type": "string",
+                            "description": "Complemento do endereço",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "province": {
+                            "type": "string",
+                            "description": "Bairro",
+                            "example": "Jardim Pedra Branca",
+                            "deprecated": false
+                          },
+                          "postalCode": {
+                            "type": "string",
+                            "description": "CEP do endereço",
+                            "example": "14079-452",
+                            "deprecated": false
+                          },
+                          "cpfCnpj": {
+                            "type": "string",
+                            "description": "CPF ou CNPJ do proprietário da subconta",
+                            "example": "35381637000150",
+                            "deprecated": false
+                          },
+                          "birthDate": {
+                            "type": "string",
+                            "description": "Data de nascimento (somente quando Pessoa Física)",
+                            "format": "date",
+                            "example": "1995-04-12",
+                            "deprecated": false
+                          },
+                          "personType": {
+                            "type": "string",
+                            "description": "Tipo de Pessoa",
+                            "example": "JURIDICA",
+                            "deprecated": false,
+                            "enum": [
+                              "JURIDICA",
+                              "FISICA"
+                            ],
+                            "x-readme-ref-name": "AccountGetResponsePersonType"
+                          },
+                          "companyType": {
+                            "type": "string",
+                            "description": "Tipo da empresa (somente quando Pessoa Jurídica)",
+                            "example": "MEI",
+                            "deprecated": false,
+                            "enum": [
+                              "MEI",
+                              "LIMITED",
+                              "INDIVIDUAL",
+                              "ASSOCIATION"
+                            ],
+                            "x-readme-ref-name": "AccountGetResponseCompanyType"
+                          },
+                          "city": {
+                            "type": "integer",
+                            "description": "Identificador único da cidade no Asaas",
+                            "format": "int32",
+                            "example": 15478,
+                            "deprecated": false
+                          },
+                          "state": {
+                            "type": "string",
+                            "description": "Sigla do Estado (SP, RJ, SC, ...)",
+                            "example": "SP",
+                            "deprecated": false
+                          },
+                          "country": {
+                            "type": "string",
+                            "description": "País (Fixo Brasil)",
+                            "example": "Brasil",
+                            "deprecated": false
+                          },
+                          "tradingName": {
+                            "type": "string",
+                            "description": "Nome de exibição (preenchido automaticamente)",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "site": {
+                            "type": "string",
+                            "description": "URL of the subbacount website",
+                            "example": "https://www.example.com",
+                            "deprecated": false
+                          },
+                          "walletId": {
+                            "type": "string",
+                            "description": "Unique wallet identifier to split charges or transfer between Asaas accounts",
+                            "example": "c0c1688f-636b-42c0-b6ee-7339182276b7",
+                            "deprecated": false
+                          },
+                          "accountNumber": {
+                            "type": "object",
+                            "properties": {
+                              "agency": {
+                                "type": "string",
+                                "description": "Account agency",
+                                "example": "0001",
+                                "deprecated": false
+                              },
+                              "account": {
+                                "type": "string",
+                                "description": "Account number",
+                                "example": "3514",
+                                "deprecated": false
+                              },
+                              "accountDigit": {
+                                "type": "string",
+                                "description": "Account digit",
+                                "example": "3",
+                                "deprecated": false
+                              }
+                            },
+                            "description": "Subaccount number in Asaas",
+                            "deprecated": false,
+                            "x-readme-ref-name": "AccountNumberDTO"
+                          },
+                          "commercialInfoExpiration": {
+                            "type": "object",
+                            "properties": {
+                              "isExpired": {
+                                "type": "boolean",
+                                "description": "Informa se os dados comerciais estão expirados",
+                                "example": false,
+                                "deprecated": false
+                              },
+                              "scheduledDate": {
+                                "type": "string",
+                                "description": "Informa a data de expiração dos dados comerciais",
+                                "format": "date-time",
+                                "example": "2025-05-05 00:00:00",
+                                "deprecated": false
+                              }
+                            },
+                            "description": "Informações sobre a expiração dos dados comerciais",
+                            "deprecated": false,
+                            "x-readme-ref-name": "AccountInfoCommercialInfoExpirationResponseDTO"
+                          },
+                          "accessToken": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "ID da chave de API",
+                                "example": "b6bff0c5-38c6-496a-a3a8-105b31d5bcfe",
+                                "deprecated": false
+                              },
+                              "name": {
+                                "type": "string",
+                                "description": "Nome da chave de API",
+                                "example": "My API Access Token",
+                                "deprecated": false
+                              },
+                              "enabled": {
+                                "type": "boolean",
+                                "description": "Indica se a chave de API está habilitada",
+                                "example": false,
+                                "deprecated": false
+                              },
+                              "expirationDate": {
+                                "type": "string",
+                                "description": "Data de expiração da chave de API",
+                                "format": "date-time",
+                                "example": "2026-12-31 12:30:50",
+                                "deprecated": false
+                              },
+                              "dateCreated": {
+                                "type": "string",
+                                "description": "Data de criação da chave de API",
+                                "format": "date-time",
+                                "example": "2026-01-01 08:00:00",
+                                "deprecated": false
+                              },
+                              "projectedExpirationDateByLackOfUse": {
+                                "type": "string",
+                                "description": "Data prevista de expiração por falta de uso da chave de API",
+                                "format": "date",
+                                "example": "2026-06-01",
+                                "deprecated": false
+                              }
+                            },
+                            "x-readme-ref-name": "CustomerApiAccessTokenBaseResponseDTO"
+                          }
+                        },
+                        "x-readme-ref-name": "AccountGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "AccountListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/accounts/{id}": {
+      "get": {
+        "tags": [
+          "Subcontas Asaas"
+        ],
+        "summary": "Recuperar uma única subconta",
+        "description": "",
+        "operationId": "recuperar-uma-unica-subconta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da subconta no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "4f468235-cec3-482f-b3d0-348af4c7194"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "account",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da subconta no Asaas",
+                      "example": "4f468235-cec3-482f-b3d0-348af4c7194",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome da subconta",
+                      "example": "John Doe",
+                      "deprecated": false
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "Email da subconta",
+                      "example": "john.doe@asaas.com.br",
+                      "deprecated": false
+                    },
+                    "loginEmail": {
+                      "type": "string",
+                      "description": "Email para login da subconta, caso não informado será utilizado o email da subconta",
+                      "example": "john.doe@asaas.com.br",
+                      "deprecated": false
+                    },
+                    "phone": {
+                      "type": "string",
+                      "description": "Telefone Fixo",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "mobilePhone": {
+                      "type": "string",
+                      "description": "Telefone Celular",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "address": {
+                      "type": "string",
+                      "description": "Logradouro",
+                      "example": "Rua Fernando Orlandi",
+                      "deprecated": false
+                    },
+                    "addressNumber": {
+                      "type": "string",
+                      "description": "Número do endereço",
+                      "example": "544",
+                      "deprecated": false
+                    },
+                    "complement": {
+                      "type": "string",
+                      "description": "Complemento do endereço",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "province": {
+                      "type": "string",
+                      "description": "Bairro",
+                      "example": "Jardim Pedra Branca",
+                      "deprecated": false
+                    },
+                    "postalCode": {
+                      "type": "string",
+                      "description": "CEP do endereço",
+                      "example": "14079-452",
+                      "deprecated": false
+                    },
+                    "cpfCnpj": {
+                      "type": "string",
+                      "description": "CPF ou CNPJ do proprietário da subconta",
+                      "example": "35381637000150",
+                      "deprecated": false
+                    },
+                    "birthDate": {
+                      "type": "string",
+                      "description": "Data de nascimento (somente quando Pessoa Física)",
+                      "format": "date",
+                      "example": "1995-04-12",
+                      "deprecated": false
+                    },
+                    "personType": {
+                      "type": "string",
+                      "description": "Tipo de Pessoa",
+                      "example": "JURIDICA",
+                      "deprecated": false,
+                      "enum": [
+                        "JURIDICA",
+                        "FISICA"
+                      ],
+                      "x-readme-ref-name": "AccountGetResponsePersonType"
+                    },
+                    "companyType": {
+                      "type": "string",
+                      "description": "Tipo da empresa (somente quando Pessoa Jurídica)",
+                      "example": "MEI",
+                      "deprecated": false,
+                      "enum": [
+                        "MEI",
+                        "LIMITED",
+                        "INDIVIDUAL",
+                        "ASSOCIATION"
+                      ],
+                      "x-readme-ref-name": "AccountGetResponseCompanyType"
+                    },
+                    "city": {
+                      "type": "integer",
+                      "description": "Identificador único da cidade no Asaas",
+                      "format": "int32",
+                      "example": 15478,
+                      "deprecated": false
+                    },
+                    "state": {
+                      "type": "string",
+                      "description": "Sigla do Estado (SP, RJ, SC, ...)",
+                      "example": "SP",
+                      "deprecated": false
+                    },
+                    "country": {
+                      "type": "string",
+                      "description": "País (Fixo Brasil)",
+                      "example": "Brasil",
+                      "deprecated": false
+                    },
+                    "tradingName": {
+                      "type": "string",
+                      "description": "Nome de exibição (preenchido automaticamente)",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "site": {
+                      "type": "string",
+                      "description": "URL of the subbacount website",
+                      "example": "https://www.example.com",
+                      "deprecated": false
+                    },
+                    "walletId": {
+                      "type": "string",
+                      "description": "Unique wallet identifier to split charges or transfer between Asaas accounts",
+                      "example": "c0c1688f-636b-42c0-b6ee-7339182276b7",
+                      "deprecated": false
+                    },
+                    "accountNumber": {
+                      "type": "object",
+                      "properties": {
+                        "agency": {
+                          "type": "string",
+                          "description": "Account agency",
+                          "example": "0001",
+                          "deprecated": false
+                        },
+                        "account": {
+                          "type": "string",
+                          "description": "Account number",
+                          "example": "3514",
+                          "deprecated": false
+                        },
+                        "accountDigit": {
+                          "type": "string",
+                          "description": "Account digit",
+                          "example": "3",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Subaccount number in Asaas",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AccountNumberDTO"
+                    },
+                    "commercialInfoExpiration": {
+                      "type": "object",
+                      "properties": {
+                        "isExpired": {
+                          "type": "boolean",
+                          "description": "Informa se os dados comerciais estão expirados",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "scheduledDate": {
+                          "type": "string",
+                          "description": "Informa a data de expiração dos dados comerciais",
+                          "format": "date-time",
+                          "example": "2025-05-05 00:00:00",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações sobre a expiração dos dados comerciais",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AccountInfoCommercialInfoExpirationResponseDTO"
+                    },
+                    "accessToken": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "ID da chave de API",
+                          "example": "b6bff0c5-38c6-496a-a3a8-105b31d5bcfe",
+                          "deprecated": false
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Nome da chave de API",
+                          "example": "My API Access Token",
+                          "deprecated": false
+                        },
+                        "enabled": {
+                          "type": "boolean",
+                          "description": "Indica se a chave de API está habilitada",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "expirationDate": {
+                          "type": "string",
+                          "description": "Data de expiração da chave de API",
+                          "format": "date-time",
+                          "example": "2026-12-31 12:30:50",
+                          "deprecated": false
+                        },
+                        "dateCreated": {
+                          "type": "string",
+                          "description": "Data de criação da chave de API",
+                          "format": "date-time",
+                          "example": "2026-01-01 08:00:00",
+                          "deprecated": false
+                        },
+                        "projectedExpirationDateByLackOfUse": {
+                          "type": "string",
+                          "description": "Data prevista de expiração por falta de uso da chave de API",
+                          "format": "date",
+                          "example": "2026-06-01",
+                          "deprecated": false
+                        }
+                      },
+                      "x-readme-ref-name": "CustomerApiAccessTokenBaseResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "AccountGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/accounts/{id}/accessTokens": {
+      "post": {
+        "tags": [
+          "Subcontas Asaas"
+        ],
+        "summary": "Criar chave de API para uma subconta",
+        "description": "",
+        "operationId": "criar-chave-de-api-para-uma-subconta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da subconta no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "b6bff0c5-38c6-496a-a3a8-105b31d5bcfe"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nome da chave de API",
+                    "example": "My API Access Token",
+                    "deprecated": false
+                  },
+                  "expirationDate": {
+                    "type": "string",
+                    "description": "Data de expiração da chave de API",
+                    "format": "date-time",
+                    "example": "2026-12-31 12:30:50",
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "CustomerApiAccessTokenSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "ID da chave de API",
+                      "example": "b6bff0c5-38c6-496a-a3a8-105b31d5bcfe",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome da chave de API",
+                      "example": "My API Access Token",
+                      "deprecated": false
+                    },
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Indica se a chave de API está habilitada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "expirationDate": {
+                      "type": "string",
+                      "description": "Data de expiração da chave de API",
+                      "format": "date-time",
+                      "example": "2026-12-31 12:30:50",
+                      "deprecated": false
+                    },
+                    "dateCreated": {
+                      "type": "string",
+                      "description": "Data de criação da chave de API",
+                      "format": "date-time",
+                      "example": "2026-01-01 08:00:00",
+                      "deprecated": false
+                    },
+                    "projectedExpirationDateByLackOfUse": {
+                      "type": "string",
+                      "description": "Data prevista de expiração por falta de uso da chave de API",
+                      "format": "date",
+                      "example": "2026-06-01",
+                      "deprecated": false
+                    },
+                    "apiKey": {
+                      "type": "string",
+                      "description": "Chave de API",
+                      "example": "$aact_hmlg_xxxxx",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "CustomerApiAccessTokenSaveResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Subcontas Asaas"
+        ],
+        "summary": "Listar chaves de API de uma subconta",
+        "description": "",
+        "operationId": "listar-chaves-de-api-de-uma-subconta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da subconta no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "4f468235-cec3-482f-b3d0-348af4c7194"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessTokens": {
+                      "type": "array",
+                      "description": "Lista de chaves de API da subconta",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "ID da chave de API",
+                            "example": "b6bff0c5-38c6-496a-a3a8-105b31d5bcfe",
+                            "deprecated": false
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Nome da chave de API",
+                            "example": "My API Access Token",
+                            "deprecated": false
+                          },
+                          "enabled": {
+                            "type": "boolean",
+                            "description": "Indica se a chave de API está habilitada",
+                            "example": false,
+                            "deprecated": false
+                          },
+                          "expirationDate": {
+                            "type": "string",
+                            "description": "Data de expiração da chave de API",
+                            "format": "date-time",
+                            "example": "2026-12-31 12:30:50",
+                            "deprecated": false
+                          },
+                          "dateCreated": {
+                            "type": "string",
+                            "description": "Data de criação da chave de API",
+                            "format": "date-time",
+                            "example": "2026-01-01 08:00:00",
+                            "deprecated": false
+                          },
+                          "projectedExpirationDateByLackOfUse": {
+                            "type": "string",
+                            "description": "Data prevista de expiração por falta de uso da chave de API",
+                            "format": "date",
+                            "example": "2026-06-01",
+                            "deprecated": false
+                          }
+                        },
+                        "x-readme-ref-name": "CustomerApiAccessTokenBaseResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "CustomerApiAccessTokenListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/accounts/{id}/accessTokens/{accessTokenId}": {
+      "put": {
+        "tags": [
+          "Subcontas Asaas"
+        ],
+        "summary": "Atualizar chave de API de uma subconta",
+        "description": "",
+        "operationId": "atualizar-chave-de-api-de-uma-subconta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da subconta no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "b6bff0c5-38c6-496a-a3a8-105b31d5bcfe"
+            }
+          },
+          {
+            "name": "accessTokenId",
+            "in": "path",
+            "description": "ID da chave de API",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "279baa3b-2cfd-4d41-b04b-e3299ae4b645"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "name",
+                  "enabled",
+                  "expirationDate"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nome da chave de API",
+                    "nullable": false,
+                    "example": "My API Access Token",
+                    "deprecated": false
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Indica se a chave de API está habilitada",
+                    "nullable": false,
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "expirationDate": {
+                    "type": "string",
+                    "description": "Data de expiração da chave de API",
+                    "format": "date-time",
+                    "nullable": false,
+                    "example": "2026-12-31 12:30:50",
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "CustomerApiAccessTokenUpdateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "ID da chave de API",
+                      "example": "b6bff0c5-38c6-496a-a3a8-105b31d5bcfe",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome da chave de API",
+                      "example": "My API Access Token",
+                      "deprecated": false
+                    },
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Indica se a chave de API está habilitada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "expirationDate": {
+                      "type": "string",
+                      "description": "Data de expiração da chave de API",
+                      "format": "date-time",
+                      "example": "2026-12-31 12:30:50",
+                      "deprecated": false
+                    },
+                    "dateCreated": {
+                      "type": "string",
+                      "description": "Data de criação da chave de API",
+                      "format": "date-time",
+                      "example": "2026-01-01 08:00:00",
+                      "deprecated": false
+                    },
+                    "projectedExpirationDateByLackOfUse": {
+                      "type": "string",
+                      "description": "Data prevista de expiração por falta de uso da chave de API",
+                      "format": "date",
+                      "example": "2026-06-01",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "CustomerApiAccessTokenBaseResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Subcontas Asaas"
+        ],
+        "summary": "Excluir chave de API de uma subconta",
+        "description": "",
+        "operationId": "excluir-chave-de-api-de-uma-subconta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da subconta no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "b6bff0c5-38c6-496a-a3a8-105b31d5bcfe"
+            }
+          },
+          {
+            "name": "accessTokenId",
+            "in": "path",
+            "description": "ID da chave de API",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "279baa3b-2cfd-4d41-b04b-e3299ae4b645"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

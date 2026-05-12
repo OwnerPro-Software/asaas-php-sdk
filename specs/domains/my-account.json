@@ -1,0 +1,2632 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Informações e personalização da conta"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/myAccount/commercialInfo/": {
+      "get": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "Recuperar dados comerciais",
+        "description": "",
+        "operationId": "recuperar-dados-comerciais",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "Situação da conta",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "APPROVED",
+                        "AWAITING_ACTION_AUTHORIZATION",
+                        "DENIED",
+                        "PENDING"
+                      ],
+                      "x-readme-ref-name": "AccountInfoGetResponseStatus"
+                    },
+                    "personType": {
+                      "type": "string",
+                      "description": "Tipo de Pessoa",
+                      "example": "JURIDICA",
+                      "deprecated": false,
+                      "enum": [
+                        "JURIDICA",
+                        "FISICA"
+                      ],
+                      "x-readme-ref-name": "AccountInfoGetResponsePersonType"
+                    },
+                    "cpfCnpj": {
+                      "type": "string",
+                      "description": "CPF ou CNPJ do proprietário da conta",
+                      "example": "66625514000140",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome do proprietário da conta",
+                      "example": "John Doe",
+                      "deprecated": false
+                    },
+                    "birthDate": {
+                      "type": "string",
+                      "description": "Data de nascimento necessária caso as informações forem de pessoa física",
+                      "format": "date",
+                      "example": "1995-04-12",
+                      "deprecated": false
+                    },
+                    "companyName": {
+                      "type": "string",
+                      "description": "Nome da empresa",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "companyType": {
+                      "type": "string",
+                      "description": "Tipo da empresa (somente quando Pessoa Jurídica)",
+                      "example": "MEI",
+                      "deprecated": false,
+                      "enum": [
+                        "MEI",
+                        "LIMITED",
+                        "INDIVIDUAL",
+                        "ASSOCIATION"
+                      ],
+                      "x-readme-ref-name": "AccountInfoGetResponseCompanyType"
+                    },
+                    "incomeValue": {
+                      "type": "number",
+                      "description": "Faturamento/Renda mensal",
+                      "example": 250000,
+                      "deprecated": false
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "E-mail da conta",
+                      "example": "john.doe@asaas.com.br",
+                      "deprecated": false
+                    },
+                    "phone": {
+                      "type": "string",
+                      "description": "Telefone",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "mobilePhone": {
+                      "type": "string",
+                      "description": "Telefone Celular",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "postalCode": {
+                      "type": "string",
+                      "description": "CEP do endereço",
+                      "example": "89223005",
+                      "deprecated": false
+                    },
+                    "address": {
+                      "type": "string",
+                      "description": "Logradouro",
+                      "example": "Av. Rolf Wiest",
+                      "deprecated": false
+                    },
+                    "addressNumber": {
+                      "type": "string",
+                      "description": "Número do endereço",
+                      "example": "659",
+                      "deprecated": false
+                    },
+                    "complement": {
+                      "type": "string",
+                      "description": "Complemento do endereço",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "province": {
+                      "type": "string",
+                      "description": "Bairro",
+                      "example": "Bom retiro",
+                      "deprecated": false
+                    },
+                    "city": {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "description": "Tipo de objeto",
+                          "example": "city",
+                          "deprecated": false
+                        },
+                        "id": {
+                          "type": "integer",
+                          "description": "Identificador único da cidade no Asaas",
+                          "format": "int32",
+                          "example": 13660,
+                          "deprecated": false
+                        },
+                        "ibgeCode": {
+                          "type": "string",
+                          "description": "Código do IBGE",
+                          "example": "4209102",
+                          "deprecated": false
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Nome da cidade",
+                          "example": "Joinville",
+                          "deprecated": false
+                        },
+                        "districtCode": {
+                          "type": "string",
+                          "description": "Código do distrito",
+                          "example": "05",
+                          "deprecated": false
+                        },
+                        "district": {
+                          "type": "string",
+                          "description": "Nome do distrito",
+                          "example": "Joinville",
+                          "deprecated": false
+                        },
+                        "state": {
+                          "type": "string",
+                          "description": "Sigla do Estado (SP, RJ, SC, ...)",
+                          "example": "SC",
+                          "deprecated": false,
+                          "enum": [
+                            "AC",
+                            "AL",
+                            "AP",
+                            "AM",
+                            "BA",
+                            "CE",
+                            "DF",
+                            "ES",
+                            "GO",
+                            "MA",
+                            "MT",
+                            "MS",
+                            "MG",
+                            "PA",
+                            "PB",
+                            "PR",
+                            "PE",
+                            "PI",
+                            "RR",
+                            "RO",
+                            "RJ",
+                            "RN",
+                            "RS",
+                            "SC",
+                            "SP",
+                            "SE",
+                            "TO"
+                          ],
+                          "x-readme-ref-name": "AccountInfoCityState"
+                        }
+                      },
+                      "description": "Informações da cidade cadastrada em sua conta",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AccountInfoCityDTO"
+                    },
+                    "denialReason": {
+                      "type": "string",
+                      "description": "Motivo pelo qual é necessário reenviar as informações",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "tradingName": {
+                      "type": "string",
+                      "description": "Nome de exibição (preenchido automaticamente)",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "site": {
+                      "type": "string",
+                      "description": "Website",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "availableCompanyNames": {
+                      "type": "array",
+                      "description": "Nomes de empresa disponíveis. Preenchido apenas para contas do tipo Pessoa Jurídica(PJ).",
+                      "example": [
+                        "ASAAS GESTAO FINANCEIRA S.A.",
+                        "ASAAS"
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Nomes de empresa disponíveis. Preenchido apenas para contas do tipo Pessoa Jurídica(PJ).",
+                        "example": [
+                          "ASAAS GESTAO FINANCEIRA S.A.",
+                          "ASAAS"
+                        ],
+                        "deprecated": false
+                      }
+                    },
+                    "commercialInfoExpiration": {
+                      "type": "object",
+                      "properties": {
+                        "isExpired": {
+                          "type": "boolean",
+                          "description": "Informa se os dados comerciais estão expirados",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "scheduledDate": {
+                          "type": "string",
+                          "description": "Informa a data de expiração dos dados comerciais",
+                          "format": "date-time",
+                          "example": "2025-05-05 00:00:00",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações sobre a expiração dos dados comerciais",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AccountInfoCommercialInfoExpirationResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "AccountInfoGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "Atualizar dados comerciais",
+        "description": "",
+        "operationId": "atualizar-dados-comerciais",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "personType": {
+                    "type": "string",
+                    "description": "Tipo de Pessoa",
+                    "example": "JURIDICA",
+                    "deprecated": false,
+                    "enum": [
+                      "JURIDICA",
+                      "FISICA"
+                    ],
+                    "x-readme-ref-name": "AccountInfoSaveRequestPersonType"
+                  },
+                  "cpfCnpj": {
+                    "type": "string",
+                    "description": "CPF ou CNPJ do proprietário da conta",
+                    "example": "66625514000140",
+                    "deprecated": false
+                  },
+                  "birthDate": {
+                    "type": "string",
+                    "description": "Data de nascimento necessária caso as informações forem de pessoa física",
+                    "format": "date",
+                    "example": "1995-04-12",
+                    "deprecated": false
+                  },
+                  "companyType": {
+                    "type": "string",
+                    "description": "Tipo da empresa (somente quando Pessoa Jurídica)",
+                    "example": "MEI",
+                    "deprecated": false,
+                    "enum": [
+                      "MEI",
+                      "LIMITED",
+                      "INDIVIDUAL",
+                      "ASSOCIATION"
+                    ],
+                    "x-readme-ref-name": "AccountInfoSaveRequestCompanyType"
+                  },
+                  "companyName": {
+                    "type": "string",
+                    "description": "Nome da empresa",
+                    "example": "ASAAS",
+                    "deprecated": false
+                  },
+                  "incomeValue": {
+                    "type": "number",
+                    "description": "Faturamento/Renda mensal",
+                    "example": 25000,
+                    "deprecated": false
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "E-mail da conta",
+                    "example": "john.doe@asaas.com.br",
+                    "deprecated": false
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Telefone",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "mobilePhone": {
+                    "type": "string",
+                    "description": "Telefone Celular",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "site": {
+                    "type": "string",
+                    "description": "Website",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "postalCode": {
+                    "type": "string",
+                    "description": "CEP do endereço",
+                    "example": "89223005",
+                    "deprecated": false
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Logradouro",
+                    "example": "Av. Rolf Wiest",
+                    "deprecated": false
+                  },
+                  "addressNumber": {
+                    "type": "string",
+                    "description": "Número do endereço",
+                    "example": "659",
+                    "deprecated": false
+                  },
+                  "complement": {
+                    "type": "string",
+                    "description": "Complemento do endereço",
+                    "deprecated": false,
+                    "example": null
+                  },
+                  "province": {
+                    "type": "string",
+                    "description": "Bairro",
+                    "example": "Bom Retiro",
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "AccountInfoSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "Situação da conta",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "APPROVED",
+                        "AWAITING_ACTION_AUTHORIZATION",
+                        "DENIED",
+                        "PENDING"
+                      ],
+                      "x-readme-ref-name": "AccountInfoGetResponseStatus"
+                    },
+                    "personType": {
+                      "type": "string",
+                      "description": "Tipo de Pessoa",
+                      "example": "JURIDICA",
+                      "deprecated": false,
+                      "enum": [
+                        "JURIDICA",
+                        "FISICA"
+                      ],
+                      "x-readme-ref-name": "AccountInfoGetResponsePersonType"
+                    },
+                    "cpfCnpj": {
+                      "type": "string",
+                      "description": "CPF ou CNPJ do proprietário da conta",
+                      "example": "66625514000140",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome do proprietário da conta",
+                      "example": "John Doe",
+                      "deprecated": false
+                    },
+                    "birthDate": {
+                      "type": "string",
+                      "description": "Data de nascimento necessária caso as informações forem de pessoa física",
+                      "format": "date",
+                      "example": "1995-04-12",
+                      "deprecated": false
+                    },
+                    "companyName": {
+                      "type": "string",
+                      "description": "Nome da empresa",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "companyType": {
+                      "type": "string",
+                      "description": "Tipo da empresa (somente quando Pessoa Jurídica)",
+                      "example": "MEI",
+                      "deprecated": false,
+                      "enum": [
+                        "MEI",
+                        "LIMITED",
+                        "INDIVIDUAL",
+                        "ASSOCIATION"
+                      ],
+                      "x-readme-ref-name": "AccountInfoGetResponseCompanyType"
+                    },
+                    "incomeValue": {
+                      "type": "number",
+                      "description": "Faturamento/Renda mensal",
+                      "example": 250000,
+                      "deprecated": false
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "E-mail da conta",
+                      "example": "john.doe@asaas.com.br",
+                      "deprecated": false
+                    },
+                    "phone": {
+                      "type": "string",
+                      "description": "Telefone",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "mobilePhone": {
+                      "type": "string",
+                      "description": "Telefone Celular",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "postalCode": {
+                      "type": "string",
+                      "description": "CEP do endereço",
+                      "example": "89223005",
+                      "deprecated": false
+                    },
+                    "address": {
+                      "type": "string",
+                      "description": "Logradouro",
+                      "example": "Av. Rolf Wiest",
+                      "deprecated": false
+                    },
+                    "addressNumber": {
+                      "type": "string",
+                      "description": "Número do endereço",
+                      "example": "659",
+                      "deprecated": false
+                    },
+                    "complement": {
+                      "type": "string",
+                      "description": "Complemento do endereço",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "province": {
+                      "type": "string",
+                      "description": "Bairro",
+                      "example": "Bom retiro",
+                      "deprecated": false
+                    },
+                    "city": {
+                      "type": "object",
+                      "properties": {
+                        "object": {
+                          "type": "string",
+                          "description": "Tipo de objeto",
+                          "example": "city",
+                          "deprecated": false
+                        },
+                        "id": {
+                          "type": "integer",
+                          "description": "Identificador único da cidade no Asaas",
+                          "format": "int32",
+                          "example": 13660,
+                          "deprecated": false
+                        },
+                        "ibgeCode": {
+                          "type": "string",
+                          "description": "Código do IBGE",
+                          "example": "4209102",
+                          "deprecated": false
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Nome da cidade",
+                          "example": "Joinville",
+                          "deprecated": false
+                        },
+                        "districtCode": {
+                          "type": "string",
+                          "description": "Código do distrito",
+                          "example": "05",
+                          "deprecated": false
+                        },
+                        "district": {
+                          "type": "string",
+                          "description": "Nome do distrito",
+                          "example": "Joinville",
+                          "deprecated": false
+                        },
+                        "state": {
+                          "type": "string",
+                          "description": "Sigla do Estado (SP, RJ, SC, ...)",
+                          "example": "SC",
+                          "deprecated": false,
+                          "enum": [
+                            "AC",
+                            "AL",
+                            "AP",
+                            "AM",
+                            "BA",
+                            "CE",
+                            "DF",
+                            "ES",
+                            "GO",
+                            "MA",
+                            "MT",
+                            "MS",
+                            "MG",
+                            "PA",
+                            "PB",
+                            "PR",
+                            "PE",
+                            "PI",
+                            "RR",
+                            "RO",
+                            "RJ",
+                            "RN",
+                            "RS",
+                            "SC",
+                            "SP",
+                            "SE",
+                            "TO"
+                          ],
+                          "x-readme-ref-name": "AccountInfoCityState"
+                        }
+                      },
+                      "description": "Informações da cidade cadastrada em sua conta",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AccountInfoCityDTO"
+                    },
+                    "denialReason": {
+                      "type": "string",
+                      "description": "Motivo pelo qual é necessário reenviar as informações",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "tradingName": {
+                      "type": "string",
+                      "description": "Nome de exibição (preenchido automaticamente)",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "site": {
+                      "type": "string",
+                      "description": "Website",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "availableCompanyNames": {
+                      "type": "array",
+                      "description": "Nomes de empresa disponíveis. Preenchido apenas para contas do tipo Pessoa Jurídica(PJ).",
+                      "example": [
+                        "ASAAS GESTAO FINANCEIRA S.A.",
+                        "ASAAS"
+                      ],
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Nomes de empresa disponíveis. Preenchido apenas para contas do tipo Pessoa Jurídica(PJ).",
+                        "example": [
+                          "ASAAS GESTAO FINANCEIRA S.A.",
+                          "ASAAS"
+                        ],
+                        "deprecated": false
+                      }
+                    },
+                    "commercialInfoExpiration": {
+                      "type": "object",
+                      "properties": {
+                        "isExpired": {
+                          "type": "boolean",
+                          "description": "Informa se os dados comerciais estão expirados",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "scheduledDate": {
+                          "type": "string",
+                          "description": "Informa a data de expiração dos dados comerciais",
+                          "format": "date-time",
+                          "example": "2025-05-05 00:00:00",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações sobre a expiração dos dados comerciais",
+                      "deprecated": false,
+                      "x-readme-ref-name": "AccountInfoCommercialInfoExpirationResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "AccountInfoGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/sandbox/myAccount/approve": {
+      "post": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "(Apenas Sandbox) Aprovar conta",
+        "description": "Este endpoint aprova a sua conta no ambiente sandbox.",
+        "operationId": "aprovar-conta",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "MyAccountSandboxApproveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da conta no Asaas",
+                      "example": "a910f50b-8745-4bc6-89fe-f1931c6a2e05",
+                      "deprecated": false
+                    },
+                    "commercialInfo": {
+                      "type": "string",
+                      "description": "Status dos dados comerciais enviados",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED",
+                        "AWAITING_APPROVAL"
+                      ],
+                      "x-readme-ref-name": "MyAccountGetStatusResponseStatus"
+                    },
+                    "bankAccountInfo": {
+                      "type": "string",
+                      "description": "Status dos dados comerciais enviados",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED",
+                        "AWAITING_APPROVAL"
+                      ],
+                      "x-readme-ref-name": "MyAccountGetStatusResponseStatus"
+                    },
+                    "documentation": {
+                      "type": "string",
+                      "description": "Status dos dados comerciais enviados",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED",
+                        "AWAITING_APPROVAL"
+                      ],
+                      "x-readme-ref-name": "MyAccountGetStatusResponseStatus"
+                    },
+                    "general": {
+                      "type": "string",
+                      "description": "Status dos dados comerciais enviados",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED",
+                        "AWAITING_APPROVAL"
+                      ],
+                      "x-readme-ref-name": "MyAccountGetStatusResponseStatus"
+                    }
+                  },
+                  "x-readme-ref-name": "MyAccountGetStatusResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/myAccount/paymentCheckoutConfig/": {
+      "post": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "Salvar personalização da fatura",
+        "description": "",
+        "operationId": "salvar-personalizacao-da-fatura",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "logoBackgroundColor",
+                  "infoBackgroundColor",
+                  "fontColor"
+                ],
+                "type": "object",
+                "properties": {
+                  "logoBackgroundColor": {
+                    "type": "string",
+                    "description": "Cor de fundo do logo",
+                    "nullable": false,
+                    "example": "#00ff00",
+                    "deprecated": false
+                  },
+                  "infoBackgroundColor": {
+                    "type": "string",
+                    "description": "Cor de fundo das suas informações",
+                    "nullable": false,
+                    "example": "#000fff",
+                    "deprecated": false
+                  },
+                  "fontColor": {
+                    "type": "string",
+                    "description": "Cor da fonte das suas informações",
+                    "nullable": false,
+                    "example": "#00ff0",
+                    "deprecated": false
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Indica se a personalização está habilitada",
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "logoFile": {
+                    "type": "string",
+                    "description": "Arquivo",
+                    "format": "binary",
+                    "nullable": false,
+                    "deprecated": false,
+                    "example": null,
+                    "x-readme-ref-name": "File"
+                  }
+                },
+                "x-readme-ref-name": "PaymentCheckoutConfigSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "paymentCheckoutConfig",
+                      "deprecated": false
+                    },
+                    "logoBackgroundColor": {
+                      "type": "string",
+                      "description": "Cor de fundo do logo",
+                      "example": "#00ff00",
+                      "deprecated": false
+                    },
+                    "infoBackgroundColor": {
+                      "type": "string",
+                      "description": "Cor de fundo das suas informações",
+                      "example": "#000fff",
+                      "deprecated": false
+                    },
+                    "fontColor": {
+                      "type": "string",
+                      "description": "Cor da fonte das suas informações",
+                      "example": "#00ff00",
+                      "deprecated": false
+                    },
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Indica se a personalização está habilitada",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "logoUrl": {
+                      "type": "string",
+                      "description": "Link para download da logo",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "observations": {
+                      "type": "string",
+                      "description": "Observações da análise de personalização da fatura",
+                      "example": "Aprovado automaticamente pelo sistema.",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Situação da personalização da fatura",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "AWAITING_APPROVAL",
+                        "APPROVED",
+                        "REJECTED"
+                      ],
+                      "x-readme-ref-name": "PaymentCheckoutConfigGetResponseInvoiceConfigStatus"
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentCheckoutConfigGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "Recuperar configurações de personalização",
+        "description": "",
+        "operationId": "recuperar-configuracoes-de-personalizacao",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "paymentCheckoutConfig",
+                      "deprecated": false
+                    },
+                    "logoBackgroundColor": {
+                      "type": "string",
+                      "description": "Cor de fundo do logo",
+                      "example": "#00ff00",
+                      "deprecated": false
+                    },
+                    "infoBackgroundColor": {
+                      "type": "string",
+                      "description": "Cor de fundo das suas informações",
+                      "example": "#000fff",
+                      "deprecated": false
+                    },
+                    "fontColor": {
+                      "type": "string",
+                      "description": "Cor da fonte das suas informações",
+                      "example": "#00ff00",
+                      "deprecated": false
+                    },
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Indica se a personalização está habilitada",
+                      "example": true,
+                      "deprecated": false,
+                      "default": true
+                    },
+                    "logoUrl": {
+                      "type": "string",
+                      "description": "Link para download da logo",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "observations": {
+                      "type": "string",
+                      "description": "Observações da análise de personalização da fatura",
+                      "example": "Aprovado automaticamente pelo sistema.",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Situação da personalização da fatura",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "AWAITING_APPROVAL",
+                        "APPROVED",
+                        "REJECTED"
+                      ],
+                      "x-readme-ref-name": "PaymentCheckoutConfigGetResponseInvoiceConfigStatus"
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentCheckoutConfigGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/myAccount/accountNumber": {
+      "get": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "Recuperar número de conta no Asaas",
+        "description": "",
+        "operationId": "recuperar-numero-de-conta-no-asaas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "agency": {
+                      "type": "string",
+                      "description": "Agência da conta",
+                      "example": "0001",
+                      "deprecated": false
+                    },
+                    "account": {
+                      "type": "string",
+                      "description": "Número da conta",
+                      "example": "6541",
+                      "deprecated": false
+                    },
+                    "accountDigit": {
+                      "type": "string",
+                      "description": "Dígito da conta",
+                      "example": "5",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "MyAccountGetAccountNumberResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/myAccount/fees/": {
+      "get": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "Recuperar taxas da conta",
+        "description": "",
+        "operationId": "recuperar-taxas-da-conta",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "payment": {
+                      "type": "object",
+                      "properties": {
+                        "bankSlip": {
+                          "type": "object",
+                          "properties": {
+                            "defaultValue": {
+                              "type": "number",
+                              "description": "Taxa por cobrança",
+                              "example": 6.96,
+                              "deprecated": false
+                            },
+                            "discountValue": {
+                              "type": "number",
+                              "description": "Taxa promocional (Se houver)",
+                              "example": 3.99,
+                              "deprecated": false
+                            },
+                            "expirationDate": {
+                              "type": "string",
+                              "description": "Data de expiração da taxa promocional (Se houver)",
+                              "format": "date-time",
+                              "example": "2019-05-19 00:00:00",
+                              "deprecated": false
+                            },
+                            "daysToReceive": {
+                              "type": "integer",
+                              "description": "Dias para recebimento da cobrança",
+                              "format": "int32",
+                              "example": 1,
+                              "deprecated": false
+                            }
+                          },
+                          "description": "Taxas de boleto",
+                          "deprecated": false,
+                          "x-readme-ref-name": "MyAccountGetAccountFeesPaymentBankSlipDTO"
+                        },
+                        "creditCard": {
+                          "type": "object",
+                          "properties": {
+                            "operationValue": {
+                              "type": "number",
+                              "description": "Taxa operacional por cobrança",
+                              "example": 0.49,
+                              "deprecated": false
+                            },
+                            "oneInstallmentPercentage": {
+                              "type": "number",
+                              "description": "Taxa percentual à vista",
+                              "example": 2.99,
+                              "deprecated": false
+                            },
+                            "upToSixInstallmentsPercentage": {
+                              "type": "number",
+                              "description": "Taxa percentual para 2 à 6 parcelas",
+                              "example": 2.99,
+                              "deprecated": false
+                            },
+                            "upToTwelveInstallmentsPercentage": {
+                              "type": "number",
+                              "description": "Taxa percentual para 7 à 12 parcelas",
+                              "example": 2.99,
+                              "deprecated": false
+                            },
+                            "upToTwentyOneInstallmentsPercentage": {
+                              "type": "number",
+                              "description": "Taxa percentual para 13 à 21 parcelas",
+                              "example": 4.29,
+                              "deprecated": false
+                            },
+                            "discountOneInstallmentPercentage": {
+                              "type": "number",
+                              "description": "Taxa percentual à vista promocional (Se houver)",
+                              "example": 1.99,
+                              "deprecated": false
+                            },
+                            "discountUpToSixInstallmentsPercentage": {
+                              "type": "number",
+                              "description": "Taxa percentual para 2 à 6 parcelas promocional (Se houver)",
+                              "example": 1.99,
+                              "deprecated": false
+                            },
+                            "discountUpToTwelveInstallmentsPercentage": {
+                              "type": "number",
+                              "description": "Taxa percentual para 7 à 12 parcelas promocional (Se houver)",
+                              "example": 1.99,
+                              "deprecated": false
+                            },
+                            "discountUpToTwentyOneInstallmentsPercentage": {
+                              "type": "number",
+                              "description": "Taxa percentual para 13 à 21 parcelas promocional (Se houver)",
+                              "example": 3.29,
+                              "deprecated": false
+                            },
+                            "discountExpiration": {
+                              "type": "string",
+                              "description": "Data de expiração da taxa promocional (Se houver)",
+                              "format": "date-time",
+                              "example": "2019-05-19 00:00:00",
+                              "deprecated": false
+                            },
+                            "daysToReceive": {
+                              "type": "integer",
+                              "description": "Dias para recebimento da cobrança",
+                              "format": "int32",
+                              "example": 32,
+                              "deprecated": false
+                            }
+                          },
+                          "description": "Taxas de cartão de crédito",
+                          "deprecated": false,
+                          "x-readme-ref-name": "MyAccountGetAccountFeesPaymentCreditCardDTO"
+                        },
+                        "debitCard": {
+                          "type": "object",
+                          "properties": {
+                            "operationValue": {
+                              "type": "number",
+                              "description": "Taxa operacional por cobrança",
+                              "example": 0.35,
+                              "deprecated": false
+                            },
+                            "defaultPercentage": {
+                              "type": "number",
+                              "description": "Taxa percentual por cobrança",
+                              "example": 1.89,
+                              "deprecated": false
+                            },
+                            "daysToReceive": {
+                              "type": "integer",
+                              "description": "Dias para recebimento da cobrança",
+                              "format": "int32",
+                              "example": 3,
+                              "deprecated": false
+                            }
+                          },
+                          "description": "Taxas de cartão de débito",
+                          "deprecated": false,
+                          "x-readme-ref-name": "MyAccountGetAccountFeesPaymentDebitCardDTO"
+                        },
+                        "pix": {
+                          "type": "object",
+                          "properties": {
+                            "fixedFeeValue": {
+                              "type": "number",
+                              "description": "Taxa fixa (Se houver)",
+                              "deprecated": false,
+                              "example": null
+                            },
+                            "fixedFeeValueWithDiscount": {
+                              "type": "number",
+                              "description": "Taxa fixa promocional (Se houver)",
+                              "deprecated": false,
+                              "example": null
+                            },
+                            "percentageFee": {
+                              "type": "number",
+                              "description": "Taxa percentual (Se houver)",
+                              "example": 0.99,
+                              "deprecated": false
+                            },
+                            "minimumFeeValue": {
+                              "type": "number",
+                              "description": "Taxa fixa mínima em caso de taxa percentual",
+                              "example": 0.29,
+                              "deprecated": false
+                            },
+                            "maximumFeeValue": {
+                              "type": "number",
+                              "description": "Taxa fixa máxima em caso de taxa percentual",
+                              "example": 1.99,
+                              "deprecated": false
+                            },
+                            "discountExpiration": {
+                              "type": "string",
+                              "description": "Data de expiração da taxa promocional (Se houver)",
+                              "format": "date-time",
+                              "deprecated": false,
+                              "example": null
+                            },
+                            "monthlyCreditsWithoutFee": {
+                              "type": "integer",
+                              "description": "Quantidade de transações grátis no mês",
+                              "format": "int32",
+                              "example": 30,
+                              "deprecated": false
+                            },
+                            "creditsReceivedOfCurrentMonth": {
+                              "type": "integer",
+                              "description": "Quantas transações já recebeu este mês",
+                              "format": "int32",
+                              "example": 10,
+                              "deprecated": false
+                            }
+                          },
+                          "description": "Taxas de pix",
+                          "deprecated": false,
+                          "x-readme-ref-name": "MyAccountGetAccountFeesPaymentPixDTO"
+                        }
+                      },
+                      "description": "Taxas de cobranças",
+                      "deprecated": false,
+                      "x-readme-ref-name": "MyAccountGetAccountFeesPaymentDTO"
+                    },
+                    "transfer": {
+                      "type": "object",
+                      "properties": {
+                        "monthlyTransfersWithoutFee": {
+                          "type": "integer",
+                          "description": "Quantidade de transações grátis mensais",
+                          "format": "int32",
+                          "example": 30,
+                          "deprecated": false
+                        },
+                        "ted": {
+                          "type": "object",
+                          "properties": {
+                            "feeValue": {
+                              "type": "number",
+                              "description": "Taxa por transferência via TED",
+                              "example": 5,
+                              "deprecated": false
+                            },
+                            "consideredInMonthlyTransfersWithoutFee": {
+                              "type": "boolean",
+                              "description": "Indica se a quantidade de transações grátis mensais considera TED",
+                              "example": true,
+                              "deprecated": false
+                            }
+                          },
+                          "description": "Taxas para transferências TED",
+                          "deprecated": false,
+                          "x-readme-ref-name": "MyAccountGetAccountFeesTransferTedDTO"
+                        },
+                        "pix": {
+                          "type": "object",
+                          "properties": {
+                            "feeValue": {
+                              "type": "number",
+                              "description": "Taxa por envio de transferências via Pix",
+                              "example": 5,
+                              "deprecated": false
+                            },
+                            "discountValue": {
+                              "type": "number",
+                              "description": "Taxa promocional (Se houver)",
+                              "deprecated": false,
+                              "example": null
+                            },
+                            "expirationDate": {
+                              "type": "string",
+                              "description": "Data de expiração da taxa promocional (Se houver)",
+                              "format": "date-time",
+                              "deprecated": false,
+                              "example": null
+                            },
+                            "consideredInMonthlyTransfersWithoutFee": {
+                              "type": "boolean",
+                              "description": "Indica se a quantidade de transações grátis mensais considera Pix",
+                              "example": true,
+                              "deprecated": false
+                            }
+                          },
+                          "description": "Taxas para transferências Pix",
+                          "deprecated": false,
+                          "x-readme-ref-name": "MyAccountGetAccountFeesTransferPixDTO"
+                        }
+                      },
+                      "description": "Taxas de transferências",
+                      "deprecated": false,
+                      "x-readme-ref-name": "MyAccountGetAccountFeesTransferDTO"
+                    },
+                    "notification": {
+                      "type": "object",
+                      "properties": {
+                        "phoneCallFeeValue": {
+                          "type": "number",
+                          "description": "Taxas por ligação de robô de voz",
+                          "example": 0.55,
+                          "deprecated": false
+                        },
+                        "whatsAppFeeValue": {
+                          "type": "number",
+                          "description": "Taxas por notificações via WhatsApp",
+                          "example": 0.55,
+                          "deprecated": false
+                        },
+                        "messagingFeeValue": {
+                          "type": "number",
+                          "description": "Taxas por envio de e-mails e SMS",
+                          "example": 0.99,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Taxas de notificação",
+                      "deprecated": false,
+                      "x-readme-ref-name": "MyAccountGetAccountFeesNotificationDTO"
+                    },
+                    "creditBureauReport": {
+                      "type": "object",
+                      "properties": {
+                        "naturalPersonFeeValue": {
+                          "type": "number",
+                          "description": "Taxa por consulta Serasa de pessoa física",
+                          "example": 16.99,
+                          "deprecated": false
+                        },
+                        "legalPersonFeeValue": {
+                          "type": "number",
+                          "description": "Taxa por consulta Serasa de pessoa jurídica",
+                          "example": 16.99,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Taxas de consulta Serasa",
+                      "deprecated": false,
+                      "x-readme-ref-name": "MyAccountGetAccountFeesCreditBureauReportDTO"
+                    },
+                    "paymentDunning": {
+                      "type": "object",
+                      "properties": {
+                        "feeValue": {
+                          "type": "number",
+                          "description": "Taxa por cobrança",
+                          "example": 9.9,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Taxas de negativação Serasa",
+                      "deprecated": false,
+                      "x-readme-ref-name": "MyAccountGetAccountFeesPaymentDunningDTO"
+                    },
+                    "invoice": {
+                      "type": "object",
+                      "properties": {
+                        "feeValue": {
+                          "type": "number",
+                          "description": "Taxa por nota de serviço emitida",
+                          "example": 0.99,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Taxas de notas fiscais",
+                      "deprecated": false,
+                      "x-readme-ref-name": "MyAccountGetAccountFeesInvoiceDTO"
+                    },
+                    "anticipation": {
+                      "type": "object",
+                      "properties": {
+                        "creditCard": {
+                          "type": "object",
+                          "properties": {
+                            "detachedMonthlyFeeValue": {
+                              "type": "number",
+                              "description": "Taxa ao mês para cobranças à vista",
+                              "example": 2.49,
+                              "deprecated": false
+                            },
+                            "installmentMonthlyFeeValue": {
+                              "type": "integer",
+                              "description": "Taxa ao mês para cobranças parceladas",
+                              "format": "int32",
+                              "example": 2,
+                              "deprecated": false
+                            }
+                          },
+                          "description": "Tarifa de antecipações em cartão de crédito",
+                          "deprecated": false,
+                          "x-readme-ref-name": "MyAccountGetAccountFeesAnticipationCreditCardDTO"
+                        },
+                        "bankSlip": {
+                          "type": "object",
+                          "properties": {
+                            "monthlyFeePercentage": {
+                              "type": "number",
+                              "description": "Taxa ao mês para cobranças em boleto",
+                              "example": 4.99,
+                              "deprecated": false
+                            }
+                          },
+                          "description": "Tarifa de antecipações em boletos",
+                          "deprecated": false,
+                          "x-readme-ref-name": "MyAccountGetAccountFeesAnticipationBankSlipDTO"
+                        }
+                      },
+                      "description": "Taxas de antecipação",
+                      "deprecated": false,
+                      "x-readme-ref-name": "MyAccountGetAccountFeesAnticipationDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "MyAccountGetAccountFeesResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/myAccount/status/": {
+      "get": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "Consultar situação cadastral da conta",
+        "description": "",
+        "operationId": "consultar-situacao-cadastral-da-conta",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único da conta no Asaas",
+                      "example": "a910f50b-8745-4bc6-89fe-f1931c6a2e05",
+                      "deprecated": false
+                    },
+                    "commercialInfo": {
+                      "type": "string",
+                      "description": "Status dos dados comerciais enviados",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED",
+                        "AWAITING_APPROVAL"
+                      ],
+                      "x-readme-ref-name": "MyAccountGetStatusResponseStatus"
+                    },
+                    "bankAccountInfo": {
+                      "type": "string",
+                      "description": "Status dos dados comerciais enviados",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED",
+                        "AWAITING_APPROVAL"
+                      ],
+                      "x-readme-ref-name": "MyAccountGetStatusResponseStatus"
+                    },
+                    "documentation": {
+                      "type": "string",
+                      "description": "Status dos dados comerciais enviados",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED",
+                        "AWAITING_APPROVAL"
+                      ],
+                      "x-readme-ref-name": "MyAccountGetStatusResponseStatus"
+                    },
+                    "general": {
+                      "type": "string",
+                      "description": "Status dos dados comerciais enviados",
+                      "example": "APPROVED",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED",
+                        "AWAITING_APPROVAL"
+                      ],
+                      "x-readme-ref-name": "MyAccountGetStatusResponseStatus"
+                    }
+                  },
+                  "x-readme-ref-name": "MyAccountGetStatusResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/wallets/": {
+      "get": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "Recuperar WalletId",
+        "description": "",
+        "operationId": "recuperar-walletid",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "description": "Tipo de objeto",
+                            "example": "wallet",
+                            "deprecated": false
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador da carteira",
+                            "example": "0000c712-0a0b-a0b0-0000-031e7ac51a2",
+                            "deprecated": false
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "WalletGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "WalletShowResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/myAccount/": {
+      "delete": {
+        "tags": [
+          "Informações e personalização da conta"
+        ],
+        "summary": "Excluir subconta White Label",
+        "description": "",
+        "operationId": "excluir-subconta-white-label",
+        "parameters": [
+          {
+            "name": "removeReason",
+            "in": "query",
+            "description": "Motivo da remoção",
+            "schema": {
+              "type": "string",
+              "example": "Liberar dados"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "observations": {
+                      "type": "string",
+                      "description": "Informações sobre a exclusão",
+                      "example": "Conta desabilitada com sucesso",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "MyAccountDisableAccountResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

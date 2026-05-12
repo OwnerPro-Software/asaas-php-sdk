@@ -1,0 +1,1240 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Documentos de cobranças"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/payments/{id}/documents": {
+      "post": {
+        "tags": [
+          "Documentos de cobranças"
+        ],
+        "summary": "Fazer upload de documentos da cobrança",
+        "description": "",
+        "operationId": "fazer-upload-de-documentos-da-cobranca",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da cobrança no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "availableAfterPayment",
+                  "type",
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "availableAfterPayment": {
+                    "type": "boolean",
+                    "description": "true para disponibilizar o documento apenas após o pagamento",
+                    "nullable": false,
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Tipo de documento",
+                    "nullable": false,
+                    "example": "INVOICE",
+                    "deprecated": false,
+                    "enum": [
+                      "INVOICE",
+                      "CONTRACT",
+                      "MEDIA",
+                      "DOCUMENT",
+                      "SPREADSHEET",
+                      "PROGRAM",
+                      "OTHER"
+                    ],
+                    "x-readme-ref-name": "PaymentDocumentSaveRequestPaymentDocumentType"
+                  },
+                  "file": {
+                    "type": "string",
+                    "description": "Arquivo",
+                    "format": "binary",
+                    "nullable": false,
+                    "deprecated": false,
+                    "example": null,
+                    "x-readme-ref-name": "File"
+                  }
+                },
+                "x-readme-ref-name": "PaymentDocumentSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo do objeto",
+                      "example": "paymentDocument",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do documento",
+                      "example": "609a3f98-8db7-4a89-b511-de4c3be6d462",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome do documento",
+                      "example": "Nota Fiscal.pdf",
+                      "deprecated": false
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de documento",
+                      "example": "INVOICE",
+                      "deprecated": false,
+                      "enum": [
+                        "INVOICE",
+                        "CONTRACT",
+                        "MEDIA",
+                        "DOCUMENT",
+                        "SPREADSHEET",
+                        "PROGRAM",
+                        "OTHER"
+                      ],
+                      "x-readme-ref-name": "PaymentDocumentGetResponsePaymentDocumentType"
+                    },
+                    "availableAfterPayment": {
+                      "type": "boolean",
+                      "description": "Disponível somente após o pagamento",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "publicId": {
+                          "type": "string",
+                          "description": "Identificador único do documento",
+                          "example": "TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                          "deprecated": false
+                        },
+                        "originalName": {
+                          "type": "string",
+                          "description": "Nome original do documento",
+                          "example": "Nota Fiscal.pdf",
+                          "deprecated": false
+                        },
+                        "size": {
+                          "type": "integer",
+                          "description": "Tamanho do arquivo",
+                          "format": "int32",
+                          "example": 14499,
+                          "deprecated": false
+                        },
+                        "extension": {
+                          "type": "string",
+                          "description": "Extensão do arquivo",
+                          "example": "pdf",
+                          "deprecated": false
+                        },
+                        "previewUrl": {
+                          "type": "string",
+                          "description": "Link para download do preview do arquivo",
+                          "example": "https://www.asaas.com/file/preview/TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                          "deprecated": false
+                        },
+                        "downloadUrl": {
+                          "type": "string",
+                          "description": "Link para download do arquivo",
+                          "example": "https://www.asaas.com/file/public/download/TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Objeto do Arquivo",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PaymentDocumentFileResponseDTO"
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o arquivo foi removido",
+                      "example": false,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDocumentGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Documentos de cobranças"
+        ],
+        "summary": "Listar documentos de uma cobrança",
+        "description": "",
+        "operationId": "listar-documentos-de-uma-cobranca",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da cobrança no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "description": "Tipo do objeto",
+                            "example": "paymentDocument",
+                            "deprecated": false
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único do documento",
+                            "example": "609a3f98-8db7-4a89-b511-de4c3be6d462",
+                            "deprecated": false
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Nome do documento",
+                            "example": "Nota Fiscal.pdf",
+                            "deprecated": false
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Tipo de documento",
+                            "example": "INVOICE",
+                            "deprecated": false,
+                            "enum": [
+                              "INVOICE",
+                              "CONTRACT",
+                              "MEDIA",
+                              "DOCUMENT",
+                              "SPREADSHEET",
+                              "PROGRAM",
+                              "OTHER"
+                            ],
+                            "x-readme-ref-name": "PaymentDocumentGetResponsePaymentDocumentType"
+                          },
+                          "availableAfterPayment": {
+                            "type": "boolean",
+                            "description": "Disponível somente após o pagamento",
+                            "example": true,
+                            "deprecated": false
+                          },
+                          "file": {
+                            "type": "object",
+                            "properties": {
+                              "publicId": {
+                                "type": "string",
+                                "description": "Identificador único do documento",
+                                "example": "TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                                "deprecated": false
+                              },
+                              "originalName": {
+                                "type": "string",
+                                "description": "Nome original do documento",
+                                "example": "Nota Fiscal.pdf",
+                                "deprecated": false
+                              },
+                              "size": {
+                                "type": "integer",
+                                "description": "Tamanho do arquivo",
+                                "format": "int32",
+                                "example": 14499,
+                                "deprecated": false
+                              },
+                              "extension": {
+                                "type": "string",
+                                "description": "Extensão do arquivo",
+                                "example": "pdf",
+                                "deprecated": false
+                              },
+                              "previewUrl": {
+                                "type": "string",
+                                "description": "Link para download do preview do arquivo",
+                                "example": "https://www.asaas.com/file/preview/TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                                "deprecated": false
+                              },
+                              "downloadUrl": {
+                                "type": "string",
+                                "description": "Link para download do arquivo",
+                                "example": "https://www.asaas.com/file/public/download/TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                                "deprecated": false
+                              }
+                            },
+                            "description": "Objeto do Arquivo",
+                            "deprecated": false,
+                            "x-readme-ref-name": "PaymentDocumentFileResponseDTO"
+                          },
+                          "deleted": {
+                            "type": "boolean",
+                            "description": "Indica se o arquivo foi removido",
+                            "example": false,
+                            "deprecated": false
+                          }
+                        },
+                        "x-readme-ref-name": "PaymentDocumentGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDocumentListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/payments/{id}/documents/{documentId}": {
+      "put": {
+        "tags": [
+          "Documentos de cobranças"
+        ],
+        "summary": "Atualizar definições de um documento da cobrança",
+        "description": "",
+        "operationId": "atualizar-definicoes-de-um-documento-da-cobranca",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da cobrança no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "description": "Identificador único do documento",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "availableAfterPayment",
+                  "type"
+                ],
+                "type": "object",
+                "properties": {
+                  "availableAfterPayment": {
+                    "type": "boolean",
+                    "description": "true para disponibilizar o documento apenas após o pagamento",
+                    "nullable": false,
+                    "example": true,
+                    "deprecated": false
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Tipo de documento",
+                    "nullable": false,
+                    "example": "INVOICE",
+                    "deprecated": false,
+                    "enum": [
+                      "INVOICE",
+                      "CONTRACT",
+                      "MEDIA",
+                      "DOCUMENT",
+                      "SPREADSHEET",
+                      "PROGRAM",
+                      "OTHER"
+                    ],
+                    "x-readme-ref-name": "PaymentDocumentUpdateRequestPaymentDocumentType"
+                  }
+                },
+                "x-readme-ref-name": "PaymentDocumentUpdateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo do objeto",
+                      "example": "paymentDocument",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do documento",
+                      "example": "609a3f98-8db7-4a89-b511-de4c3be6d462",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome do documento",
+                      "example": "Nota Fiscal.pdf",
+                      "deprecated": false
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de documento",
+                      "example": "INVOICE",
+                      "deprecated": false,
+                      "enum": [
+                        "INVOICE",
+                        "CONTRACT",
+                        "MEDIA",
+                        "DOCUMENT",
+                        "SPREADSHEET",
+                        "PROGRAM",
+                        "OTHER"
+                      ],
+                      "x-readme-ref-name": "PaymentDocumentGetResponsePaymentDocumentType"
+                    },
+                    "availableAfterPayment": {
+                      "type": "boolean",
+                      "description": "Disponível somente após o pagamento",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "publicId": {
+                          "type": "string",
+                          "description": "Identificador único do documento",
+                          "example": "TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                          "deprecated": false
+                        },
+                        "originalName": {
+                          "type": "string",
+                          "description": "Nome original do documento",
+                          "example": "Nota Fiscal.pdf",
+                          "deprecated": false
+                        },
+                        "size": {
+                          "type": "integer",
+                          "description": "Tamanho do arquivo",
+                          "format": "int32",
+                          "example": 14499,
+                          "deprecated": false
+                        },
+                        "extension": {
+                          "type": "string",
+                          "description": "Extensão do arquivo",
+                          "example": "pdf",
+                          "deprecated": false
+                        },
+                        "previewUrl": {
+                          "type": "string",
+                          "description": "Link para download do preview do arquivo",
+                          "example": "https://www.asaas.com/file/preview/TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                          "deprecated": false
+                        },
+                        "downloadUrl": {
+                          "type": "string",
+                          "description": "Link para download do arquivo",
+                          "example": "https://www.asaas.com/file/public/download/TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Objeto do Arquivo",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PaymentDocumentFileResponseDTO"
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o arquivo foi removido",
+                      "example": false,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDocumentGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Documentos de cobranças"
+        ],
+        "summary": "Recuperar um único documento da cobrança",
+        "description": "",
+        "operationId": "recuperar-um-unico-documento-da-cobranca",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da cobrança no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "description": "Identificador único do documento",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo do objeto",
+                      "example": "paymentDocument",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do documento",
+                      "example": "609a3f98-8db7-4a89-b511-de4c3be6d462",
+                      "deprecated": false
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nome do documento",
+                      "example": "Nota Fiscal.pdf",
+                      "deprecated": false
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Tipo de documento",
+                      "example": "INVOICE",
+                      "deprecated": false,
+                      "enum": [
+                        "INVOICE",
+                        "CONTRACT",
+                        "MEDIA",
+                        "DOCUMENT",
+                        "SPREADSHEET",
+                        "PROGRAM",
+                        "OTHER"
+                      ],
+                      "x-readme-ref-name": "PaymentDocumentGetResponsePaymentDocumentType"
+                    },
+                    "availableAfterPayment": {
+                      "type": "boolean",
+                      "description": "Disponível somente após o pagamento",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "publicId": {
+                          "type": "string",
+                          "description": "Identificador único do documento",
+                          "example": "TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                          "deprecated": false
+                        },
+                        "originalName": {
+                          "type": "string",
+                          "description": "Nome original do documento",
+                          "example": "Nota Fiscal.pdf",
+                          "deprecated": false
+                        },
+                        "size": {
+                          "type": "integer",
+                          "description": "Tamanho do arquivo",
+                          "format": "int32",
+                          "example": 14499,
+                          "deprecated": false
+                        },
+                        "extension": {
+                          "type": "string",
+                          "description": "Extensão do arquivo",
+                          "example": "pdf",
+                          "deprecated": false
+                        },
+                        "previewUrl": {
+                          "type": "string",
+                          "description": "Link para download do preview do arquivo",
+                          "example": "https://www.asaas.com/file/preview/TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                          "deprecated": false
+                        },
+                        "downloadUrl": {
+                          "type": "string",
+                          "description": "Link para download do arquivo",
+                          "example": "https://www.asaas.com/file/public/download/TSrLvzPGF7HPQhYu9OZhZSBX3mm1sxpToEcFm30imOM3sKEjhzCc1zAIuqQ7n11",
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Objeto do Arquivo",
+                      "deprecated": false,
+                      "x-readme-ref-name": "PaymentDocumentFileResponseDTO"
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o arquivo foi removido",
+                      "example": false,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDocumentGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Documentos de cobranças"
+        ],
+        "summary": "Excluir documento de uma cobrança",
+        "description": "",
+        "operationId": "excluir-documento-de-uma-cobranca",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único da cobrança no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "description": "Identificador único do documento",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "boolean",
+                      "description": "Indica se o arquivo foi removido",
+                      "example": true,
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do documento",
+                      "example": "609a3f98-8db7-4a89-b511-de4c3be6d462",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentDocumentDeleteResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

@@ -1,0 +1,1117 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Splits"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/payments/splits/paid/{id}": {
+      "get": {
+        "tags": [
+          "Splits"
+        ],
+        "summary": "Recuperar um único split pago",
+        "description": "",
+        "operationId": "recuperar-um-unico-split-pago",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do split pago no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do split pago no Asaas",
+                      "example": "fd41396a-7453-47d0-9411-c8543522591d",
+                      "deprecated": false
+                    },
+                    "walletId": {
+                      "type": "string",
+                      "description": "Identificador da carteira Asaas que será transferido",
+                      "example": "7bafd95a-e783-4a62-9be1-23999af742c6",
+                      "deprecated": false
+                    },
+                    "fixedValue": {
+                      "type": "number",
+                      "description": "Valor fixo a ser transferido para a conta quando a cobrança for recebida",
+                      "example": 20.32,
+                      "deprecated": false
+                    },
+                    "percentualValue": {
+                      "type": "number",
+                      "description": "Percentual sobre o valor líquido da cobrança a ser transferido quando for recebida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "totalValue": {
+                      "type": "number",
+                      "description": "Valor total do split que será enviado. Os valores exibidos podem sofrer alteração após a confirmação ou alteração da cobrança.",
+                      "example": 20.32,
+                      "deprecated": false
+                    },
+                    "cancellationReason": {
+                      "type": "string",
+                      "description": "Motivo de cancelamento do split",
+                      "example": "PAYMENT_DELETED",
+                      "deprecated": false,
+                      "enum": [
+                        "PAYMENT_DELETED",
+                        "PAYMENT_OVERDUE",
+                        "PAYMENT_RECEIVED_IN_CASH",
+                        "PAYMENT_REFUNDED",
+                        "VALUE_DIVERGENCE_BLOCK",
+                        "WALLET_UNABLE_TO_RECEIVE"
+                      ],
+                      "x-readme-ref-name": "PaymentSplitGetResponsePaymentSplitCancellationReason"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status do split",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "PROCESSING",
+                        "PROCESSING_REFUND",
+                        "AWAITING_CREDIT",
+                        "CANCELLED",
+                        "DONE",
+                        "REFUNDED",
+                        "BLOCKED_BY_VALUE_DIVERGENCE"
+                      ],
+                      "x-readme-ref-name": "PaymentSplitGetResponsePaymentSplitStatus"
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador do split no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do split",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "description": "Configurações do split",
+                  "deprecated": false,
+                  "x-readme-ref-name": "PaymentSplitGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/payments/splits/paid": {
+      "get": {
+        "tags": [
+          "Splits"
+        ],
+        "summary": "Listar splits pagos",
+        "description": "",
+        "operationId": "listar-splits-pagos",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "paymentId",
+            "in": "query",
+            "description": "Filtrar pelo ID da cobrança",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar por status",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por status",
+              "example": "PENDING",
+              "deprecated": false,
+              "enum": [
+                "PENDING",
+                "PROCESSING",
+                "PROCESSING_REFUND",
+                "AWAITING_CREDIT",
+                "CANCELLED",
+                "DONE",
+                "REFUNDED",
+                "BLOCKED_BY_VALUE_DIVERGENCE"
+              ],
+              "x-readme-ref-name": "PaymentSplitListPaidRequestPaymentSplitStatus"
+            }
+          },
+          {
+            "name": "paymentConfirmedDate[ge]",
+            "in": "query",
+            "description": "Filtrar a partir da data de confirmação da cobrança inicial",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "paymentConfirmedDate[le]",
+            "in": "query",
+            "description": "Filtrar a partir da data de confirmação da cobrança final",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "creditDate[ge]",
+            "in": "query",
+            "description": "Filtrar a partir da data de envio do split inicial",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "creditDate[le]",
+            "in": "query",
+            "description": "Filtrar a partir da data de envio do split final",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único do split pago no Asaas",
+                            "example": "fd41396a-7453-47d0-9411-c8543522591d",
+                            "deprecated": false
+                          },
+                          "walletId": {
+                            "type": "string",
+                            "description": "Identificador da carteira Asaas que será transferido",
+                            "example": "7bafd95a-e783-4a62-9be1-23999af742c6",
+                            "deprecated": false
+                          },
+                          "fixedValue": {
+                            "type": "number",
+                            "description": "Valor fixo a ser transferido para a conta quando a cobrança for recebida",
+                            "example": 20.32,
+                            "deprecated": false
+                          },
+                          "percentualValue": {
+                            "type": "number",
+                            "description": "Percentual sobre o valor líquido da cobrança a ser transferido quando for recebida",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "totalValue": {
+                            "type": "number",
+                            "description": "Valor total do split que será enviado. Os valores exibidos podem sofrer alteração após a confirmação ou alteração da cobrança.",
+                            "example": 20.32,
+                            "deprecated": false
+                          },
+                          "cancellationReason": {
+                            "type": "string",
+                            "description": "Motivo de cancelamento do split",
+                            "example": "PAYMENT_DELETED",
+                            "deprecated": false,
+                            "enum": [
+                              "PAYMENT_DELETED",
+                              "PAYMENT_OVERDUE",
+                              "PAYMENT_RECEIVED_IN_CASH",
+                              "PAYMENT_REFUNDED",
+                              "VALUE_DIVERGENCE_BLOCK",
+                              "WALLET_UNABLE_TO_RECEIVE"
+                            ],
+                            "x-readme-ref-name": "PaymentSplitGetResponsePaymentSplitCancellationReason"
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status do split",
+                            "example": "PENDING",
+                            "deprecated": false,
+                            "enum": [
+                              "PENDING",
+                              "PROCESSING",
+                              "PROCESSING_REFUND",
+                              "AWAITING_CREDIT",
+                              "CANCELLED",
+                              "DONE",
+                              "REFUNDED",
+                              "BLOCKED_BY_VALUE_DIVERGENCE"
+                            ],
+                            "x-readme-ref-name": "PaymentSplitGetResponsePaymentSplitStatus"
+                          },
+                          "externalReference": {
+                            "type": "string",
+                            "description": "Identificador do split no seu sistema",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do split",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Configurações do split",
+                        "deprecated": false,
+                        "x-readme-ref-name": "PaymentSplitGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentSplitListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/payments/splits/received/{id}": {
+      "get": {
+        "tags": [
+          "Splits"
+        ],
+        "summary": "Recuperar um único split recebido",
+        "description": "",
+        "operationId": "recuperar-um-unico-split-recebido",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do split pago no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do split pago no Asaas",
+                      "example": "fd41396a-7453-47d0-9411-c8543522591d",
+                      "deprecated": false
+                    },
+                    "walletId": {
+                      "type": "string",
+                      "description": "Identificador da carteira Asaas que será transferido",
+                      "example": "7bafd95a-e783-4a62-9be1-23999af742c6",
+                      "deprecated": false
+                    },
+                    "fixedValue": {
+                      "type": "number",
+                      "description": "Valor fixo a ser transferido para a conta quando a cobrança for recebida",
+                      "example": 20.32,
+                      "deprecated": false
+                    },
+                    "percentualValue": {
+                      "type": "number",
+                      "description": "Percentual sobre o valor líquido da cobrança a ser transferido quando for recebida",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "totalValue": {
+                      "type": "number",
+                      "description": "Valor total do split que será enviado. Os valores exibidos podem sofrer alteração após a confirmação ou alteração da cobrança.",
+                      "example": 20.32,
+                      "deprecated": false
+                    },
+                    "cancellationReason": {
+                      "type": "string",
+                      "description": "Motivo de cancelamento do split",
+                      "example": "PAYMENT_DELETED",
+                      "deprecated": false,
+                      "enum": [
+                        "PAYMENT_DELETED",
+                        "PAYMENT_OVERDUE",
+                        "PAYMENT_RECEIVED_IN_CASH",
+                        "PAYMENT_REFUNDED",
+                        "VALUE_DIVERGENCE_BLOCK",
+                        "WALLET_UNABLE_TO_RECEIVE"
+                      ],
+                      "x-readme-ref-name": "PaymentSplitGetResponsePaymentSplitCancellationReason"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status do split",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "PROCESSING",
+                        "PROCESSING_REFUND",
+                        "AWAITING_CREDIT",
+                        "CANCELLED",
+                        "DONE",
+                        "REFUNDED",
+                        "BLOCKED_BY_VALUE_DIVERGENCE"
+                      ],
+                      "x-readme-ref-name": "PaymentSplitGetResponsePaymentSplitStatus"
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador do split no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do split",
+                      "deprecated": false,
+                      "example": null
+                    }
+                  },
+                  "description": "Configurações do split",
+                  "deprecated": false,
+                  "x-readme-ref-name": "PaymentSplitGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/payments/splits/received": {
+      "get": {
+        "tags": [
+          "Splits"
+        ],
+        "summary": "Listar splits recebidos",
+        "description": "",
+        "operationId": "listar-splits-recebidos",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          },
+          {
+            "name": "paymentId",
+            "in": "query",
+            "description": "Filtrar pelo ID da cobrança",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrar por status",
+            "schema": {
+              "type": "string",
+              "description": "Filtrar por status",
+              "example": "PENDING",
+              "deprecated": false,
+              "enum": [
+                "PENDING",
+                "PROCESSING",
+                "PROCESSING_REFUND",
+                "AWAITING_CREDIT",
+                "CANCELLED",
+                "DONE",
+                "REFUNDED",
+                "BLOCKED_BY_VALUE_DIVERGENCE"
+              ],
+              "x-readme-ref-name": "PaymentSplitListReceivedRequestPaymentSplitStatus"
+            }
+          },
+          {
+            "name": "paymentConfirmedDate[ge]",
+            "in": "query",
+            "description": "Filtrar a partir da data de confirmação da cobrança inicial",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "paymentConfirmedDate[le]",
+            "in": "query",
+            "description": "Filtrar a partir da data de confirmação da cobrança final",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "creditDate[ge]",
+            "in": "query",
+            "description": "Filtrar a partir da data de recebimento do split inicial",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          },
+          {
+            "name": "creditDate[le]",
+            "in": "query",
+            "description": "Filtrar a partir da data de recebimento do split final",
+            "schema": {
+              "type": "string",
+              "example": null
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único do split pago no Asaas",
+                            "example": "fd41396a-7453-47d0-9411-c8543522591d",
+                            "deprecated": false
+                          },
+                          "walletId": {
+                            "type": "string",
+                            "description": "Identificador da carteira Asaas que será transferido",
+                            "example": "7bafd95a-e783-4a62-9be1-23999af742c6",
+                            "deprecated": false
+                          },
+                          "fixedValue": {
+                            "type": "number",
+                            "description": "Valor fixo a ser transferido para a conta quando a cobrança for recebida",
+                            "example": 20.32,
+                            "deprecated": false
+                          },
+                          "percentualValue": {
+                            "type": "number",
+                            "description": "Percentual sobre o valor líquido da cobrança a ser transferido quando for recebida",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "totalValue": {
+                            "type": "number",
+                            "description": "Valor total do split que será enviado. Os valores exibidos podem sofrer alteração após a confirmação ou alteração da cobrança.",
+                            "example": 20.32,
+                            "deprecated": false
+                          },
+                          "cancellationReason": {
+                            "type": "string",
+                            "description": "Motivo de cancelamento do split",
+                            "example": "PAYMENT_DELETED",
+                            "deprecated": false,
+                            "enum": [
+                              "PAYMENT_DELETED",
+                              "PAYMENT_OVERDUE",
+                              "PAYMENT_RECEIVED_IN_CASH",
+                              "PAYMENT_REFUNDED",
+                              "VALUE_DIVERGENCE_BLOCK",
+                              "WALLET_UNABLE_TO_RECEIVE"
+                            ],
+                            "x-readme-ref-name": "PaymentSplitGetResponsePaymentSplitCancellationReason"
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status do split",
+                            "example": "PENDING",
+                            "deprecated": false,
+                            "enum": [
+                              "PENDING",
+                              "PROCESSING",
+                              "PROCESSING_REFUND",
+                              "AWAITING_CREDIT",
+                              "CANCELLED",
+                              "DONE",
+                              "REFUNDED",
+                              "BLOCKED_BY_VALUE_DIVERGENCE"
+                            ],
+                            "x-readme-ref-name": "PaymentSplitGetResponsePaymentSplitStatus"
+                          },
+                          "externalReference": {
+                            "type": "string",
+                            "description": "Identificador do split no seu sistema",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do split",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Configurações do split",
+                        "deprecated": false,
+                        "x-readme-ref-name": "PaymentSplitGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "PaymentSplitListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

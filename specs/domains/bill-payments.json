@@ -1,0 +1,1460 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Pagamento de contas"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/bill": {
+      "post": {
+        "tags": [
+          "Pagamento de contas"
+        ],
+        "summary": "Criar um pagamento de conta",
+        "description": "",
+        "operationId": "criar-um-pagamento-de-conta",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "identificationField"
+                ],
+                "type": "object",
+                "properties": {
+                  "identificationField": {
+                    "type": "string",
+                    "description": "Linha digitável do boleto",
+                    "nullable": false,
+                    "example": "03399.77779 29900.000000 04751.101017 1 81510000002990",
+                    "deprecated": false
+                  },
+                  "scheduleDate": {
+                    "type": "string",
+                    "description": "Data de agendamento do pagamento",
+                    "example": "2020-03-15",
+                    "deprecated": false
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Descrição do pagamento de conta",
+                    "example": "Celular 03/12",
+                    "deprecated": false
+                  },
+                  "discount": {
+                    "type": "number",
+                    "description": "Desconto atribuído ao pagamento",
+                    "example": 0,
+                    "deprecated": false
+                  },
+                  "interest": {
+                    "type": "number",
+                    "description": "Juros atribuído ao pagamento",
+                    "example": 0,
+                    "deprecated": false
+                  },
+                  "fine": {
+                    "type": "number",
+                    "description": "Multa atribuída ao pagamento",
+                    "example": 0,
+                    "deprecated": false
+                  },
+                  "dueDate": {
+                    "type": "string",
+                    "description": "Data de vencimento da conta caso seja do tipo que não possui essa informação",
+                    "format": "date",
+                    "example": "2020-03-30",
+                    "deprecated": false
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Valor da conta caso seja do tipo que não possui essa informação (Ex: faturas de cartão de crédito)",
+                    "example": 29,
+                    "deprecated": false
+                  },
+                  "externalReference": {
+                    "type": "string",
+                    "description": "Identificador do boleto no seu sistema",
+                    "example": "056984",
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "BillSaveRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "bill",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do pagamento de conta no Asaas",
+                      "example": "f1bce822-6f37-4905-8de8-f1af9f2f4bab",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status do pagamento de conta",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "BANK_PROCESSING",
+                        "PAID",
+                        "FAILED",
+                        "CANCELLED",
+                        "REFUNDED",
+                        "AWAITING_CHECKOUT_RISK_ANALYSIS_REQUEST"
+                      ],
+                      "x-readme-ref-name": "BillGetResponseBillStatus"
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor a ser pago",
+                      "example": 29,
+                      "deprecated": false
+                    },
+                    "discount": {
+                      "type": "number",
+                      "description": "Desconto atribuído ao pagamento",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "interest": {
+                      "type": "number",
+                      "description": "Juros atribuído ao pagamento",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "fine": {
+                      "type": "number",
+                      "description": "Multa atribuída ao pagamento",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "identificationField": {
+                      "type": "string",
+                      "description": "Linha digitável do boleto a ser pago",
+                      "example": "03399.77779 29900.000000 04751.101017 1 81510000002990",
+                      "deprecated": false
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "description": "Data de vencimento da cobrança",
+                      "format": "date",
+                      "example": "2020-01-31",
+                      "deprecated": false
+                    },
+                    "scheduleDate": {
+                      "type": "string",
+                      "description": "Data de agendamento do pagamento",
+                      "format": "date",
+                      "example": "2020-01-31",
+                      "deprecated": false
+                    },
+                    "paymentDate": {
+                      "type": "string",
+                      "description": "Data em que o pagamento foi efetivado",
+                      "format": "date",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "fee": {
+                      "type": "number",
+                      "description": "Taxa do Asaas para o pagamento de conta",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do pagamento de conta",
+                      "example": "Celular 01/12",
+                      "deprecated": false
+                    },
+                    "companyName": {
+                      "type": "string",
+                      "description": "Empresa/Órgão emissor da cobrança",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "transactionReceiptUrl": {
+                      "type": "string",
+                      "description": "Comprovante do pagamento de conta",
+                      "example": "https://www.asaas.com/comprovantes/00016578",
+                      "deprecated": false
+                    },
+                    "canBeCancelled": {
+                      "type": "boolean",
+                      "description": "Se o pagamento pode ser cancelado",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador do boleto no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "failReasons": {
+                      "type": "array",
+                      "description": "Lista com motivos de falha no pagamento",
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Lista com motivos de falha no pagamento",
+                        "deprecated": false,
+                        "example": null
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "BillGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Pagamento de contas"
+        ],
+        "summary": "Listar pagamento de contas",
+        "description": "",
+        "operationId": "listar-pagamento-de-contas",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Elemento inicial da lista",
+            "schema": {
+              "type": "integer",
+              "example": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de elementos da lista (max: 100)",
+            "schema": {
+              "maximum": 100,
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "list",
+                      "deprecated": false
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Indica se há mais uma página a ser buscada",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Quantidade total de itens para os filtros informados",
+                      "format": "int32",
+                      "example": 2,
+                      "deprecated": false
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Quantidade de objetos por página",
+                      "format": "int32",
+                      "example": 10,
+                      "deprecated": false
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "description": "Posição do objeto a partir do qual a página deve ser carregada",
+                      "format": "int32",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "description": "Tipo de objeto",
+                            "example": "bill",
+                            "deprecated": false
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "Identificador único do pagamento de conta no Asaas",
+                            "example": "f1bce822-6f37-4905-8de8-f1af9f2f4bab",
+                            "deprecated": false
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Status do pagamento de conta",
+                            "example": "PENDING",
+                            "deprecated": false,
+                            "enum": [
+                              "PENDING",
+                              "BANK_PROCESSING",
+                              "PAID",
+                              "FAILED",
+                              "CANCELLED",
+                              "REFUNDED",
+                              "AWAITING_CHECKOUT_RISK_ANALYSIS_REQUEST"
+                            ],
+                            "x-readme-ref-name": "BillGetResponseBillStatus"
+                          },
+                          "value": {
+                            "type": "number",
+                            "description": "Valor a ser pago",
+                            "example": 29,
+                            "deprecated": false
+                          },
+                          "discount": {
+                            "type": "number",
+                            "description": "Desconto atribuído ao pagamento",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "interest": {
+                            "type": "number",
+                            "description": "Juros atribuído ao pagamento",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "fine": {
+                            "type": "number",
+                            "description": "Multa atribuída ao pagamento",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "identificationField": {
+                            "type": "string",
+                            "description": "Linha digitável do boleto a ser pago",
+                            "example": "03399.77779 29900.000000 04751.101017 1 81510000002990",
+                            "deprecated": false
+                          },
+                          "dueDate": {
+                            "type": "string",
+                            "description": "Data de vencimento da cobrança",
+                            "format": "date",
+                            "example": "2020-01-31",
+                            "deprecated": false
+                          },
+                          "scheduleDate": {
+                            "type": "string",
+                            "description": "Data de agendamento do pagamento",
+                            "format": "date",
+                            "example": "2020-01-31",
+                            "deprecated": false
+                          },
+                          "paymentDate": {
+                            "type": "string",
+                            "description": "Data em que o pagamento foi efetivado",
+                            "format": "date",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "fee": {
+                            "type": "number",
+                            "description": "Taxa do Asaas para o pagamento de conta",
+                            "example": 0,
+                            "deprecated": false
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do pagamento de conta",
+                            "example": "Celular 01/12",
+                            "deprecated": false
+                          },
+                          "companyName": {
+                            "type": "string",
+                            "description": "Empresa/Órgão emissor da cobrança",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "transactionReceiptUrl": {
+                            "type": "string",
+                            "description": "Comprovante do pagamento de conta",
+                            "example": "https://www.asaas.com/comprovantes/00016578",
+                            "deprecated": false
+                          },
+                          "canBeCancelled": {
+                            "type": "boolean",
+                            "description": "Se o pagamento pode ser cancelado",
+                            "example": false,
+                            "deprecated": false
+                          },
+                          "externalReference": {
+                            "type": "string",
+                            "description": "Identificador do boleto no seu sistema",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "failReasons": {
+                            "type": "array",
+                            "description": "Lista com motivos de falha no pagamento",
+                            "deprecated": false,
+                            "items": {
+                              "type": "string",
+                              "description": "Lista com motivos de falha no pagamento",
+                              "deprecated": false,
+                              "example": null
+                            }
+                          }
+                        },
+                        "x-readme-ref-name": "BillGetResponseDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "BillListResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/bill/simulate": {
+      "post": {
+        "tags": [
+          "Pagamento de contas"
+        ],
+        "summary": "Simular um pagamento de conta",
+        "description": "",
+        "operationId": "simular-um-pagamento-de-conta",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "identificationField": {
+                    "type": "string",
+                    "description": "Linha digitável do boleto",
+                    "example": "03399.77779 29900.000000 04751.101017 1 81510000002990",
+                    "deprecated": false
+                  },
+                  "barCode": {
+                    "type": "string",
+                    "description": "Código de barras do boleto",
+                    "deprecated": false,
+                    "example": null
+                  }
+                },
+                "x-readme-ref-name": "BillSimulateRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "minimumScheduleDate": {
+                      "type": "string",
+                      "description": "Data mínima permitida para agendamento",
+                      "format": "date",
+                      "example": "2021-11-22",
+                      "deprecated": false
+                    },
+                    "fee": {
+                      "type": "number",
+                      "description": "Taxa cobrada no pagamento da conta",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "bankSlipInfo": {
+                      "type": "object",
+                      "properties": {
+                        "identificationField": {
+                          "type": "string",
+                          "description": "Linha digitável",
+                          "example": "03399201595100529040147600301023888440000421177",
+                          "deprecated": false
+                        },
+                        "value": {
+                          "type": "number",
+                          "description": "Valor do boleto",
+                          "example": 4211.77,
+                          "deprecated": false
+                        },
+                        "dueDate": {
+                          "type": "string",
+                          "description": "Data de vencimento",
+                          "format": "date",
+                          "example": "2021-12-24",
+                          "deprecated": false
+                        },
+                        "companyName": {
+                          "type": "string",
+                          "description": "Empresa/Órgão emissor do boleto",
+                          "deprecated": false,
+                          "example": null
+                        },
+                        "bank": {
+                          "type": "string",
+                          "description": "Código do banco emissor do boleto no sistema bancário",
+                          "example": "033",
+                          "deprecated": false
+                        },
+                        "beneficiaryCpfCnpj": {
+                          "type": "string",
+                          "description": "CPF ou CNPJ do beneficiário",
+                          "example": "19.540.550/0001-21",
+                          "deprecated": false
+                        },
+                        "beneficiaryName": {
+                          "type": "string",
+                          "description": "Nome do beneficiário",
+                          "example": "ASAAS GESTAO FINANCEIRA S.A.",
+                          "deprecated": false
+                        },
+                        "allowChangeValue": {
+                          "type": "boolean",
+                          "description": "Se o valor pode ser alterado ou não",
+                          "example": false,
+                          "deprecated": false
+                        },
+                        "minValue": {
+                          "type": "number",
+                          "description": "Valor mínimo que pode ser alterado",
+                          "example": 4211.77,
+                          "deprecated": false
+                        },
+                        "maxValue": {
+                          "type": "number",
+                          "description": "Valor máximo que pode ser alterado",
+                          "example": 4211.77,
+                          "deprecated": false
+                        },
+                        "discountValue": {
+                          "type": "number",
+                          "description": "Valor dos descontos",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "interestValue": {
+                          "type": "number",
+                          "description": "Valor do juros",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "fineValue": {
+                          "type": "number",
+                          "description": "Valor da multa",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "originalValue": {
+                          "type": "number",
+                          "description": "Valor original do boleto",
+                          "example": 4211.77,
+                          "deprecated": false
+                        },
+                        "totalDiscountValue": {
+                          "type": "number",
+                          "description": "Valor total de descontos e abatimentos",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "totalAdditionalValue": {
+                          "type": "number",
+                          "description": "Valor total de juros e multa",
+                          "example": 0,
+                          "deprecated": false
+                        },
+                        "isOverdue": {
+                          "type": "boolean",
+                          "description": "Informa se o boleto está vencido",
+                          "example": false,
+                          "deprecated": false
+                        }
+                      },
+                      "description": "Informações do boleto a ser pago",
+                      "deprecated": false,
+                      "x-readme-ref-name": "BillSimulateBankSlipInfoResponseDTO"
+                    }
+                  },
+                  "x-readme-ref-name": "BillSimulateResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/bill/{id}": {
+      "get": {
+        "tags": [
+          "Pagamento de contas"
+        ],
+        "summary": "Recuperar um único pagamento de conta",
+        "description": "",
+        "operationId": "recuperar-um-unico-pagamento-de-conta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do pagamento de conta no Asaas",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "f1bce822-6f37-4905-8de8-f1af9f2f4bab"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "bill",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do pagamento de conta no Asaas",
+                      "example": "f1bce822-6f37-4905-8de8-f1af9f2f4bab",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status do pagamento de conta",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "BANK_PROCESSING",
+                        "PAID",
+                        "FAILED",
+                        "CANCELLED",
+                        "REFUNDED",
+                        "AWAITING_CHECKOUT_RISK_ANALYSIS_REQUEST"
+                      ],
+                      "x-readme-ref-name": "BillGetResponseBillStatus"
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor a ser pago",
+                      "example": 29,
+                      "deprecated": false
+                    },
+                    "discount": {
+                      "type": "number",
+                      "description": "Desconto atribuído ao pagamento",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "interest": {
+                      "type": "number",
+                      "description": "Juros atribuído ao pagamento",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "fine": {
+                      "type": "number",
+                      "description": "Multa atribuída ao pagamento",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "identificationField": {
+                      "type": "string",
+                      "description": "Linha digitável do boleto a ser pago",
+                      "example": "03399.77779 29900.000000 04751.101017 1 81510000002990",
+                      "deprecated": false
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "description": "Data de vencimento da cobrança",
+                      "format": "date",
+                      "example": "2020-01-31",
+                      "deprecated": false
+                    },
+                    "scheduleDate": {
+                      "type": "string",
+                      "description": "Data de agendamento do pagamento",
+                      "format": "date",
+                      "example": "2020-01-31",
+                      "deprecated": false
+                    },
+                    "paymentDate": {
+                      "type": "string",
+                      "description": "Data em que o pagamento foi efetivado",
+                      "format": "date",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "fee": {
+                      "type": "number",
+                      "description": "Taxa do Asaas para o pagamento de conta",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do pagamento de conta",
+                      "example": "Celular 01/12",
+                      "deprecated": false
+                    },
+                    "companyName": {
+                      "type": "string",
+                      "description": "Empresa/Órgão emissor da cobrança",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "transactionReceiptUrl": {
+                      "type": "string",
+                      "description": "Comprovante do pagamento de conta",
+                      "example": "https://www.asaas.com/comprovantes/00016578",
+                      "deprecated": false
+                    },
+                    "canBeCancelled": {
+                      "type": "boolean",
+                      "description": "Se o pagamento pode ser cancelado",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador do boleto no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "failReasons": {
+                      "type": "array",
+                      "description": "Lista com motivos de falha no pagamento",
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Lista com motivos de falha no pagamento",
+                        "deprecated": false,
+                        "example": null
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "BillGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/bill/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Pagamento de contas"
+        ],
+        "summary": "Cancelar pagamento de contas",
+        "description": "Permite o cancelamento do pagamento de conta. Utilize a propriedade `canBeCancelled` do objeto `bill` para verificar se o pagamento de conta pode ser cancelado. \nAo ser cancelado o pagamento da conta não será realizado.",
+        "operationId": "cancelar-pagamento-de-contas",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador único do pagamento de conta a ser cancelado",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1bce822-6f37-4905-8de8-f1af9f2f4bab"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-readme-ref-name": "BillCancelRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "Tipo de objeto",
+                      "example": "bill",
+                      "deprecated": false
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Identificador único do pagamento de conta no Asaas",
+                      "example": "f1bce822-6f37-4905-8de8-f1af9f2f4bab",
+                      "deprecated": false
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Status do pagamento de conta",
+                      "example": "PENDING",
+                      "deprecated": false,
+                      "enum": [
+                        "PENDING",
+                        "BANK_PROCESSING",
+                        "PAID",
+                        "FAILED",
+                        "CANCELLED",
+                        "REFUNDED",
+                        "AWAITING_CHECKOUT_RISK_ANALYSIS_REQUEST"
+                      ],
+                      "x-readme-ref-name": "BillGetResponseBillStatus"
+                    },
+                    "value": {
+                      "type": "number",
+                      "description": "Valor a ser pago",
+                      "example": 29,
+                      "deprecated": false
+                    },
+                    "discount": {
+                      "type": "number",
+                      "description": "Desconto atribuído ao pagamento",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "interest": {
+                      "type": "number",
+                      "description": "Juros atribuído ao pagamento",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "fine": {
+                      "type": "number",
+                      "description": "Multa atribuída ao pagamento",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "identificationField": {
+                      "type": "string",
+                      "description": "Linha digitável do boleto a ser pago",
+                      "example": "03399.77779 29900.000000 04751.101017 1 81510000002990",
+                      "deprecated": false
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "description": "Data de vencimento da cobrança",
+                      "format": "date",
+                      "example": "2020-01-31",
+                      "deprecated": false
+                    },
+                    "scheduleDate": {
+                      "type": "string",
+                      "description": "Data de agendamento do pagamento",
+                      "format": "date",
+                      "example": "2020-01-31",
+                      "deprecated": false
+                    },
+                    "paymentDate": {
+                      "type": "string",
+                      "description": "Data em que o pagamento foi efetivado",
+                      "format": "date",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "fee": {
+                      "type": "number",
+                      "description": "Taxa do Asaas para o pagamento de conta",
+                      "example": 0,
+                      "deprecated": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Descrição do pagamento de conta",
+                      "example": "Celular 01/12",
+                      "deprecated": false
+                    },
+                    "companyName": {
+                      "type": "string",
+                      "description": "Empresa/Órgão emissor da cobrança",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "transactionReceiptUrl": {
+                      "type": "string",
+                      "description": "Comprovante do pagamento de conta",
+                      "example": "https://www.asaas.com/comprovantes/00016578",
+                      "deprecated": false
+                    },
+                    "canBeCancelled": {
+                      "type": "boolean",
+                      "description": "Se o pagamento pode ser cancelado",
+                      "example": false,
+                      "deprecated": false
+                    },
+                    "externalReference": {
+                      "type": "string",
+                      "description": "Identificador do boleto no seu sistema",
+                      "deprecated": false,
+                      "example": null
+                    },
+                    "failReasons": {
+                      "type": "array",
+                      "description": "Lista com motivos de falha no pagamento",
+                      "deprecated": false,
+                      "items": {
+                        "type": "string",
+                        "description": "Lista com motivos de falha no pagamento",
+                        "deprecated": false,
+                        "example": null
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "BillGetResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}

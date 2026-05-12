@@ -1,0 +1,625 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Asaas",
+    "description": "API pública de integração com a plataforma Asaas.",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.asaas.com",
+      "description": "Sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Cartão de crédito"
+    }
+  ],
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "paths": {
+    "/v3/creditCard/tokenizeCreditCard": {
+      "post": {
+        "tags": [
+          "Cartão de crédito"
+        ],
+        "summary": "Tokenização de cartão de crédito",
+        "description": "",
+        "operationId": "tokenizacao-de-cartao-de-credito",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "customer",
+                  "creditCard",
+                  "creditCardHolderInfo",
+                  "remoteIp"
+                ],
+                "type": "object",
+                "properties": {
+                  "customer": {
+                    "type": "string",
+                    "description": "Identificador único do cliente no Asaas",
+                    "nullable": false,
+                    "example": "cus_G7Dvo4iphUNk",
+                    "deprecated": false
+                  },
+                  "creditCard": {
+                    "required": [
+                      "holderName",
+                      "number",
+                      "expiryMonth",
+                      "expiryYear",
+                      "ccv"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "holderName": {
+                        "type": "string",
+                        "description": "Nome impresso no cartão",
+                        "nullable": false,
+                        "example": "John Doe",
+                        "deprecated": false
+                      },
+                      "number": {
+                        "type": "string",
+                        "description": "Número do cartão",
+                        "nullable": false,
+                        "example": "1234567890123456",
+                        "deprecated": false
+                      },
+                      "expiryMonth": {
+                        "type": "string",
+                        "description": "Mês de expiração com 2 dígitos",
+                        "nullable": false,
+                        "example": "2",
+                        "deprecated": false
+                      },
+                      "expiryYear": {
+                        "type": "string",
+                        "description": "Ano de expiração com 4 dígitos",
+                        "nullable": false,
+                        "example": "2026",
+                        "deprecated": false
+                      },
+                      "ccv": {
+                        "type": "string",
+                        "description": "Código de segurança",
+                        "nullable": false,
+                        "example": "123",
+                        "deprecated": false
+                      }
+                    },
+                    "description": "Informações do cartão de crédito",
+                    "nullable": false,
+                    "deprecated": false,
+                    "x-readme-ref-name": "CreditCardRequestDTO"
+                  },
+                  "creditCardHolderInfo": {
+                    "required": [
+                      "name",
+                      "email",
+                      "cpfCnpj",
+                      "postalCode",
+                      "addressNumber",
+                      "phone"
+                    ],
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Nome do titular do cartão",
+                        "nullable": false,
+                        "example": "John Doe",
+                        "deprecated": false
+                      },
+                      "email": {
+                        "type": "string",
+                        "description": "Email do titular do cartão",
+                        "nullable": false,
+                        "example": "john.doe@asaas.com",
+                        "deprecated": false
+                      },
+                      "cpfCnpj": {
+                        "type": "string",
+                        "description": "CPF ou CNPJ do titular do cartão",
+                        "nullable": false,
+                        "example": "12345678901",
+                        "deprecated": false
+                      },
+                      "postalCode": {
+                        "type": "string",
+                        "description": "CEP do titular do cartão",
+                        "nullable": false,
+                        "example": "12345678",
+                        "deprecated": false
+                      },
+                      "addressNumber": {
+                        "type": "string",
+                        "description": "Número do endereço do titular do cartão",
+                        "nullable": false,
+                        "example": "123",
+                        "deprecated": false
+                      },
+                      "addressComplement": {
+                        "type": "string",
+                        "description": "Complemento do endereço do titular do cartão",
+                        "deprecated": false,
+                        "example": null
+                      },
+                      "phone": {
+                        "type": "string",
+                        "description": "Telefone com DDD do titular do cartão",
+                        "nullable": false,
+                        "deprecated": false,
+                        "example": null
+                      },
+                      "mobilePhone": {
+                        "type": "string",
+                        "description": "Celular do titular do cartão",
+                        "deprecated": false,
+                        "example": null
+                      }
+                    },
+                    "description": "Informações do titular do cartão de crédito",
+                    "nullable": false,
+                    "deprecated": false,
+                    "x-readme-ref-name": "CreditCardHolderInfoRequestDTO"
+                  },
+                  "remoteIp": {
+                    "type": "string",
+                    "description": "IP de onde o cliente está fazendo a compra. Não deve ser informado o IP do seu servidor.",
+                    "nullable": false,
+                    "example": "116.213.42.532",
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "CreditCardTokenizeRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "creditCardNumber": {
+                      "type": "string",
+                      "description": "Últimos 4 dígitos do cartão utilizado",
+                      "example": "8829",
+                      "deprecated": false
+                    },
+                    "creditCardBrand": {
+                      "type": "string",
+                      "description": "Bandeira do cartão utilizado",
+                      "example": "VISA",
+                      "deprecated": false,
+                      "enum": [
+                        "VISA",
+                        "MASTERCARD",
+                        "ELO",
+                        "DINERS",
+                        "DISCOVER",
+                        "AMEX",
+                        "CABAL",
+                        "BANESCARD",
+                        "CREDZ",
+                        "SOROCRED",
+                        "CREDSYSTEM",
+                        "JCB",
+                        "UNKNOWN"
+                      ],
+                      "x-readme-ref-name": "CreditCardTokenizeResponseCreditCardBrand"
+                    },
+                    "creditCardToken": {
+                      "type": "string",
+                      "description": "Token do cartão de crédito que poderá ser enviado nas próximas transações sem a necessidade de informar novamente os dados de cartão e do titular",
+                      "example": "a75a1d98-c52d-4a6b-a413-71e00b193c99",
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "CreditCardTokenizeResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v3/creditCard/preAuthorization/config": {
+      "post": {
+        "tags": [
+          "Cartão de crédito"
+        ],
+        "summary": "Salvar ou atualizar configuração da pré-autorização",
+        "description": "",
+        "operationId": "salvar-ou-atualizar-configuracao-de-pre-autorizacao",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "daysToExpire"
+                ],
+                "type": "object",
+                "properties": {
+                  "daysToExpire": {
+                    "type": "integer",
+                    "description": "Quantidade de dias para expiração da pré-autorização",
+                    "format": "int32",
+                    "nullable": false,
+                    "example": 5,
+                    "deprecated": false
+                  }
+                },
+                "x-readme-ref-name": "CreditCardPreAuthorizationConfigRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "required": [
+                    "daysToExpire"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "daysToExpire": {
+                      "type": "integer",
+                      "description": "Quantidade de dias para expiração da pré-autorização",
+                      "format": "int32",
+                      "nullable": false,
+                      "example": 5,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "CreditCardPreAuthorizationConfigResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_action",
+                      "description": "O prazo de cobranças com pré-autorização deve estar dentro do intervalo de 3 a 25 dias."
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "tags": [
+          "Cartão de crédito"
+        ],
+        "summary": "Recuperar configuração da pré-autorização",
+        "description": "",
+        "operationId": "recuperar-configuracao-de-pre-autorizacao",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "required": [
+                    "daysToExpire"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "daysToExpire": {
+                      "type": "integer",
+                      "description": "Quantidade de dias para expiração da pré-autorização",
+                      "format": "int32",
+                      "nullable": false,
+                      "example": 5,
+                      "deprecated": false
+                    }
+                  },
+                  "x-readme-ref-name": "CreditCardPreAuthorizationConfigResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "error_code",
+                      "description": "Descrição do erro"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "Lista de objetos",
+                      "deprecated": false,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "description": "Código do erro",
+                            "deprecated": false,
+                            "example": null
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Descrição do erro",
+                            "deprecated": false,
+                            "example": null
+                          }
+                        },
+                        "description": "Lista de objetos",
+                        "deprecated": false,
+                        "x-readme-ref-name": "ErrorResponseItemDTO"
+                      }
+                    }
+                  },
+                  "x-readme-ref-name": "ErrorResponseDTO"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "code": "invalid_access_token",
+                      "description": "A chave de API fornecida é inválida"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden. Ocorre quando o body da requisição está preenchido, chamadas de método GET precisam ter um body vazio."
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "apiKey",
+        "name": "access_token",
+        "in": "header"
+      }
+    }
+  }
+}
