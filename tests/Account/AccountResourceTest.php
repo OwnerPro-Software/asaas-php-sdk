@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
+use OwnerPro\Asaas\Account\AccessTokenPermission;
+use OwnerPro\Asaas\Account\AccessTokenScope;
 use OwnerPro\Asaas\Account\AccountResource;
+use OwnerPro\Asaas\Account\Request\AccessTokenConfig;
+use OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig;
 use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Request\AccountRequest;
 use OwnerPro\Asaas\Account\Request\EscrowConfigRequest;
@@ -183,6 +187,120 @@ it('updates an access token from request object', function (): void {
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens/tok_1'
         && $request->method() === 'PUT');
+});
+
+it('sends accessTokenConfig on subaccount create to seed the initial key with TRANSFER permission', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'acc_1', 'apiKey' => 'ak_1'], 200)]);
+
+    accountResource()->create([
+        'name' => 'Sub Account',
+        'email' => 'sub@test.com',
+        'cpfCnpj' => '12345678900',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua X',
+        'addressNumber' => '100',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'accessTokenConfig' => [
+            'name' => 'Onboarding',
+            'permissions' => [
+                ['name' => 'TRANSFER', 'scope' => 'READ_WRITE'],
+                ['name' => 'PIX_DEBIT', 'scope' => 'READ_WRITE'],
+            ],
+        ],
+    ]);
+
+    Http::assertSent(function ($request): bool {
+        if ($request->method() !== 'POST' || $request->url() !== 'https://api-sandbox.asaas.com/v3/accounts') {
+            return false;
+        }
+        $body = $request->data();
+
+        return ($body['accessTokenConfig']['name'] ?? null) === 'Onboarding'
+            && ($body['accessTokenConfig']['permissions'][0]['name'] ?? null) === 'TRANSFER'
+            && ($body['accessTokenConfig']['permissions'][0]['scope'] ?? null) === 'READ_WRITE'
+            && ($body['accessTokenConfig']['permissions'][1]['name'] ?? null) === 'PIX_DEBIT';
+    });
+});
+
+it('sends accessTokenConfig from DTO instances (enum cases) on subaccount create', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'acc_1'], 200)]);
+
+    accountResource()->create(new AccountRequest(
+        name: 'Sub Account',
+        email: 'sub@test.com',
+        cpfCnpj: '12345678900',
+        mobilePhone: '11999999999',
+        incomeValue: 5000.00,
+        address: 'Rua X',
+        addressNumber: '100',
+        province: 'Centro',
+        postalCode: '01001000',
+        accessTokenConfig: new AccessTokenConfig(
+            name: 'Onboarding',
+            permissions: [
+                new AccessTokenPermissionConfig(
+                    name: AccessTokenPermission::Transfer,
+                    scope: AccessTokenScope::ReadWrite,
+                ),
+            ],
+        ),
+    ));
+
+    Http::assertSent(fn ($request): bool => ($request->data()['accessTokenConfig']['permissions'][0]['name'] ?? null) === 'TRANSFER'
+        && ($request->data()['accessTokenConfig']['permissions'][0]['scope'] ?? null) === 'READ_WRITE');
+});
+
+it('sends permissions on updateAccessToken to widen an existing key', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'tok_1'], 200)]);
+
+    accountResource()->updateAccessToken('acc_123', 'tok_1', new AccessTokenRequest(
+        permissions: [
+            new AccessTokenPermissionConfig(
+                name: AccessTokenPermission::Transfer,
+                scope: AccessTokenScope::ReadWrite,
+            ),
+            new AccessTokenPermissionConfig(
+                name: AccessTokenPermission::Webhook,
+                scope: AccessTokenScope::Read,
+            ),
+        ],
+    ));
+
+    Http::assertSent(function ($request): bool {
+        if ($request->method() !== 'PUT') {
+            return false;
+        }
+        $body = $request->data();
+
+        return ($body['permissions'][0]['name'] ?? null) === 'TRANSFER'
+            && ($body['permissions'][0]['scope'] ?? null) === 'READ_WRITE'
+            && ($body['permissions'][1]['name'] ?? null) === 'WEBHOOK'
+            && ($body['permissions'][1]['scope'] ?? null) === 'READ';
+    });
+});
+
+it('sends permissions on createAccessToken when provided via raw array', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'tok_1'], 200)]);
+
+    accountResource()->createAccessToken('acc_123', [
+        'name' => 'Limited',
+        'permissions' => [
+            ['name' => 'PAYMENT', 'scope' => 'READ_WRITE'],
+        ],
+    ]);
+
+    Http::assertSent(function ($request): bool {
+        if ($request->method() !== 'POST') {
+            return false;
+        }
+        $body = $request->data();
+
+        return ($body['name'] ?? null) === 'Limited'
+            && ($body['permissions'][0]['name'] ?? null) === 'PAYMENT'
+            && ($body['permissions'][0]['scope'] ?? null) === 'READ_WRITE';
+    });
 });
 
 it('deletes an access token', function (): void {

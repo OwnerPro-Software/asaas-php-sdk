@@ -353,6 +353,36 @@ Available nested DTOs (`OwnerPro\Asaas\Support\DTO\*`):
 | `SplitRefund` | `RefundPaymentRequest` |
 | `Callback` | `CreatePaymentRequest` |
 | `QrCodePayload` | `PayQrCodeRequest` |
+| `Discount` | `CreatePaymentRequest`, `UpdatePaymentRequest` (`{value, dueDateLimitDays?, type?}`) |
+| `Interest` | `CreatePaymentRequest`, `UpdatePaymentRequest` (`{value}`) |
+| `Fine` | `CreatePaymentRequest`, `UpdatePaymentRequest` (`{value, type?}`) |
+
+**Discount / Interest / Fine (since 2.0.0)** — `discount`, `interest`, and `fine` on `CreatePaymentRequest` / `UpdatePaymentRequest` are typed value objects, not floats. Each ships a `coerce()` helper that accepts a float (legacy shape, wrapped as `value`), an array, a DTO instance, `Missing::Value`, or `null` — so existing scalar callers keep working:
+
+```php
+use OwnerPro\Asaas\Payment\DiscountType;
+use OwnerPro\Asaas\Payment\FineType;
+use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
+use OwnerPro\Asaas\Support\DTO\Discount;
+use OwnerPro\Asaas\Support\DTO\Fine;
+use OwnerPro\Asaas\Support\DTO\Interest;
+
+// Legacy float still works — wrapped automatically as Discount(value: 10.0)
+Asaas::payments()->create(new CreatePaymentRequest(
+    customer: 'cus_abc123', billingType: 'PIX', value: 200.00, dueDate: '2026-04-01',
+    discount: 10.0,
+));
+
+// Typed value object with the full Asaas-documented shape
+Asaas::payments()->create(new CreatePaymentRequest(
+    customer: 'cus_abc123', billingType: 'PIX', value: 200.00, dueDate: '2026-04-01',
+    discount: new Discount(value: 10.0, dueDateLimitDays: 5, type: DiscountType::Percentage),
+    interest: new Interest(value: 1.5),
+    fine: new Fine(value: 2.0, type: FineType::Percentage),
+));
+```
+
+Reading `$request->discount` returns `?Discount` (not `?float`) — access `$request->discount->value` for the scalar.
 
 Example with `Split` (marketplace splits) and `Callback` (post-payment redirect):
 
@@ -1061,7 +1091,7 @@ class MyLoggingConnector implements Connector
     public function post(string $path, array $data = []): AsaasResult { /* ... */ }
     public function put(string $path, array $data = []): AsaasResult { /* ... */ }
     public function delete(string $path): AsaasResult { /* ... */ }
-    public function postMultipart(string $path, array $data, array $files): AsaasResult { /* ... */ }
+    public function postMultipart(string $path, array $data, array $files = []): AsaasResult { /* ... */ }
     // paginate() and all() are provided by the trait
 }
 

@@ -88,6 +88,12 @@ Major release. Spec-alignment work driven by a full audit of the SDK against `sp
 ### Internal
 
 - `Discount`, `Interest`, `Fine`, `Callback` each expose a static `coerce()` helper, normalising union inputs (`array | float | DTO | Missing | null`) into a normalized DTO instance. This kept `UpdatePaymentRequest`'s constructor cognitive complexity under PHPStan's class threshold without weakening the public API.
+- Wire-level integration tests added to `AccountResourceTest` pinning that `POST /v3/accounts` carries `accessTokenConfig` end-to-end (both via raw array and via `AccessTokenConfig` DTO with enum cases), and that `PUT /v3/accounts/{id}/accessTokens/{tokenId}` carries `permissions` in the documented `{name, scope}` shape. Closes the e2e coverage gap on the feature that motivated this release (subaccount keys ship with `TRANSFER` permission so `POST /transfers` no longer blocks production).
+
+### Documentation
+
+- README: documented the `Discount` / `Interest` / `Fine` value objects in the nested-DTOs table and added a usage example showing both legacy float and typed-DTO forms — this is the load-bearing breaking change of 2.0.0 (property type changed from `?float` to `?Discount|?Interest|?Fine`) and was previously CHANGELOG-only.
+- README: updated the Custom Connector example to match the new `postMultipart(string, array, array = [])` signature.
 
 ## [1.4.0] - 2026-05-12
 

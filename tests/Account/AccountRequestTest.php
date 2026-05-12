@@ -142,13 +142,13 @@ it('masks loginEmail and surfaces webhooks/accessTokenConfig in debug info when 
         province: 'Centro',
         postalCode: '01001000',
         loginEmail: 'login@example.com',
-        webhooks: [new OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest(url: 'https://x.com', email: 'a@b.com')],
-        accessTokenConfig: new OwnerPro\Asaas\Account\Request\AccessTokenConfig(
+        webhooks: [new CreateWebhookRequest(url: 'https://x.com', email: 'a@b.com')],
+        accessTokenConfig: new AccessTokenConfig(
             name: 'Onboarding',
             permissions: [
-                new OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig(
-                    name: OwnerPro\Asaas\Account\AccessTokenPermission::Payment,
-                    scope: OwnerPro\Asaas\Account\AccessTokenScope::ReadWrite,
+                new AccessTokenPermissionConfig(
+                    name: AccessTokenPermission::Payment,
+                    scope: AccessTokenScope::ReadWrite,
                 ),
             ],
         ),
@@ -158,7 +158,7 @@ it('masks loginEmail and surfaces webhooks/accessTokenConfig in debug info when 
 
     expect($debug['loginEmail'])->toBe('***');
     expect($debug['webhooks'])->toHaveCount(1);
-    expect($debug['accessTokenConfig'])->toBeInstanceOf(OwnerPro\Asaas\Account\Request\AccessTokenConfig::class);
+    expect($debug['accessTokenConfig'])->toBeInstanceOf(AccessTokenConfig::class);
 });
 
 it('masks short cpfCnpj without negative repeat', function (): void {
