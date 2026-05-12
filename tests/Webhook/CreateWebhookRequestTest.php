@@ -64,6 +64,17 @@ it('masks authToken in debug info', function (): void {
     expect($debug['sendType'])->toBe('SEQUENTIALLY');
     expect($debug['authToken'])->toBe('***');
     expect($debug['events'])->toBe(['PAYMENT_CONFIRMED']);
+    expect($debug)->toHaveKey('interrupted');
+    expect($debug['interrupted'])->toBeFalse();
+});
+
+it('defaults interrupted to false when omitted from fromArray', function (): void {
+    $request = CreateWebhookRequest::fromArray([
+        'url' => 'https://example.com/hook',
+        'email' => 'dev@test.com',
+    ]);
+
+    expect($request->interrupted)->toBeFalse();
 });
 
 it('shows null authToken as null in debug info', function (): void {

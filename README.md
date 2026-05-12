@@ -678,9 +678,44 @@ Asaas::payments()->identificationField(string $id): AsaasResult
 Asaas::payments()->viewingInfo(string $id): AsaasResult
 Asaas::payments()->getChargeback(string $id): AsaasResult
 Asaas::payments()->getEscrow(string $id): AsaasResult
+Asaas::payments()->finishEscrow(string $id): AsaasResult
 Asaas::payments()->simulate(array|SimulatePaymentRequest $data): AsaasResult
 Asaas::payments()->limits(): AsaasResult
 Asaas::payments()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
+
+// Payment documents (multipart upload + CRUD)
+Asaas::payments()->uploadDocument(
+    string $paymentId,
+    string|resource $file,
+    PaymentDocumentType|string $type,
+    bool $availableAfterPayment,
+    string $filename,
+): AsaasResult
+Asaas::payments()->listDocuments(string $paymentId): AsaasPaginatedResult
+Asaas::payments()->findDocument(string $paymentId, string $documentId): AsaasResult
+Asaas::payments()->updateDocument(string $paymentId, string $documentId, array|UpdatePaymentDocumentRequest $data): AsaasResult
+Asaas::payments()->deleteDocument(string $paymentId, string $documentId): AsaasResult
+
+// Split lookup (paid by you / received by you)
+Asaas::payments()->listSplitsPaid(array $query = []): AsaasPaginatedResult
+Asaas::payments()->findSplitPaid(string $id): AsaasResult
+Asaas::payments()->listSplitsReceived(array $query = []): AsaasPaginatedResult
+Asaas::payments()->findSplitReceived(string $id): AsaasResult
+```
+
+### Lean Payments (`leanPayments()`)
+
+Slim-response variants of the standard payment endpoints — same request DTOs, smaller response payloads. Useful for high-throughput create/find flows where you don't need every field back.
+
+```php
+Asaas::leanPayments()->create(array|CreatePaymentRequest $data): AsaasResult
+Asaas::leanPayments()->createWithCreditCard(array|CreatePaymentRequest $data): AsaasResult
+Asaas::leanPayments()->find(string $id): AsaasResult
+Asaas::leanPayments()->captureAuthorized(string $id): AsaasResult
+Asaas::leanPayments()->restore(string $id): AsaasResult
+Asaas::leanPayments()->refund(string $id, array|RefundPaymentRequest $data = []): AsaasResult
+Asaas::leanPayments()->receiveInCash(string $id, array|ReceivePaymentInCashRequest $data = []): AsaasResult
+Asaas::leanPayments()->undoReceivedInCash(string $id): AsaasResult
 ```
 
 #### Credit card pre-authorization (two-step capture)
@@ -826,6 +861,10 @@ Asaas::accounts()->findAccessToken(string $accountId, string $tokenId): AsaasRes
 Asaas::accounts()->createAccessToken(string $accountId, array|AccessTokenRequest|null $data = null): AsaasResult
 Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
 Asaas::accounts()->deleteAccessToken(string $accountId, string $tokenId): AsaasResult
+Asaas::accounts()->escrowConfig(string $accountId): AsaasResult
+Asaas::accounts()->setEscrowConfig(string $accountId, array|EscrowConfigRequest $data): AsaasResult
+Asaas::accounts()->defaultEscrowConfig(): AsaasResult
+Asaas::accounts()->setDefaultEscrowConfig(array|EscrowConfigRequest $data): AsaasResult
 Asaas::accounts()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
@@ -890,6 +929,13 @@ Asaas::myAccount()->uploadDocumentFile(string $documentId, string|resource $file
 Asaas::myAccount()->deleteDocumentFile(string $fileId): AsaasResult
 Asaas::myAccount()->bankAccount(): AsaasResult
 Asaas::myAccount()->updateBankAccount(array|AccountBankAccountRequest $data): AsaasResult
+Asaas::myAccount()->paymentCheckoutConfig(): AsaasResult
+Asaas::myAccount()->updatePaymentCheckoutConfig(
+    array|PaymentCheckoutConfigRequest $data,
+    string|resource|null $logoFile = null,
+    ?string $logoFilename = null,
+): AsaasResult
+Asaas::myAccount()->wallets(array $query = []): AsaasPaginatedResult
 Asaas::myAccount()->delete(array|DeleteAccountRequest $data): AsaasResult
 ```
 
@@ -972,6 +1018,29 @@ Asaas::statements()->paymentStatistics(array $query = []): AsaasResult
 Asaas::statements()->splitStatistics(array $query = []): AsaasResult
 Asaas::statements()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
+
+### Fiscal Info (`fiscalInfo()`)
+
+Configures fiscal data and digital certificates for NFS-e (Nota Fiscal de Serviço eletrônica) issuance, plus lookup of municipal/federal/national service classification codes.
+
+```php
+Asaas::fiscalInfo()->recover(): AsaasResult
+Asaas::fiscalInfo()->save(
+    array|FiscalInfoSaveRequest $data,
+    string|resource|null $certificateFile = null,
+    ?string $certificateFilename = null,
+): AsaasResult
+Asaas::fiscalInfo()->municipalOptions(): AsaasResult
+Asaas::fiscalInfo()->services(array $query = []): AsaasPaginatedResult
+Asaas::fiscalInfo()->federalServiceCodes(array $query = []): AsaasPaginatedResult
+Asaas::fiscalInfo()->nbsCodes(array $query = []): AsaasPaginatedResult
+Asaas::fiscalInfo()->operationIndicatorCodes(array $query = []): AsaasPaginatedResult
+Asaas::fiscalInfo()->taxClassificationCodes(array $query = []): AsaasPaginatedResult
+Asaas::fiscalInfo()->taxSituationCodes(array $query = []): AsaasPaginatedResult
+Asaas::fiscalInfo()->configureNationalPortal(bool $enabled): AsaasResult
+```
+
+`save()` is a `multipart/form-data` POST. Pass `$certificateFile` (binary string or file resource) only when uploading an A1 digital certificate; the form-only call works the same way without it. `email` and `simplesNacional` are the only required fields on `FiscalInfoSaveRequest`.
 
 ## Custom Connector
 

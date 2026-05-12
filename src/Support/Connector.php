@@ -28,7 +28,7 @@ interface Connector
      *     headers?: array<string, string>
      * }> $files
      */
-    public function postMultipart(string $path, array $data, array $files): AsaasResult;
+    public function postMultipart(string $path, array $data, array $files = []): AsaasResult;
 
     /** @param array<string, mixed> $query */
     public function paginate(string $path, array $query): AsaasPaginatedResult;

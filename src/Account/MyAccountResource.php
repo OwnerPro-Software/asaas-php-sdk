@@ -7,6 +7,8 @@ namespace OwnerPro\Asaas\Account;
 use OwnerPro\Asaas\Account\Request\AccountBankAccountRequest;
 use OwnerPro\Asaas\Account\Request\CommercialInfoRequest;
 use OwnerPro\Asaas\Account\Request\DeleteAccountRequest;
+use OwnerPro\Asaas\Account\Request\PaymentCheckoutConfigRequest;
+use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
 use OwnerPro\Asaas\Support\IdGuard;
@@ -99,6 +101,43 @@ final readonly class MyAccountResource
         $request = $data instanceof DeleteAccountRequest ? $data : DeleteAccountRequest::fromArray($data);
 
         return $this->connector->delete(self::BASE.'?removeReason='.rawurlencode($request->removeReason));
+    }
+
+    public function paymentCheckoutConfig(): AsaasResult
+    {
+        return $this->connector->get(self::BASE.'/paymentCheckoutConfig/');
+    }
+
+    /**
+     * @param  array<string, mixed>|PaymentCheckoutConfigRequest  $data
+     * @param  string|resource|null  $logoFile  Optional logo image (binary).
+     */
+    public function updatePaymentCheckoutConfig(
+        array|PaymentCheckoutConfigRequest $data,
+        mixed $logoFile = null,
+        ?string $logoFilename = null,
+    ): AsaasResult {
+        $files = [];
+
+        if ($logoFile !== null) {
+            $files[] = [
+                'name' => 'logoFile',
+                'contents' => $logoFile,
+                'filename' => $logoFilename ?? 'logo.png',
+            ];
+        }
+
+        return $this->connector->postMultipart(
+            self::BASE.'/paymentCheckoutConfig/',
+            PaymentCheckoutConfigRequest::resolveData($data),
+            $files,
+        );
+    }
+
+    /** @param array<string, mixed> $query */
+    public function wallets(array $query = []): AsaasPaginatedResult
+    {
+        return $this->connector->paginate('/wallets/', $query);
     }
 
     private function documentFilesPath(string $documentId): string

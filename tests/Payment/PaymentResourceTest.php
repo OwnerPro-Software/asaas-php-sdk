@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
+use OwnerPro\Asaas\Payment\PaymentDocumentType;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\PayWithCreditCardRequest;
@@ -539,6 +540,192 @@ it('gets escrow details for a payment', function (): void {
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/escrow'
         && $request->method() === 'GET');
 });
+
+it('finishes escrow on a payment', function (): void {
+    Http::fake(['*' => Http::response(['object' => 'payment', 'id' => 'pay_abc123'], 200)]);
+
+    $result = paymentResource()->finishEscrow('pay_abc123');
+
+    expect($result->success)->toBeTrue();
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/escrow/pay_abc123/finish'
+        && $request->method() === 'POST');
+});
+
+it('rejects empty id on finishEscrow', function (): void {
+    paymentResource()->finishEscrow('');
+})->throws(InvalidArgumentException::class);
+
+// --- splits ---
+
+it('lists splits paid via paginate', function (): void {
+    Http::fake(['*' => Http::response(['data' => [['id' => 'sp_1']], 'hasMore' => false, 'totalCount' => 1, 'limit' => 10, 'offset' => 0], 200)]);
+
+    $result = paymentResource()->listSplitsPaid(['walletId' => 'wal_1']);
+
+    expect($result->success)->toBeTrue();
+    expect($result->data[0]['id'])->toBe('sp_1');
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && str_starts_with($r->url(), 'https://api-sandbox.asaas.com/v3/payments/splits/paid')
+        && str_contains($r->url(), 'walletId=wal_1'));
+});
+
+it('finds a single split paid', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'sp_1'], 200)]);
+
+    paymentResource()->findSplitPaid('sp_1');
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && $r->url() === 'https://api-sandbox.asaas.com/v3/payments/splits/paid/sp_1');
+});
+
+it('rejects empty id on findSplitPaid', function (): void {
+    paymentResource()->findSplitPaid('');
+})->throws(InvalidArgumentException::class);
+
+it('lists splits received via paginate', function (): void {
+    Http::fake(['*' => Http::response(['data' => [['id' => 'sr_1']], 'hasMore' => false, 'totalCount' => 1, 'limit' => 10, 'offset' => 0], 200)]);
+
+    paymentResource()->listSplitsReceived();
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && str_starts_with($r->url(), 'https://api-sandbox.asaas.com/v3/payments/splits/received'));
+});
+
+it('finds a single split received', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'sr_1'], 200)]);
+
+    paymentResource()->findSplitReceived('sr_1');
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && $r->url() === 'https://api-sandbox.asaas.com/v3/payments/splits/received/sr_1');
+});
+
+it('rejects empty id on findSplitReceived', function (): void {
+    paymentResource()->findSplitReceived('');
+})->throws(InvalidArgumentException::class);
+
+// --- documents ---
+
+it('uploads a payment document via multipart', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'doc_1', 'type' => 'INVOICE'], 200)]);
+
+    $result = paymentResource()->uploadDocument(
+        paymentId: 'pay_abc123',
+        file: 'binary-bytes',
+        type: PaymentDocumentType::Invoice,
+        availableAfterPayment: true,
+        filename: 'nf.pdf',
+    );
+
+    expect($result->success)->toBeTrue();
+    expect($result->data['id'])->toBe('doc_1');
+
+    Http::assertSent(function ($request): bool {
+        if ($request->method() !== 'POST') {
+            return false;
+        }
+        if ($request->url() !== 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/documents') {
+            return false;
+        }
+        if (! str_contains((string) $request->header('Content-Type')[0], 'multipart/form-data')) {
+            return false;
+        }
+        $body = (string) $request->body();
+
+        return str_contains($body, 'INVOICE')
+            && str_contains($body, 'name="availableAfterPayment"')
+            && str_contains($body, 'true')
+            && str_contains($body, 'filename="nf.pdf"');
+    });
+});
+
+it('accepts a string document type on upload', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'doc_2'], 200)]);
+
+    paymentResource()->uploadDocument(
+        paymentId: 'pay_abc123',
+        file: 'x',
+        type: 'NEW_CUSTOM_TYPE',
+        availableAfterPayment: false,
+        filename: 'x.pdf',
+    );
+
+    Http::assertSent(fn ($r): bool => str_contains((string) $r->body(), 'NEW_CUSTOM_TYPE')
+        && str_contains((string) $r->body(), 'false'));
+});
+
+it('rejects empty paymentId on uploadDocument', function (): void {
+    paymentResource()->uploadDocument(
+        paymentId: '',
+        file: 'x',
+        type: 'INVOICE',
+        availableAfterPayment: true,
+        filename: 'x.pdf',
+    );
+})->throws(InvalidArgumentException::class);
+
+it('lists payment documents via paginate', function (): void {
+    Http::fake(['*' => Http::response(['data' => [['id' => 'doc_1']], 'hasMore' => false, 'totalCount' => 1, 'limit' => 10, 'offset' => 0], 200)]);
+
+    $result = paymentResource()->listDocuments('pay_abc123');
+
+    expect($result->success)->toBeTrue();
+    expect($result->data[0]['id'])->toBe('doc_1');
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && str_starts_with($r->url(), 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/documents'));
+});
+
+it('finds a payment document', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'doc_1', 'type' => 'INVOICE'], 200)]);
+
+    $result = paymentResource()->findDocument('pay_abc123', 'doc_1');
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && $r->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/documents/doc_1');
+});
+
+it('updates a payment document', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'doc_1', 'type' => 'CONTRACT'], 200)]);
+
+    $result = paymentResource()->updateDocument('pay_abc123', 'doc_1', [
+        'availableAfterPayment' => false,
+        'type' => PaymentDocumentType::Contract,
+    ]);
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($r): bool {
+        if ($r->method() !== 'PUT') {
+            return false;
+        }
+        $body = $r->data();
+
+        return ($body['availableAfterPayment'] ?? null) === false && ($body['type'] ?? null) === 'CONTRACT';
+    });
+});
+
+it('deletes a payment document', function (): void {
+    Http::fake(['*' => Http::response(['deleted' => true], 200)]);
+
+    $result = paymentResource()->deleteDocument('pay_abc123', 'doc_1');
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'DELETE'
+        && $r->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/documents/doc_1');
+});
+
+it('rejects empty documentId on findDocument', function (): void {
+    paymentResource()->findDocument('pay_abc123', '');
+})->throws(InvalidArgumentException::class);
+
+it('rejects empty paymentId on findDocument', function (): void {
+    paymentResource()->findDocument('', 'doc_1');
+})->throws(InvalidArgumentException::class);
 
 // --- error handling ---
 

@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Spec-alignment release driven by a full audit of the SDK against `specs/asaas_openapi.json` plus a follow-up on the subaccount API-key permission flow that the local OpenAPI snapshot did not surface. Closes 19 documented field gaps, the wrong-verb bug on `TransferResource::cancel()`, the missing `GET /v3/accounts/{id}/accessTokens/{accessTokenId}` endpoint, and the new `accessTokenConfig` / `permissions` payload pieces — without which subaccounts created via the SDK inherited a key with no `TRANSFER` permission and blocked the production flow.
+## [2.0.0] - 2026-05-12
+
+Major release. Spec-alignment work driven by a full audit of the SDK against `specs/asaas_openapi.json`, followed by the deferred backlog closing the remaining endpoint gaps (fiscal info, payment documents, escrow, payment checkout personalisation, wallets, lean payments, and split lookup). Closes 19 documented field gaps, the wrong-verb bug on `TransferResource::cancel()`, the missing `GET /v3/accounts/{id}/accessTokens/{accessTokenId}` endpoint, the new `accessTokenConfig` / `permissions` payload pieces (without which subaccounts created via the SDK inherited a key with no `TRANSFER` permission and blocked the production flow), and adds 27 new endpoints across 9 domains.
 
 ### Breaking
 
 - `TransferResource::cancel($id)` now sends **DELETE** (was POST). Asaas's spec requires DELETE on `/v3/transfers/{id}/cancel` — POST silently failed or hit the wrong handler in some configurations. Any consumer wrapping the SDK's HTTP layer (e.g. retry middleware keyed by method) must update accordingly.
 - `PayWithCreditCardRequest::$creditCard`, `$creditCardHolderInfo`, and `$remoteIp` are now optional (`?CreditCard`, `?CreditCardHolderInfo`, `?string`) to support the new token-only flow. Constructors using positional args keep working; consumers relying on the previous "throws when missing" semantics will no longer see those exceptions and must validate at their own boundaries.
+- `Connector::postMultipart()` no longer throws on an empty `$files` array — `$files` is now optional with a `[]` default. Custom `Connector` implementations must update their signature to match (`array $files = []`). The change unblocks form-only multipart endpoints (`/v3/fiscalInfo/`, `/v3/myAccount/paymentCheckoutConfig/`) where the binary file is optional. The previous "at least one file" invariant was an artificial guard, not a protocol requirement.
 
 ### Added — DTO fields
 
@@ -47,21 +50,40 @@ Spec-alignment release driven by a full audit of the SDK against `specs/asaas_op
 - `PaymentResource::refundBankSlip(string $id)` — `POST /v3/payments/{id}/bankSlip/refund`.
 - `PaymentResource::getChargeback(string $id)` — `GET /v3/payments/{id}/chargeback`.
 - `PaymentResource::getEscrow(string $id)` — `GET /v3/payments/{id}/escrow`.
+- `PaymentResource::finishEscrow(string $id)` — `POST /v3/escrow/{id}/finish` to release escrow on a payment.
+- `PaymentResource::uploadDocument(...)`, `listDocuments(string $paymentId)`, `findDocument(string $paymentId, string $documentId)`, `updateDocument(string $paymentId, string $documentId, array|UpdatePaymentDocumentRequest $data)`, `deleteDocument(string $paymentId, string $documentId)` — full CRUD for `/v3/payments/{id}/documents/*` (upload is multipart with `type`, `availableAfterPayment`, and the file).
+- `PaymentResource::listSplitsPaid(array $query = [])`, `findSplitPaid(string $id)`, `listSplitsReceived(array $query = [])`, `findSplitReceived(string $id)` — the four `/v3/payments/splits/(paid|received)/*` endpoints.
 - `AccountResource::createAccessToken($accountId, $data = null)` now accepts an optional `AccessTokenRequest` (or array) body with `name`/`expirationDate`.
 - `AccountResource::findAccessToken(string $accountId, string $tokenId)` — `GET /v3/accounts/{id}/accessTokens/{accessTokenId}`, the single-token retrieve that the original audit missed.
+- `AccountResource::escrowConfig(string $accountId)`, `setEscrowConfig(string $accountId, array|EscrowConfigRequest $data)`, `defaultEscrowConfig()`, `setDefaultEscrowConfig(array|EscrowConfigRequest $data)` — manage escrow accounts at both the per-subaccount level (`/v3/accounts/{id}/escrow`) and the default-for-all level (`/v3/accounts/escrow`).
 - `MyAccountResource::accountNumber()` — `GET /v3/myAccount/accountNumber`.
 - `MyAccountResource::fees()` — `GET /v3/myAccount/fees/`.
+- `MyAccountResource::paymentCheckoutConfig()` and `updatePaymentCheckoutConfig(array|PaymentCheckoutConfigRequest $data, mixed $logoFile = null, ?string $logoFilename = null)` — GET / POST `/v3/myAccount/paymentCheckoutConfig/`. The save call is multipart and accepts an optional logo binary.
+- `MyAccountResource::wallets(array $query = [])` — `GET /v3/wallets/`, the walletId listing.
 - `StatementResource::balance()` — `GET /v3/finance/balance`.
 - `StatementResource::paymentStatistics(array $query = [])` — `GET /v3/finance/payment/statistics`.
 - `StatementResource::splitStatistics(array $query = [])` — `GET /v3/finance/split/statistics`.
 - `TransferResource::createInternal(array|InternalTransferRequest $data)` — `POST /v3/transfers/` (trailing slash) for the internal-Asaas-account flow with `walletId`.
+
+### Added — new resources
+
+- `OwnerPro\Asaas\FiscalInfo\FiscalInfoResource` (resolved via `Asaas::fiscalInfo()` / `$client->fiscalInfo()`) covering `/v3/fiscalInfo/*`: `recover()`, `save(array|FiscalInfoSaveRequest $data, mixed $certificateFile = null, ?string $certificateFilename = null)` (multipart, optional A1 certificate), `municipalOptions()`, `services()`, `federalServiceCodes()`, `nbsCodes()`, `operationIndicatorCodes()`, `taxClassificationCodes()`, `taxSituationCodes()`, and `configureNationalPortal(bool $enabled)`.
+- `OwnerPro\Asaas\Payment\LeanPaymentResource` (resolved via `Asaas::leanPayments()` / `$client->leanPayments()`) covering `/v3/lean/payments/*` — slim-response variants of the standard payment endpoints: `create()`, `createWithCreditCard()`, `find()`, `captureAuthorized()`, `restore()`, `refund()`, `receiveInCash()`, `undoReceivedInCash()`. Reuses the same request DTOs as `PaymentResource`.
+
+### Added — DTOs and enums
+
+- `OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoSaveRequest` — partial-update DTO for the `POST /v3/fiscalInfo/` body (every form field except the binary).
+- `OwnerPro\Asaas\Payment\PaymentDocumentType` enum (`INVOICE`, `CONTRACT`, `MEDIA`, `DOCUMENT`, `SPREADSHEET`, `PROGRAM`, `OTHER`).
+- `OwnerPro\Asaas\Payment\Request\UpdatePaymentDocumentRequest` — required-fields DTO for `PUT /v3/payments/{id}/documents/{documentId}`.
+- `OwnerPro\Asaas\Account\Request\EscrowConfigRequest` — `{daysToExpire, enabled?, isFeePayer?}` for the four escrow-config endpoints.
+- `OwnerPro\Asaas\Account\Request\PaymentCheckoutConfigRequest` — `{logoBackgroundColor, infoBackgroundColor, fontColor, enabled?}` for the checkout-personalisation save.
 
 ### Migration notes
 
 - `discount` / `interest` / `fine` on `CreatePaymentRequest` and `UpdatePaymentRequest`: passing a float keeps working — the SDK wraps it as `Discount(value: $float)` / `Interest(...)` / `Fine(...)`. Wire output is now the documented object shape (`{value: ..., dueDateLimitDays: ..., type: ...}`), which is what Asaas's validator describes. If you were relying on the older scalar-on-wire behavior, audit your downstream consumers accordingly.
 - `PayWithCreditCardRequest::fromArray` no longer throws on missing `creditCard`, `creditCardHolderInfo`, or `remoteIp` — required validation moves to the server. Provide either `creditCardToken` **or** the full card/holder/IP triple.
 - `TransferResource::cancel()`: confirmed via the audit that the spec uses DELETE. If you reverse-proxy or log by HTTP method, update mappings.
-- Deferred to 1.6.0: `fiscalInfo` resource (9 endpoints, multipart), `POST/GET /v3/payments/{id}/documents` and related document CRUD, MyAccount escrow endpoints, `paymentCheckoutConfig`, `wallets`, and the `lean/payments`/`splits/paid+received` families.
+- Custom `Connector` implementations: the `postMultipart()` interface signature changed from `(string, array, array)` to `(string, array, array = [])`. Native PHP signatures must include the default value to remain LSP-compatible.
 
 ### Internal
 
@@ -145,7 +167,8 @@ Initial public release. See [README](README.md) for full feature documentation.
 - Pagination helpers `paginate()` and `all()` (generator).
 - `WebhookVerifier` with timing-safe token comparison and configurable IP allowlist.
 
-[Unreleased]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.4.0...v2.0.0
 [1.4.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.2.0...v1.2.1

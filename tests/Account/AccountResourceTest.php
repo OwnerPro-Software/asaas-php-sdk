@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Account\AccountResource;
 use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Request\AccountRequest;
+use OwnerPro\Asaas\Account\Request\EscrowConfigRequest;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Environment;
@@ -221,4 +222,83 @@ it('returns failure on API error', function (): void {
 
     expect($result->success)->toBeFalse();
     expect($result->response->status())->toBe(401);
+});
+
+// --- escrow ---
+
+it('gets escrow config for a subaccount', function (): void {
+    Http::fake(['*' => Http::response(['daysToExpire' => 30, 'enabled' => true], 200)]);
+
+    $result = accountResource()->escrowConfig('acc_123');
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && $r->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/escrow');
+});
+
+it('sets escrow config for a subaccount', function (): void {
+    Http::fake(['*' => Http::response(['daysToExpire' => 45, 'enabled' => true, 'isFeePayer' => true], 200)]);
+
+    $result = accountResource()->setEscrowConfig('acc_123', [
+        'daysToExpire' => 45,
+        'enabled' => true,
+        'isFeePayer' => true,
+    ]);
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($r): bool {
+        if ($r->method() !== 'POST') {
+            return false;
+        }
+        if ($r->url() !== 'https://api-sandbox.asaas.com/v3/accounts/acc_123/escrow') {
+            return false;
+        }
+        $body = $r->data();
+
+        return ($body['daysToExpire'] ?? null) === 45
+            && ($body['enabled'] ?? null) === true
+            && ($body['isFeePayer'] ?? null) === true;
+    });
+});
+
+it('accepts an EscrowConfigRequest DTO on setEscrowConfig', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    accountResource()->setEscrowConfig(
+        'acc_123',
+        new EscrowConfigRequest(daysToExpire: 15),
+    );
+
+    Http::assertSent(fn ($r): bool => ($r->data()['daysToExpire'] ?? null) === 15);
+});
+
+it('rejects empty accountId on escrowConfig', function (): void {
+    accountResource()->escrowConfig('');
+})->throws(InvalidArgumentException::class);
+
+it('gets the default escrow config', function (): void {
+    Http::fake(['*' => Http::response(['daysToExpire' => 30], 200)]);
+
+    $result = accountResource()->defaultEscrowConfig();
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && $r->url() === 'https://api-sandbox.asaas.com/v3/accounts/escrow');
+});
+
+it('sets the default escrow config', function (): void {
+    Http::fake(['*' => Http::response(['daysToExpire' => 60], 200)]);
+
+    accountResource()->setDefaultEscrowConfig(['daysToExpire' => 60]);
+
+    Http::assertSent(function ($r): bool {
+        if ($r->method() !== 'POST' || $r->url() !== 'https://api-sandbox.asaas.com/v3/accounts/escrow') {
+            return false;
+        }
+
+        return ($r->data()['daysToExpire'] ?? null) === 60;
+    });
 });

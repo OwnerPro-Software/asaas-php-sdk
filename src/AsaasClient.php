@@ -12,7 +12,9 @@ use OwnerPro\Asaas\Account\MyAccountResource;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
 use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
+use OwnerPro\Asaas\FiscalInfo\FiscalInfoResource;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
+use OwnerPro\Asaas\Payment\LeanPaymentResource;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Pix\PixResource;
 use OwnerPro\Asaas\PixAutomatic\PixAutomaticResource;
@@ -50,6 +52,8 @@ final class AsaasClient implements AsaasClientContract
                 'creditCards',
                 'billPayments',
                 'statements',
+                'fiscalInfo',
+                'leanPayments',
             ],
         ];
     }
@@ -127,6 +131,16 @@ final class AsaasClient implements AsaasClientContract
     public function statements(): StatementResource
     {
         return $this->resolve(StatementResource::class);
+    }
+
+    public function fiscalInfo(): FiscalInfoResource
+    {
+        return $this->resolve(FiscalInfoResource::class);
+    }
+
+    public function leanPayments(): LeanPaymentResource
+    {
+        return $this->resolve(LeanPaymentResource::class);
     }
 
     /**

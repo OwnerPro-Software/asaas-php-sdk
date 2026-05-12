@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas\Account;
 use Generator;
 use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Request\AccountRequest;
+use OwnerPro\Asaas\Account\Request\EscrowConfigRequest;
 use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
@@ -63,6 +64,28 @@ final readonly class AccountResource
     public function deleteAccessToken(string $accountId, string $tokenId): AsaasResult
     {
         return $this->connector->delete($this->tokenPath($accountId, $tokenId));
+    }
+
+    public function escrowConfig(string $accountId): AsaasResult
+    {
+        return $this->connector->get($this->path($accountId, '/escrow'));
+    }
+
+    /** @param array<string, mixed>|EscrowConfigRequest $data */
+    public function setEscrowConfig(string $accountId, array|EscrowConfigRequest $data): AsaasResult
+    {
+        return $this->connector->post($this->path($accountId, '/escrow'), EscrowConfigRequest::resolveData($data));
+    }
+
+    public function defaultEscrowConfig(): AsaasResult
+    {
+        return $this->connector->get(self::BASE.'/escrow');
+    }
+
+    /** @param array<string, mixed>|EscrowConfigRequest $data */
+    public function setDefaultEscrowConfig(array|EscrowConfigRequest $data): AsaasResult
+    {
+        return $this->connector->post(self::BASE.'/escrow', EscrowConfigRequest::resolveData($data));
     }
 
     /**

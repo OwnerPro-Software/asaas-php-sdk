@@ -10,6 +10,7 @@ use OwnerPro\Asaas\Payment\Request\PayWithCreditCardRequest;
 use OwnerPro\Asaas\Payment\Request\ReceivePaymentInCashRequest;
 use OwnerPro\Asaas\Payment\Request\RefundPaymentRequest;
 use OwnerPro\Asaas\Payment\Request\SimulatePaymentRequest;
+use OwnerPro\Asaas\Payment\Request\UpdatePaymentDocumentRequest;
 use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
 use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
@@ -83,6 +84,11 @@ final readonly class PaymentResource
         return $this->connector->get($this->path($id, '/escrow'));
     }
 
+    public function finishEscrow(string $id): AsaasResult
+    {
+        return $this->connector->post(sprintf('/escrow/%s/finish', IdGuard::validate($id)));
+    }
+
     public function restore(string $id): AsaasResult
     {
         return $this->connector->post($this->path($id, '/restore'));
@@ -146,6 +152,76 @@ final readonly class PaymentResource
         return $this->connector->get(self::BASE.'/limits');
     }
 
+    /** @param array<string, mixed> $query */
+    public function listSplitsPaid(array $query = []): AsaasPaginatedResult
+    {
+        return $this->connector->paginate(self::BASE.'/splits/paid', $query);
+    }
+
+    public function findSplitPaid(string $id): AsaasResult
+    {
+        return $this->connector->get(sprintf('%s/splits/paid/%s', self::BASE, IdGuard::validate($id)));
+    }
+
+    /** @param array<string, mixed> $query */
+    public function listSplitsReceived(array $query = []): AsaasPaginatedResult
+    {
+        return $this->connector->paginate(self::BASE.'/splits/received', $query);
+    }
+
+    public function findSplitReceived(string $id): AsaasResult
+    {
+        return $this->connector->get(sprintf('%s/splits/received/%s', self::BASE, IdGuard::validate($id)));
+    }
+
+    /** @param string|resource $file */
+    public function uploadDocument(
+        string $paymentId,
+        mixed $file,
+        PaymentDocumentType|string $type,
+        bool $availableAfterPayment,
+        string $filename,
+    ): AsaasResult {
+        $typeValue = $type instanceof PaymentDocumentType ? $type->value : $type;
+
+        return $this->connector->postMultipart(
+            $this->path($paymentId, '/documents'),
+            [
+                'type' => $typeValue,
+                'availableAfterPayment' => $availableAfterPayment ? 'true' : 'false',
+            ],
+            [[
+                'name' => 'file',
+                'contents' => $file,
+                'filename' => $filename,
+            ]],
+        );
+    }
+
+    public function listDocuments(string $paymentId): AsaasPaginatedResult
+    {
+        return $this->connector->paginate($this->path($paymentId, '/documents'), []);
+    }
+
+    public function findDocument(string $paymentId, string $documentId): AsaasResult
+    {
+        return $this->connector->get($this->documentPath($paymentId, $documentId));
+    }
+
+    /** @param array<string, mixed>|UpdatePaymentDocumentRequest $data */
+    public function updateDocument(string $paymentId, string $documentId, array|UpdatePaymentDocumentRequest $data): AsaasResult
+    {
+        return $this->connector->put(
+            $this->documentPath($paymentId, $documentId),
+            UpdatePaymentDocumentRequest::resolveData($data),
+        );
+    }
+
+    public function deleteDocument(string $paymentId, string $documentId): AsaasResult
+    {
+        return $this->connector->delete($this->documentPath($paymentId, $documentId));
+    }
+
     /**
      * @param  array<string, mixed>  $filters
      * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
@@ -158,5 +234,10 @@ final readonly class PaymentResource
     private function path(string $id, string $suffix = ''): string
     {
         return sprintf('%s/%s%s', self::BASE, IdGuard::validate($id), $suffix);
+    }
+
+    private function documentPath(string $paymentId, string $documentId): string
+    {
+        return sprintf('%s/%s/documents/%s', self::BASE, IdGuard::validate($paymentId), IdGuard::validate($documentId));
     }
 }

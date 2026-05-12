@@ -8,7 +8,9 @@ use OwnerPro\Asaas\Account\AccountResource;
 use OwnerPro\Asaas\Account\MyAccountResource;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
+use OwnerPro\Asaas\FiscalInfo\FiscalInfoResource;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
+use OwnerPro\Asaas\Payment\LeanPaymentResource;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Pix\PixResource;
 use OwnerPro\Asaas\PixAutomatic\PixAutomaticResource;
@@ -42,4 +44,8 @@ interface AsaasClientContract
     public function billPayments(): BillPaymentResource;
 
     public function statements(): StatementResource;
+
+    public function fiscalInfo(): FiscalInfoResource;
+
+    public function leanPayments(): LeanPaymentResource;
 }

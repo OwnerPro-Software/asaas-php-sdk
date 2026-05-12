@@ -89,9 +89,25 @@ it('forwards custom per-file headers to the multipart attachment', function (): 
         && str_contains((string) $request->body(), 'tagged-value'));
 });
 
-it('rejects empty files array', function (): void {
-    multipartConnector()->postMultipart('/myAccount/documents/x/files', [], []);
-})->throws(InvalidArgumentException::class, 'postMultipart requires at least one file.');
+it('sends form-only multipart when no files are attached', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $result = multipartConnector()->postMultipart('/fiscalInfo/', ['email' => 'a@b.c', 'simplesNacional' => true]);
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        if ($request->method() !== 'POST') {
+            return false;
+        }
+        if (! str_contains((string) $request->header('Content-Type')[0], 'multipart/form-data')) {
+            return false;
+        }
+        $body = (string) $request->body();
+
+        return str_contains($body, 'name="email"') && str_contains($body, 'a@b.c');
+    });
+});
 
 it('returns failure on multipart connection error', function (): void {
     Http::fake(fn () => throw new ConnectionException('boom'));

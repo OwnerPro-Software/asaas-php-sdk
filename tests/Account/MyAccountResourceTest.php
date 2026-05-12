@@ -8,6 +8,7 @@ use OwnerPro\Asaas\Account\MyAccountResource;
 use OwnerPro\Asaas\Account\Request\AccountBankAccountRequest;
 use OwnerPro\Asaas\Account\Request\CommercialInfoRequest;
 use OwnerPro\Asaas\Account\Request\DeleteAccountRequest;
+use OwnerPro\Asaas\Account\Request\PaymentCheckoutConfigRequest;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\BankAccountType;
@@ -308,3 +309,86 @@ it('rejects empty removeReason on delete', function (): void {
 it('rejects missing removeReason on delete', function (): void {
     myAccountResource()->delete([]);
 })->throws(InvalidArgumentException::class);
+
+// --- paymentCheckoutConfig + wallets ---
+
+it('fetches the payment checkout config', function (): void {
+    Http::fake(['*' => Http::response(['status' => 'APPROVED', 'logoBackgroundColor' => '#fff'], 200)]);
+
+    $result = myAccountResource()->paymentCheckoutConfig();
+
+    expect($result->success)->toBeTrue();
+    expect($result->data['status'])->toBe('APPROVED');
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && $r->url() === 'https://api-sandbox.asaas.com/v3/myAccount/paymentCheckoutConfig/');
+});
+
+it('updates the payment checkout config without a logo file', function (): void {
+    Http::fake(['*' => Http::response(['status' => 'AWAITING_APPROVAL'], 200)]);
+
+    $result = myAccountResource()->updatePaymentCheckoutConfig([
+        'logoBackgroundColor' => '#000000',
+        'infoBackgroundColor' => '#ffffff',
+        'fontColor' => '#222222',
+        'enabled' => true,
+    ]);
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($r): bool {
+        if ($r->method() !== 'POST' || $r->url() !== 'https://api-sandbox.asaas.com/v3/myAccount/paymentCheckoutConfig/') {
+            return false;
+        }
+        if (! str_contains((string) $r->header('Content-Type')[0], 'multipart/form-data')) {
+            return false;
+        }
+        $body = (string) $r->body();
+
+        return str_contains($body, '#000000') && str_contains($body, 'name="enabled"');
+    });
+});
+
+it('updates the payment checkout config with a logo upload', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    myAccountResource()->updatePaymentCheckoutConfig(
+        data: new PaymentCheckoutConfigRequest(
+            logoBackgroundColor: '#abcdef',
+            infoBackgroundColor: '#123456',
+            fontColor: '#000000',
+        ),
+        logoFile: 'png-bytes',
+        logoFilename: 'brand.png',
+    );
+
+    Http::assertSent(fn ($r): bool => str_contains((string) $r->body(), 'name="logoFile"')
+        && str_contains((string) $r->body(), 'filename="brand.png"')
+        && str_contains((string) $r->body(), 'png-bytes'));
+});
+
+it('defaults the logo filename when only the file content is provided', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    myAccountResource()->updatePaymentCheckoutConfig(
+        data: [
+            'logoBackgroundColor' => '#000', 'infoBackgroundColor' => '#fff', 'fontColor' => '#abc',
+        ],
+        logoFile: 'png',
+    );
+
+    Http::assertSent(fn ($r): bool => str_contains((string) $r->body(), 'filename="logo.png"'));
+});
+
+it('lists wallets via paginate', function (): void {
+    Http::fake(['*' => Http::response(['data' => [['id' => 'wal_1']], 'hasMore' => false, 'totalCount' => 1, 'limit' => 10, 'offset' => 0], 200)]);
+
+    $result = myAccountResource()->wallets(['limit' => 5]);
+
+    expect($result->success)->toBeTrue();
+    expect($result->data[0]['id'])->toBe('wal_1');
+
+    Http::assertSent(fn ($r): bool => $r->method() === 'GET'
+        && str_starts_with($r->url(), 'https://api-sandbox.asaas.com/v3/wallets/')
+        && str_contains($r->url(), 'limit=5'));
+});

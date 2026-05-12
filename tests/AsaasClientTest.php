@@ -8,7 +8,9 @@ use OwnerPro\Asaas\Account\MyAccountResource;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
+use OwnerPro\Asaas\FiscalInfo\FiscalInfoResource;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
+use OwnerPro\Asaas\Payment\LeanPaymentResource;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Pix\PixResource;
 use OwnerPro\Asaas\PixAutomatic\PixAutomaticResource;
@@ -100,6 +102,8 @@ it('hides the connector from debug output', function (): void {
         'creditCards',
         'billPayments',
         'statements',
+        'fiscalInfo',
+        'leanPayments',
     ]);
     expect($debug)->not->toHaveKey('connector');
     expect(print_r($client, true))->not->toContain('sk_live_super_secret_key_123');
@@ -191,6 +195,22 @@ it('resolves StatementResource', function (): void {
     $first = $client->statements();
     expect($first)->toBeInstanceOf(StatementResource::class);
     expect($client->statements())->toBe($first);
+});
+
+it('resolves FiscalInfoResource', function (): void {
+    Http::fake();
+    $client = new AsaasClient(AsaasConnector::forLaravel('k', Environment::Sandbox, 30));
+    $first = $client->fiscalInfo();
+    expect($first)->toBeInstanceOf(FiscalInfoResource::class);
+    expect($client->fiscalInfo())->toBe($first);
+});
+
+it('resolves LeanPaymentResource', function (): void {
+    Http::fake();
+    $client = new AsaasClient(AsaasConnector::forLaravel('k', Environment::Sandbox, 30));
+    $first = $client->leanPayments();
+    expect($first)->toBeInstanceOf(LeanPaymentResource::class);
+    expect($client->leanPayments())->toBe($first);
 });
 
 it('exposes a MyAccountResource through myAccount()', function (): void {

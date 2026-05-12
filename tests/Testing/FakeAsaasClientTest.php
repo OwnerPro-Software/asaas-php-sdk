@@ -11,7 +11,9 @@ use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
 use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
+use OwnerPro\Asaas\FiscalInfo\FiscalInfoResource;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
+use OwnerPro\Asaas\Payment\LeanPaymentResource;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Pix\PixResource;
 use OwnerPro\Asaas\PixAutomatic\PixAutomaticResource;
@@ -55,6 +57,8 @@ it('FakeAsaasClient exposes every resource accessor from the contract', function
     expect($fake->creditCards())->toBeInstanceOf(CreditCardResource::class);
     expect($fake->billPayments())->toBeInstanceOf(BillPaymentResource::class);
     expect($fake->statements())->toBeInstanceOf(StatementResource::class);
+    expect($fake->fiscalInfo())->toBeInstanceOf(FiscalInfoResource::class);
+    expect($fake->leanPayments())->toBeInstanceOf(LeanPaymentResource::class);
 });
 
 it('FakeAsaasClient memoises resource instances', function (): void {

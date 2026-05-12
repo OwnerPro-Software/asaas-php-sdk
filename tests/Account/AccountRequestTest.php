@@ -123,6 +123,42 @@ it('shows null optionals as null in debug info', function (): void {
 
     expect($debug['birthDate'])->toBeNull();
     expect($debug['phone'])->toBeNull();
+    expect($debug['loginEmail'])->toBeNull();
+    expect($debug)->toHaveKey('webhooks');
+    expect($debug['webhooks'])->toBeNull();
+    expect($debug)->toHaveKey('accessTokenConfig');
+    expect($debug['accessTokenConfig'])->toBeNull();
+});
+
+it('masks loginEmail and surfaces webhooks/accessTokenConfig in debug info when set', function (): void {
+    $request = new AccountRequest(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        mobilePhone: '11999999999',
+        incomeValue: 5000.00,
+        address: 'Rua Exemplo',
+        addressNumber: '123',
+        province: 'Centro',
+        postalCode: '01001000',
+        loginEmail: 'login@example.com',
+        webhooks: [new OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest(url: 'https://x.com', email: 'a@b.com')],
+        accessTokenConfig: new OwnerPro\Asaas\Account\Request\AccessTokenConfig(
+            name: 'Onboarding',
+            permissions: [
+                new OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig(
+                    name: OwnerPro\Asaas\Account\AccessTokenPermission::Payment,
+                    scope: OwnerPro\Asaas\Account\AccessTokenScope::ReadWrite,
+                ),
+            ],
+        ),
+    );
+
+    $debug = $request->__debugInfo();
+
+    expect($debug['loginEmail'])->toBe('***');
+    expect($debug['webhooks'])->toHaveCount(1);
+    expect($debug['accessTokenConfig'])->toBeInstanceOf(OwnerPro\Asaas\Account\Request\AccessTokenConfig::class);
 });
 
 it('masks short cpfCnpj without negative repeat', function (): void {

@@ -57,7 +57,7 @@ function fakeConnector(Closure $getHandler): Connector
          *     headers?: array<string, string>
          * }> $files
          */
-        public function postMultipart(string $path, array $data, array $files): AsaasResult
+        public function postMultipart(string $path, array $data, array $files = []): AsaasResult
         {
             return AsaasResult::failure([['code' => 'NOT_IMPLEMENTED', 'description' => 'Not implemented']]);
         }

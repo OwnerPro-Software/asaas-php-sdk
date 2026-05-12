@@ -18,7 +18,9 @@ use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
 use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\CreditCard\CreditCardResource;
+use OwnerPro\Asaas\FiscalInfo\FiscalInfoResource;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
+use OwnerPro\Asaas\Payment\LeanPaymentResource;
 use OwnerPro\Asaas\Payment\PaymentResource;
 use OwnerPro\Asaas\Pix\PixResource;
 use OwnerPro\Asaas\PixAutomatic\PixAutomaticResource;
@@ -115,6 +117,16 @@ final class FakeAsaasClient implements AsaasClientContract
     public function statements(): StatementResource
     {
         return $this->asaasClient->statements();
+    }
+
+    public function fiscalInfo(): FiscalInfoResource
+    {
+        return $this->asaasClient->fiscalInfo();
+    }
+
+    public function leanPayments(): LeanPaymentResource
+    {
+        return $this->asaasClient->leanPayments();
     }
 
     /** @param array<string, mixed>|PromiseInterface|Closure $stub */

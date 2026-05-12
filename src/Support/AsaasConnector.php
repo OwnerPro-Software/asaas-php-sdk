@@ -77,12 +77,8 @@ final readonly class AsaasConnector implements Connector
      *     headers?: array<string, string>
      * }> $files
      */
-    public function postMultipart(string $path, array $data, array $files): AsaasResult
+    public function postMultipart(string $path, array $data, array $files = []): AsaasResult
     {
-        if ($files === []) {
-            throw new InvalidArgumentException('postMultipart requires at least one file.');
-        }
-
         return $this->sendRequest(function () use ($path, $data, $files): Response {
             try {
                 foreach ($files as $file) {
