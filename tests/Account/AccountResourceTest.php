@@ -8,9 +8,9 @@ use OwnerPro\Asaas\Account\AccessTokenScope;
 use OwnerPro\Asaas\Account\AccountResource;
 use OwnerPro\Asaas\Account\Request\AccessTokenConfig;
 use OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig;
-use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Request\AccountRequest;
 use OwnerPro\Asaas\Account\Request\EscrowConfigRequest;
+use OwnerPro\Asaas\Account\Request\UpdateAccessTokenRequest;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Environment;
@@ -176,7 +176,7 @@ it('updates an access token from request object', function (): void {
         'id' => 'tok_1', 'name' => 'Updated', 'enabled' => false,
     ], 200)]);
 
-    $result = accountResource()->updateAccessToken('acc_123', 'tok_1', new AccessTokenRequest(
+    $result = accountResource()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRequest(
         name: 'Updated',
         enabled: false,
         expirationDate: '2027-01-01',
@@ -185,9 +185,28 @@ it('updates an access token from request object', function (): void {
     expect($result->success)->toBeTrue();
     expect($result->data)->toBeArray();
 
-    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens/tok_1'
-        && $request->method() === 'PUT');
+    Http::assertSent(function ($request): bool {
+        if ($request->url() !== 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens/tok_1') {
+            return false;
+        }
+        if ($request->method() !== 'PUT') {
+            return false;
+        }
+        $body = $request->data();
+
+        return ($body['name'] ?? null) === 'Updated'
+            && ($body['enabled'] ?? null) === false
+            && ($body['expirationDate'] ?? null) === '2027-01-01';
+    });
 });
+
+it('rejects updateAccessToken array missing required fields', function (array $payload): void {
+    accountResource()->updateAccessToken('acc_123', 'tok_1', $payload);
+})->throws(InvalidArgumentException::class)->with([
+    'missing name' => [['enabled' => true, 'expirationDate' => '2027-01-01']],
+    'missing enabled' => [['name' => 'x', 'expirationDate' => '2027-01-01']],
+    'missing expirationDate' => [['name' => 'x', 'enabled' => true]],
+]);
 
 it('sends accessTokenConfig on subaccount create to seed the initial key with TRANSFER permission', function (): void {
     Http::fake(['*' => Http::response(['id' => 'acc_1', 'apiKey' => 'ak_1'], 200)]);
@@ -255,7 +274,10 @@ it('sends accessTokenConfig from DTO instances (enum cases) on subaccount create
 it('sends permissions on updateAccessToken to widen an existing key', function (): void {
     Http::fake(['*' => Http::response(['id' => 'tok_1'], 200)]);
 
-    accountResource()->updateAccessToken('acc_123', 'tok_1', new AccessTokenRequest(
+    accountResource()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRequest(
+        name: 'Widened',
+        enabled: true,
+        expirationDate: '2027-01-01',
         permissions: [
             new AccessTokenPermissionConfig(
                 name: AccessTokenPermission::Transfer,
@@ -312,6 +334,16 @@ it('deletes an access token', function (): void {
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens/tok_1'
         && $request->method() === 'DELETE');
+});
+
+it('treats 204 No Content as success on deleteAccessToken', function (): void {
+    Http::fake(['*' => Http::response('', 204)]);
+
+    $result = accountResource()->deleteAccessToken('acc_123', 'tok_1');
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toBe([]);
+    expect($result->response->status())->toBe(204);
 });
 
 it('iterates all accounts lazily', function (): void {

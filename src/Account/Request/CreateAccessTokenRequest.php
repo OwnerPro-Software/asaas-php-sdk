@@ -8,7 +8,7 @@ use OwnerPro\Asaas\Account\AccessTokenPermission;
 use OwnerPro\Asaas\Account\AccessTokenScope;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
-final readonly class AccessTokenRequest
+final readonly class CreateAccessTokenRequest
 {
     use HasArrayFactory;
 
@@ -18,7 +18,6 @@ final readonly class AccessTokenRequest
     /** @param list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>|null $permissions */
     public function __construct(
         public ?string $name = null,
-        public ?bool $enabled = null,
         public ?string $expirationDate = null,
         ?array $permissions = null,
     ) {
@@ -28,12 +27,11 @@ final readonly class AccessTokenRequest
         ) : null;
     }
 
-    /** @param array{name?: string, enabled?: bool, expirationDate?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>} $data */
+    /** @param array{name?: string, expirationDate?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>} $data */
     public static function fromArray(array $data): static
     {
         return new self(
             name: $data['name'] ?? null,
-            enabled: $data['enabled'] ?? null,
             expirationDate: $data['expirationDate'] ?? null,
             permissions: $data['permissions'] ?? null,
         );

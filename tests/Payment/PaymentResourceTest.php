@@ -567,11 +567,66 @@ it('creates a payment with credit card via trailing-slash endpoint', function (a
         'billingType' => 'CREDIT_CARD',
         'value' => 150.00,
         'dueDate' => '2026-04-01',
+        'remoteIp' => '203.0.113.42',
         'creditCardToken' => 'tok_xyz',
     ]);
 
-    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/'
-        && $request->method() === 'POST');
+    Http::assertSent(function ($request): bool {
+        if ($request->url() !== 'https://api-sandbox.asaas.com/v3/payments/' || $request->method() !== 'POST') {
+            return false;
+        }
+        $body = $request->data();
+
+        return ($body['creditCardToken'] ?? null) === 'tok_xyz'
+            && ($body['remoteIp'] ?? null) === '203.0.113.42';
+    });
+})->with('payment_fixture');
+
+it('rejects createWithCreditCard when remoteIp is missing', function (): void {
+    paymentResource()->createWithCreditCard([
+        'customer' => 'cus_456',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 150.00,
+        'dueDate' => '2026-04-01',
+        'creditCardToken' => 'tok_xyz',
+    ]);
+})->throws(InvalidArgumentException::class, 'remoteIp is required');
+
+it('rejects createWithCreditCard when neither token nor card+holder are provided', function (): void {
+    paymentResource()->createWithCreditCard([
+        'customer' => 'cus_456',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 150.00,
+        'dueDate' => '2026-04-01',
+        'remoteIp' => '203.0.113.42',
+    ]);
+})->throws(InvalidArgumentException::class, 'provide either creditCardToken');
+
+it('rejects createWithCreditCard with card but no holder info', function (): void {
+    paymentResource()->createWithCreditCard([
+        'customer' => 'cus_456',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 150.00,
+        'dueDate' => '2026-04-01',
+        'remoteIp' => '203.0.113.42',
+        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
+    ]);
+})->throws(InvalidArgumentException::class, 'provide either creditCardToken');
+
+it('pins creditCardToken on the wire when passed via DTO', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    paymentResource()->createWithCreditCard(new CreatePaymentRequest(
+        customer: 'cus_456',
+        billingType: 'CREDIT_CARD',
+        value: 150.00,
+        dueDate: '2026-04-01',
+        remoteIp: '203.0.113.42',
+        creditCardToken: 'tok_xyz',
+    ));
+
+    Http::assertSent(fn ($request): bool => ($request->data()['creditCardToken'] ?? null) === 'tok_xyz'
+        && ($request->data()['remoteIp'] ?? null) === '203.0.113.42');
 })->with('payment_fixture');
 
 it('lists refunds for a payment', function (): void {

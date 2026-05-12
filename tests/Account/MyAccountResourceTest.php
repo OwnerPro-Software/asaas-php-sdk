@@ -218,6 +218,99 @@ it('accepts a string document type for forward compatibility', function (): void
     expect($result->success)->toBeTrue();
 });
 
+it('serialises every DocumentType case on the multipart body', function (DocumentType $type, string $expected): void {
+    Http::fake(['*' => Http::response(['id' => 'file_x'], 200)]);
+
+    myAccountResource()->uploadDocumentFile(
+        documentId: 'doc_1',
+        file: 'bytes',
+        type: $type,
+        filename: 'f.png',
+    );
+
+    Http::assertSent(fn ($request): bool => str_contains(
+        (string) $request->body(),
+        "name=\"type\"\r\nContent-Length: ".strlen($expected)."\r\n\r\n".$expected,
+    ));
+})->with([
+    [DocumentType::AllowBankAccountDepositStatement, 'ALLOW_BANK_ACCOUNT_DEPOSIT_STATEMENT'],
+    [DocumentType::Custom, 'CUSTOM'],
+    [DocumentType::EmancipationOfMinors, 'EMANCIPATION_OF_MINORS'],
+    [DocumentType::EntrepreneurRequirement, 'ENTREPRENEUR_REQUIREMENT'],
+    [DocumentType::IdentificationSelfie, 'IDENTIFICATION_SELFIE'],
+    [DocumentType::Identification, 'IDENTIFICATION'],
+    [DocumentType::Invoice, 'INVOICE'],
+    [DocumentType::MeiCertificate, 'MEI_CERTIFICATE'],
+    [DocumentType::MinutesOfConstitution, 'MINUTES_OF_CONSTITUTION'],
+    [DocumentType::MinutesOfElection, 'MINUTES_OF_ELECTION'],
+    [DocumentType::PowerOfAttorney, 'POWER_OF_ATTORNEY'],
+    [DocumentType::SocialContract, 'SOCIAL_CONTRACT'],
+]);
+
+it('finds a document file by id via GET /myAccount/documents/files/{id}', function (): void {
+    Http::fake(['*' => Http::response([
+        'id' => 'file_1',
+        'documentId' => 'doc_1',
+        'status' => 'APPROVED',
+    ], 200)]);
+
+    $result = myAccountResource()->findDocumentFile('file_1');
+
+    expect($result->success)->toBeTrue();
+    expect($result->data['id'])->toBe('file_1');
+
+    Http::assertSent(fn ($request): bool => $request->method() === 'GET'
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/documents/files/file_1');
+});
+
+it('rejects empty fileId on findDocumentFile', function (): void {
+    myAccountResource()->findDocumentFile('');
+})->throws(InvalidArgumentException::class);
+
+it('updates a document file via multipart POST /myAccount/documents/files/{id}', function (): void {
+    Http::fake(['*' => Http::response([
+        'id' => 'file_1',
+        'documentId' => 'doc_1',
+        'status' => 'PROCESSING',
+    ], 200)]);
+
+    $result = myAccountResource()->updateDocumentFile(
+        fileId: 'file_1',
+        file: 'replacement-bytes',
+        type: DocumentType::IdentificationSelfie,
+        filename: 'selfie.png',
+    );
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        if ($request->method() !== 'POST') {
+            return false;
+        }
+        if ($request->url() !== 'https://api-sandbox.asaas.com/v3/myAccount/documents/files/file_1') {
+            return false;
+        }
+        if (! str_contains((string) $request->header('Content-Type')[0], 'multipart/form-data')) {
+            return false;
+        }
+
+        $body = (string) $request->body();
+
+        return str_contains($body, 'IDENTIFICATION_SELFIE')
+            && str_contains($body, 'filename="selfie.png"')
+            && str_contains($body, 'replacement-bytes');
+    });
+});
+
+it('rejects empty fileId on updateDocumentFile', function (): void {
+    myAccountResource()->updateDocumentFile(
+        fileId: '',
+        file: 'irrelevant',
+        type: DocumentType::Identification,
+        filename: 'x.png',
+    );
+})->throws(InvalidArgumentException::class);
+
 it('deletes a document file', function (): void {
     Http::fake(['*' => Http::response(['deleted' => true, 'id' => 'file_1'], 200)]);
 

@@ -11,6 +11,10 @@ final readonly class StaticQrCodeRequest
 {
     use HasArrayFactory;
 
+    /**
+     * @param  string|null  $expirationDate  Format `YYYY-MM-DD HH:MM:SS`.
+     * @param  string|null  $externalReference  maxLength: 100 (validated server-side).
+     */
     public function __construct(
         public ?string $addressKey = null,
         public ?string $description = null,

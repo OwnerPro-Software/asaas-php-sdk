@@ -141,6 +141,8 @@ if ($result->success) {
 }
 ```
 
+> **204 No Content endpoints.** `accounts()->deleteAccessToken()` and `webhooks()->removeBackoff()` return HTTP 204 with an empty body. `$result->success` is `true` but `$result->data` is `[]` (empty array). Check `$result->success` — never `$result->data` — to decide if the call worked.
+
 ### Throwing on Failure
 
 ```php
@@ -251,7 +253,7 @@ PaymentStatus::from($payment['status']);     // PaymentStatus::Pending
 | `BillPayment\BillPaymentStatus` | `Pending`, `BankProcessing`, `Paid`, `Failed`, `Cancelled`, `Refunded`, `AwaitingCheckoutRiskAnalysisRequest` |
 | `Account\CompanyType` | `Mei`, `Limited`, `Individual`, `Association` |
 | `Account\PersonType` | `Fisica`, `Juridica` |
-| `Account\DocumentType` | `Identification`, `SocialContract`, `EntrepreneurRequirement`, `Minutes`, `Custom` |
+| `Account\DocumentType` | 12 KYC types — `AllowBankAccountDepositStatement`, `Custom`, `EmancipationOfMinors`, `EntrepreneurRequirement`, `IdentificationSelfie`, `Identification`, `Invoice`, `MeiCertificate`, `MinutesOfConstitution`, `MinutesOfElection`, `PowerOfAttorney`, `SocialContract` |
 | `Account\AccessTokenPermission` | 33 cases — `Payment`, `Transfer`, `Webhook`, `Invoice`, `Bill`, `PixDebit`, `PixCredit`, `PixAddressKey`, `PixRecurring`, `PixTransaction`, `PixAutomatic`, `Customer`, `CustomerNotification`, `PaymentRefund`, `Chargeback`, `Installment`, `Subscription`, `PaymentLink`, `Checkout`, `CreditCard`, `Anticipation`, `AnticipationConfig`, `Escrow`, `EscrowConfig`, `CreditBureau`, `PaymentDunning`, `FiscalInfo`, `MobilePhoneRecharge`, `FinancialTransaction`, `AccountInfo`, `PaymentCheckoutConfig`, `SubAccount`, `AccountDocument` |
 | `Account\AccessTokenScope` | `Read`, `ReadWrite` |
 | `CreditCard\CreditCardBrand` | `Visa`, `Mastercard`, `Elo`, `Diners`, `Discover`, `Amex`, `Cabal`, `Banescard`, `Credz`, `Sorocred`, `Credsystem`, `Jcb`, `Unknown` |
@@ -422,6 +424,7 @@ Beyond `create()` and `update()`, several action methods now accept typed reques
 **Payment actions:**
 
 ```php
+use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\SimulatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\RefundPaymentRequest;
 use OwnerPro\Asaas\Payment\Request\PayWithCreditCardRequest;
@@ -467,6 +470,16 @@ Asaas::payments()->payWithCreditCard('pay_abc123', new PayWithCreditCardRequest(
         phone: '11999999999',
     ),
     remoteIp: '203.0.113.42', // payer's IP — required for Asaas antifraud analysis
+));
+
+// Create + charge with a saved card token in one shot (`POST /payments/`)
+Asaas::payments()->createWithCreditCard(new CreatePaymentRequest(
+    customer: 'cus_456',
+    billingType: 'CREDIT_CARD',
+    value: 150.00,
+    dueDate: '2026-04-01',
+    remoteIp: '203.0.113.42',
+    creditCardToken: 'tok_xyz', // saved-card token from a previous authorization
 ));
 
 // Receive payment in cash
@@ -748,12 +761,16 @@ Slim-response variants of the standard payment endpoints — same request DTOs, 
 ```php
 Asaas::leanPayments()->create(array|CreatePaymentRequest $data): AsaasResult
 Asaas::leanPayments()->createWithCreditCard(array|CreatePaymentRequest $data): AsaasResult
+Asaas::leanPayments()->list(array $query = []): AsaasPaginatedResult
 Asaas::leanPayments()->find(string $id): AsaasResult
+Asaas::leanPayments()->update(string $id, array|UpdatePaymentRequest $data): AsaasResult
+Asaas::leanPayments()->delete(string $id): AsaasResult
 Asaas::leanPayments()->captureAuthorized(string $id): AsaasResult
 Asaas::leanPayments()->restore(string $id): AsaasResult
 Asaas::leanPayments()->refund(string $id, array|RefundPaymentRequest $data = []): AsaasResult
 Asaas::leanPayments()->receiveInCash(string $id, array|ReceivePaymentInCashRequest $data = []): AsaasResult
 Asaas::leanPayments()->undoReceivedInCash(string $id): AsaasResult
+Asaas::leanPayments()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
 #### Credit card pre-authorization (two-step capture)
@@ -896,8 +913,8 @@ Asaas::accounts()->find(string $id): AsaasResult
 Asaas::accounts()->list(array $query = []): AsaasPaginatedResult
 Asaas::accounts()->listAccessTokens(string $accountId): AsaasResult
 Asaas::accounts()->findAccessToken(string $accountId, string $tokenId): AsaasResult
-Asaas::accounts()->createAccessToken(string $accountId, array|AccessTokenRequest|null $data = null): AsaasResult
-Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
+Asaas::accounts()->createAccessToken(string $accountId, array|CreateAccessTokenRequest|null $data = null): AsaasResult
+Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|UpdateAccessTokenRequest $data): AsaasResult
 Asaas::accounts()->deleteAccessToken(string $accountId, string $tokenId): AsaasResult
 Asaas::accounts()->escrowConfig(string $accountId): AsaasResult
 Asaas::accounts()->setEscrowConfig(string $accountId, array|EscrowConfigRequest $data): AsaasResult
@@ -915,8 +932,8 @@ use OwnerPro\Asaas\Account\AccessTokenPermission;
 use OwnerPro\Asaas\Account\AccessTokenScope;
 use OwnerPro\Asaas\Account\Request\AccessTokenConfig;
 use OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig;
-use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Request\AccountRequest;
+use OwnerPro\Asaas\Account\Request\UpdateAccessTokenRequest;
 
 // On subaccount creation — initial key with a curated scope
 $result = Asaas::accounts()->create(new AccountRequest(
@@ -940,7 +957,7 @@ $result = Asaas::accounts()->create(new AccountRequest(
 ));
 
 // Later — widen an existing key's permissions
-Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new AccessTokenRequest(
+Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRequest(
     name: 'Chave de Integração',
     enabled: true,
     expirationDate: '2026-12-31 23:59:59',
@@ -949,6 +966,8 @@ Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new AccessTokenRequest(
     ],
 ));
 ```
+
+> **Required on update.** `UpdateAccessTokenRequest` makes `name`, `enabled` and `expirationDate` mandatory in the constructor — the Asaas `PUT /accounts/{id}/accessTokens/{tokenId}` rejects partial updates. `CreateAccessTokenRequest` keeps every field optional because `POST` accepts a bare body (Asaas applies its defaults).
 
 `AccessTokenPermission` covers all 33 permission codes documented by Asaas (`PAYMENT`, `TRANSFER`, `WEBHOOK`, `PIX_*`, `INVOICE`, `BILL`, etc.); `AccessTokenScope` is `READ` or `READ_WRITE`. Both DTOs accept the enum **or** the raw string for forward-compat.
 
@@ -964,6 +983,8 @@ Asaas::myAccount()->commercialInfo(): AsaasResult
 Asaas::myAccount()->updateCommercialInfo(array|CommercialInfoRequest $data): AsaasResult
 Asaas::myAccount()->documents(): AsaasResult
 Asaas::myAccount()->uploadDocumentFile(string $documentId, string|resource $file, DocumentType|string $type, string $filename): AsaasResult
+Asaas::myAccount()->findDocumentFile(string $fileId): AsaasResult
+Asaas::myAccount()->updateDocumentFile(string $fileId, string|resource $file, DocumentType|string $type, string $filename): AsaasResult
 Asaas::myAccount()->deleteDocumentFile(string $fileId): AsaasResult
 Asaas::myAccount()->bankAccount(): AsaasResult
 Asaas::myAccount()->updateBankAccount(array|AccountBankAccountRequest $data): AsaasResult
@@ -1079,6 +1100,136 @@ Asaas::fiscalInfo()->configureNationalPortal(bool $enabled): AsaasResult
 ```
 
 `save()` is a `multipart/form-data` POST. Pass `$certificateFile` (binary string or file resource) only when uploading an A1 digital certificate; the form-only call works the same way without it. `email` and `simplesNacional` are the only required fields on `FiscalInfoRequest`.
+
+## Date formats
+
+Asaas expects two distinct string formats for date fields. Mismatch (`T`, `Z`, timezones) is rejected with HTTP 400 — the SDK does **not** parse `DateTimeInterface` for you; pass already-formatted strings.
+
+| DTO field(s) | Format | Example |
+|---|---|---|
+| `CreatePaymentRequest::$dueDate`, `UpdatePaymentRequest::$dueDate` | `YYYY-MM-DD` | `'2026-04-01'` |
+| `ReceivePaymentInCashRequest::$paymentDate` | `YYYY-MM-DD` | `'2026-04-01'` |
+| `AccountRequest::$birthDate`, `CommercialInfoRequest::$birthDate` | `YYYY-MM-DD` | `'1985-06-15'` |
+| `CreateInvoiceRequest::$effectiveDate`, `UpdateInvoiceRequest::$effectiveDate` | `YYYY-MM-DD` | `'2026-04-01'` |
+| `TransferRequest::$scheduleDate`, `PayQrCodeRequest::$scheduleDate` | `YYYY-MM-DD` | `'2026-04-01'` |
+| `DecodeQrCodeRequest::$expectedPaymentDate` | `YYYY-MM-DD` | `'2026-04-01'` |
+| `AuthorizationRequest::$startDate`, `AuthorizationRequest::$finishDate` | `YYYY-MM-DD` | `'2026-04-01'` |
+| `CreateBillPaymentRequest::$dueDate` | `YYYY-MM-DD` | `'2026-04-01'` |
+| `CreateAccessTokenRequest::$expirationDate`, `UpdateAccessTokenRequest::$expirationDate` | `YYYY-MM-DD HH:MM:SS` | `'2026-12-31 23:59:59'` |
+| `StaticQrCodeRequest::$expirationDate` | `YYYY-MM-DD HH:MM:SS` | `'2026-12-31 23:59:59'` |
+
+## Available filters per list endpoint
+
+Every `list($query = [])` method accepts an associative array of filters. Below is the canonical set of filters accepted by the Asaas API, per resource. Pass any combination as `$query`; the SDK forwards them verbatim (`offset` / `limit` are wired by `paginate()` and rarely need to be set manually).
+
+### `payments()->list()` / `leanPayments()->list()` — `GET /v3/payments` and `/v3/lean/payments`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `customer` | string | Customer ID |
+| `customerGroupName` | string | Group name |
+| `billingType` | string | `BOLETO`, `PIX`, `CREDIT_CARD`, `UNDEFINED` |
+| `status` | string | Payment status |
+| `subscription` | string | Subscription ID |
+| `installment` | string | Installment ID |
+| `externalReference` | string | Integrator-controlled reference |
+| `paymentDate` | string `YYYY-MM-DD` | Exact payment date |
+| `invoiceStatus` | string | Linked invoice status |
+| `estimatedCreditDate` | string `YYYY-MM-DD` | Expected credit date |
+| `pixQrCodeId` | string | Linked QR code ID |
+| `anticipated` | bool | Already-anticipated flag |
+| `anticipable` | bool | Eligible for anticipation |
+| `dateCreated[ge]`, `dateCreated[le]` | string `YYYY-MM-DD` | Created-at range |
+| `paymentDate[ge]`, `paymentDate[le]` | string `YYYY-MM-DD` | Payment date range |
+| `estimatedCreditDate[ge]`, `estimatedCreditDate[le]` | string `YYYY-MM-DD` | Estimated credit range |
+| `dueDate[ge]`, `dueDate[le]` | string `YYYY-MM-DD` | Due-date range |
+| `user` | string | Created-by user ID |
+| `checkoutSession` | string | Checkout session ID |
+
+### `payments()->listSplitsPaid()` / `listSplitsReceived()`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `paymentId` | string | Source payment |
+| `status` | string | Split status |
+| `paymentConfirmedDate[ge]`, `paymentConfirmedDate[le]` | string `YYYY-MM-DD` | Confirmation range |
+| `creditDate[ge]`, `creditDate[le]` | string `YYYY-MM-DD` | Credit range |
+
+### `accounts()->list()` — `GET /v3/accounts`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `cpfCnpj` | string | CPF/CNPJ exact match |
+| `email` | string | Account email |
+| `name` | string | Account name |
+| `walletId` | string | Wallet ID |
+
+### `invoices()->list()` — `GET /v3/invoices`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `effectiveDate[Ge]`, `effectiveDate[Le]` | string `YYYY-MM-DD` | Effective-date range (capitalised in spec) |
+| `payment` | string | Payment ID |
+| `installment` | string | Installment ID |
+| `externalReference` | string | Reference |
+| `status` | string | Invoice status |
+| `customer` | string | Customer ID |
+
+### `transfers()->list()` — `GET /v3/transfers`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `dateCreated[ge]`, `dateCreated[le]` | string `YYYY-MM-DD` | Created-at range |
+| `transferDate[ge]`, `transferDate[le]` | string `YYYY-MM-DD` | Transfer-date range |
+| `type` | string | `PIX`, `TED`, `INTERNAL` |
+
+### `pix()->listKeys()` — `GET /v3/pix/addressKeys`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `status` | string | Key status |
+| `statusList` | string | Comma-separated status list |
+
+### `pixTransactions()->list()` — `GET /v3/pix/transactions`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `status` | string | Transaction status |
+| `type` | string | Transaction type |
+| `endToEndIdentifier` | string | EndToEndId |
+
+### `pixTransactions()->listRecurrings()` — `GET /v3/pix/transactions/recurrings`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `status` | string | Status |
+| `value` | float | Exact value |
+| `searchText` | string | Free-text search |
+
+### `pixAutomatic()->listAuthorizations()` — `GET /v3/pix/automatic/authorizations`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `status` | string | Authorization status |
+| `customerId` | string | Customer ID |
+
+### `pixAutomatic()->listPaymentInstructions()` — `GET /v3/pix/automatic/paymentInstructions`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `authorizationId` | string | Source authorization |
+| `customerId` | string | Customer ID |
+| `paymentId` | string | Linked payment |
+| `status` | string | Instruction status |
+
+### `statements()->list()` — `GET /v3/financialTransactions`
+
+| Filter | Type | Notes |
+|---|---|---|
+| `startDate`, `finishDate` | string `YYYY-MM-DD` | Inclusive range |
+| `order` | string | `asc` / `desc` |
+
+`billPayments()->list()` and `webhooks()->list()` only support `offset` / `limit`. `fiscalInfo()` lookup endpoints (`federalServiceCodes`, `nbsCodes`, `services`, `taxClassificationCodes`, `taxSituationCodes`, `operationIndicatorCodes`) accept `code` / `description` / `codeDescription` / `taxSituationCode` depending on the endpoint.
 
 ## Custom Connector
 

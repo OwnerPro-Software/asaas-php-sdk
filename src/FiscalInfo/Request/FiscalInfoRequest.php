@@ -10,6 +10,17 @@ use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Support\Missing;
 use SensitiveParameter;
 
+/**
+ * Partial-update DTO for `POST /v3/fiscalInfo/`. The OpenAPI spec marks
+ * `email` and `simplesNacional` as required on the **first save** of an
+ * account's fiscal profile, but Asaas accepts a partial body once the profile
+ * exists (re-save / amend). Every field defaults to `Missing::Value` so omitted
+ * keys never reach the wire.
+ *
+ * Caller responsibility: on the **first** save for a subaccount, provide both
+ * `email` and `simplesNacional`. The SDK does not enforce this because doing so
+ * would break the legitimate re-save flow.
+ */
 final readonly class FiscalInfoRequest implements JsonSerializable
 {
     use HasUpdatableArrayFactory;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Payment\Request;
 
+use InvalidArgumentException;
 use JsonSerializable;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
@@ -35,6 +36,12 @@ final readonly class PayWithCreditCardRequest implements JsonSerializable
     ) {
         $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
         $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
+
+        if ($creditCardToken === null && (! $this->creditCard instanceof CreditCard || ! $this->creditCardHolderInfo instanceof CreditCardHolderInfo)) {
+            throw new InvalidArgumentException(
+                'PayWithCreditCardRequest: provide either creditCardToken or both creditCard and creditCardHolderInfo.',
+            );
+        }
     }
 
     /** @return array{creditCard: ?array<string, mixed>, creditCardHolderInfo: ?array<string, mixed>, remoteIp: ?string, creditCardToken: ?string} */

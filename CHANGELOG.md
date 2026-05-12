@@ -7,6 +7,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Spec-mirroring sprint driven by a client-reported production bug
+(`accounts()->updateAccessToken()` accepting bodies without `name`/`enabled`/
+`expirationDate`) plus a fresh 14-dimension audit of the SDK against
+`specs/asaas_openapi.json`. Closes 15 documented gaps across enum coverage,
+required-ness, cross-field validation, endpoint parity, and 204 handling.
+
+### Breaking
+
+- `OwnerPro\Asaas\Account\DocumentType` enum reworked to match the 12 KYC
+  document types Asaas accepts. The previous `Minutes = 'MINUTES'` case was
+  rejected by the server (server expects `MINUTES_OF_CONSTITUTION` /
+  `MINUTES_OF_ELECTION`); seven legitimate cases were missing entirely
+  (`ALLOW_BANK_ACCOUNT_DEPOSIT_STATEMENT`, `EMANCIPATION_OF_MINORS`,
+  `IDENTIFICATION_SELFIE`, `INVOICE`, `MEI_CERTIFICATE`, `POWER_OF_ATTORNEY`,
+  plus the two split-minutes cases). Migration: replace `DocumentType::Minutes`
+  with `DocumentType::MinutesOfConstitution` or `MinutesOfElection` depending
+  on the document. New cases unblock the white-label subaccount onboarding
+  flow for the 8 KYC types previously inaccessible via typed enum.
+- `OwnerPro\Asaas\Account\Request\AccessTokenRequest` deleted. Split into two
+  DTOs reflecting the spec's per-verb required-ness:
+  - `CreateAccessTokenRequest` (POST `/accounts/{id}/accessTokens`) — every
+    field optional; matches Asaas's default-application semantics on create.
+  - `UpdateAccessTokenRequest` (PUT `/accounts/{id}/accessTokens/{tokenId}`)
+    — `name`, `enabled`, `expirationDate` are mandatory positional
+    constructor arguments; `fromArray()` throws `InvalidArgumentException`
+    when any of the three is absent.
+
+  Migration:
+  ```php
+  // Before
+  new AccessTokenRequest(name: 'x', expirationDate: '...')
+  // After (POST)
+  new CreateAccessTokenRequest(name: 'x', expirationDate: '...')
+  // After (PUT)
+  new UpdateAccessTokenRequest(name: 'x', enabled: true, expirationDate: '...')
+  ```
+
+### Added
+
+- `OwnerPro\Asaas\Payment\Request\CreatePaymentRequest::$creditCardToken`
+  (`?string`) — supports the spec's saved-card-token mode on
+  `POST /v3/payments/`. Send a previously stored card token in the same
+  request that creates the payment, without resubmitting card and holder data.
+- `LeanPaymentResource::list()`, `LeanPaymentResource::update()`,
+  `LeanPaymentResource::delete()`, `LeanPaymentResource::all()` — closes the
+  CRUD parity gap with `PaymentResource` for `/v3/lean/payments`.
+- `MyAccountResource::findDocumentFile(string $fileId)` and
+  `MyAccountResource::updateDocumentFile(string $fileId, mixed $file,
+  DocumentType|string $type, string $filename)` — completes the
+  `/v3/myAccount/documents/files/{id}` triplet (GET / POST / DELETE).
+
+### Fixed
+
+- `PayWithCreditCardRequest` now validates cross-field in the constructor and
+  `fromArray()`: rejects payloads where neither `creditCardToken` nor both
+  `creditCard` and `creditCardHolderInfo` are present. Throws
+  `InvalidArgumentException` synchronously instead of failing on the server.
+- `PaymentResource::createWithCreditCard()` guards `remoteIp` (required by
+  Asaas antifraud analysis on `/v3/payments/`) and the same token-vs-card
+  cross-field rule before the HTTP roundtrip.
+
+### Documentation
+
+- README — DocumentType enum table updated to list all 12 KYC types.
+- README — new "Date formats" section enumerating which DTO fields expect
+  `YYYY-MM-DD` vs `YYYY-MM-DD HH:MM:SS`, since the SDK passes strings through
+  verbatim and Asaas rejects `T`/`Z`/timezone offsets.
+- README — new "Available filters per list endpoint" section with one table
+  per `list()` method (`payments`, `accounts`, `invoices`, `transfers`,
+  `pix`, `pixTransactions`, `pixAutomatic`, `statements`).
+- README — `AccessTokenRequest` migration note and updated subaccount
+  onboarding example using `UpdateAccessTokenRequest`.
+- README — note that `accounts()->deleteAccessToken()` and
+  `webhooks()->removeBackoff()` return HTTP 204 with an empty body; check
+  `$result->success`, not `$result->data`.
+- README — `creditCardToken` example for `payments()->createWithCreditCard()`.
+- PHPDoc — `BillingType` enum docblock split request-acceptable cases
+  (`Undefined`, `Boleto`, `CreditCard`, `Pix`) from response-only cases
+  (`DebitCard`, `Transfer`, `Deposit`, `MundipaggCielo`, `VoucherCard`,
+  `AsaasMoney`) that Asaas only returns on response bodies.
+- PHPDoc — date format strings on `CreatePaymentRequest::$dueDate`,
+  `StaticQrCodeRequest::$expirationDate`, `AuthorizationRequest::$startDate`/
+  `$finishDate`/`$contractId`/`$description`.
+- PHPDoc — maxLength constraints on `StaticQrCodeRequest::$externalReference`
+  (100), `AuthorizationRequest::$contractId`/`$description` (35) as Asaas
+  validates server-side.
+- PHPDoc — partial-update semantics documented on `FiscalInfoRequest` and
+  `UpdatePaymentRequest`; legacy-flow note on `TransferRequest::$walletId`.
+- Wire tests pin all 12 `DocumentType` cases on the multipart body of
+  `MyAccountResource::uploadDocumentFile()` and the 204 No Content path on
+  both `deleteAccessToken` and `removeBackoff`.
+
 ## [2.0.0] - 2026-05-12
 
 Major release. Spec-alignment work driven by a full audit of the SDK against `specs/asaas_openapi.json`, followed by the deferred backlog closing the remaining endpoint gaps (fiscal info, payment documents, escrow, payment checkout personalisation, wallets, lean payments, and split lookup). Closes 19 documented field gaps, the wrong-verb bug on `TransferResource::cancel()`, the missing `GET /v3/accounts/{id}/accessTokens/{accessTokenId}` endpoint, the new `accessTokenConfig` / `permissions` payload pieces (without which subaccounts created via the SDK inherited a key with no `TRANSFER` permission and blocked the production flow), and adds 27 new endpoints across 9 domains.

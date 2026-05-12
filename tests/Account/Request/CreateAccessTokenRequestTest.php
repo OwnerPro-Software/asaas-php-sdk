@@ -5,40 +5,45 @@ declare(strict_types=1);
 use OwnerPro\Asaas\Account\AccessTokenPermission;
 use OwnerPro\Asaas\Account\AccessTokenScope;
 use OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig;
-use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
+use OwnerPro\Asaas\Account\Request\CreateAccessTokenRequest;
 
-mutates(AccessTokenRequest::class);
+mutates(CreateAccessTokenRequest::class);
 
-it('builds from array with scalar fields only', function (): void {
-    $request = AccessTokenRequest::fromArray([
+it('builds an empty request when POST body is not needed', function (): void {
+    $request = new CreateAccessTokenRequest;
+
+    expect($request->name)->toBeNull();
+    expect($request->expirationDate)->toBeNull();
+    expect($request->permissions)->toBeNull();
+    expect($request->toArray())->toBe([]);
+});
+
+it('builds from array with name and expirationDate', function (): void {
+    $request = CreateAccessTokenRequest::fromArray([
         'name' => 'Onboarding',
-        'enabled' => true,
         'expirationDate' => '2026-12-31 23:59:59',
     ]);
 
     expect($request->name)->toBe('Onboarding');
-    expect($request->enabled)->toBeTrue();
     expect($request->expirationDate)->toBe('2026-12-31 23:59:59');
     expect($request->permissions)->toBeNull();
 });
 
-it('coerces nested permissions from arrays', function (): void {
-    $request = AccessTokenRequest::fromArray([
+it('coerces nested permissions from arrays on create', function (): void {
+    $request = CreateAccessTokenRequest::fromArray([
         'name' => 'Limited',
         'permissions' => [
             ['name' => 'PAYMENT', 'scope' => 'READ_WRITE'],
-            ['name' => 'TRANSFER', 'scope' => 'READ'],
         ],
     ]);
 
-    expect($request->permissions)->toHaveCount(2);
+    expect($request->permissions)->toHaveCount(1);
     expect($request->permissions[0])->toBeInstanceOf(AccessTokenPermissionConfig::class);
     expect($request->permissions[0]->name)->toBe('PAYMENT');
-    expect($request->permissions[1]->scope)->toBe('READ');
 });
 
-it('serializes permissions to the documented wire shape', function (): void {
-    $request = new AccessTokenRequest(
+it('serialises enum permissions on create body', function (): void {
+    $request = new CreateAccessTokenRequest(
         permissions: [
             new AccessTokenPermissionConfig(
                 name: AccessTokenPermission::Transfer,
@@ -52,10 +57,4 @@ it('serializes permissions to the documented wire shape', function (): void {
             ['name' => 'TRANSFER', 'scope' => 'READ_WRITE'],
         ],
     ]);
-});
-
-it('omits permissions from toArray when null', function (): void {
-    $request = new AccessTokenRequest(name: 'OnlyName');
-
-    expect($request->toArray())->toBe(['name' => 'OnlyName']);
 });

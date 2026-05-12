@@ -100,6 +100,26 @@ it('masks creditCardToken in debug info when set', function (): void {
     expect($request->__debugInfo()['creditCardToken'])->toBe('***');
 });
 
+it('rejects empty payload with neither token nor card+holder', function (): void {
+    new PayWithCreditCardRequest;
+})->throws(InvalidArgumentException::class, 'PayWithCreditCardRequest: provide either creditCardToken');
+
+it('rejects card without holder info', function (): void {
+    new PayWithCreditCardRequest(
+        creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
+    );
+})->throws(InvalidArgumentException::class, 'PayWithCreditCardRequest: provide either creditCardToken');
+
+it('rejects holder info without card', function (): void {
+    new PayWithCreditCardRequest(
+        creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
+    );
+})->throws(InvalidArgumentException::class, 'PayWithCreditCardRequest: provide either creditCardToken');
+
+it('rejects fromArray with neither token nor card+holder', function (): void {
+    PayWithCreditCardRequest::fromArray(['remoteIp' => '203.0.113.42']);
+})->throws(InvalidArgumentException::class, 'PayWithCreditCardRequest: provide either creditCardToken');
+
 it('cannot be serialized', function (): void {
     $request = new PayWithCreditCardRequest(
         creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),

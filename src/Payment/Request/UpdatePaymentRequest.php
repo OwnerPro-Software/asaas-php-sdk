@@ -15,6 +15,16 @@ use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\Missing;
 
+/**
+ * Partial-update DTO for `PUT /v3/payments/{id}`. The OpenAPI spec marks
+ * `billingType`, `value` and `dueDate` as required (REST full-replace), but
+ * the Asaas API accepts partial bodies in practice — the canonical use case
+ * is changing a single field (e.g. only `dueDate`). Every field defaults to
+ * `Missing::Value` so omitted keys never reach the wire.
+ *
+ * Caller responsibility: when re-issuing the payment from scratch, include the
+ * spec-required trio.
+ */
 final readonly class UpdatePaymentRequest
 {
     use HasUpdatableArrayFactory;

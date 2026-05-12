@@ -48,6 +48,7 @@ final readonly class CreatePaymentRequest implements JsonSerializable
      * @param  array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float|null  $discount
      * @param  array{value?: float}|Interest|float|null  $interest
      * @param  array{value?: float, type?: FineType|string}|Fine|float|null  $fine
+     * @param  string  $dueDate  Format `YYYY-MM-DD`.
      */
     public function __construct(
         public string $customer,
@@ -73,6 +74,8 @@ final readonly class CreatePaymentRequest implements JsonSerializable
         array|CreditCardHolderInfo|null $creditCardHolderInfo = null,
         public ?string $remoteIp = null,
         public ?bool $authorizeOnly = null,
+        #[SensitiveParameter]
+        public ?string $creditCardToken = null,
     ) {
         $this->split = $split !== null ? array_map(
             fn (array|Split $item): Split => $item instanceof Split ? $item : Split::fromArray($item),
@@ -92,7 +95,7 @@ final readonly class CreatePaymentRequest implements JsonSerializable
         $this->fine = $coercedFine;
     }
 
-    /** @return array{customer: string, billingType: BillingType|string, value: float, dueDate: string, description: ?string, externalReference: ?string, discount: ?Discount, interest: ?Interest, fine: ?Fine, postalService: ?bool, daysAfterDueDateToRegistrationCancellation: ?int, installmentCount: ?int, installmentValue: ?float, totalValue: ?float, pixAutomaticAuthorizationId: ?string, split: ?list<Split>, callback: ?Callback, creditCard: ?array<string, mixed>, creditCardHolderInfo: ?array<string, mixed>, remoteIp: ?string, authorizeOnly: ?bool} */
+    /** @return array{customer: string, billingType: BillingType|string, value: float, dueDate: string, description: ?string, externalReference: ?string, discount: ?Discount, interest: ?Interest, fine: ?Fine, postalService: ?bool, daysAfterDueDateToRegistrationCancellation: ?int, installmentCount: ?int, installmentValue: ?float, totalValue: ?float, pixAutomaticAuthorizationId: ?string, split: ?list<Split>, callback: ?Callback, creditCard: ?array<string, mixed>, creditCardHolderInfo: ?array<string, mixed>, remoteIp: ?string, authorizeOnly: ?bool, creditCardToken: ?string} */
     public function __debugInfo(): array
     {
         return [
@@ -117,10 +120,11 @@ final readonly class CreatePaymentRequest implements JsonSerializable
             'creditCardHolderInfo' => $this->creditCardHolderInfo?->__debugInfo(),
             'remoteIp' => $this->remoteIp,
             'authorizeOnly' => $this->authorizeOnly,
+            'creditCardToken' => $this->creditCardToken !== null ? '***' : null,
         ];
     }
 
-    /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float, interest?: array{value?: float}|Interest|float, fine?: array{value?: float, type?: FineType|string}|Fine|float, postalService?: bool, daysAfterDueDateToRegistrationCancellation?: int, installmentCount?: int, installmentValue?: float, totalValue?: float, pixAutomaticAuthorizationId?: string, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string, authorizeOnly?: bool} $data */
+    /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float, interest?: array{value?: float}|Interest|float, fine?: array{value?: float, type?: FineType|string}|Fine|float, postalService?: bool, daysAfterDueDateToRegistrationCancellation?: int, installmentCount?: int, installmentValue?: float, totalValue?: float, pixAutomaticAuthorizationId?: string, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string, authorizeOnly?: bool, creditCardToken?: string} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -145,6 +149,7 @@ final readonly class CreatePaymentRequest implements JsonSerializable
             creditCardHolderInfo: $data['creditCardHolderInfo'] ?? null,
             remoteIp: $data['remoteIp'] ?? null,
             authorizeOnly: $data['authorizeOnly'] ?? null,
+            creditCardToken: $data['creditCardToken'] ?? null,
         );
     }
 }

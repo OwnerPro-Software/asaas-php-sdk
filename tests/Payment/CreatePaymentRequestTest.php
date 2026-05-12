@@ -63,6 +63,7 @@ it('persists every optional scalar field passed via fromArray', function (): voi
         'postalService' => true,
         'remoteIp' => '203.0.113.42',
         'authorizeOnly' => true,
+        'creditCardToken' => 'tok_xyz',
     ]);
 
     expect($request->description)->toBe('order_001');
@@ -70,6 +71,32 @@ it('persists every optional scalar field passed via fromArray', function (): voi
     expect($request->postalService)->toBeTrue();
     expect($request->remoteIp)->toBe('203.0.113.42');
     expect($request->authorizeOnly)->toBeTrue();
+    expect($request->creditCardToken)->toBe('tok_xyz');
+});
+
+it('serialises creditCardToken in toArray when set', function (): void {
+    $request = new CreatePaymentRequest(
+        customer: 'cus_001',
+        billingType: BillingType::CreditCard,
+        value: 150.00,
+        dueDate: '2026-04-01',
+        remoteIp: '203.0.113.42',
+        creditCardToken: 'tok_xyz',
+    );
+
+    expect($request->toArray()['creditCardToken'])->toBe('tok_xyz');
+});
+
+it('masks creditCardToken on __debugInfo when present', function (): void {
+    $request = new CreatePaymentRequest(
+        customer: 'cus_001',
+        billingType: BillingType::CreditCard,
+        value: 150.00,
+        dueDate: '2026-04-01',
+        creditCardToken: 'tok_xyz',
+    );
+
+    expect($request->__debugInfo()['creditCardToken'])->toBe('***');
 });
 
 it('accepts discount/interest/fine as legacy floats and coerces to value objects', function (): void {
@@ -306,6 +333,7 @@ it('produces an exact debug info shape with all scalar fields and masked nested 
         ],
         'remoteIp' => '203.0.113.42',
         'authorizeOnly' => true,
+        'creditCardToken' => null,
     ]);
 });
 
@@ -339,6 +367,7 @@ it('produces an exact debug info shape with nulls for unset optional fields', fu
         'creditCardHolderInfo' => null,
         'remoteIp' => null,
         'authorizeOnly' => null,
+        'creditCardToken' => null,
     ]);
 });
 

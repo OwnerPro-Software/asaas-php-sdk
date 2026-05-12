@@ -70,6 +70,31 @@ final readonly class MyAccountResource
         );
     }
 
+    public function findDocumentFile(string $fileId): AsaasResult
+    {
+        return $this->connector->get($this->documentFilePath($fileId));
+    }
+
+    /** @param string|resource $file */
+    public function updateDocumentFile(
+        string $fileId,
+        mixed $file,
+        DocumentType|string $type,
+        string $filename,
+    ): AsaasResult {
+        $typeValue = $type instanceof DocumentType ? $type->value : $type;
+
+        return $this->connector->postMultipart(
+            $this->documentFilePath($fileId),
+            ['type' => $typeValue],
+            [[
+                'name' => 'documentFile',
+                'contents' => $file,
+                'filename' => $filename,
+            ]],
+        );
+    }
+
     public function deleteDocumentFile(string $fileId): AsaasResult
     {
         return $this->connector->delete($this->documentFilePath($fileId));

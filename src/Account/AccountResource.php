@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Account;
 
 use Generator;
-use OwnerPro\Asaas\Account\Request\AccessTokenRequest;
 use OwnerPro\Asaas\Account\Request\AccountRequest;
+use OwnerPro\Asaas\Account\Request\CreateAccessTokenRequest;
 use OwnerPro\Asaas\Account\Request\EscrowConfigRequest;
+use OwnerPro\Asaas\Account\Request\UpdateAccessTokenRequest;
 use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
@@ -47,18 +48,18 @@ final readonly class AccountResource
         return $this->connector->get($this->tokenPath($accountId, $tokenId));
     }
 
-    /** @param array<string, mixed>|AccessTokenRequest|null $data */
-    public function createAccessToken(string $accountId, array|AccessTokenRequest|null $data = null): AsaasResult
+    /** @param array<string, mixed>|CreateAccessTokenRequest|null $data */
+    public function createAccessToken(string $accountId, array|CreateAccessTokenRequest|null $data = null): AsaasResult
     {
-        $body = $data === null ? [] : AccessTokenRequest::resolveData($data);
+        $body = $data === null ? [] : CreateAccessTokenRequest::resolveData($data);
 
         return $this->connector->post($this->path($accountId, '/accessTokens'), $body);
     }
 
-    /** @param array<string, mixed>|AccessTokenRequest $data */
-    public function updateAccessToken(string $accountId, string $tokenId, array|AccessTokenRequest $data): AsaasResult
+    /** @param array<string, mixed>|UpdateAccessTokenRequest $data */
+    public function updateAccessToken(string $accountId, string $tokenId, array|UpdateAccessTokenRequest $data): AsaasResult
     {
-        return $this->connector->put($this->tokenPath($accountId, $tokenId), AccessTokenRequest::resolveData($data));
+        return $this->connector->put($this->tokenPath($accountId, $tokenId), UpdateAccessTokenRequest::resolveData($data));
     }
 
     public function deleteAccessToken(string $accountId, string $tokenId): AsaasResult

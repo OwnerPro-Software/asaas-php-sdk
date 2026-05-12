@@ -16,6 +16,10 @@ final readonly class AuthorizationRequest
 
     /**
      * @param  array{expirationSeconds?: int, originalValue?: float, pixKey?: string, description?: string}|ImmediateQrCode  $immediateQrCode
+     * @param  string  $contractId  maxLength: 35 (validated server-side).
+     * @param  string  $startDate  Format `YYYY-MM-DD`.
+     * @param  string|null  $finishDate  Format `YYYY-MM-DD`.
+     * @param  string|null  $description  maxLength: 35 (validated server-side).
      */
     public function __construct(
         public PixAutomaticFrequency|string $frequency,

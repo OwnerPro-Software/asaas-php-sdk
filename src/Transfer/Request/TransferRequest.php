@@ -27,6 +27,9 @@ final readonly class TransferRequest implements JsonSerializable
     /**
      * @param  array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string}|BankAccount|null  $bankAccount
      * @param  array{frequency?: TransferRecurrenceFrequency|string, quantity?: int}|Recurring|null  $recurring
+     * @param  string|null  $scheduleDate  Format `YYYY-MM-DD`.
+     * @param  string|null  $walletId  Legacy flow — accepted by `POST /v3/transfers` for backward compat, but the canonical path
+     *                                 for wallet-to-wallet movement is `InternalTransferRequest` via `transfers()->internal()`.
      */
     public function __construct(
         public float $value,

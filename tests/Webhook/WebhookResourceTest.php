@@ -7,6 +7,7 @@ use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest;
 use OwnerPro\Asaas\Webhook\Request\UpdateWebhookRequest;
+use OwnerPro\Asaas\Webhook\WebhookEvent;
 use OwnerPro\Asaas\Webhook\WebhookResource;
 
 mutates(WebhookResource::class);
@@ -96,6 +97,40 @@ it('accepts interrupted from raw array on create', function (array $fixture): vo
     Http::assertSent(fn ($request): bool => ($request->data()['interrupted'] ?? null) === true);
 })->with('webhook_fixture');
 
+it('serialises WebhookEvent enum and raw strings interchangeably on create body', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    webhookResource()->create(new CreateWebhookRequest(
+        url: 'https://example.com/hook',
+        email: 'dev@test.com',
+        events: [
+            WebhookEvent::PaymentConfirmed,
+            'PAYMENT_RECEIVED',
+            WebhookEvent::TransferDone,
+        ],
+    ));
+
+    Http::assertSent(fn ($request): bool => ($request->data()['events'] ?? null) === [
+        'PAYMENT_CONFIRMED',
+        'PAYMENT_RECEIVED',
+        'TRANSFER_DONE',
+    ]);
+})->with('webhook_fixture');
+
+it('serialises WebhookEvent enum on update body', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    webhookResource()->update('wh_123', new UpdateWebhookRequest(
+        events: [WebhookEvent::PixAutomaticRecurringEligibilityUpdated, 'PAYMENT_OVERDUE'],
+    ));
+
+    Http::assertSent(fn ($request): bool => $request->method() === 'PUT'
+        && ($request->data()['events'] ?? null) === [
+            'PIX_AUTOMATIC_RECURRING_ELIGIBILITY_UPDATED',
+            'PAYMENT_OVERDUE',
+        ]);
+})->with('webhook_fixture');
+
 it('sends interrupted on update when set', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 
@@ -180,6 +215,16 @@ it('removes backoff penalty', function (): void {
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/webhooks/wh_123/removeBackoff'
         && $request->method() === 'POST');
+});
+
+it('treats 204 No Content as success on removeBackoff', function (): void {
+    Http::fake(['*' => Http::response('', 204)]);
+
+    $result = webhookResource()->removeBackoff('wh_123');
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toBe([]);
+    expect($result->response->status())->toBe(204);
 });
 
 it('iterates all webhooks lazily', function (array $page1): void {
