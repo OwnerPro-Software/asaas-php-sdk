@@ -311,7 +311,6 @@ it('updates a document file via multipart POST /myAccount/documents/files/{id}',
     $result = myAccountResource()->updateDocumentFile(
         fileId: 'file_1',
         file: 'replacement-bytes',
-        type: DocumentType::IdentificationSelfie,
         filename: 'selfie.png',
     );
 
@@ -330,9 +329,9 @@ it('updates a document file via multipart POST /myAccount/documents/files/{id}',
 
         $body = (string) $request->body();
 
-        return str_contains($body, 'IDENTIFICATION_SELFIE')
-            && str_contains($body, 'filename="selfie.png"')
-            && str_contains($body, 'replacement-bytes');
+        return str_contains($body, 'filename="selfie.png"')
+            && str_contains($body, 'replacement-bytes')
+            && ! str_contains($body, 'name="type"');
     });
 });
 
@@ -340,38 +339,9 @@ it('rejects empty fileId on updateDocumentFile', function (): void {
     myAccountResource()->updateDocumentFile(
         fileId: '',
         file: 'irrelevant',
-        type: DocumentType::Identification,
         filename: 'x.png',
     );
 })->throws(InvalidArgumentException::class);
-
-it('accepts a raw string type on updateDocumentFile (no enum coercion)', function (): void {
-    Http::fake(['*' => Http::response([
-        'id' => 'file_str',
-        'documentId' => 'doc_str',
-        'status' => 'PROCESSING',
-    ], 200)]);
-
-    $result = myAccountResource()->updateDocumentFile(
-        fileId: 'file_str',
-        file: 'raw-bytes',
-        type: 'FUTURE_DOCUMENT_TYPE',
-        filename: 'future.png',
-    );
-
-    expect($result->success)->toBeTrue();
-
-    Http::assertSent(function ($request): bool {
-        if ($request->method() !== 'POST') {
-            return false;
-        }
-        $body = (string) $request->body();
-
-        return str_contains($body, 'FUTURE_DOCUMENT_TYPE')
-            && str_contains($body, 'filename="future.png"')
-            && str_contains($body, 'raw-bytes');
-    });
-});
 
 it('deletes a document file', function (): void {
     Http::fake(['*' => Http::response(['deleted' => true, 'id' => 'file_1'], 200)]);

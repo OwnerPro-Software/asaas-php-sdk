@@ -77,6 +77,23 @@ Major release prep. Two consecutive spec-alignment audits against `specs/asaas_o
 - `TransferResource::cancel($id)` now sends **DELETE** (was POST). Asaas's spec requires DELETE on `/v3/transfers/{id}/cancel` — POST silently failed or hit the wrong handler in some configurations. Any consumer wrapping the SDK's HTTP layer (e.g. retry middleware keyed by method) must update accordingly.
 - `PayWithCreditCardRequest::$creditCard`, `$creditCardHolderInfo`, and `$remoteIp` are now optional (`?CreditCard`, `?CreditCardHolderInfo`, `?string`) to support the new token-only flow. Constructors using positional args keep working; consumers relying on the previous "throws when missing" semantics will no longer see those exceptions and must validate at their own boundaries.
 - `Connector::postMultipart()` no longer throws on an empty `$files` array — `$files` is now optional with a `[]` default. Custom `Connector` implementations must update their signature to match (`array $files = []`). The change unblocks form-only multipart endpoints (`/v3/fiscalInfo/`, `/v3/myAccount/paymentCheckoutConfig/`) where the binary file is optional. The previous "at least one file" invariant was an artificial guard, not a protocol requirement.
+- `OwnerPro\Asaas\Webhook\Request\UpdateWebhookRequest::$email` and
+  `$apiVersion` removed. Both are accepted on `POST /v3/webhooks` (create) but
+  the documented `PUT /v3/webhooks/{id}` body
+  (https://docs.asaas.com/reference/atualizar-webhook-existente) lists only
+  `name`, `url`, `sendType`, `enabled`, `interrupted`, `authToken`, `events`.
+  The SDK contract follows the published spec + docs, not observed runtime
+  acceptance — Asaas can tighten validation at any time. Migration: drop
+  the arguments from `new UpdateWebhookRequest(...)` / `fromArray()` callers.
+  To change a webhook's notification email or API version, delete the webhook
+  and recreate it via `webhooks()->create()`.
+- `MyAccountResource::updateDocumentFile()` — `DocumentType|string $type`
+  argument removed. `POST /v3/myAccount/documents/files/{id}` (spec +
+  https://docs.asaas.com/reference/atualizar-documento-enviado) accepts only
+  `documentFile`; Asaas keeps the document `type` slot fixed on update. The
+  SDK no longer forwards a `type` form-data part. Migration: drop the `type:`
+  argument from `myAccount()->updateDocumentFile(...)` calls. To re-categorise
+  a document, delete the file and re-upload via `uploadDocumentFile()`.
 
 ### Added — DTO fields
 
@@ -122,7 +139,7 @@ Major release prep. Two consecutive spec-alignment audits against `specs/asaas_o
 - `MyAccountResource::fees()` — `GET /v3/myAccount/fees/`.
 - `MyAccountResource::paymentCheckoutConfig()` and `updatePaymentCheckoutConfig(array|PaymentCheckoutConfigRequest $data, mixed $logoFile = null, ?string $logoFilename = null)` — GET / POST `/v3/myAccount/paymentCheckoutConfig/`. The save call is multipart and accepts an optional logo binary.
 - `MyAccountResource::wallets(array $query = [])` — `GET /v3/wallets/`, the walletId listing.
-- `MyAccountResource::findDocumentFile(string $fileId)` and `MyAccountResource::updateDocumentFile(string $fileId, mixed $file, DocumentType|string $type, string $filename)` — completes the `/v3/myAccount/documents/files/{id}` triplet (GET / POST / DELETE).
+- `MyAccountResource::findDocumentFile(string $fileId)` and `MyAccountResource::updateDocumentFile(string $fileId, mixed $file, string $filename)` — completes the `/v3/myAccount/documents/files/{id}` triplet (GET / POST / DELETE). Asaas keeps the document `type` slot fixed on update, so the SDK forwards only the `documentFile` multipart part (matching the spec and https://docs.asaas.com/reference/atualizar-documento-enviado).
 - `MyAccountResource::approveSandbox()` — wraps the sandbox-only `POST /v3/sandbox/myAccount/approve` endpoint, fast-approving every status slot (commercial info, bank account, documentation, general) to unblock white-label onboarding integration tests. Returns HTTP 400 in production; only call against `Environment::Sandbox`.
 - `StatementResource::balance()` — `GET /v3/finance/balance`.
 - `StatementResource::paymentStatistics(array $query = [])` — `GET /v3/finance/payment/statistics`.
