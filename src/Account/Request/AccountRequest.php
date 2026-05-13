@@ -48,7 +48,6 @@ final readonly class AccountRequest implements JsonSerializable
         #[SensitiveParameter]
         public ?string $phone = null,
         public ?string $complement = null,
-        public ?string $tradingName = null,
         public ?string $site = null,
         #[SensitiveParameter]
         public ?string $loginEmail = null,
@@ -63,7 +62,7 @@ final readonly class AccountRequest implements JsonSerializable
         $this->accessTokenConfig = is_array($accessTokenConfig) ? AccessTokenConfig::fromArray($accessTokenConfig) : $accessTokenConfig;
     }
 
-    /** @return array{name: string, email: string, cpfCnpj: string, mobilePhone: string, incomeValue: float, address: string, addressNumber: string, province: string, postalCode: string, birthDate: ?string, companyType: CompanyType|string|null, phone: ?string, complement: ?string, tradingName: ?string, site: ?string, loginEmail: ?string, webhooks: ?list<CreateWebhookRequest>, accessTokenConfig: ?AccessTokenConfig} */
+    /** @return array{name: string, email: string, cpfCnpj: string, mobilePhone: string, incomeValue: float, address: string, addressNumber: string, province: string, postalCode: string, birthDate: ?string, companyType: CompanyType|string|null, phone: ?string, complement: ?string, site: ?string, loginEmail: ?string, webhooks: ?list<CreateWebhookRequest>, accessTokenConfig: ?AccessTokenConfig} */
     public function __debugInfo(): array
     {
         return [
@@ -80,7 +79,6 @@ final readonly class AccountRequest implements JsonSerializable
             'companyType' => $this->companyType,
             'phone' => $this->phone !== null ? '***' : null,
             'complement' => $this->complement,
-            'tradingName' => $this->tradingName,
             'site' => $this->site,
             'loginEmail' => $this->loginEmail !== null ? '***' : null,
             'webhooks' => $this->webhooks,
@@ -88,7 +86,7 @@ final readonly class AccountRequest implements JsonSerializable
         ];
     }
 
-    /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, incomeValue?: float, address?: string, addressNumber?: string, province?: string, postalCode?: string, birthDate?: string, companyType?: CompanyType|string, phone?: string, complement?: string, tradingName?: string, site?: string, loginEmail?: string, webhooks?: list<array<string, mixed>|CreateWebhookRequest>, accessTokenConfig?: array{name?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>}|AccessTokenConfig} $data */
+    /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, incomeValue?: float, address?: string, addressNumber?: string, province?: string, postalCode?: string, birthDate?: string, companyType?: CompanyType|string, phone?: string, complement?: string, site?: string, loginEmail?: string, webhooks?: list<array<string, mixed>|CreateWebhookRequest>, accessTokenConfig?: array{name?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>}|AccessTokenConfig} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -105,7 +103,6 @@ final readonly class AccountRequest implements JsonSerializable
             companyType: $data['companyType'] ?? null,
             phone: $data['phone'] ?? null,
             complement: $data['complement'] ?? null,
-            tradingName: $data['tradingName'] ?? null,
             site: $data['site'] ?? null,
             loginEmail: $data['loginEmail'] ?? null,
             webhooks: $data['webhooks'] ?? null,

@@ -19,7 +19,6 @@ final readonly class CommercialInfoRequest implements JsonSerializable
 
     /** @param string|Missing $birthDate Format `YYYY-MM-DD`. */
     public function __construct(
-        public string|Missing $name = Missing::Value,
         #[SensitiveParameter]
         public string|Missing $email = Missing::Value,
         #[SensitiveParameter]
@@ -37,7 +36,6 @@ final readonly class CommercialInfoRequest implements JsonSerializable
         public string|Missing $complement = Missing::Value,
         public string|Missing $province = Missing::Value,
         public string|Missing $postalCode = Missing::Value,
-        public string|Missing $tradingName = Missing::Value,
         public string|Missing $site = Missing::Value,
         public PersonType|string|Missing $personType = Missing::Value,
         public string|Missing $companyName = Missing::Value,
@@ -72,11 +70,10 @@ final readonly class CommercialInfoRequest implements JsonSerializable
         return $fields;
     }
 
-    /** @param array{name?: string, email?: string, cpfCnpj?: string, mobilePhone?: string, phone?: string, birthDate?: string, companyType?: CompanyType|string, incomeValue?: float, address?: string, addressNumber?: string, complement?: string, province?: string, postalCode?: string, tradingName?: string, site?: string, personType?: PersonType|string, companyName?: string} $data */
+    /** @param array{email?: string, cpfCnpj?: string, mobilePhone?: string, phone?: string, birthDate?: string, companyType?: CompanyType|string, incomeValue?: float, address?: string, addressNumber?: string, complement?: string, province?: string, postalCode?: string, site?: string, personType?: PersonType|string, companyName?: string} $data */
     public static function fromArray(array $data): static
     {
         return new self(
-            name: $data['name'] ?? Missing::Value,
             email: $data['email'] ?? Missing::Value,
             cpfCnpj: $data['cpfCnpj'] ?? Missing::Value,
             mobilePhone: $data['mobilePhone'] ?? Missing::Value,
@@ -89,7 +86,6 @@ final readonly class CommercialInfoRequest implements JsonSerializable
             complement: $data['complement'] ?? Missing::Value,
             province: $data['province'] ?? Missing::Value,
             postalCode: $data['postalCode'] ?? Missing::Value,
-            tradingName: $data['tradingName'] ?? Missing::Value,
             site: $data['site'] ?? Missing::Value,
             personType: $data['personType'] ?? Missing::Value,
             companyName: $data['companyName'] ?? Missing::Value,

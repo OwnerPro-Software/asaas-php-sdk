@@ -40,7 +40,6 @@ it('keeps companyType string passthrough', function (): void {
 
 it('builds from array with all fields populated', function (): void {
     $req = CommercialInfoRequest::fromArray([
-        'name' => 'Acme Ltd',
         'email' => 'contact@acme.test',
         'cpfCnpj' => '12345678000199',
         'mobilePhone' => '11999999999',
@@ -53,12 +52,10 @@ it('builds from array with all fields populated', function (): void {
         'complement' => 'Sala 101',
         'province' => 'Bela Vista',
         'postalCode' => '01310100',
-        'tradingName' => 'Acme',
         'site' => 'https://acme.test',
     ]);
 
     expect($req->toArray())->toBe([
-        'name' => 'Acme Ltd',
         'email' => 'contact@acme.test',
         'cpfCnpj' => '12345678000199',
         'mobilePhone' => '11999999999',
@@ -71,7 +68,6 @@ it('builds from array with all fields populated', function (): void {
         'complement' => 'Sala 101',
         'province' => 'Bela Vista',
         'postalCode' => '01310100',
-        'tradingName' => 'Acme',
         'site' => 'https://acme.test',
     ]);
 });
@@ -108,15 +104,15 @@ it('omits Missing fields from __debugInfo entirely', function (): void {
 
 it('exposes only the provided fields in __debugInfo', function (): void {
     $req = new CommercialInfoRequest(
-        name: 'Acme',
+        companyName: 'Acme',
         incomeValue: 1000.0,
     );
 
     $debug = $req->__debugInfo();
 
     expect($debug)->toBe([
-        'name' => 'Acme',
         'incomeValue' => 1000.0,
+        'companyName' => 'Acme',
     ]);
 });
 

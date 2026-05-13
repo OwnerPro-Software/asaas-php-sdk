@@ -75,14 +75,12 @@ it('persists every optional scalar field passed via fromArray', function (): voi
         'value' => 100.00,
         'pixAddressKey' => 'jdoe@example.com',
         'pixAddressKeyType' => PixAddressKeyType::Email,
-        'walletId' => 'wal_001',
         'operationType' => TransferOperationType::Ted,
         'description' => 'salary',
         'scheduleDate' => '2026-04-01',
         'externalReference' => 'ext_42',
     ]);
 
-    expect($request->walletId)->toBe('wal_001');
     expect($request->operationType)->toBe(TransferOperationType::Ted);
     expect($request->description)->toBe('salary');
     expect($request->scheduleDate)->toBe('2026-04-01');
@@ -94,7 +92,6 @@ it('produces an exact debug info shape with masked pix key and all scalar fields
         value: 100.00,
         pixAddressKey: 'jdoe@example.com',
         pixAddressKeyType: PixAddressKeyType::Email,
-        walletId: 'wal_001',
         operationType: TransferOperationType::Ted,
         description: 'salary',
         scheduleDate: '2026-04-01',
@@ -106,7 +103,6 @@ it('produces an exact debug info shape with masked pix key and all scalar fields
         'pixAddressKey' => '************.com',
         'pixAddressKeyType' => PixAddressKeyType::Email,
         'bankAccount' => null,
-        'walletId' => 'wal_001',
         'operationType' => TransferOperationType::Ted,
         'description' => 'salary',
         'scheduleDate' => '2026-04-01',
@@ -143,7 +139,6 @@ it('produces an exact debug info shape with masked nested bank account', functio
             'bankAccountType' => null,
             'ispb' => null,
         ],
-        'walletId' => null,
         'operationType' => null,
         'description' => null,
         'scheduleDate' => null,

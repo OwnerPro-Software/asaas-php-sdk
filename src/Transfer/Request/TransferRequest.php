@@ -28,8 +28,6 @@ final readonly class TransferRequest implements JsonSerializable
      * @param  array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string}|BankAccount|null  $bankAccount
      * @param  array{frequency?: TransferRecurrenceFrequency|string, quantity?: int}|Recurring|null  $recurring
      * @param  string|null  $scheduleDate  Format `YYYY-MM-DD`.
-     * @param  string|null  $walletId  Legacy flow — accepted by `POST /v3/transfers` for backward compat, but the canonical path
-     *                                 for wallet-to-wallet movement is `InternalTransferRequest` via `transfers()->internal()`.
      */
     public function __construct(
         public float $value,
@@ -38,7 +36,6 @@ final readonly class TransferRequest implements JsonSerializable
         public PixAddressKeyType|string|null $pixAddressKeyType = null,
         #[SensitiveParameter]
         array|BankAccount|null $bankAccount = null,
-        public ?string $walletId = null,
         public TransferOperationType|string|null $operationType = null,
         public ?string $description = null,
         public ?string $scheduleDate = null,
@@ -49,7 +46,7 @@ final readonly class TransferRequest implements JsonSerializable
         $this->recurring = is_array($recurring) ? Recurring::fromArray($recurring) : $recurring;
     }
 
-    /** @return array{value: float, pixAddressKey: ?string, pixAddressKeyType: PixAddressKeyType|string|null, bankAccount: ?array<string, mixed>, walletId: ?string, operationType: TransferOperationType|string|null, description: ?string, scheduleDate: ?string, externalReference: ?string, recurring: ?Recurring} */
+    /** @return array{value: float, pixAddressKey: ?string, pixAddressKeyType: PixAddressKeyType|string|null, bankAccount: ?array<string, mixed>, operationType: TransferOperationType|string|null, description: ?string, scheduleDate: ?string, externalReference: ?string, recurring: ?Recurring} */
     public function __debugInfo(): array
     {
         return [
@@ -57,7 +54,6 @@ final readonly class TransferRequest implements JsonSerializable
             'pixAddressKey' => $this->pixAddressKey !== null ? self::mask($this->pixAddressKey, 4) : null,
             'pixAddressKeyType' => $this->pixAddressKeyType,
             'bankAccount' => $this->bankAccount?->__debugInfo(),
-            'walletId' => $this->walletId,
             'operationType' => $this->operationType,
             'description' => $this->description,
             'scheduleDate' => $this->scheduleDate,
@@ -66,7 +62,7 @@ final readonly class TransferRequest implements JsonSerializable
         ];
     }
 
-    /** @param array{value?: float, pixAddressKey?: string, pixAddressKeyType?: PixAddressKeyType|string, bankAccount?: array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: string, ispb?: string}, walletId?: string, operationType?: TransferOperationType|string, description?: string, scheduleDate?: string, externalReference?: string, recurring?: array{frequency?: TransferRecurrenceFrequency|string, quantity?: int}|Recurring} $data */
+    /** @param array{value?: float, pixAddressKey?: string, pixAddressKeyType?: PixAddressKeyType|string, bankAccount?: array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: string, ispb?: string}, operationType?: TransferOperationType|string, description?: string, scheduleDate?: string, externalReference?: string, recurring?: array{frequency?: TransferRecurrenceFrequency|string, quantity?: int}|Recurring} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -74,7 +70,6 @@ final readonly class TransferRequest implements JsonSerializable
             pixAddressKey: $data['pixAddressKey'] ?? null,
             pixAddressKeyType: $data['pixAddressKeyType'] ?? null,
             bankAccount: $data['bankAccount'] ?? null,
-            walletId: $data['walletId'] ?? null,
             operationType: $data['operationType'] ?? null,
             description: $data['description'] ?? null,
             scheduleDate: $data['scheduleDate'] ?? null,

@@ -43,6 +43,27 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   // After (PUT)
   new UpdateAccessTokenRequest(name: 'x', enabled: true, expirationDate: '...')
   ```
+- `OwnerPro\Asaas\Account\Request\CommercialInfoRequest::$name` and `$tradingName`
+  removed. Both are response-only per Asaas docs (`POST /v3/myAccount/commercialInfo`
+  request schema lists 15 fields, neither among them) — keeping them on the DTO
+  promised an API that does not exist; Asaas silently dropped the keys on the
+  wire. Migration: drop these arguments from `new CommercialInfoRequest(...)`
+  calls. `name` and `tradingName` are populated by Asaas server-side and surface
+  only on response payloads.
+- `OwnerPro\Asaas\Account\Request\AccountRequest::$tradingName` removed. Same
+  story: response-only ("preenchido automaticamente" in the spec response
+  schemas), absent from the `POST /v3/accounts` request body documented at
+  https://docs.asaas.com/reference/criar-subconta. Migration: drop the argument
+  from `new AccountRequest(...)` / `fromArray(['tradingName' => ...])` callers.
+- `OwnerPro\Asaas\Transfer\Request\TransferRequest::$walletId` removed. The
+  field belongs to the **internal-transfer** endpoint
+  (`POST /v3/transfers/`, trailing slash) and was leaking into the public
+  `POST /v3/transfers` body as a legacy backward-compat affordance. The
+  Asaas-documented body for `POST /v3/transfers`
+  (https://docs.asaas.com/reference/transferir-para-conta-de-outra-instituicao-ou-chave-pix)
+  does not list `walletId`. Migration: route Asaas-to-Asaas transfers through
+  `transfers()->createInternal(new InternalTransferRequest(value: ..., walletId: ...))`,
+  which is the canonical endpoint for wallet-to-wallet movement.
 
 ### Added
 
@@ -141,7 +162,7 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   (100), `AuthorizationRequest::$contractId`/`$description` (35) as Asaas
   validates server-side.
 - PHPDoc — partial-update semantics documented on `FiscalInfoRequest` and
-  `UpdatePaymentRequest`; legacy-flow note on `TransferRequest::$walletId`.
+  `UpdatePaymentRequest`.
 - PHPDoc + README — server-side defaults for `FiscalInfoRequest`
   (`simplesNacional=true`, `culturalProjectsPromoter=true`): the SDK omits the
   field on partial updates so a re-save never silently overwrites the

@@ -26,7 +26,6 @@ it('creates from array with all fields', function (): void {
         'companyType' => 'MEI',
         'phone' => '1133334444',
         'complement' => 'Apt 4',
-        'tradingName' => 'JD Corp',
         'site' => 'https://example.com',
     ]);
 
@@ -43,7 +42,6 @@ it('creates from array with all fields', function (): void {
     expect($request->companyType)->toBe('MEI');
     expect($request->phone)->toBe('1133334444');
     expect($request->complement)->toBe('Apt 4');
-    expect($request->tradingName)->toBe('JD Corp');
     expect($request->site)->toBe('https://example.com');
 });
 
@@ -64,7 +62,6 @@ it('creates from array with only required fields', function (): void {
     expect($request->companyType)->toBeNull();
     expect($request->phone)->toBeNull();
     expect($request->complement)->toBeNull();
-    expect($request->tradingName)->toBeNull();
     expect($request->site)->toBeNull();
 });
 
@@ -83,7 +80,6 @@ it('masks sensitive data in debug info', function (): void {
         companyType: 'MEI',
         phone: '1133334444',
         complement: 'Apt 4',
-        tradingName: 'JD Corp',
         site: 'https://example.com',
     );
 
@@ -102,7 +98,6 @@ it('masks sensitive data in debug info', function (): void {
     expect($debug['companyType'])->toBe('MEI');
     expect($debug['phone'])->toBe('***');
     expect($debug['complement'])->toBe('Apt 4');
-    expect($debug['tradingName'])->toBe('JD Corp');
     expect($debug['site'])->toBe('https://example.com');
 });
 
