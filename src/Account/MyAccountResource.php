@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Account;
 
-use OwnerPro\Asaas\Account\Request\AccountBankAccountRequest;
 use OwnerPro\Asaas\Account\Request\CommercialInfoRequest;
 use OwnerPro\Asaas\Account\Request\DeleteAccountRequest;
 use OwnerPro\Asaas\Account\Request\PaymentCheckoutConfigRequest;
@@ -112,32 +111,6 @@ final readonly class MyAccountResource
     public function deleteDocumentFile(string $fileId): AsaasResult
     {
         return $this->connector->delete($this->documentFilePath($fileId));
-    }
-
-    /**
-     * `GET /v3/myAccount/bankAccountInfo`.
-     *
-     * Not formally documented in the `my-account` OpenAPI spec but accepted by
-     * Asaas in practice. Used by the subaccount onboarding flow to read the
-     * configured withdrawal account before `updateBankAccount()`.
-     */
-    public function bankAccount(): AsaasResult
-    {
-        return $this->connector->get(self::BASE.'/bankAccountInfo');
-    }
-
-    /**
-     * `POST /v3/myAccount/bankAccountInfo`. Same spec-coverage caveat as
-     * `bankAccount()`: undocumented in the spec, supported in production.
-     *
-     * @param  array<string, mixed>|AccountBankAccountRequest  $data
-     */
-    public function updateBankAccount(array|AccountBankAccountRequest $data): AsaasResult
-    {
-        return $this->connector->post(
-            self::BASE.'/bankAccountInfo',
-            AccountBankAccountRequest::resolveData($data),
-        );
     }
 
     /**

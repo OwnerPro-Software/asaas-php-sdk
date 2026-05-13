@@ -5,13 +5,11 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Account\DocumentType;
 use OwnerPro\Asaas\Account\MyAccountResource;
-use OwnerPro\Asaas\Account\Request\AccountBankAccountRequest;
 use OwnerPro\Asaas\Account\Request\CommercialInfoRequest;
 use OwnerPro\Asaas\Account\Request\DeleteAccountRequest;
 use OwnerPro\Asaas\Account\Request\PaymentCheckoutConfigRequest;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasResult;
-use OwnerPro\Asaas\Support\BankAccountType;
 use OwnerPro\Asaas\Support\Environment;
 
 mutates(MyAccountResource::class);
@@ -357,62 +355,6 @@ it('deletes a document file', function (): void {
 it('rejects empty fileId on deleteDocumentFile', function (): void {
     myAccountResource()->deleteDocumentFile('');
 })->throws(InvalidArgumentException::class);
-
-it('reads bank account info from /myAccount/bankAccountInfo', function (): void {
-    Http::fake(['*' => Http::response([
-        'bank' => ['code' => '341', 'name' => 'Itaú'],
-        'agency' => '1234',
-        'account' => '56789',
-        'accountDigit' => '0',
-        'bankAccountType' => 'CONTA_CORRENTE',
-    ], 200)]);
-
-    $result = myAccountResource()->bankAccount();
-
-    expect($result->success)->toBeTrue();
-    expect($result->data['bank']['code'])->toBe('341');
-
-    Http::assertSent(fn ($request): bool => $request->method() === 'GET'
-        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/bankAccountInfo');
-});
-
-it('updates bank account info from array', function (): void {
-    Http::fake(['*' => Http::response(['updated' => true], 200)]);
-
-    $result = myAccountResource()->updateBankAccount([
-        'bankCode' => '341',
-        'agency' => '1234',
-        'account' => '56789',
-        'accountDigit' => '0',
-        'accountType' => 'CONTA_CORRENTE',
-    ]);
-
-    expect($result->success)->toBeTrue();
-
-    Http::assertSent(function ($request): bool {
-        return $request->method() === 'POST'
-            && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/bankAccountInfo'
-            && $request['bank']['code'] === '341'
-            && $request['agency'] === '1234'
-            && $request['bankAccountType'] === 'CONTA_CORRENTE';
-    });
-});
-
-it('updates bank account from AccountBankAccountRequest', function (): void {
-    Http::fake(['*' => Http::response(['updated' => true], 200)]);
-
-    $result = myAccountResource()->updateBankAccount(
-        new AccountBankAccountRequest(
-            bankCode: '341',
-            agency: '1',
-            account: '1',
-            accountDigit: '1',
-            accountType: BankAccountType::CheckingAccount,
-        ),
-    );
-
-    expect($result->success)->toBeTrue();
-});
 
 it('deletes the account with removeReason from array', function (): void {
     Http::fake(['*' => Http::response(['deleted' => true], 200)]);

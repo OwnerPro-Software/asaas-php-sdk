@@ -94,6 +94,24 @@ Major release prep. Two consecutive spec-alignment audits against `specs/asaas_o
   SDK no longer forwards a `type` form-data part. Migration: drop the `type:`
   argument from `myAccount()->updateDocumentFile(...)` calls. To re-categorise
   a document, delete the file and re-upload via `uploadDocumentFile()`.
+- `AccountResource::findAccessToken()` removed. `GET /v3/accounts/{id}/accessTokens/{accessTokenId}`
+  is not documented by Asaas — the
+  [subaccount API key management guide](https://docs.asaas.com/docs/gerenciamento-de-chaves-de-api-de-subcontas)
+  exposes only list, create, update and delete; single-token retrieve was
+  inferred by REST symmetry and accepted at runtime, never by contract.
+  Migration: call `accounts()->listAccessTokens($accountId)` and filter by
+  `id`, or retain the `accessTokenId` returned by `createAccessToken()`.
+- `MyAccountResource::bankAccount()` and `MyAccountResource::updateBankAccount()`
+  removed, along with the `AccountBankAccountRequest` DTO. `GET` and `POST` on
+  `/v3/myAccount/bankAccountInfo` are not documented anywhere on Asaas's public
+  docs — the field appears only as a status flag (`PENDING`/`APPROVED`/`REJECTED`)
+  inside `GET /v3/myAccount/status`, and the
+  [subaccount approval flow guide](https://docs.asaas.com/docs/detalhamento-do-fluxo-de-aprova%C3%A7%C3%A3o-de-subcontas)
+  enumerates the endpoints used during onboarding without naming a bank-account
+  CRUD pair. Both methods were added by runtime-observation to support the
+  white-label onboarding flow, not from any documented contract. Migration:
+  drive the bank-account registration through the Asaas web panel; monitor
+  `myAccount()->status()['bankAccountInfo']` to track approval.
 
 ### Added — DTO fields
 
@@ -133,7 +151,6 @@ Major release prep. Two consecutive spec-alignment audits against `specs/asaas_o
 - `PaymentResource::listSplitsPaid(array $query = [])`, `findSplitPaid(string $id)`, `listSplitsReceived(array $query = [])`, `findSplitReceived(string $id)` — the four `/v3/payments/splits/(paid|received)/*` endpoints.
 - `LeanPaymentResource::list()`, `LeanPaymentResource::update()`, `LeanPaymentResource::delete()`, `LeanPaymentResource::all()` — closes the CRUD parity gap with `PaymentResource` for `/v3/lean/payments`.
 - `AccountResource::createAccessToken($accountId, $data = null)` now accepts an optional `CreateAccessTokenRequest` (or array) body with `name`/`expirationDate`.
-- `AccountResource::findAccessToken(string $accountId, string $tokenId)` — `GET /v3/accounts/{id}/accessTokens/{accessTokenId}`, the single-token retrieve that the original audit missed.
 - `AccountResource::escrowConfig(string $accountId)`, `setEscrowConfig(string $accountId, array|EscrowConfigRequest $data)`, `defaultEscrowConfig()`, `setDefaultEscrowConfig(array|EscrowConfigRequest $data)` — manage escrow accounts at both the per-subaccount level (`/v3/accounts/{id}/escrow`) and the default-for-all level (`/v3/accounts/escrow`).
 - `MyAccountResource::accountNumber()` — `GET /v3/myAccount/accountNumber`.
 - `MyAccountResource::fees()` — `GET /v3/myAccount/fees/`.

@@ -43,19 +43,6 @@ final readonly class AccountResource
         return $this->connector->get($this->path($accountId, '/accessTokens'));
     }
 
-    /**
-     * `GET /v3/accounts/{id}/accessTokens/{accessTokenId}`.
-     *
-     * The OpenAPI spec only documents the list variant
-     * (`GET /v3/accounts/{id}/accessTokens`); the single-token retrieve is not
-     * formally specced but Asaas accepts it in practice. Kept as a convenience
-     * for callers that need to fetch one specific token without paginating.
-     */
-    public function findAccessToken(string $accountId, string $tokenId): AsaasResult
-    {
-        return $this->connector->get($this->tokenPath($accountId, $tokenId));
-    }
-
     /** @param array<string, mixed>|CreateAccessTokenRequest|null $data */
     public function createAccessToken(string $accountId, array|CreateAccessTokenRequest|null $data = null): AsaasResult
     {

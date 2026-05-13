@@ -132,19 +132,6 @@ it('creates an access token', function (): void {
         && $request->method() === 'POST');
 });
 
-it('finds a single access token by id', function (): void {
-    Http::fake(['*' => Http::response([
-        'id' => 'tok_1', 'name' => 'Onboarding', 'enabled' => true, 'expirationDate' => '2026-12-31 23:59:59',
-    ], 200)]);
-
-    $result = accountResource()->findAccessToken('acc_123', 'tok_1');
-
-    expect($result->success)->toBeTrue();
-    expect($result->data['id'])->toBe('tok_1');
-    Http::assertSent(fn ($request): bool => $request->method() === 'GET'
-        && $request->url() === 'https://api-sandbox.asaas.com/v3/accounts/acc_123/accessTokens/tok_1');
-});
-
 it('creates an access token with name and expirationDate body', function (): void {
     Http::fake(['*' => Http::response(['id' => 'tok_1'], 200)]);
 

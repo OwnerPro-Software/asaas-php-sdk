@@ -916,7 +916,6 @@ Asaas::accounts()->create(array|AccountRequest $data): AsaasResult
 Asaas::accounts()->find(string $id): AsaasResult
 Asaas::accounts()->list(array $query = []): AsaasPaginatedResult
 Asaas::accounts()->listAccessTokens(string $accountId): AsaasResult
-Asaas::accounts()->findAccessToken(string $accountId, string $tokenId): AsaasResult
 Asaas::accounts()->createAccessToken(string $accountId, array|CreateAccessTokenRequest|null $data = null): AsaasResult
 Asaas::accounts()->updateAccessToken(string $accountId, string $tokenId, array|UpdateAccessTokenRequest $data): AsaasResult
 Asaas::accounts()->deleteAccessToken(string $accountId, string $tokenId): AsaasResult
@@ -1033,8 +1032,6 @@ Asaas::myAccount()->uploadDocumentFile(string $documentId, string|resource $file
 Asaas::myAccount()->findDocumentFile(string $fileId): AsaasResult
 Asaas::myAccount()->updateDocumentFile(string $fileId, string|resource $file, string $filename): AsaasResult
 Asaas::myAccount()->deleteDocumentFile(string $fileId): AsaasResult
-Asaas::myAccount()->bankAccount(): AsaasResult
-Asaas::myAccount()->updateBankAccount(array|AccountBankAccountRequest $data): AsaasResult
 Asaas::myAccount()->paymentCheckoutConfig(): AsaasResult
 Asaas::myAccount()->updatePaymentCheckoutConfig(
     array|PaymentCheckoutConfigRequest $data,
@@ -1049,22 +1046,17 @@ Asaas::myAccount()->delete(array|DeleteAccountRequest $data): AsaasResult
 > (auto-approval shortcut for testing) are intentionally not exposed: they have no
 > production counterpart and would only obscure the real KYC flow. Use the
 > `Connector` directly if you need to reach a sandbox-only path in your test
-> harness. `bankAccount()` / `updateBankAccount()` hit
-> `GET|POST /v3/myAccount/bankAccountInfo`, which Asaas accepts in production but
-> does not formally document in `specs/domains/my-account.json` — kept here because
-> the subaccount onboarding flow depends on them.
+> harness.
 
 #### Subaccount onboarding (white label)
 
-After `accounts()->create()` returns a new subaccount, the tenant must complete KYC, send commercial info, and register a bank account before they can transact. Drive the full flow without redirecting the tenant to the Asaas panel by instantiating a tenant-scoped client with the **subaccount's apiKey** and calling `myAccount()`.
+After `accounts()->create()` returns a new subaccount, the tenant must complete KYC and send commercial info before they can transact. Drive the documented portion of the flow without redirecting the tenant to the Asaas panel by instantiating a tenant-scoped client with the **subaccount's apiKey** and calling `myAccount()`.
 
 ```php
 use OwnerPro\Asaas\Account\DocumentType;
-use OwnerPro\Asaas\Account\Request\AccountBankAccountRequest;
 use OwnerPro\Asaas\Account\Request\CommercialInfoRequest;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\Account\CompanyType;
-use OwnerPro\Asaas\Support\BankAccountType;
 use OwnerPro\Asaas\Support\Environment;
 
 $tenantClient = AsaasClient::for(
@@ -1093,14 +1085,9 @@ $tenantClient->myAccount()->uploadDocumentFile(
     filename: 'rg.png',
 );
 
-// 4. Set the bank account where withdrawals will land
-$tenantClient->myAccount()->updateBankAccount(new AccountBankAccountRequest(
-    bankCode: '341',
-    agency: '1234',
-    account: '56789',
-    accountDigit: '0',
-    accountType: BankAccountType::CheckingAccount,
-));
+// 4. The tenant registers their bank account through the Asaas web panel —
+//    no public API endpoint is documented for /myAccount/bankAccountInfo.
+//    Monitor $status['bankAccountInfo'] to track approval (PENDING → APPROVED).
 ```
 
 Listen to the `ACCOUNT_STATUS_*` webhook events (already in `WebhookEvent`) to react to approvals and rejections asynchronously.
