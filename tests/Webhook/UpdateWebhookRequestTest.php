@@ -66,10 +66,10 @@ it('masks authToken in debug info', function (): void {
     expect($debug['events'])->toBe(['PAYMENT_CONFIRMED']);
 });
 
-it('shows null authToken as null in debug info', function (): void {
-    $request = new UpdateWebhookRequest(url: 'https://example.com/hook', authToken: null);
+it('omits authToken from debug info when Missing', function (): void {
+    $request = new UpdateWebhookRequest(url: 'https://example.com/hook');
 
-    expect($request->__debugInfo()['authToken'])->toBeNull();
+    expect($request->__debugInfo())->not->toHaveKey('authToken');
 });
 
 it('masks authToken in json serialization', function (): void {

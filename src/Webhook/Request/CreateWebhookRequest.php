@@ -13,6 +13,18 @@ use OwnerPro\Asaas\Webhook\WebhookEvent;
 use OwnerPro\Asaas\Webhook\WebhookSendType;
 use SensitiveParameter;
 
+/**
+ * Request body for `POST /v3/webhooks`.
+ *
+ * The OpenAPI spec does not mark any field as required for create, but this DTO
+ * promotes `url` and `email` to mandatory positional arguments. Rationale:
+ *  - A webhook without `url` is useless — Asaas has nowhere to deliver events.
+ *  - Asaas notifies failure-backoff state through `email`; omitting it hides
+ *    delivery issues from the operator.
+ *
+ * This is intentionally stricter than the spec to surface mistakes at
+ * construction time rather than after the first failed delivery.
+ */
 final readonly class CreateWebhookRequest implements Arrayable, JsonSerializable
 {
     use HasArrayFactory;

@@ -12,6 +12,16 @@ use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use SensitiveParameter;
 
+/**
+ * Request body for `POST /v3/payments/{id}/payWithCreditCard`.
+ *
+ * The OpenAPI spec lists `creditCard` + `creditCardHolderInfo` as required, but
+ * Asaas in practice also accepts `creditCardToken` (saved-card flow) in their
+ * place. The SDK enforces the cross-field rule: at least one of `creditCardToken`
+ * **or** the full (`creditCard`, `creditCardHolderInfo`) pair must be provided.
+ * Anything else throws `InvalidArgumentException` at construction time, before
+ * the request reaches Asaas.
+ */
 final readonly class PayWithCreditCardRequest implements JsonSerializable
 {
     use HasArrayFactory;

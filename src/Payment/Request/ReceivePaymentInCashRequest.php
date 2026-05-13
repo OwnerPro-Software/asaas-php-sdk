@@ -10,6 +10,7 @@ final readonly class ReceivePaymentInCashRequest
 {
     use HasArrayFactory;
 
+    /** @param string|null $paymentDate Format `YYYY-MM-DD`. */
     public function __construct(
         public ?string $paymentDate = null,
         public ?float $value = null,

@@ -30,7 +30,10 @@ final readonly class LeanPaymentResource
     /** @param array<string, mixed>|CreatePaymentRequest $data */
     public function createWithCreditCard(array|CreatePaymentRequest $data): AsaasResult
     {
-        return $this->connector->post(self::BASE.'/', CreatePaymentRequest::resolveData($data));
+        return $this->connector->post(
+            self::BASE.'/',
+            CreatePaymentRequest::ensureReadyForCreditCard($data)->toArray(),
+        );
     }
 
     /** @param array<string, mixed> $query */

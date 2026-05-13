@@ -43,3 +43,19 @@ it('serializes string frequency unchanged via toArray', function (): void {
 
     expect($recurring->toArray())->toBe(['frequency' => 'WEEKLY', 'quantity' => 2]);
 });
+
+// Documented range per PHPDoc: 1..51 for WEEKLY, 1..11 for MONTHLY.
+// SDK does not enforce the range at runtime (delegated to Asaas server).
+// These pins confirm boundary values are accepted by the DTO and round-trip
+// unchanged, so the only validation point is server-side.
+it('accepts documented boundary quantities for each frequency', function (TransferRecurrenceFrequency $frequency, int $quantity): void {
+    $recurring = new Recurring(frequency: $frequency, quantity: $quantity);
+
+    expect($recurring->quantity)->toBe($quantity);
+    expect($recurring->toArray()['quantity'])->toBe($quantity);
+})->with([
+    'WEEKLY lower bound' => [TransferRecurrenceFrequency::Weekly, 1],
+    'WEEKLY upper bound' => [TransferRecurrenceFrequency::Weekly, 51],
+    'MONTHLY lower bound' => [TransferRecurrenceFrequency::Monthly, 1],
+    'MONTHLY upper bound' => [TransferRecurrenceFrequency::Monthly, 11],
+]);

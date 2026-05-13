@@ -14,7 +14,10 @@ final readonly class CreateInvoiceRequest
 
     public Taxes $taxes;
 
-    /** @param array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes $taxes */
+    /**
+     * @param  array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes  $taxes
+     * @param  string  $effectiveDate  Format `YYYY-MM-DD`.
+     */
     public function __construct(
         public string $serviceDescription,
         public string $observations,

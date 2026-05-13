@@ -27,6 +27,7 @@ final readonly class AccountRequest implements JsonSerializable
     /**
      * @param  list<array<string, mixed>|CreateWebhookRequest>|null  $webhooks
      * @param  array{name?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>}|AccessTokenConfig|null  $accessTokenConfig
+     * @param  string|null  $birthDate  Format `YYYY-MM-DD`.
      */
     public function __construct(
         public string $name,

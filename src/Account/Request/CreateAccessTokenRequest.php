@@ -15,7 +15,10 @@ final readonly class CreateAccessTokenRequest
     /** @var list<AccessTokenPermissionConfig>|null */
     public ?array $permissions;
 
-    /** @param list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>|null $permissions */
+    /**
+     * @param  list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>|null  $permissions
+     * @param  string|null  $expirationDate  Format `YYYY-MM-DD HH:MM:SS`.
+     */
     public function __construct(
         public ?string $name = null,
         public ?string $expirationDate = null,

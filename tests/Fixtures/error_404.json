@@ -1,0 +1,8 @@
+{
+    "errors": [
+        {
+            "code": "not_found",
+            "description": "The requested resource was not found."
+        }
+    ]
+}

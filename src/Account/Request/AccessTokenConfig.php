@@ -9,6 +9,18 @@ use OwnerPro\Asaas\Account\AccessTokenScope;
 use OwnerPro\Asaas\Support\Arrayable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 
+/**
+ * Convenience value object holding the `{name, permissions[]}` shape that
+ * `AccountRequest::$accessTokenConfig` carries inline on `POST /v3/accounts`.
+ *
+ * `accessTokenConfig` is **not** documented in the OpenAPI spec for
+ * `POST /v3/accounts` — Asaas accepts the inline pair as a one-shot convenience
+ * so subaccount creation and initial access-token configuration happen in a
+ * single request (instead of `create()` followed by `createAccessToken()`).
+ * Outside of `AccountRequest`, this DTO is unused.
+ *
+ * @see AccountRequest::$accessTokenConfig
+ */
 final readonly class AccessTokenConfig implements Arrayable
 {
     use HasArrayFactory;

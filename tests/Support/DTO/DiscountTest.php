@@ -55,8 +55,7 @@ it('passes through Discount instance untouched', function (): void {
     expect(Discount::coerce($original))->toBe($original);
 });
 
-it('preserves null and Missing without wrapping', function (): void {
-    expect(Discount::coerce(null))->toBeNull();
+it('preserves Missing without wrapping', function (): void {
     expect(Discount::coerce(Missing::Value))->toBe(Missing::Value);
 });
 

@@ -1,0 +1,8 @@
+{
+    "errors": [
+        {
+            "code": "bad_gateway",
+            "description": "The upstream service returned an invalid response."
+        }
+    ]
+}

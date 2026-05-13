@@ -17,18 +17,18 @@ final readonly class UpdateWebhookRequest implements JsonSerializable
     use HasUpdatableArrayFactory;
     use MasksSensitiveData;
 
-    /** @param list<WebhookEvent|string>|Missing|null $events */
+    /** @param list<WebhookEvent|string>|Missing $events */
     public function __construct(
-        public string|Missing|null $url = Missing::Value,
-        public string|Missing|null $email = Missing::Value,
-        public string|Missing|null $name = Missing::Value,
-        public bool|Missing|null $enabled = Missing::Value,
-        public bool|Missing|null $interrupted = Missing::Value,
-        public int|Missing|null $apiVersion = Missing::Value,
-        public WebhookSendType|string|Missing|null $sendType = Missing::Value,
+        public string|Missing $url = Missing::Value,
+        public string|Missing $email = Missing::Value,
+        public string|Missing $name = Missing::Value,
+        public bool|Missing $enabled = Missing::Value,
+        public bool|Missing $interrupted = Missing::Value,
+        public int|Missing $apiVersion = Missing::Value,
+        public WebhookSendType|string|Missing $sendType = Missing::Value,
         #[SensitiveParameter]
-        public string|Missing|null $authToken = Missing::Value,
-        public array|Missing|null $events = Missing::Value,
+        public string|Missing $authToken = Missing::Value,
+        public array|Missing $events = Missing::Value,
     ) {}
 
     /** @return array<string, mixed> */
@@ -38,13 +38,13 @@ final readonly class UpdateWebhookRequest implements JsonSerializable
         $fields = array_filter(get_object_vars($this), fn (mixed $v): bool => ! $v instanceof Missing);
 
         if (array_key_exists('authToken', $fields)) {
-            $fields['authToken'] = $this->authToken !== null ? '***' : null;
+            $fields['authToken'] = '***';
         }
 
         return $fields;
     }
 
-    /** @param array{url?: string|null, email?: string|null, name?: string|null, enabled?: bool|null, interrupted?: bool|null, apiVersion?: int|null, sendType?: WebhookSendType|string|null, authToken?: string|null, events?: list<WebhookEvent|string>|null} $data */
+    /** @param array{url?: string, email?: string, name?: string, enabled?: bool, interrupted?: bool, apiVersion?: int, sendType?: WebhookSendType|string, authToken?: string, events?: list<WebhookEvent|string>} $data */
     public static function fromArray(array $data): static
     {
         return new self(

@@ -19,7 +19,10 @@ final readonly class BankAccount implements Arrayable, JsonSerializable
 
     public ?Bank $bank;
 
-    /** @param array{code?: string}|Bank|null $bank */
+    /**
+     * @param  array{code?: string}|Bank|null  $bank
+     * @param  string|null  $ownerBirthDate  Format `YYYY-MM-DD`. Asaas rejects `T`/`Z`/timezone-suffixed strings with HTTP 400.
+     */
     public function __construct(
         public string $ownerName,
         #[SensitiveParameter]

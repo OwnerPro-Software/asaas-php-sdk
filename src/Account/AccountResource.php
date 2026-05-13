@@ -43,6 +43,14 @@ final readonly class AccountResource
         return $this->connector->get($this->path($accountId, '/accessTokens'));
     }
 
+    /**
+     * `GET /v3/accounts/{id}/accessTokens/{accessTokenId}`.
+     *
+     * The OpenAPI spec only documents the list variant
+     * (`GET /v3/accounts/{id}/accessTokens`); the single-token retrieve is not
+     * formally specced but Asaas accepts it in practice. Kept as a convenience
+     * for callers that need to fetch one specific token without paginating.
+     */
     public function findAccessToken(string $accountId, string $tokenId): AsaasResult
     {
         return $this->connector->get($this->tokenPath($accountId, $tokenId));
@@ -67,6 +75,12 @@ final readonly class AccountResource
         return $this->connector->delete($this->tokenPath($accountId, $tokenId));
     }
 
+    /**
+     * Escrow-config management is exposed on `AccountResource` for ergonomics
+     * (subaccount lifecycle stays in one place). The endpoints actually live
+     * under the `escrow` spec domain; a dedicated `EscrowResource` may
+     * supersede these methods in a future major release.
+     */
     public function escrowConfig(string $accountId): AsaasResult
     {
         return $this->connector->get($this->path($accountId, '/escrow'));

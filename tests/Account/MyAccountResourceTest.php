@@ -311,6 +311,34 @@ it('rejects empty fileId on updateDocumentFile', function (): void {
     );
 })->throws(InvalidArgumentException::class);
 
+it('accepts a raw string type on updateDocumentFile (no enum coercion)', function (): void {
+    Http::fake(['*' => Http::response([
+        'id' => 'file_str',
+        'documentId' => 'doc_str',
+        'status' => 'PROCESSING',
+    ], 200)]);
+
+    $result = myAccountResource()->updateDocumentFile(
+        fileId: 'file_str',
+        file: 'raw-bytes',
+        type: 'FUTURE_DOCUMENT_TYPE',
+        filename: 'future.png',
+    );
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        if ($request->method() !== 'POST') {
+            return false;
+        }
+        $body = (string) $request->body();
+
+        return str_contains($body, 'FUTURE_DOCUMENT_TYPE')
+            && str_contains($body, 'filename="future.png"')
+            && str_contains($body, 'raw-bytes');
+    });
+});
+
 it('deletes a document file', function (): void {
     Http::fake(['*' => Http::response(['deleted' => true, 'id' => 'file_1'], 200)]);
 

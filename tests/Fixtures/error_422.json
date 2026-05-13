@@ -1,0 +1,16 @@
+{
+    "errors": [
+        {
+            "code": "invalid_field",
+            "description": "The cpfCnpj field must be a valid CPF or CNPJ."
+        },
+        {
+            "code": "invalid_field",
+            "description": "The email field must be a valid email address."
+        },
+        {
+            "code": "invalid_field",
+            "description": "The postalCode field must contain exactly 8 digits."
+        }
+    ]
+}

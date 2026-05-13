@@ -206,6 +206,22 @@ it('updates a payment from request object', function (array $fixture): void {
         && $request->method() === 'PUT');
 })->with('payment_fixture');
 
+it('UpdatePaymentRequest: omitted fields never reach the wire as null', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    paymentResource()->update('pay_abc123', new UpdatePaymentRequest(value: 200.00));
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body === ['value' => 200.00]
+            && ! array_key_exists('description', $body)
+            && ! array_key_exists('externalReference', $body)
+            && ! array_key_exists('discount', $body)
+            && ! array_key_exists('callback', $body);
+    });
+})->with('payment_fixture');
+
 // --- delete ---
 
 it('deletes a payment', function (): void {
@@ -612,6 +628,38 @@ it('rejects createWithCreditCard with card but no holder info', function (): voi
         'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
     ]);
 })->throws(InvalidArgumentException::class, 'provide either creditCardToken');
+
+it('rejects createWithCreditCard with holder info but no card', function (): void {
+    paymentResource()->createWithCreditCard([
+        'customer' => 'cus_456',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 150.00,
+        'dueDate' => '2026-04-01',
+        'remoteIp' => '203.0.113.42',
+        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+    ]);
+})->throws(InvalidArgumentException::class, 'provide either creditCardToken');
+
+it('accepts createWithCreditCard with creditCard plus holderInfo (no token)', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    paymentResource()->createWithCreditCard(new CreatePaymentRequest(
+        customer: 'cus_456',
+        billingType: 'CREDIT_CARD',
+        value: 150.00,
+        dueDate: '2026-04-01',
+        remoteIp: '203.0.113.42',
+        creditCard: new CreditCard(holderName: 'John', number: '4111111111111111', expiryMonth: '12', expiryYear: '2030', ccv: '123'),
+        creditCardHolderInfo: new CreditCardHolderInfo(name: 'John', email: 'j@t.com', cpfCnpj: '123', postalCode: '01001000', addressNumber: '1', phone: '11999'),
+    ));
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/'
+        && $request->method() === 'POST'
+        && ($request->data()['creditCardToken'] ?? null) === null
+        && ($request->data()['creditCard']['holderName'] ?? null) === 'John'
+        && ($request->data()['creditCardHolderInfo']['email'] ?? null) === 'j@t.com'
+        && ($request->data()['remoteIp'] ?? null) === '203.0.113.42');
+})->with('payment_fixture');
 
 it('pins creditCardToken on the wire when passed via DTO', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);

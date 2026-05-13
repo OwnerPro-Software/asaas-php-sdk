@@ -23,6 +23,12 @@ it('implements Connector interface', function (): void {
     expect(AsaasConnector::class)->toImplement(Connector::class);
 });
 
+it('__debugInfo() exposes only baseUrl (no PendingRequest, no api key leak)', function (): void {
+    $connector = new AsaasConnector(new PendingRequest, '');
+
+    expect($connector->__debugInfo())->toBe(['baseUrl' => '']);
+});
+
 // --- forLaravel factory ---
 
 it('forLaravel accepts string environment', function (): void {
@@ -177,7 +183,7 @@ it('standalone get returns success result', function (): void {
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response(['id' => 'pay_123', 'status' => 'PENDING'], 200)]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->get('/payments/pay_123');
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
@@ -194,7 +200,7 @@ it('standalone get returns empty data on scalar JSON response', function (): voi
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response('true', 200)]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->get('/payments/pay_123');
 
     expect($result->success)->toBeTrue();
@@ -210,7 +216,7 @@ it('standalone post returns success result', function (): void {
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response(['id' => 'pay_new', 'status' => 'PENDING'], 200)]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->post('/payments', ['value' => 100]);
 
     expect($result->success)->toBeTrue();
@@ -225,7 +231,7 @@ it('standalone put returns success result', function (): void {
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response(['id' => 'pay_123', 'status' => 'UPDATED'], 200)]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->put('/payments/pay_123', ['value' => 200]);
 
     expect($result->success)->toBeTrue();
@@ -240,7 +246,7 @@ it('standalone delete returns success result', function (): void {
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response(['deleted' => true, 'id' => 'pay_123'], 200)]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->delete('/payments/pay_123');
 
     expect($result->success)->toBeTrue();
@@ -257,7 +263,7 @@ it('standalone returns failure result on error response', function (): void {
             400,
         )]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->post('/payments', ['bad' => 'data']);
 
     expect($result->success)->toBeFalse();
@@ -277,7 +283,7 @@ it('standalone paginate returns paginated result', function (): void {
             200,
         )]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->paginate('/payments', ['limit' => 10]);
 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
@@ -296,7 +302,7 @@ it('standalone returns fallback error when error response has no errors array', 
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response('Internal Server Error', 500)]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->post('/payments', ['bad' => 'data']);
 
     expect($result->success)->toBeFalse();
@@ -304,6 +310,162 @@ it('standalone returns fallback error when error response has no errors array', 
     expect($result->errors)->toBe([['code' => 'UNKNOWN_ERROR', 'description' => 'Internal Server Error']]);
     expect($result->data)->toBeNull();
 });
+
+it('synthesizes UNKNOWN_ERROR when error envelope has empty errors array', function (): void {
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response(
+            json_decode(file_get_contents(__DIR__.'/../Fixtures/error_empty_errors.json'), true),
+            403,
+        )]);
+
+    $connector = new AsaasConnector($pendingRequest, '');
+    $result = $connector->get('/payments/pay_123');
+
+    expect($result->success)->toBeFalse();
+    expect($result->response->status())->toBe(403);
+    expect($result->errors)->toBe([['code' => 'UNKNOWN_ERROR', 'description' => 'Asaas returned empty errors array (status 403)']]);
+    expect($result->data)->toBeNull();
+});
+
+it('propagates error envelope shape across documented and undocumented status codes', function (int $status, array $fixture): void {
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response($fixture, $status)]);
+
+    $connector = new AsaasConnector($pendingRequest, '');
+    $result = $connector->post('/payments', ['bad' => 'data']);
+
+    expect($result->success)->toBeFalse();
+    expect($result->response->status())->toBe($status);
+    expect($result->errors)->toBe($fixture['errors']);
+    expect($result->errors[0])->toHaveKey('code');
+    expect($result->errors[0])->toHaveKey('description');
+    expect($result->data)->toBeNull();
+})->with('error_envelope_fixture');
+
+it('exposes Retry-After header from 429 response through AsaasResult', function (): void {
+    $fixture = json_decode((string) file_get_contents(__DIR__.'/../Fixtures/error_429.json'), true);
+
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response($fixture, 429, ['Retry-After' => '30'])]);
+
+    $connector = new AsaasConnector($pendingRequest, '');
+    $result = $connector->get('/pix/tokenBucket/addressKey');
+
+    expect($result->success)->toBeFalse();
+    expect($result->response)->not->toBeNull();
+    expect($result->response->status())->toBe(429);
+    expect($result->response->header('Retry-After'))->toBe('30');
+    expect($result->errors[0]['code'])->toBe('rate_limit_exceeded');
+    expect($result->errors[0]['description'])->toBe('Too many requests. Please retry after the period indicated by the Retry-After header.');
+});
+
+it('synthesizes UNKNOWN_ERROR from {message: ...} shape when errors key is absent', function (): void {
+    $fixture = json_decode((string) file_get_contents(__DIR__.'/../Fixtures/error_message_shape.json'), true);
+
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response($fixture, 503)]);
+
+    $connector = new AsaasConnector($pendingRequest, '');
+    $result = $connector->get('/payments/pay_123');
+
+    expect($result->success)->toBeFalse();
+    expect($result->response->status())->toBe(503);
+    expect($result->errors)->toBe([['code' => 'UNKNOWN_ERROR', 'description' => 'some error']]);
+    expect($result->data)->toBeNull();
+});
+
+it('falls through to body fallback when {message: ""} is empty string', function (): void {
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response(['message' => ''], 503)]);
+
+    $connector = new AsaasConnector($pendingRequest, '');
+    $result = $connector->get('/payments/pay_456');
+
+    expect($result->success)->toBeFalse();
+    expect($result->response->status())->toBe(503);
+    expect($result->errors[0]['code'])->toBe('UNKNOWN_ERROR');
+    expect($result->errors[0]['description'])->not->toBe('');
+    expect($result->errors[0]['description'])->toContain('message');
+});
+
+it('propagates 403 error envelope with code and description', function (): void {
+    $fixture = json_decode((string) file_get_contents(__DIR__.'/../Fixtures/error_403.json'), true);
+
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response($fixture, 403)]);
+
+    $connector = new AsaasConnector($pendingRequest, '');
+    $result = $connector->get('/payments');
+
+    expect($result->success)->toBeFalse();
+    expect($result->response->status())->toBe(403);
+    expect($result->errors[0]['code'])->toBe('forbidden');
+    expect($result->errors[0]['description'])->toBe('You are not allowed to access this resource.');
+    expect($result->data)->toBeNull();
+});
+
+it('propagates 404 error envelope with code and description', function (): void {
+    $fixture = json_decode((string) file_get_contents(__DIR__.'/../Fixtures/error_404.json'), true);
+
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response($fixture, 404)]);
+
+    $connector = new AsaasConnector($pendingRequest, '');
+    $result = $connector->get('/payments/invalid');
+
+    expect($result->success)->toBeFalse();
+    expect($result->response->status())->toBe(404);
+    expect($result->errors[0]['code'])->toBe('not_found');
+    expect($result->errors[0]['description'])->toBe('The requested resource was not found.');
+    expect($result->data)->toBeNull();
+});
+
+it('orFail() surfaces synthesized description when errors array is empty', function (): void {
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response(
+            json_decode(file_get_contents(__DIR__.'/../Fixtures/error_empty_errors.json'), true),
+            500,
+        )]);
+
+    $connector = new AsaasConnector($pendingRequest, '');
+    $result = $connector->get('/payments/pay_123');
+
+    expect($result->success)->toBeFalse();
+
+    $result->orFail();
+})->throws(AsaasRequestException::class, 'Asaas returned empty errors array (status 500)');
 
 it('strips HTML tags and truncates long non-JSON error bodies', function (): void {
     $htmlBody = '<html><head><title>502 Bad Gateway</title></head><body><h1>502 Bad Gateway</h1><p>nginx/1.24.0</p>'.str_repeat('<p>extra</p>', 200).'</body></html>';
@@ -315,7 +477,7 @@ it('strips HTML tags and truncates long non-JSON error bodies', function (): voi
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response($htmlBody, 502)]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->get('/payments/pay_123');
 
     expect($result->success)->toBeFalse();
@@ -334,7 +496,7 @@ it('standalone get returns failure result on connection exception', function ():
         ->preventStrayRequests()
         ->stub([fn ($request, $options): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->get('/payments/pay_123');
 
     expect($result)->toBeInstanceOf(AsaasResult::class);
@@ -352,7 +514,7 @@ it('standalone paginate returns failure result on connection exception', functio
         ->preventStrayRequests()
         ->stub([fn ($request, $options): never => throw new ConnectionException('cURL error 7: Failed to connect')]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->paginate('/payments', []);
 
     expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
@@ -700,7 +862,7 @@ it('standalone handles 2xx with no JSON body', function (): void {
         ->preventStrayRequests()
         ->stub([fn ($request, $options) => Factory::response('', 200)]);
 
-    $connector = new AsaasConnector($pendingRequest);
+    $connector = new AsaasConnector($pendingRequest, '');
     $result = $connector->get('/payments/x');
 
     expect($result->success)->toBeTrue();
@@ -846,10 +1008,4 @@ it('accepts the minimum valid connect timeout (1 second)', function (): void {
     $connector = AsaasConnector::forStandalone('key', Environment::Sandbox, 30, 1);
 
     expect($connector)->toBeInstanceOf(AsaasConnector::class);
-});
-
-it('default baseUrl is empty string when not provided', function (): void {
-    $connector = new AsaasConnector(new PendingRequest);
-
-    expect($connector->__debugInfo())->toBe(['baseUrl' => '']);
 });

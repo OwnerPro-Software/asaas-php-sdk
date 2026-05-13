@@ -13,6 +13,12 @@ final readonly class Recurring implements Arrayable
 {
     use HasArrayFactory;
 
+    /**
+     * @param  TransferRecurrenceFrequency|string  $frequency  Recurrence cadence. Determines the max for `$quantity`.
+     * @param  int  $quantity  Number of repetitions, including the initial transfer.
+     *                         Range: `1..51` for `WEEKLY`, `1..11` for `MONTHLY`.
+     *                         Validated server-side; out-of-range values return HTTP 400.
+     */
     public function __construct(
         public TransferRecurrenceFrequency|string $frequency,
         public int $quantity,

@@ -17,6 +17,7 @@ final readonly class CommercialInfoRequest implements JsonSerializable
     use HasUpdatableArrayFactory;
     use MasksSensitiveData;
 
+    /** @param string|Missing $birthDate Format `YYYY-MM-DD`. */
     public function __construct(
         public string|Missing $name = Missing::Value,
         #[SensitiveParameter]

@@ -149,6 +149,22 @@ it('omits interrupted from update payload when not set', function (array $fixtur
         && ! array_key_exists('interrupted', $request->data()));
 })->with('webhook_fixture');
 
+it('UpdateWebhookRequest: omitted fields never reach the wire as null', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    webhookResource()->update('wh_123', new UpdateWebhookRequest(enabled: false));
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body === ['enabled' => false]
+            && ! array_key_exists('url', $body)
+            && ! array_key_exists('name', $body)
+            && ! array_key_exists('email', $body)
+            && ! array_key_exists('authToken', $body);
+    });
+})->with('webhook_fixture');
+
 it('lists webhooks', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 

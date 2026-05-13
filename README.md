@@ -536,9 +536,9 @@ Asaas::billPayments()->simulate(new SimulateBillPaymentRequest(
 ));
 ```
 
-### Clearing Fields on Updates
+### Partial Updates: Omitting Fields
 
-Update DTOs (`UpdatePaymentRequest`, `UpdateInvoiceRequest`, `UpdateWebhookRequest`) support three states for each field:
+Update DTOs (`UpdatePaymentRequest`, `UpdateInvoiceRequest`, `UpdateWebhookRequest`) use `Missing::Value` as the default for every field. Omit a field to leave it untouched; pass a value to change it. The Asaas spec marks every request-body field as `nullable: false`, so explicit `null` is **not** supported — passing `null` to a typed field now raises `TypeError` instead of leaking `{"field": null}` onto the wire (which the API rejects).
 
 ```php
 use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
@@ -549,25 +549,17 @@ Asaas::payments()->update('pay_123', new UpdatePaymentRequest(
     // description not passed → field not sent → API keeps current value
 ));
 
-// 2. Clear the field — pass null explicitly:
-Asaas::payments()->update('pay_123', new UpdatePaymentRequest(
-    description: null, // → sends {"description": null} → API clears it
-));
-
-// 3. Set a new value:
+// 2. Set a new value:
 Asaas::payments()->update('pay_123', new UpdatePaymentRequest(
     description: 'New description',
 ));
 ```
 
-This also works with `fromArray()` — missing keys are omitted, explicit `null` values are sent:
+Array shape works identically — only keys present in the array reach the wire:
 
 ```php
 // Only updates value, description untouched:
 Asaas::payments()->update('pay_123', ['value' => 200.00]);
-
-// Clears description:
-Asaas::payments()->update('pay_123', ['value' => 200.00, 'description' => null]);
 ```
 
 ### Updated Request DTOs with Nested DTO Support
@@ -704,6 +696,18 @@ foreach (Asaas::payments()->all() as $payment) {
 ```
 
 ## Resources
+
+> **Response shape.** Every resource method returns `AsaasResult` with `$data`
+> typed as `array<string, mixed>` — the SDK passes Asaas's JSON response through
+> verbatim and does **not** decode it into typed response objects. To learn
+> which fields each endpoint returns (e.g. `id`, `status`, `bankSlipUrl`,
+> `netValue`, `dateCreated`), consult either the OpenAPI spec under
+> `specs/domains/<domain>.json` or the public Asaas docs at
+> <https://docs.asaas.com/>. Nested sub-objects observed on the response side
+> (`creditCard`, `discount`, `fine`, `interest`, `callback`, `escrow`,
+> `chargeback`, etc.) follow the same `array<string, mixed>` rule — the SDK's
+> request-side DTOs in `OwnerPro\Asaas\Support\DTO\*` are reference-only for
+> field names, not response value objects.
 
 ### Payments (`payments()`)
 
@@ -901,7 +905,7 @@ Asaas::invoices()->find(string $id): AsaasResult
 Asaas::invoices()->list(array $query = []): AsaasPaginatedResult
 Asaas::invoices()->update(string $id, array|UpdateInvoiceRequest $data): AsaasResult
 Asaas::invoices()->authorize(string $id): AsaasResult
-Asaas::invoices()->cancel(string $id): AsaasResult
+Asaas::invoices()->cancel(string $id, array|CancelInvoiceRequest|null $data = null): AsaasResult
 Asaas::invoices()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
@@ -971,6 +975,48 @@ Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRe
 
 `AccessTokenPermission` covers all 33 permission codes documented by Asaas (`PAYMENT`, `TRANSFER`, `WEBHOOK`, `PIX_*`, `INVOICE`, `BILL`, etc.); `AccessTokenScope` is `READ` or `READ_WRITE`. Both DTOs accept the enum **or** the raw string for forward-compat.
 
+#### Permission ↔ endpoint mapping (heuristic)
+
+> **Heuristic mapping — not normative.** Asaas does not publish an official permission ↔ endpoint correspondence: the OpenAPI spec declares `security` only at the top of each domain file (no per-operation `security` or `x-permission` extension), and the public docs page that once described the mapping no longer resolves. The table below is our best inference from the enum names and Asaas API domains. Treat it as best-effort documentation, not contract: validate in sandbox before restricting a production key, and report drift via a GitHub issue if a restricted key returns `401/403` on an endpoint listed here.
+
+| Permission | Endpoints (heuristic) | SDK Resource |
+|---|---|---|
+| `Customer` | `/v3/customers/*` | not exposed — use `Connector` directly |
+| `CustomerNotification` | `/v3/customers/{id}/notifications`, `/v3/notifications/*` | not exposed — use `Connector` directly |
+| `Payment` | `/v3/payments`, `/v3/payments/{id}`, `/v3/payments/{id}/status`, `/v3/payments/{id}/billingInfo`, `/v3/payments/{id}/viewingInfo`, `/v3/payments/{id}/identificationField`, `/v3/payments/{id}/pixQrCode`, `/v3/payments/{id}/receiveInCash`, `/v3/payments/{id}/undoReceivedInCash`, `/v3/payments/{id}/captureAuthorizedPayment`, `/v3/payments/{id}/payWithCreditCard`, `/v3/payments/{id}/refund`, `/v3/payments/{id}/restore`, `/v3/payments/limits`, `/v3/payments/simulate`, `/v3/lean/payments/*` | `PaymentResource`, `LeanPaymentResource` |
+| `PaymentRefund` | `/v3/payments/{id}/refunds`, `/v3/payments/{id}/bankSlip/refund` | `PaymentResource::refunds*` |
+| `Chargeback` | `/v3/chargebacks/*`, `/v3/payments/{id}/chargeback` | partial — `PaymentResource::chargeback` |
+| `Installment` | `/v3/installments/*` | not exposed — use `Connector` directly |
+| `Subscription` | `/v3/subscriptions/*` | not exposed — use `Connector` directly |
+| `PixCredit` | `/v3/payments/{id}/pixQrCode` (receive via Pix); dynamic QR Code | `PaymentResource::pixQrCode` |
+| `PaymentLink` | `/v3/paymentLinks/*` | not exposed — use `Connector` directly |
+| `Checkout` | `/v3/checkouts/*` | not exposed — use `Connector` directly |
+| `CreditCard` | `/v3/creditCard/tokenizeCreditCard`, `/v3/creditCard/preAuthorization/config` | `CreditCardResource` |
+| `Anticipation` | `/v3/anticipations`, `/v3/anticipations/{id}`, `/v3/anticipations/{id}/cancel`, `/v3/anticipations/simulate`, `/v3/anticipations/limits` | not exposed — use `Connector` directly |
+| `AnticipationConfig` | `/v3/anticipations/configurations` | not exposed — use `Connector` directly |
+| `Escrow` | `/v3/escrow/{id}/finish`, `/v3/payments/{id}/escrow`, `/v3/accounts/{id}/escrow` | partial — `AccountResource::getEscrow`/`updateEscrow` |
+| `EscrowConfig` | `/v3/accounts/escrow`, `/v3/accounts/{id}/escrow` (PUT/POST config) | `AccountResource::*EscrowConfig` |
+| `CreditBureau` | `/v3/creditBureauReport`, `/v3/creditBureauReport/{id}` | not exposed — use `Connector` directly |
+| `PaymentDunning` | `/v3/paymentDunnings/*` | not exposed — use `Connector` directly |
+| `FiscalInfo` | `/v3/fiscalInfo/*` (config, services, NBS, taxes, federalServiceCodes, taxClassificationCodes, taxSituationCodes, operationIndicatorCodes, municipalOptions, nationalPortal) | `FiscalInfoResource` |
+| `Invoice` | `/v3/invoices`, `/v3/invoices/{id}`, `/v3/invoices/{id}/authorize`, `/v3/invoices/{id}/cancel` | `InvoiceResource` |
+| `PixDebit` | `/v3/pix/qrCodes/decode`, `/v3/pix/qrCodes/pay` (pay) | `PixTransactionResource::decode`/`pay` |
+| `PixAddressKey` | `/v3/pix/addressKeys`, `/v3/pix/addressKeys/{id}`, `/v3/pix/tokenBucket/addressKey` | `PixResource::*Key` |
+| `PixRecurring` | `/v3/pix/transactions/recurrings`, `/v3/pix/transactions/recurrings/{id}`, `/v3/pix/transactions/recurrings/{id}/cancel`, `/v3/pix/transactions/recurrings/{id}/items`, `/v3/pix/transactions/recurrings/items/{id}/cancel` | `PixTransactionResource::recurring*` |
+| `PixTransaction` | `/v3/pix/transactions`, `/v3/pix/transactions/{id}`, `/v3/pix/transactions/{id}/cancel`, `/v3/pix/qrCodes/static`, `/v3/pix/qrCodes/static/{id}` | `PixTransactionResource`, `PixResource::*StaticQr*` |
+| `PixAutomatic` | `/v3/pix/automatic/authorizations`, `/v3/pix/automatic/authorizations/{id}`, `/v3/pix/automatic/paymentInstructions`, `/v3/pix/automatic/paymentInstructions/{id}` | `PixAutomaticResource` |
+| `Transfer` | `/v3/transfers`, `/v3/transfers/{id}`, `/v3/transfers/{id}/cancel` | `TransferResource` |
+| `Bill` | `/v3/bill`, `/v3/bill/{id}`, `/v3/bill/{id}/cancel`, `/v3/bill/simulate` | `BillPaymentResource` |
+| `MobilePhoneRecharge` | `/v3/mobilePhoneRecharges/*` | not exposed — use `Connector` directly |
+| `FinancialTransaction` | `/v3/financialTransactions`, `/v3/finance/balance`, `/v3/finance/payment/statistics`, `/v3/finance/split/statistics` | `StatementResource` |
+| `AccountInfo` | `/v3/myAccount/`, `/v3/myAccount/accountNumber`, `/v3/myAccount/commercialInfo/`, `/v3/myAccount/fees/`, `/v3/myAccount/status/`, `/v3/wallets/` | `MyAccountResource` (partial) |
+| `PaymentCheckoutConfig` | `/v3/myAccount/paymentCheckoutConfig/` | `MyAccountResource::*PaymentCheckoutConfig` |
+| `Webhook` | `/v3/webhooks`, `/v3/webhooks/{id}`, `/v3/webhooks/{id}/removeBackoff` | `WebhookResource` |
+| `SubAccount` | `/v3/accounts`, `/v3/accounts/{id}`, `/v3/accounts/{id}/accessTokens`, `/v3/accounts/{id}/accessTokens/{accessTokenId}` | `AccountResource` |
+| `AccountDocument` | `/v3/myAccount/documents`, `/v3/myAccount/documents/{id}`, `/v3/myAccount/documents/files/{id}` | `MyAccountResource::*Document*` |
+
+Ambiguities worth flagging when validating in sandbox: `PIX_CREDIT` vs `PIX_DEBIT` (receive vs pay via Pix), `ESCROW` vs `ESCROW_CONFIG` (operations vs configuration), `ANTICIPATION` vs `ANTICIPATION_CONFIG` (analogous), and `ACCOUNT_INFO` vs `SUB_ACCOUNT` (read of own account vs CRUD over child accounts). The path `/v3/payments/{id}/chargeback` lives under the `Payment` URL prefix but is expected to require `CHARGEBACK` (resource-name wins over path-prefix).
+
 ### My Account (`myAccount()`)
 
 Operates on the **current** account behind the apiKey — used for tenant onboarding (KYC, commercial info, document upload, bank account). Must be called with the **subaccount's** apiKey, not the master.
@@ -997,6 +1043,15 @@ Asaas::myAccount()->updatePaymentCheckoutConfig(
 Asaas::myAccount()->wallets(array $query = []): AsaasPaginatedResult
 Asaas::myAccount()->delete(array|DeleteAccountRequest $data): AsaasResult
 ```
+
+> **Out of scope.** Sandbox-only endpoints such as `POST /sandbox/myAccount/approve`
+> (auto-approval shortcut for testing) are intentionally not exposed: they have no
+> production counterpart and would only obscure the real KYC flow. Use the
+> `Connector` directly if you need to reach a sandbox-only path in your test
+> harness. `bankAccount()` / `updateBankAccount()` hit
+> `GET|POST /v3/myAccount/bankAccountInfo`, which Asaas accepts in production but
+> does not formally document in `specs/domains/my-account.json` — kept here because
+> the subaccount onboarding flow depends on them.
 
 #### Subaccount onboarding (white label)
 
@@ -1114,6 +1169,7 @@ Asaas expects two distinct string formats for date fields. Mismatch (`T`, `Z`, t
 | `AccountRequest::$birthDate`, `CommercialInfoRequest::$birthDate` | `YYYY-MM-DD` | `'1985-06-15'` |
 | `CreateInvoiceRequest::$effectiveDate`, `UpdateInvoiceRequest::$effectiveDate` | `YYYY-MM-DD` | `'2026-04-01'` |
 | `TransferRequest::$scheduleDate`, `PayQrCodeRequest::$scheduleDate` | `YYYY-MM-DD` | `'2026-04-01'` |
+| `BankAccount::$ownerBirthDate` (via `TransferRequest::$bankAccount`) | `YYYY-MM-DD` | `'1990-05-15'` |
 | `DecodeQrCodeRequest::$expectedPaymentDate` | `YYYY-MM-DD` | `'2026-04-01'` |
 | `AuthorizationRequest::$startDate`, `AuthorizationRequest::$finishDate` | `YYYY-MM-DD` | `'2026-04-01'` |
 | `CreateBillPaymentRequest::$dueDate` | `YYYY-MM-DD` | `'2026-04-01'` |

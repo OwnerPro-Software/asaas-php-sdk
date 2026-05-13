@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Invoice\InvoiceResource;
+use OwnerPro\Asaas\Invoice\Request\CancelInvoiceRequest;
 use OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest;
 use OwnerPro\Asaas\Invoice\Request\UpdateInvoiceRequest;
 use OwnerPro\Asaas\Support\AsaasConnector;
@@ -168,7 +169,41 @@ it('cancels an invoice', function (array $fixture): void {
     expect($result->success)->toBeTrue();
 
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices/inv_123/cancel'
-        && $request->method() === 'POST');
+        && $request->method() === 'POST'
+        && $request->data() === []);
+})->with('invoice_fixture');
+
+it('omits cancelOnlyOnAsaas when DTO leaves it Missing', function (array $fixture): void {
+    $cancelled = array_merge($fixture, ['status' => 'CANCELLED']);
+    Http::fake(['*' => Http::response($cancelled, 200)]);
+
+    invoiceResource()->cancel('inv_123', new CancelInvoiceRequest);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices/inv_123/cancel'
+        && $request->method() === 'POST'
+        && $request->data() === []);
+})->with('invoice_fixture');
+
+it('sends cancelOnlyOnAsaas on the wire when cancelling from array', function (array $fixture): void {
+    $cancelled = array_merge($fixture, ['status' => 'CANCELLED']);
+    Http::fake(['*' => Http::response($cancelled, 200)]);
+
+    invoiceResource()->cancel('inv_123', ['cancelOnlyOnAsaas' => true]);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices/inv_123/cancel'
+        && $request->method() === 'POST'
+        && $request['cancelOnlyOnAsaas'] === true);
+})->with('invoice_fixture');
+
+it('sends cancelOnlyOnAsaas=false on the wire when cancelling from DTO', function (array $fixture): void {
+    $cancelled = array_merge($fixture, ['status' => 'CANCELLED']);
+    Http::fake(['*' => Http::response($cancelled, 200)]);
+
+    invoiceResource()->cancel('inv_123', new CancelInvoiceRequest(cancelOnlyOnAsaas: false));
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/invoices/inv_123/cancel'
+        && $request->method() === 'POST'
+        && $request['cancelOnlyOnAsaas'] === false);
 })->with('invoice_fixture');
 
 it('iterates all invoices lazily', function (array $page1): void {
@@ -227,6 +262,21 @@ it('updates invoice with typed Taxes DTO', function (array $fixture): void {
         $body = $request->data();
 
         return $body['taxes'] === ['retainIss' => false, 'iss' => 3.0, 'pis' => 1.0, 'cofins' => 2.0, 'csll' => 0.5, 'inss' => 5.0, 'ir' => 1.0];
+    });
+})->with('invoice_fixture');
+
+it('UpdateInvoiceRequest: omitted fields never reach the wire as null', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    invoiceResource()->update('inv_123', new UpdateInvoiceRequest(value: 1500.00));
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body === ['value' => 1500.00]
+            && ! array_key_exists('observations', $body)
+            && ! array_key_exists('externalReference', $body)
+            && ! array_key_exists('serviceDescription', $body);
     });
 })->with('invoice_fixture');
 

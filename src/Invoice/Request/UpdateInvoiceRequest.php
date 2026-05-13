@@ -12,24 +12,27 @@ final readonly class UpdateInvoiceRequest
 {
     use HasUpdatableArrayFactory;
 
-    public Taxes|Missing|null $taxes;
+    public Taxes|Missing $taxes;
 
-    /** @param array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes|Missing|null $taxes */
+    /**
+     * @param  array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes|Missing  $taxes
+     * @param  string|Missing  $effectiveDate  Format `YYYY-MM-DD`.
+     */
     public function __construct(
-        public string|Missing|null $serviceDescription = Missing::Value,
-        public string|Missing|null $observations = Missing::Value,
-        public float|Missing|null $value = Missing::Value,
-        public float|Missing|null $deductions = Missing::Value,
-        public string|Missing|null $effectiveDate = Missing::Value,
-        public string|Missing|null $municipalServiceName = Missing::Value,
-        array|Taxes|Missing|null $taxes = Missing::Value,
-        public string|Missing|null $externalReference = Missing::Value,
-        public bool|Missing|null $updatePayment = Missing::Value,
+        public string|Missing $serviceDescription = Missing::Value,
+        public string|Missing $observations = Missing::Value,
+        public float|Missing $value = Missing::Value,
+        public float|Missing $deductions = Missing::Value,
+        public string|Missing $effectiveDate = Missing::Value,
+        public string|Missing $municipalServiceName = Missing::Value,
+        array|Taxes|Missing $taxes = Missing::Value,
+        public string|Missing $externalReference = Missing::Value,
+        public bool|Missing $updatePayment = Missing::Value,
     ) {
         $this->taxes = is_array($taxes) ? Taxes::fromArray($taxes) : $taxes;
     }
 
-    /** @param array{serviceDescription?: string|null, observations?: string|null, value?: float|null, deductions?: float|null, effectiveDate?: string|null, municipalServiceName?: string|null, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|null, externalReference?: string|null, updatePayment?: bool|null} $data */
+    /** @param array{serviceDescription?: string, observations?: string, value?: float, deductions?: float, effectiveDate?: string, municipalServiceName?: string, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes, externalReference?: string, updatePayment?: bool} $data */
     public static function fromArray(array $data): static
     {
         return new self(

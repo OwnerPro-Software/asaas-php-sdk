@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Statement;
 
+/**
+ * Classification of a `GET /v3/financialTransactions` row.
+ *
+ * Response-classification helper, not a request input. Asaas does not expose
+ * `type` as a request filter on `/v3/financialTransactions` — the enum exists
+ * so consumers can `match` over the raw string returned in `$result->data`
+ * without maintaining their own constant map.
+ */
 enum FinancialTransactionType: string
 {
     case PaymentReceived = 'PAYMENT_RECEIVED';

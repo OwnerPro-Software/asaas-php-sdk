@@ -11,6 +11,7 @@ final readonly class CreateBillPaymentRequest
 {
     use HasArrayFactory;
 
+    /** @param string|null $dueDate Format `YYYY-MM-DD`. */
     public function __construct(
         public string $identificationField,
         public ?string $scheduleDate = null,

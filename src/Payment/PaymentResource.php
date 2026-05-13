@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Payment;
 
 use Generator;
-use InvalidArgumentException;
 use OwnerPro\Asaas\Payment\Request\CreatePaymentRequest;
 use OwnerPro\Asaas\Payment\Request\PayWithCreditCardRequest;
 use OwnerPro\Asaas\Payment\Request\ReceivePaymentInCashRequest;
@@ -17,8 +16,6 @@ use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Connector;
-use OwnerPro\Asaas\Support\DTO\CreditCard;
-use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\IdGuard;
 
 final readonly class PaymentResource
@@ -36,21 +33,10 @@ final readonly class PaymentResource
     /** @param array<string, mixed>|CreatePaymentRequest $data */
     public function createWithCreditCard(array|CreatePaymentRequest $data): AsaasResult
     {
-        $request = $data instanceof CreatePaymentRequest ? $data : CreatePaymentRequest::fromArray($data); // @phpstan-ignore argument.type
-
-        if ($request->remoteIp === null) {
-            throw new InvalidArgumentException(
-                'PaymentResource::createWithCreditCard: remoteIp is required by Asaas antifraud analysis.',
-            );
-        }
-
-        if ($request->creditCardToken === null && (! $request->creditCard instanceof CreditCard || ! $request->creditCardHolderInfo instanceof CreditCardHolderInfo)) {
-            throw new InvalidArgumentException(
-                'PaymentResource::createWithCreditCard: provide either creditCardToken or both creditCard and creditCardHolderInfo.',
-            );
-        }
-
-        return $this->connector->post(self::BASE.'/', $request->toArray());
+        return $this->connector->post(
+            self::BASE.'/',
+            CreatePaymentRequest::ensureReadyForCreditCard($data)->toArray(),
+        );
     }
 
     public function find(string $id): AsaasResult

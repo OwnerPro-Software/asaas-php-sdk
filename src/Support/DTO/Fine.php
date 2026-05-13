@@ -28,13 +28,17 @@ final readonly class Fine implements Arrayable
         );
     }
 
-    /** @param array{value?: float, type?: FineType|string}|Fine|float|Missing|null $value */
-    public static function coerce(array|self|float|Missing|null $value): self|Missing|null
+    /** @param array{value?: float, type?: FineType|string}|Fine|float|Missing $value */
+    public static function coerce(array|self|float|Missing $value): self|Missing
     {
-        return match (true) {
-            $value === null, $value instanceof Missing, $value instanceof self => $value,
-            is_array($value) => self::fromArray($value),
-            default => new self(value: $value),
-        };
+        if ($value instanceof Missing || $value instanceof self) {
+            return $value;
+        }
+
+        if (is_array($value)) {
+            return self::fromArray($value);
+        }
+
+        return new self(value: $value);
     }
 }

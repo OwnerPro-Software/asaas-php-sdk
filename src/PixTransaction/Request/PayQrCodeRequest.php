@@ -18,7 +18,10 @@ final readonly class PayQrCodeRequest implements JsonSerializable
 
     public QrCodePayload $qrCode;
 
-    /** @param array{payload?: string, changeValue?: float}|QrCodePayload $qrCode */
+    /**
+     * @param  array{payload?: string, changeValue?: float}|QrCodePayload  $qrCode
+     * @param  string|null  $scheduleDate  Format `YYYY-MM-DD`.
+     */
     public function __construct(
         #[SensitiveParameter]
         array|QrCodePayload $qrCode,

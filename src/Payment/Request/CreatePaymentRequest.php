@@ -84,12 +84,12 @@ final readonly class CreatePaymentRequest implements JsonSerializable
         $this->callback = is_array($callback) ? Callback::fromArray($callback) : $callback;
         $this->creditCard = is_array($creditCard) ? CreditCard::fromArray($creditCard) : $creditCard;
         $this->creditCardHolderInfo = is_array($creditCardHolderInfo) ? CreditCardHolderInfo::fromArray($creditCardHolderInfo) : $creditCardHolderInfo;
-        /** @var ?Discount */
-        $coercedDiscount = Discount::coerce($discount);
-        /** @var ?Interest */
-        $coercedInterest = Interest::coerce($interest);
-        /** @var ?Fine */
-        $coercedFine = Fine::coerce($fine);
+        /** @var ?Discount $coercedDiscount */
+        $coercedDiscount = $discount === null ? null : Discount::coerce($discount);
+        /** @var ?Interest $coercedInterest */
+        $coercedInterest = $interest === null ? null : Interest::coerce($interest);
+        /** @var ?Fine $coercedFine */
+        $coercedFine = $fine === null ? null : Fine::coerce($fine);
         $this->discount = $coercedDiscount;
         $this->interest = $coercedInterest;
         $this->fine = $coercedFine;
@@ -122,6 +122,38 @@ final readonly class CreatePaymentRequest implements JsonSerializable
             'authorizeOnly' => $this->authorizeOnly,
             'creditCardToken' => $this->creditCardToken !== null ? '***' : null,
         ];
+    }
+
+    /**
+     * Coerce + cross-field validate for the credit-card create flow shared by
+     * `PaymentResource::createWithCreditCard()` (`/v3/payments/`) and
+     * `LeanPaymentResource::createWithCreditCard()` (`/v3/lean/payments/`):
+     *  - `remoteIp` is required by Asaas antifraud analysis.
+     *  - either `creditCardToken` is set, or both `creditCard` and
+     *    `creditCardHolderInfo` are present.
+     *
+     * Throws `InvalidArgumentException` synchronously instead of letting the
+     * request reach Asaas with a guaranteed 400.
+     *
+     * @param  array<string, mixed>|self  $data
+     */
+    public static function ensureReadyForCreditCard(array|self $data): self
+    {
+        $request = $data instanceof self ? $data : self::fromArray($data); // @phpstan-ignore argument.type
+
+        if ($request->remoteIp === null) {
+            throw new InvalidArgumentException(
+                'CreatePaymentRequest: remoteIp is required by Asaas antifraud analysis.',
+            );
+        }
+
+        if ($request->creditCardToken === null && (! $request->creditCard instanceof CreditCard || ! $request->creditCardHolderInfo instanceof CreditCardHolderInfo)) {
+            throw new InvalidArgumentException(
+                'CreatePaymentRequest: provide either creditCardToken or both creditCard and creditCardHolderInfo.',
+            );
+        }
+
+        return $request;
     }
 
     /** @param array{customer?: string, billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float, interest?: array{value?: float}|Interest|float, fine?: array{value?: float, type?: FineType|string}|Fine|float, postalService?: bool, daysAfterDueDateToRegistrationCancellation?: int, installmentCount?: int, installmentValue?: float, totalValue?: float, pixAutomaticAuthorizationId?: string, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}, creditCard?: array{holderName?: string, number?: string, expiryMonth?: string, expiryYear?: string, ccv?: string}, creditCardHolderInfo?: array{name?: string, email?: string, cpfCnpj?: string, postalCode?: string, addressNumber?: string, phone?: string, addressComplement?: string, mobilePhone?: string}, remoteIp?: string, authorizeOnly?: bool, creditCardToken?: string} $data */

@@ -18,7 +18,7 @@ final readonly class AsaasConnector implements Connector
 
     public function __construct(
         private PendingRequest $pendingRequest,
-        private string $baseUrl = '',
+        private string $baseUrl,
     ) {}
 
     /** @return array{baseUrl: string} */
@@ -158,18 +158,40 @@ final readonly class AsaasConnector implements Connector
         return AsaasResult::success($data, $rawResponse);
     }
 
-    /** @return list<array{code?: string, description?: string}> */
+    /**
+     * Normalize the upstream error envelope into the shape `AsaasResult` exposes.
+     *
+     * The returned list is **best-effort**: when Asaas (or an intermediary proxy)
+     * returns the canonical envelope (`{"errors": [{"code", "description"}]}`)
+     * each item carries `code` and `description`. Otherwise the SDK falls back
+     * to a synthesized `UNKNOWN_ERROR` row whose `description` is either the
+     * upstream `message` field (alternative shape) or the response body trimmed
+     * to 350 chars with HTML stripped. The empty-array case is synthesized too,
+     * so `$result->errors[0]['description']` is always populated.
+     *
+     * @return non-empty-list<array{code?: string, description?: string}>
+     */
     private function extractErrors(Response $response): array
     {
         $errors = $response->json('errors');
 
         if (! is_array($errors)) {
+            $message = $response->json('message');
+
+            if (is_string($message) && $message !== '') {
+                return [['code' => 'UNKNOWN_ERROR', 'description' => $message]];
+            }
+
             $body = mb_substr(strip_tags($response->body()), 0, 350);
 
             return [['code' => 'UNKNOWN_ERROR', 'description' => $body]];
         }
 
-        /** @var list<array{code?: string, description?: string}> $errors */
+        if ($errors === []) {
+            return [['code' => 'UNKNOWN_ERROR', 'description' => sprintf('Asaas returned empty errors array (status %d)', $response->status())]];
+        }
+
+        /** @var non-empty-list<array{code?: string, description?: string}> $errors */
         return $errors;
     }
 }

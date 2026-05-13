@@ -29,37 +29,38 @@ final readonly class UpdatePaymentRequest
 {
     use HasUpdatableArrayFactory;
 
-    /** @var list<Split>|Missing|null */
-    public array|Missing|null $split;
+    /** @var list<Split>|Missing */
+    public array|Missing $split;
 
-    public Callback|Missing|null $callback;
+    public Callback|Missing $callback;
 
-    public Discount|Missing|null $discount;
+    public Discount|Missing $discount;
 
-    public Interest|Missing|null $interest;
+    public Interest|Missing $interest;
 
-    public Fine|Missing|null $fine;
+    public Fine|Missing $fine;
 
     /**
-     * @param  list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}|Split>|Missing|null  $split
-     * @param  array{successUrl?: string, autoRedirect?: bool}|Callback|Missing|null  $callback
-     * @param  array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float|Missing|null  $discount
-     * @param  array{value?: float}|Interest|float|Missing|null  $interest
-     * @param  array{value?: float, type?: FineType|string}|Fine|float|Missing|null  $fine
+     * @param  list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}|Split>|Missing  $split
+     * @param  array{successUrl?: string, autoRedirect?: bool}|Callback|Missing  $callback
+     * @param  array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float|Missing  $discount
+     * @param  array{value?: float}|Interest|float|Missing  $interest
+     * @param  array{value?: float, type?: FineType|string}|Fine|float|Missing  $fine
+     * @param  string|Missing  $dueDate  Format `YYYY-MM-DD`.
      */
     public function __construct(
-        public BillingType|string|Missing|null $billingType = Missing::Value,
-        public float|Missing|null $value = Missing::Value,
-        public string|Missing|null $dueDate = Missing::Value,
-        public string|Missing|null $description = Missing::Value,
-        public string|Missing|null $externalReference = Missing::Value,
-        array|Discount|float|Missing|null $discount = Missing::Value,
-        array|Interest|float|Missing|null $interest = Missing::Value,
-        array|Fine|float|Missing|null $fine = Missing::Value,
-        public bool|Missing|null $postalService = Missing::Value,
-        public int|Missing|null $daysAfterDueDateToRegistrationCancellation = Missing::Value,
-        array|Missing|null $split = Missing::Value,
-        array|Callback|Missing|null $callback = Missing::Value,
+        public BillingType|string|Missing $billingType = Missing::Value,
+        public float|Missing $value = Missing::Value,
+        public string|Missing $dueDate = Missing::Value,
+        public string|Missing $description = Missing::Value,
+        public string|Missing $externalReference = Missing::Value,
+        array|Discount|float|Missing $discount = Missing::Value,
+        array|Interest|float|Missing $interest = Missing::Value,
+        array|Fine|float|Missing $fine = Missing::Value,
+        public bool|Missing $postalService = Missing::Value,
+        public int|Missing $daysAfterDueDateToRegistrationCancellation = Missing::Value,
+        array|Missing $split = Missing::Value,
+        array|Callback|Missing $callback = Missing::Value,
     ) {
         $this->split = is_array($split) ? array_map(
             fn (array|Split $item): Split => $item instanceof Split ? $item : Split::fromArray($item),
@@ -71,7 +72,7 @@ final readonly class UpdatePaymentRequest
         $this->fine = Fine::coerce($fine);
     }
 
-    /** @param array{billingType?: BillingType|string|null, value?: float|null, dueDate?: string|null, description?: string|null, externalReference?: string|null, discount?: array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float|null, interest?: array{value?: float}|Interest|float|null, fine?: array{value?: float, type?: FineType|string}|Fine|float|null, postalService?: bool|null, daysAfterDueDateToRegistrationCancellation?: int|null, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>|null, callback?: array{successUrl?: string, autoRedirect?: bool}|null} $data */
+    /** @param array{billingType?: BillingType|string, value?: float, dueDate?: string, description?: string, externalReference?: string, discount?: array{value?: float, dueDateLimitDays?: int, type?: DiscountType|string}|Discount|float, interest?: array{value?: float}|Interest|float, fine?: array{value?: float, type?: FineType|string}|Fine|float, postalService?: bool, daysAfterDueDateToRegistrationCancellation?: int, split?: list<array{walletId?: string, fixedValue?: float, percentualValue?: float, totalFixedValue?: float, externalReference?: string, description?: string}>, callback?: array{successUrl?: string, autoRedirect?: bool}} $data */
     public static function fromArray(array $data): static
     {
         return new self(

@@ -58,6 +58,21 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   DocumentType|string $type, string $filename)` — completes the
   `/v3/myAccount/documents/files/{id}` triplet (GET / POST / DELETE).
 
+### Changed
+
+- `AsaasConnector::__construct(PendingRequest $pendingRequest, string $baseUrl)`
+  — the second argument is now **required** (was `string $baseUrl = ''`).
+  Removed to eliminate an unkillable mutation: no test could distinguish
+  the default from an explicit `''` because every documented construction
+  path supplies a real URL. All factories (`forStandalone`, `forLaravel`)
+  and `FakeAsaasClient` already pass it, so users going through
+  `AsaasClient::for()`, the `Asaas` facade, or the Laravel service
+  provider are unaffected. Only code calling `new AsaasConnector($pr)`
+  directly (not documented in the README, no in-repo callers) needs to
+  add an explicit baseUrl — pass `''` to keep the prior behaviour, or
+  the real `Environment::baseUrl()` if the `PendingRequest` is not
+  already pre-configured.
+
 ### Fixed
 
 - `PayWithCreditCardRequest` now validates cross-field in the constructor and
@@ -67,6 +82,38 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
 - `PaymentResource::createWithCreditCard()` guards `remoteIp` (required by
   Asaas antifraud analysis on `/v3/payments/`) and the same token-vs-card
   cross-field rule before the HTTP roundtrip.
+- `LeanPaymentResource::createWithCreditCard()` mirrors the
+  `PaymentResource::createWithCreditCard()` guard for `/v3/lean/payments/`:
+  throws `InvalidArgumentException` synchronously when `remoteIp` is absent
+  or when neither `creditCardToken` nor both `creditCard` and
+  `creditCardHolderInfo` are present. Previously the Lean flow forwarded the
+  payload straight to Asaas and surfaced a generic 400 to the caller.
+- `AsaasConnector::extractErrors()` no longer returns an empty `errors`
+  list when the upstream envelope is `{ "errors": [] }` (or `errors`
+  missing) on a 4xx/5xx response. The SDK now synthesizes
+  `[['code' => 'UNKNOWN_ERROR', 'description' => 'Asaas returned empty
+  errors array (status {status})']]`, so `$result->errors[0]` is always
+  populated and `$result->orFail()` surfaces a useful message instead of
+  the generic `Asaas API error` fallback from `AsaasRequestException`.
+- `InvoiceResource::cancel()` accepts an optional
+  `array|CancelInvoiceRequest|null` body so callers can pass
+  `cancelOnlyOnAsaas` to `POST /v3/invoices/{id}/cancel`. Previously the
+  SDK sent an empty body, dropping the flag and forcing every cancellation
+  through the prefeitura. The new `CancelInvoiceRequest` DTO uses the
+  `Missing` pattern so the field is omitted unless the caller opts in,
+  preserving Asaas's server-side default when no DTO is supplied.
+- `UpdateInvoiceRequest`, `UpdatePaymentRequest`, and `UpdateWebhookRequest`
+  no longer accept explicit `null` for their fields. Property types tightened
+  from `T|Missing|null` to `T|Missing`, and the `coerce()` helpers on
+  `Callback`, `Discount`, `Fine`, `Interest` follow suit (`self|Missing`,
+  drop `null`). The Asaas OpenAPI spec marks every request-body field as
+  `nullable: false`, so the previous null-pass-through was always rejected
+  by the server with HTTP 400 (or, worse, silently cleared the field on
+  certain endpoints). Migration: callers that passed `null` hoping to send
+  `{"field": null}` must now omit the field instead — either skip the
+  constructor argument (it defaults to `Missing::Value`) or drop the key
+  from the array passed to `fromArray()` / the resource method. Passing
+  `null` to a typed field now raises `TypeError` at construction time.
 
 ### Documentation
 
@@ -103,6 +150,29 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
 - Wire tests pin all 12 `DocumentType` cases on the multipart body of
   `MyAccountResource::uploadDocumentFile()` and the 204 No Content path on
   both `deleteAccessToken` and `removeBackoff`.
+- PHPDoc + README — spec-mirroring P3 doc batch closing the residual gaps
+  surfaced by the 16-dimension audit. No behaviour change: docblocks on
+  `BankAccount::$ownerBirthDate` (date format), `PayWithCreditCardRequest`
+  (cross-field token-vs-card rule, less strict than the spec),
+  `CreateWebhookRequest` (`url`/`email` promoted to required as a safety net
+  beyond the spec), `AccessTokenConfig` (inline-only convenience used by
+  `AccountRequest`), `MyAccountResource::uploadDocumentFile()` and
+  `updateDocumentFile()` (binary file contents wording aligned with the
+  other multipart methods), `MyAccountResource::bankAccount()` /
+  `updateBankAccount()` (extra-spec but accepted by Asaas in production),
+  `AccountResource::findAccessToken()` and the escrow-config block
+  (clarifying extra-spec and cross-domain placement, both candidates for
+  dedicated Resources in a future major), `HasUpdatableArrayFactory` and
+  `Missing` (codifying the `T|Missing` typing rule that prevents the v2.1
+  null-leak class of bugs), `Statement\FinancialTransactionType` and
+  `Transfer\TransferOperationType` (response-classification helpers, with
+  `Internal` flagged as response-only on `TransferOperationType`), and
+  `AsaasConnector::extractErrors()` (best-effort normalization contract).
+  README — short note above the Resources section explaining that
+  `AsaasResult::$data` stays `array<string, mixed>` (consult the spec /
+  Asaas docs for response field shape), and a "Out of scope" admonition
+  on `myAccount()` covering the sandbox-only approve endpoint and the
+  extra-spec `bankAccountInfo` pair.
 
 ## [2.0.0] - 2026-05-12
 

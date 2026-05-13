@@ -50,7 +50,7 @@ final readonly class MyAccountResource
         return $this->connector->get(self::BASE.'/documents');
     }
 
-    /** @param string|resource $file */
+    /** @param string|resource $file Document file contents (binary). */
     public function uploadDocumentFile(
         string $documentId,
         mixed $file,
@@ -75,7 +75,7 @@ final readonly class MyAccountResource
         return $this->connector->get($this->documentFilePath($fileId));
     }
 
-    /** @param string|resource $file */
+    /** @param string|resource $file Document file contents (binary). */
     public function updateDocumentFile(
         string $fileId,
         mixed $file,
@@ -100,12 +100,24 @@ final readonly class MyAccountResource
         return $this->connector->delete($this->documentFilePath($fileId));
     }
 
+    /**
+     * `GET /v3/myAccount/bankAccountInfo`.
+     *
+     * Not formally documented in the `my-account` OpenAPI spec but accepted by
+     * Asaas in practice. Used by the subaccount onboarding flow to read the
+     * configured withdrawal account before `updateBankAccount()`.
+     */
     public function bankAccount(): AsaasResult
     {
         return $this->connector->get(self::BASE.'/bankAccountInfo');
     }
 
-    /** @param array<string, mixed>|AccountBankAccountRequest $data */
+    /**
+     * `POST /v3/myAccount/bankAccountInfo`. Same spec-coverage caveat as
+     * `bankAccount()`: undocumented in the spec, supported in production.
+     *
+     * @param  array<string, mixed>|AccountBankAccountRequest  $data
+     */
     public function updateBankAccount(array|AccountBankAccountRequest $data): AsaasResult
     {
         return $this->connector->post(

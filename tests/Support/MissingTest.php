@@ -20,28 +20,11 @@ it('UpdatePaymentRequest: unprovided fields default to Missing and are stripped'
     expect($request->toArray())->toBe(['value' => 200.00]);
 });
 
-it('UpdatePaymentRequest: explicit null is kept in toArray', function (): void {
-    $request = new UpdatePaymentRequest(description: null, value: 200.00);
-
-    expect($request->description)->toBeNull();
-    $array = $request->toArray();
-    expect($array)->toHaveKey('description');
-    expect($array['description'])->toBeNull();
-    expect($array['value'])->toBe(200.00);
-});
-
 it('UpdatePaymentRequest: fromArray with missing key defaults to Missing', function (): void {
     $request = UpdatePaymentRequest::fromArray(['value' => 100.00]);
 
     expect($request->description)->toBe(Missing::Value);
     expect($request->toArray())->toBe(['value' => 100.00]);
-});
-
-it('UpdatePaymentRequest: fromArray with explicit null keeps null', function (): void {
-    $request = UpdatePaymentRequest::fromArray(['value' => 100.00, 'description' => null]);
-
-    expect($request->description)->toBeNull();
-    expect($request->toArray())->toBe(['value' => 100.00, 'description' => null]);
 });
 
 it('UpdatePaymentRequest: fromArray serializes nested Split DTOs', function (): void {
@@ -58,6 +41,11 @@ it('UpdatePaymentRequest: fromArray serializes nested Split DTOs', function (): 
     ]);
 });
 
+it('UpdatePaymentRequest: explicit null on a typed field is rejected at runtime', function (): void {
+    // @phpstan-ignore-next-line — wire test pin: type system rejects null; runtime confirms
+    new UpdatePaymentRequest(description: null, value: 200.00);
+})->throws(TypeError::class);
+
 // --- UpdateInvoiceRequest ---
 
 it('UpdateInvoiceRequest: unprovided fields default to Missing and are stripped', function (): void {
@@ -65,21 +53,6 @@ it('UpdateInvoiceRequest: unprovided fields default to Missing and are stripped'
 
     expect($request->serviceDescription)->toBe(Missing::Value);
     expect($request->toArray())->toBe(['value' => 500.00]);
-});
-
-it('UpdateInvoiceRequest: explicit null is kept in toArray', function (): void {
-    $request = new UpdateInvoiceRequest(observations: null, value: 500.00);
-
-    $array = $request->toArray();
-    expect($array)->toHaveKey('observations');
-    expect($array['observations'])->toBeNull();
-});
-
-it('UpdateInvoiceRequest: fromArray with explicit null keeps null', function (): void {
-    $request = UpdateInvoiceRequest::fromArray(['value' => 500.00, 'externalReference' => null]);
-
-    expect($request->externalReference)->toBeNull();
-    expect($request->toArray())->toBe(['value' => 500.00, 'externalReference' => null]);
 });
 
 it('UpdateInvoiceRequest: fromArray serializes nested Taxes DTO', function (): void {
@@ -92,6 +65,11 @@ it('UpdateInvoiceRequest: fromArray serializes nested Taxes DTO', function (): v
     expect($request->toArray()['taxes'])->toBe(['retainIss' => false, 'iss' => 3.0, 'pis' => 0.65, 'cofins' => 3.0, 'csll' => 1.0, 'inss' => 0.0, 'ir' => 1.5]);
 });
 
+it('UpdateInvoiceRequest: explicit null on a typed field is rejected at runtime', function (): void {
+    // @phpstan-ignore-next-line — wire test pin
+    new UpdateInvoiceRequest(observations: null, value: 500.00);
+})->throws(TypeError::class);
+
 // --- UpdateWebhookRequest ---
 
 it('UpdateWebhookRequest: unprovided fields default to Missing and are stripped', function (): void {
@@ -101,26 +79,16 @@ it('UpdateWebhookRequest: unprovided fields default to Missing and are stripped'
     expect($request->toArray())->toBe(['enabled' => false]);
 });
 
-it('UpdateWebhookRequest: explicit null is kept in toArray', function (): void {
-    $request = new UpdateWebhookRequest(name: null, enabled: true);
+it('UpdateWebhookRequest: explicit null on a typed field is rejected at runtime', function (): void {
+    // @phpstan-ignore-next-line — wire test pin
+    new UpdateWebhookRequest(name: null, enabled: true);
+})->throws(TypeError::class);
 
-    $array = $request->toArray();
-    expect($array)->toHaveKey('name');
-    expect($array['name'])->toBeNull();
-});
-
-it('UpdateWebhookRequest: fromArray with explicit null keeps null', function (): void {
-    $request = UpdateWebhookRequest::fromArray(['enabled' => true, 'name' => null]);
-
-    expect($request->name)->toBeNull();
-    expect($request->toArray())->toBe(['name' => null, 'enabled' => true]);
-});
-
-it('UpdateWebhookRequest: debugInfo shows null for null authToken and omits Missing fields', function (): void {
-    $request = new UpdateWebhookRequest(url: 'https://example.com', authToken: null);
+it('UpdateWebhookRequest: debugInfo omits Missing fields', function (): void {
+    $request = new UpdateWebhookRequest(url: 'https://example.com');
 
     $debug = $request->__debugInfo();
     expect($debug['url'])->toBe('https://example.com');
-    expect($debug['authToken'])->toBeNull();
     expect($debug)->not->toHaveKey('name');
+    expect($debug)->not->toHaveKey('authToken');
 });

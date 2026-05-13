@@ -1,0 +1,8 @@
+{
+    "errors": [
+        {
+            "code": "internal_error",
+            "description": "An unexpected error occurred while processing the request."
+        }
+    ]
+}

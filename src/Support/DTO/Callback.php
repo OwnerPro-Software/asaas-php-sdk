@@ -13,6 +13,9 @@ final readonly class Callback implements Arrayable
 {
     use HasArrayFactory;
 
+    /**
+     * @param  string  $successUrl  maxLength: 255 (validated server-side by Asaas across every endpoint that accepts a `callback`).
+     */
     public function __construct(
         public string $successUrl,
         public ?bool $autoRedirect = null,
@@ -27,8 +30,8 @@ final readonly class Callback implements Arrayable
         );
     }
 
-    /** @param array{successUrl?: string, autoRedirect?: bool}|Callback|Missing|null $value */
-    public static function coerce(array|self|Missing|null $value): self|Missing|null
+    /** @param array{successUrl?: string, autoRedirect?: bool}|Callback|Missing $value */
+    public static function coerce(array|self|Missing $value): self|Missing
     {
         return is_array($value) ? self::fromArray($value) : $value;
     }

@@ -41,10 +41,105 @@ it('creates a lean payment with credit card via /lean/payments/', function (): v
         billingType: 'CREDIT_CARD',
         value: 100.0,
         dueDate: '2026-06-01',
+        remoteIp: '203.0.113.42',
+        creditCardToken: 'tok_xyz',
     ));
 
-    Http::assertSent(fn ($r): bool => $r->method() === 'POST'
-        && $r->url() === 'https://api-sandbox.asaas.com/v3/lean/payments/');
+    Http::assertSent(function ($r): bool {
+        if ($r->method() !== 'POST' || $r->url() !== 'https://api-sandbox.asaas.com/v3/lean/payments/') {
+            return false;
+        }
+        $body = $r->data();
+
+        return ($body['remoteIp'] ?? null) === '203.0.113.42'
+            && ($body['creditCardToken'] ?? null) === 'tok_xyz';
+    });
+});
+
+it('pins remoteIp on the wire for lean createWithCreditCard from array payload', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'pay_1'], 200)]);
+
+    leanPaymentResource()->createWithCreditCard([
+        'customer' => 'cus_1',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 100.0,
+        'dueDate' => '2026-06-01',
+        'remoteIp' => '203.0.113.42',
+        'creditCardToken' => 'tok_xyz',
+    ]);
+
+    Http::assertSent(function ($r): bool {
+        if ($r->method() !== 'POST' || $r->url() !== 'https://api-sandbox.asaas.com/v3/lean/payments/') {
+            return false;
+        }
+        $body = $r->data();
+
+        return ($body['remoteIp'] ?? null) === '203.0.113.42'
+            && ($body['creditCardToken'] ?? null) === 'tok_xyz';
+    });
+});
+
+it('rejects lean createWithCreditCard when remoteIp is missing', function (): void {
+    leanPaymentResource()->createWithCreditCard([
+        'customer' => 'cus_1',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 100.0,
+        'dueDate' => '2026-06-01',
+        'creditCardToken' => 'tok_xyz',
+    ]);
+})->throws(InvalidArgumentException::class, 'remoteIp is required');
+
+it('rejects lean createWithCreditCard when neither token nor card+holder are provided', function (): void {
+    leanPaymentResource()->createWithCreditCard([
+        'customer' => 'cus_1',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 100.0,
+        'dueDate' => '2026-06-01',
+        'remoteIp' => '203.0.113.42',
+    ]);
+})->throws(InvalidArgumentException::class, 'provide either creditCardToken');
+
+it('rejects lean createWithCreditCard with card but no holder info', function (): void {
+    leanPaymentResource()->createWithCreditCard([
+        'customer' => 'cus_1',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 100.0,
+        'dueDate' => '2026-06-01',
+        'remoteIp' => '203.0.113.42',
+        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
+    ]);
+})->throws(InvalidArgumentException::class, 'provide either creditCardToken');
+
+it('rejects lean createWithCreditCard with holder info but no card', function (): void {
+    leanPaymentResource()->createWithCreditCard([
+        'customer' => 'cus_1',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 100.0,
+        'dueDate' => '2026-06-01',
+        'remoteIp' => '203.0.113.42',
+        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+    ]);
+})->throws(InvalidArgumentException::class, 'provide either creditCardToken');
+
+it('accepts lean createWithCreditCard with creditCard plus holderInfo (no token)', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'pay_lean_2'], 200)]);
+
+    leanPaymentResource()->createWithCreditCard([
+        'customer' => 'cus_1',
+        'billingType' => 'CREDIT_CARD',
+        'value' => 100.0,
+        'dueDate' => '2026-06-01',
+        'remoteIp' => '203.0.113.42',
+        'creditCard' => ['holderName' => 'John', 'number' => '4111111111111111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '123'],
+        'creditCardHolderInfo' => ['name' => 'John', 'email' => 'j@t.com', 'cpfCnpj' => '123', 'postalCode' => '01001000', 'addressNumber' => '1', 'phone' => '11999'],
+    ]);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/lean/payments/'
+        && $request->method() === 'POST'
+        && ($request->data()['creditCardToken'] ?? null) === null
+        && ($request->data()['creditCard']['holderName'] ?? null) === 'John'
+        && ($request->data()['creditCardHolderInfo']['email'] ?? null) === 'j@t.com'
+        && ($request->data()['remoteIp'] ?? null) === '203.0.113.42');
 });
 
 it('finds a lean payment', function (): void {

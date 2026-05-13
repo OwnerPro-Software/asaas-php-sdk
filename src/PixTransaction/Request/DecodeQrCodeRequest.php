@@ -11,6 +11,7 @@ final readonly class DecodeQrCodeRequest
 {
     use HasArrayFactory;
 
+    /** @param string|null $expectedPaymentDate Format `YYYY-MM-DD`. */
     public function __construct(
         public string $payload,
         public ?float $changeValue = null,

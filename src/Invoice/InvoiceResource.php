@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Invoice;
 
 use Generator;
+use OwnerPro\Asaas\Invoice\Request\CancelInvoiceRequest;
 use OwnerPro\Asaas\Invoice\Request\CreateInvoiceRequest;
 use OwnerPro\Asaas\Invoice\Request\UpdateInvoiceRequest;
 use OwnerPro\Asaas\Support\AsaasPaginatedError;
@@ -47,9 +48,12 @@ final readonly class InvoiceResource
         return $this->connector->post($this->path($id, '/authorize'));
     }
 
-    public function cancel(string $id): AsaasResult
+    /** @param array<string, mixed>|CancelInvoiceRequest|null $data */
+    public function cancel(string $id, array|CancelInvoiceRequest|null $data = null): AsaasResult
     {
-        return $this->connector->post($this->path($id, '/cancel'));
+        $body = $data === null ? [] : CancelInvoiceRequest::resolveData($data);
+
+        return $this->connector->post($this->path($id, '/cancel'), $body);
     }
 
     /**
