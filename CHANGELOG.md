@@ -14,6 +14,17 @@ Major release prep. Two consecutive spec-alignment audits against `specs/asaas_o
 
 ### Breaking
 
+- **Dropped Laravel 11 support; added Laravel 13 support.** `composer.json`
+  now requires `illuminate/http` / `illuminate/support` `^12.0|^13.0` (was
+  `^11.0|^12.0`). The CI matrix tests Laravel 12 and 13 against PHP 8.3 and
+  8.4. Reason: Laravel 11's `Http\Client\PendingRequest::parseMultipartBodyFormat`
+  does not flatten nested arrays into `key[]` multipart elements — it passes
+  the raw nested array straight to Guzzle, which then throws
+  `InvalidArgumentException: A 'contents' key is required`. Laravel 12
+  introduced the flattening behavior the SDK's multipart payload encoding now
+  depends on. Rather than re-implement the flattening inside `MultipartPayload`
+  for an EOL-imminent framework, the constraint was tightened. Migration:
+  upgrade to Laravel 12 or 13.
 - `OwnerPro\Asaas\Account\DocumentType` enum reworked to match the 12 KYC
   document types Asaas accepts. The previous `Minutes = 'MINUTES'` case was
   rejected by the server (server expects `MINUTES_OF_CONSTITUTION` /
