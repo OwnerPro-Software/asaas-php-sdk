@@ -78,6 +78,11 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   `MyAccountResource::updateDocumentFile(string $fileId, mixed $file,
   DocumentType|string $type, string $filename)` — completes the
   `/v3/myAccount/documents/files/{id}` triplet (GET / POST / DELETE).
+- `MyAccountResource::approveSandbox()` — wraps the sandbox-only
+  `POST /v3/sandbox/myAccount/approve` endpoint, fast-approving every
+  status slot (commercial info, bank account, documentation, general)
+  to unblock white-label onboarding integration tests. Returns HTTP 400
+  in production; only call against `Environment::Sandbox`.
 
 ### Changed
 

@@ -24,6 +24,17 @@ final readonly class MyAccountResource
         return $this->connector->get(self::BASE.'/status');
     }
 
+    /**
+     * `POST /v3/sandbox/myAccount/approve` — sandbox-only helper that
+     * fast-approves every status slot (commercial info, bank account,
+     * documentation, general). Returns HTTP 400 in production; only call
+     * against `Environment::Sandbox`. No request body.
+     */
+    public function approveSandbox(): AsaasResult
+    {
+        return $this->connector->post('/sandbox/myAccount/approve');
+    }
+
     public function accountNumber(): AsaasResult
     {
         return $this->connector->get(self::BASE.'/accountNumber');

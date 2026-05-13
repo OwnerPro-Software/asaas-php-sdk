@@ -1023,6 +1023,7 @@ Operates on the **current** account behind the apiKey — used for tenant onboar
 
 ```php
 Asaas::myAccount()->status(): AsaasResult
+Asaas::myAccount()->approveSandbox(): AsaasResult           // sandbox-only
 Asaas::myAccount()->accountNumber(): AsaasResult
 Asaas::myAccount()->fees(): AsaasResult
 Asaas::myAccount()->commercialInfo(): AsaasResult

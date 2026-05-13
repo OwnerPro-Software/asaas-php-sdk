@@ -56,6 +56,40 @@ it('propagates failure from /myAccount/status', function (): void {
     expect($result->response->status())->toBe(401);
 });
 
+it('approves the sandbox account via POST /sandbox/myAccount/approve', function (): void {
+    Http::fake(['*' => Http::response([
+        'id' => 'acc_sandbox_1',
+        'commercialInfo' => 'APPROVED',
+        'bankAccountInfo' => 'APPROVED',
+        'documentation' => 'APPROVED',
+        'general' => 'APPROVED',
+    ], 200)]);
+
+    $result = myAccountResource()->approveSandbox();
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toMatchArray([
+        'general' => 'APPROVED',
+        'commercialInfo' => 'APPROVED',
+    ]);
+
+    Http::assertSent(fn ($request): bool => $request->method() === 'POST'
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/sandbox/myAccount/approve'
+        && $request->body() === '[]');
+});
+
+it('propagates 400 from approveSandbox when called against production', function (): void {
+    Http::fake(['*' => Http::response(['errors' => [[
+        'code' => 'invalid_action',
+        'description' => 'Only allowed in sandbox',
+    ]]], 400)]);
+
+    $result = myAccountResource()->approveSandbox();
+
+    expect($result->success)->toBeFalse();
+    expect($result->errors[0]['description'])->toBe('Only allowed in sandbox');
+});
+
 it('reads commercial info from /myAccount/commercialInfo', function (): void {
     Http::fake(['*' => Http::response([
         'name' => 'ACME', 'incomeValue' => 10000.0, 'companyType' => 'LIMITED',
