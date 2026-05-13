@@ -89,6 +89,20 @@ Whenever the public API changes (new methods, renamed parameters, changed behavi
 
 ---
 
+## Specs
+
+The Asaas wire contract is captured under `specs/`:
+
+- `specs/asaas_openapi.json` — upstream OpenAPI export (full, source of truth for the split files).
+- `specs/domains/*.json` — per-domain splits derived from the export.
+- `specs/concept-fields.md` — cross-cutting fields/endpoints the SDK supports that are absent from the OpenAPI export but documented on `docs.asaas.com` (e.g. `accessTokenConfig`, `permissions[]`, `remoteIp` on `payWithCreditCard`). Each entry cites the canonical doc URL.
+
+**Spec-doc-authority rule:** if a field/endpoint is **not** in `specs/domains/*.json`, **not** in `specs/concept-fields.md`, **and** not in `docs.asaas.com`, it does not belong in the SDK.
+
+When auditing for wire-undocumented surface, consult **all three** before classifying — never just the OpenAPI split. When a future spec refresh adds a `concept-fields.md` entry to the OpenAPI export, delete the entry from `concept-fields.md` in the same commit. Slugs on `docs.asaas.com` frequently contain diacritics (e.g. `/docs/gerenciamento-de-permissões-de-chaves-de-api`); URL-encode them when fetching, and use the docs site-search as a fallback when slug-guessing fails.
+
+---
+
 ## Clean Architecture Principles (Uncle Bob)
 
 ### SOLID
