@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Account\Request;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\Missing;
 
@@ -17,11 +18,11 @@ final readonly class EscrowConfigRequest
         public bool|Missing $isFeePayer = Missing::Value,
     ) {}
 
-    /** @param array{daysToExpire: int, enabled?: bool, isFeePayer?: bool} $data */
+    /** @param array{daysToExpire?: int, enabled?: bool, isFeePayer?: bool} $data */
     public static function fromArray(array $data): static
     {
         return new self(
-            daysToExpire: $data['daysToExpire'],
+            daysToExpire: $data['daysToExpire'] ?? throw new InvalidArgumentException('EscrowConfigRequest: daysToExpire is required'),
             enabled: $data['enabled'] ?? Missing::Value,
             isFeePayer: $data['isFeePayer'] ?? Missing::Value,
         );

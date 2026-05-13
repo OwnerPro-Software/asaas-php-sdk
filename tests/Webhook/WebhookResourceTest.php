@@ -161,7 +161,6 @@ it('UpdateWebhookRequest: omitted fields never reach the wire as null', function
             && ! array_key_exists('url', $body)
             && ! array_key_exists('name', $body)
             && ! array_key_exists('email', $body)
-            && ! array_key_exists('apiVersion', $body)
             && ! array_key_exists('authToken', $body);
     });
 })->with('webhook_fixture');

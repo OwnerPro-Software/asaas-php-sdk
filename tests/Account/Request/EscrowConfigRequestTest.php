@@ -25,3 +25,8 @@ it('omits Missing optional fields from toArray', function (): void {
 
     expect($req->toArray())->toBe(['daysToExpire' => 15]);
 });
+
+it('throws when daysToExpire is missing from fromArray', function (): void {
+    expect(fn (): EscrowConfigRequest => EscrowConfigRequest::fromArray([]))
+        ->toThrow(InvalidArgumentException::class, 'EscrowConfigRequest: daysToExpire is required');
+});

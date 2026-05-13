@@ -75,21 +75,18 @@ final readonly class MyAccountResource
         return $this->connector->get($this->documentFilePath($fileId));
     }
 
-    /**
-     * Replace the binary file of an already-categorized document. Asaas
-     * keeps the document `type` slot fixed on update — the spec and docs
-     * for `POST /v3/myAccount/documents/files/{id}` accept only `documentFile`.
-     *
-     * @param  string|resource  $file  Document file contents (binary).
-     */
+    /** @param string|resource $file Document file contents (binary). */
     public function updateDocumentFile(
         string $fileId,
         mixed $file,
+        DocumentType|string $type,
         string $filename,
     ): AsaasResult {
+        $typeValue = $type instanceof DocumentType ? $type->value : $type;
+
         return $this->connector->postMultipart(
             $this->documentFilePath($fileId),
-            [],
+            ['type' => $typeValue],
             [[
                 'name' => 'documentFile',
                 'contents' => $file,
