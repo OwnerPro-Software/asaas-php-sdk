@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2026-05-13
 
-Major release prep. Two consecutive spec-alignment audits against `specs/asaas_openapi.json`:
+Major release. Two consecutive spec-alignment audits against `specs/asaas_openapi.json`:
 
-- **First pass** — closed 19 documented field gaps, the wrong-verb bug on `TransferResource::cancel()`, the missing `GET /v3/accounts/{id}/accessTokens/{accessTokenId}` endpoint, the new `accessTokenConfig` / `permissions` payload pieces (without which subaccounts created via the SDK inherited a key with no `TRANSFER` permission and blocked the production flow), and added 27 new endpoints across 9 domains (fiscal info, payment documents, escrow, payment checkout personalisation, wallets, lean payments, split lookup).
+- **First pass** — closed 19 documented field gaps, the wrong-verb bug on `TransferResource::cancel()`, the `accessTokenConfig` / `permissions` payload pieces (without which subaccounts created via the SDK inherited a key with no `TRANSFER` permission and blocked the production flow), and added 27 new endpoints across 9 domains (fiscal info, payment documents, escrow, payment checkout personalisation, wallets, lean payments, split lookup).
 - **Second pass** — triggered by a client-reported production bug (`accounts()->updateAccessToken()` accepting bodies without `name`/`enabled`/`expirationDate`), a 14-dimension audit closed 15 further gaps across enum coverage, required-ness, cross-field validation, endpoint parity, and 204 handling.
 
 ### Breaking
@@ -385,7 +385,7 @@ Initial public release. See [README](README.md) for full feature documentation.
 - Pagination helpers `paginate()` and `all()` (generator).
 - `WebhookVerifier` with timing-safe token comparison and configurable IP allowlist.
 
-[Unreleased]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.4.0...HEAD
+[2.0.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.4.0...v2.0.0
 [1.4.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.2.0...v1.2.1
