@@ -64,6 +64,16 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   does not list `walletId`. Migration: route Asaas-to-Asaas transfers through
   `transfers()->createInternal(new InternalTransferRequest(value: ..., walletId: ...))`,
   which is the canonical endpoint for wallet-to-wallet movement.
+- `OwnerPro\Asaas\Webhook\Request\UpdateWebhookRequest::$email` and
+  `$apiVersion` removed. Both are accepted on `POST /v3/webhooks` (create) but
+  the documented `PUT /v3/webhooks/{id}` body
+  (https://docs.asaas.com/reference/atualizar-webhook-existente) lists only
+  `name`, `url`, `sendType`, `enabled`, `interrupted`, `authToken`, `events`.
+  Asaas silently dropped both on update; the DTO promised an API that did
+  not exist. Migration: drop the arguments from
+  `new UpdateWebhookRequest(...)` / `fromArray()` callers. To change a
+  webhook's notification email or API version, delete the webhook and
+  recreate it via `webhooks()->create()`.
 
 ### Added
 
@@ -76,8 +86,11 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   CRUD parity gap with `PaymentResource` for `/v3/lean/payments`.
 - `MyAccountResource::findDocumentFile(string $fileId)` and
   `MyAccountResource::updateDocumentFile(string $fileId, mixed $file,
-  DocumentType|string $type, string $filename)` — completes the
+  string $filename)` — completes the
   `/v3/myAccount/documents/files/{id}` triplet (GET / POST / DELETE).
+  Asaas keeps the document `type` slot fixed on update, so the SDK no
+  longer forwards a `type` form-data part (only `documentFile`, matching
+  the spec and https://docs.asaas.com/reference/atualizar-documento-enviado).
 
 ### Changed
 

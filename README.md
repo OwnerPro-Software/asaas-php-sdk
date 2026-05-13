@@ -1030,7 +1030,7 @@ Asaas::myAccount()->updateCommercialInfo(array|CommercialInfoRequest $data): Asa
 Asaas::myAccount()->documents(): AsaasResult
 Asaas::myAccount()->uploadDocumentFile(string $documentId, string|resource $file, DocumentType|string $type, string $filename): AsaasResult
 Asaas::myAccount()->findDocumentFile(string $fileId): AsaasResult
-Asaas::myAccount()->updateDocumentFile(string $fileId, string|resource $file, DocumentType|string $type, string $filename): AsaasResult
+Asaas::myAccount()->updateDocumentFile(string $fileId, string|resource $file, string $filename): AsaasResult
 Asaas::myAccount()->deleteDocumentFile(string $fileId): AsaasResult
 Asaas::myAccount()->bankAccount(): AsaasResult
 Asaas::myAccount()->updateBankAccount(array|AccountBankAccountRequest $data): AsaasResult
