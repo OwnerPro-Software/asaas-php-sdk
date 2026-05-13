@@ -7,11 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Spec-mirroring sprint driven by a client-reported production bug
-(`accounts()->updateAccessToken()` accepting bodies without `name`/`enabled`/
-`expirationDate`) plus a fresh 14-dimension audit of the SDK against
-`specs/asaas_openapi.json`. Closes 15 documented gaps across enum coverage,
-required-ness, cross-field validation, endpoint parity, and 204 handling.
+Major release prep. Two consecutive spec-alignment audits against `specs/asaas_openapi.json`:
+
+- **First pass** — closed 19 documented field gaps, the wrong-verb bug on `TransferResource::cancel()`, the missing `GET /v3/accounts/{id}/accessTokens/{accessTokenId}` endpoint, the new `accessTokenConfig` / `permissions` payload pieces (without which subaccounts created via the SDK inherited a key with no `TRANSFER` permission and blocked the production flow), and added 27 new endpoints across 9 domains (fiscal info, payment documents, escrow, payment checkout personalisation, wallets, lean payments, split lookup).
+- **Second pass** — triggered by a client-reported production bug (`accounts()->updateAccessToken()` accepting bodies without `name`/`enabled`/`expirationDate`), a 14-dimension audit closed 15 further gaps across enum coverage, required-ness, cross-field validation, endpoint parity, and 204 handling.
 
 ### Breaking
 
@@ -64,25 +63,73 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   does not list `walletId`. Migration: route Asaas-to-Asaas transfers through
   `transfers()->createInternal(new InternalTransferRequest(value: ..., walletId: ...))`,
   which is the canonical endpoint for wallet-to-wallet movement.
+- `TransferResource::cancel($id)` now sends **DELETE** (was POST). Asaas's spec requires DELETE on `/v3/transfers/{id}/cancel` — POST silently failed or hit the wrong handler in some configurations. Any consumer wrapping the SDK's HTTP layer (e.g. retry middleware keyed by method) must update accordingly.
+- `PayWithCreditCardRequest::$creditCard`, `$creditCardHolderInfo`, and `$remoteIp` are now optional (`?CreditCard`, `?CreditCardHolderInfo`, `?string`) to support the new token-only flow. Constructors using positional args keep working; consumers relying on the previous "throws when missing" semantics will no longer see those exceptions and must validate at their own boundaries.
+- `Connector::postMultipart()` no longer throws on an empty `$files` array — `$files` is now optional with a `[]` default. Custom `Connector` implementations must update their signature to match (`array $files = []`). The change unblocks form-only multipart endpoints (`/v3/fiscalInfo/`, `/v3/myAccount/paymentCheckoutConfig/`) where the binary file is optional. The previous "at least one file" invariant was an artificial guard, not a protocol requirement.
 
-### Added
+### Added — DTO fields
 
-- `OwnerPro\Asaas\Payment\Request\CreatePaymentRequest::$creditCardToken`
-  (`?string`) — supports the spec's saved-card-token mode on
-  `POST /v3/payments/`. Send a previously stored card token in the same
-  request that creates the payment, without resubmitting card and holder data.
-- `LeanPaymentResource::list()`, `LeanPaymentResource::update()`,
-  `LeanPaymentResource::delete()`, `LeanPaymentResource::all()` — closes the
-  CRUD parity gap with `PaymentResource` for `/v3/lean/payments`.
-- `MyAccountResource::findDocumentFile(string $fileId)` and
-  `MyAccountResource::updateDocumentFile(string $fileId, mixed $file,
-  DocumentType|string $type, string $filename)` — completes the
-  `/v3/myAccount/documents/files/{id}` triplet (GET / POST / DELETE).
-- `MyAccountResource::approveSandbox()` — wraps the sandbox-only
-  `POST /v3/sandbox/myAccount/approve` endpoint, fast-approving every
-  status slot (commercial info, bank account, documentation, general)
-  to unblock white-label onboarding integration tests. Returns HTTP 400
-  in production; only call against `Environment::Sandbox`.
+- `CreatePaymentRequest`: `daysAfterDueDateToRegistrationCancellation`, `installmentCount`, `installmentValue`, `totalValue`, `pixAutomaticAuthorizationId`, and `creditCardToken` (`?string`) — the saved-card-token mode on `POST /v3/payments/`. Send a previously stored card token in the same request that creates the payment, without resubmitting card and holder data.
+- `UpdatePaymentRequest`: `daysAfterDueDateToRegistrationCancellation`, `callback`.
+- `PayWithCreditCardRequest`: `creditCardToken` (lets you pay using a saved-card token without sending card details again).
+- `AccountRequest`: `loginEmail`, `webhooks` (list of `CreateWebhookRequest`; coerced from raw arrays), and `accessTokenConfig` (`{name, permissions[]}`) — set the initial subaccount API key's name and permission scope at creation time so the key ships ready for `TRANSFER`, `PIX_*`, `WEBHOOK`, etc. without a manual visit to the painel. If omitted, Asaas's default (all permissions in `READ_WRITE`) still applies.
+- `UpdateAccessTokenRequest`: `permissions` (`list<AccessTokenPermissionConfig>`) — same shape, accepted by `accounts()->updateAccessToken(...)` for adjusting an existing key's permissions.
+- `CommercialInfoRequest`: `personType` (uses existing `OwnerPro\Asaas\Account\PersonType` enum), `companyName`.
+- `CreateInvoiceRequest`, `UpdateInvoiceRequest`: `updatePayment` (auto-discount taxes from the payment value).
+- `CreateBillPaymentRequest`: `value` (required for credit-card bills whose digitable line carries no embedded amount).
+- `TransferRequest`: `recurring` (Pix-recurrence object; nested `Recurring` value object with `frequency` enum + `quantity`).
+
+### Added — value objects + enums
+
+- `OwnerPro\Asaas\Support\DTO\Discount` (`{value, dueDateLimitDays, type}`), `Interest` (`{value}`), `Fine` (`{value, type}`). Each ships a static `coerce()` helper that accepts a float (legacy shape, wrapped as `value`), a raw array, an instance, `Missing::Value`, or `null`. The Payment Create/Update DTOs now hold typed instances on `$discount`, `$interest`, `$fine` (previously `?float` — see Migration below).
+- `OwnerPro\Asaas\Payment\DiscountType` (`FIXED`, `PERCENTAGE`).
+- `OwnerPro\Asaas\Payment\FineType` (`FIXED`, `PERCENTAGE`).
+- `OwnerPro\Asaas\Transfer\Request\Recurring` value object + `OwnerPro\Asaas\Transfer\TransferRecurrenceFrequency` enum (`WEEKLY`, `MONTHLY`).
+- `OwnerPro\Asaas\Transfer\Request\InternalTransferRequest` (for the `POST /v3/transfers/` internal-transfer endpoint).
+- `OwnerPro\Asaas\Support\DTO\Callback` gains a `coerce()` static helper consistent with the other value objects.
+- `BillingType` enum gains `MUNDIPAGG_CIELO`, `VOUCHER_CARD`, `ASAAS_MONEY` (still string-pass-through, but typed callers can now use the cases).
+- `OwnerPro\Asaas\Account\AccessTokenPermission` enum — all 33 documented permission codes (`PAYMENT`, `TRANSFER`, `WEBHOOK`, `PIX_*`, `INVOICE`, `BILL`, …).
+- `OwnerPro\Asaas\Account\AccessTokenScope` enum (`READ`, `READ_WRITE`).
+- `OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig` — `{name, scope}` pair; the DTO that goes inside `permissions[]`.
+- `OwnerPro\Asaas\Account\Request\AccessTokenConfig` — `{name, permissions[]}`; the object form Asaas expects under `accessTokenConfig`.
+
+### Added — resource endpoints
+
+- `PaymentResource::createWithCreditCard(array|CreatePaymentRequest $data)` — `POST /v3/payments/` (trailing slash) for the one-shot create-with-card flow.
+- `PaymentResource::listRefunds(string $id)` — `GET /v3/payments/{id}/refunds`.
+- `PaymentResource::refundBankSlip(string $id)` — `POST /v3/payments/{id}/bankSlip/refund`.
+- `PaymentResource::getChargeback(string $id)` — `GET /v3/payments/{id}/chargeback`.
+- `PaymentResource::getEscrow(string $id)` — `GET /v3/payments/{id}/escrow`.
+- `PaymentResource::finishEscrow(string $id)` — `POST /v3/escrow/{id}/finish` to release escrow on a payment.
+- `PaymentResource::uploadDocument(...)`, `listDocuments(string $paymentId)`, `findDocument(string $paymentId, string $documentId)`, `updateDocument(string $paymentId, string $documentId, array|UpdatePaymentDocumentRequest $data)`, `deleteDocument(string $paymentId, string $documentId)` — full CRUD for `/v3/payments/{id}/documents/*` (upload is multipart with `type`, `availableAfterPayment`, and the file).
+- `PaymentResource::listSplitsPaid(array $query = [])`, `findSplitPaid(string $id)`, `listSplitsReceived(array $query = [])`, `findSplitReceived(string $id)` — the four `/v3/payments/splits/(paid|received)/*` endpoints.
+- `LeanPaymentResource::list()`, `LeanPaymentResource::update()`, `LeanPaymentResource::delete()`, `LeanPaymentResource::all()` — closes the CRUD parity gap with `PaymentResource` for `/v3/lean/payments`.
+- `AccountResource::createAccessToken($accountId, $data = null)` now accepts an optional `CreateAccessTokenRequest` (or array) body with `name`/`expirationDate`.
+- `AccountResource::findAccessToken(string $accountId, string $tokenId)` — `GET /v3/accounts/{id}/accessTokens/{accessTokenId}`, the single-token retrieve that the original audit missed.
+- `AccountResource::escrowConfig(string $accountId)`, `setEscrowConfig(string $accountId, array|EscrowConfigRequest $data)`, `defaultEscrowConfig()`, `setDefaultEscrowConfig(array|EscrowConfigRequest $data)` — manage escrow accounts at both the per-subaccount level (`/v3/accounts/{id}/escrow`) and the default-for-all level (`/v3/accounts/escrow`).
+- `MyAccountResource::accountNumber()` — `GET /v3/myAccount/accountNumber`.
+- `MyAccountResource::fees()` — `GET /v3/myAccount/fees/`.
+- `MyAccountResource::paymentCheckoutConfig()` and `updatePaymentCheckoutConfig(array|PaymentCheckoutConfigRequest $data, mixed $logoFile = null, ?string $logoFilename = null)` — GET / POST `/v3/myAccount/paymentCheckoutConfig/`. The save call is multipart and accepts an optional logo binary.
+- `MyAccountResource::wallets(array $query = [])` — `GET /v3/wallets/`, the walletId listing.
+- `MyAccountResource::findDocumentFile(string $fileId)` and `MyAccountResource::updateDocumentFile(string $fileId, mixed $file, DocumentType|string $type, string $filename)` — completes the `/v3/myAccount/documents/files/{id}` triplet (GET / POST / DELETE).
+- `MyAccountResource::approveSandbox()` — wraps the sandbox-only `POST /v3/sandbox/myAccount/approve` endpoint, fast-approving every status slot (commercial info, bank account, documentation, general) to unblock white-label onboarding integration tests. Returns HTTP 400 in production; only call against `Environment::Sandbox`.
+- `StatementResource::balance()` — `GET /v3/finance/balance`.
+- `StatementResource::paymentStatistics(array $query = [])` — `GET /v3/finance/payment/statistics`.
+- `StatementResource::splitStatistics(array $query = [])` — `GET /v3/finance/split/statistics`.
+- `TransferResource::createInternal(array|InternalTransferRequest $data)` — `POST /v3/transfers/` (trailing slash) for the internal-Asaas-account flow with `walletId`.
+
+### Added — new resources
+
+- `OwnerPro\Asaas\FiscalInfo\FiscalInfoResource` (resolved via `Asaas::fiscalInfo()` / `$client->fiscalInfo()`) covering `/v3/fiscalInfo/*`: `recover()`, `save(array|FiscalInfoRequest $data, mixed $certificateFile = null, ?string $certificateFilename = null)` (multipart, optional A1 certificate), `municipalOptions()`, `services()`, `federalServiceCodes()`, `nbsCodes()`, `operationIndicatorCodes()`, `taxClassificationCodes()`, `taxSituationCodes()`, and `configureNationalPortal(bool $enabled)`.
+- `OwnerPro\Asaas\Payment\LeanPaymentResource` (resolved via `Asaas::leanPayments()` / `$client->leanPayments()`) covering `/v3/lean/payments/*` — slim-response variants of the standard payment endpoints: `create()`, `createWithCreditCard()`, `find()`, `captureAuthorized()`, `restore()`, `refund()`, `receiveInCash()`, `undoReceivedInCash()`, plus the CRUD parity additions (`list()`, `update()`, `delete()`, `all()`) listed above. Reuses the same request DTOs as `PaymentResource`.
+
+### Added — DTOs and enums
+
+- `OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoRequest` — partial-update DTO for the `POST /v3/fiscalInfo/` body (every form field except the binary).
+- `OwnerPro\Asaas\Payment\PaymentDocumentType` enum (`INVOICE`, `CONTRACT`, `MEDIA`, `DOCUMENT`, `SPREADSHEET`, `PROGRAM`, `OTHER`).
+- `OwnerPro\Asaas\Payment\Request\UpdatePaymentDocumentRequest` — required-fields DTO for `PUT /v3/payments/{id}/documents/{documentId}`.
+- `OwnerPro\Asaas\Account\Request\EscrowConfigRequest` — `{daysToExpire, enabled?, isFeePayer?}` for the four escrow-config endpoints.
+- `OwnerPro\Asaas\Account\Request\PaymentCheckoutConfigRequest` — `{logoBackgroundColor, infoBackgroundColor, fontColor, enabled?}` for the checkout-personalisation save.
 
 ### Changed
 
@@ -141,6 +188,18 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   from the array passed to `fromArray()` / the resource method. Passing
   `null` to a typed field now raises `TypeError` at construction time.
 
+### Migration notes
+
+- `discount` / `interest` / `fine` on `CreatePaymentRequest` and `UpdatePaymentRequest`: passing a float keeps working — the SDK wraps it as `Discount(value: $float)` / `Interest(...)` / `Fine(...)`. Wire output is now the documented object shape (`{value: ..., dueDateLimitDays: ..., type: ...}`), which is what Asaas's validator describes. If you were relying on the older scalar-on-wire behavior, audit your downstream consumers accordingly.
+- `PayWithCreditCardRequest::fromArray` no longer throws on missing `creditCard`, `creditCardHolderInfo`, or `remoteIp` — required validation moves to the server. Provide either `creditCardToken` **or** the full card/holder/IP triple.
+- `TransferResource::cancel()`: confirmed via the audit that the spec uses DELETE. If you reverse-proxy or log by HTTP method, update mappings.
+- Custom `Connector` implementations: the `postMultipart()` interface signature changed from `(string, array, array)` to `(string, array, array = [])`. Native PHP signatures must include the default value to remain LSP-compatible.
+
+### Internal
+
+- `Discount`, `Interest`, `Fine`, `Callback` each expose a static `coerce()` helper, normalising union inputs (`array | float | DTO | Missing | null`) into a normalized DTO instance. This kept `UpdatePaymentRequest`'s constructor cognitive complexity under PHPStan's class threshold without weakening the public API.
+- Wire-level integration tests added to `AccountResourceTest` pinning that `POST /v3/accounts` carries `accessTokenConfig` end-to-end (both via raw array and via `AccessTokenConfig` DTO with enum cases), and that `PUT /v3/accounts/{id}/accessTokens/{tokenId}` carries `permissions` in the documented `{name, scope}` shape. Closes the e2e coverage gap on the feature that motivated the first audit pass (subaccount keys ship with `TRANSFER` permission so `POST /transfers` no longer blocks production).
+
 ### Documentation
 
 - README — DocumentType enum table updated to list all 12 KYC types.
@@ -156,6 +215,8 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   `webhooks()->removeBackoff()` return HTTP 204 with an empty body; check
   `$result->success`, not `$result->data`.
 - README — `creditCardToken` example for `payments()->createWithCreditCard()`.
+- README — documented the `Discount` / `Interest` / `Fine` value objects in the nested-DTOs table and added a usage example showing both legacy float and typed-DTO forms — the property type change (from `?float` to `?Discount|?Interest|?Fine`) is the load-bearing breaking change of this release.
+- README — updated the Custom Connector example to match the new `postMultipart(string, array, array = [])` signature.
 - PHPDoc — `BillingType` enum docblock split request-acceptable cases
   (`Undefined`, `Boleto`, `CreditCard`, `Pix`) from response-only cases
   (`DebitCard`, `Transfer`, `Deposit`, `MundipaggCielo`, `VoucherCard`,
@@ -189,104 +250,17 @@ required-ness, cross-field validation, endpoint parity, and 204 handling.
   `AccountResource::findAccessToken()` and the escrow-config block
   (clarifying extra-spec and cross-domain placement, both candidates for
   dedicated Resources in a future major), `HasUpdatableArrayFactory` and
-  `Missing` (codifying the `T|Missing` typing rule that prevents the v2.1
-  null-leak class of bugs), `Statement\FinancialTransactionType` and
-  `Transfer\TransferOperationType` (response-classification helpers, with
-  `Internal` flagged as response-only on `TransferOperationType`), and
-  `AsaasConnector::extractErrors()` (best-effort normalization contract).
+  `Missing` (codifying the `T|Missing` typing rule that prevents the
+  null-leak class of bugs surfaced by the second audit pass),
+  `Statement\FinancialTransactionType` and `Transfer\TransferOperationType`
+  (response-classification helpers, with `Internal` flagged as response-only
+  on `TransferOperationType`), and `AsaasConnector::extractErrors()`
+  (best-effort normalization contract).
   README — short note above the Resources section explaining that
   `AsaasResult::$data` stays `array<string, mixed>` (consult the spec /
   Asaas docs for response field shape), and a "Out of scope" admonition
   on `myAccount()` covering the sandbox-only approve endpoint and the
   extra-spec `bankAccountInfo` pair.
-
-## [2.0.0] - 2026-05-12
-
-Major release. Spec-alignment work driven by a full audit of the SDK against `specs/asaas_openapi.json`, followed by the deferred backlog closing the remaining endpoint gaps (fiscal info, payment documents, escrow, payment checkout personalisation, wallets, lean payments, and split lookup). Closes 19 documented field gaps, the wrong-verb bug on `TransferResource::cancel()`, the missing `GET /v3/accounts/{id}/accessTokens/{accessTokenId}` endpoint, the new `accessTokenConfig` / `permissions` payload pieces (without which subaccounts created via the SDK inherited a key with no `TRANSFER` permission and blocked the production flow), and adds 27 new endpoints across 9 domains.
-
-### Breaking
-
-- `TransferResource::cancel($id)` now sends **DELETE** (was POST). Asaas's spec requires DELETE on `/v3/transfers/{id}/cancel` — POST silently failed or hit the wrong handler in some configurations. Any consumer wrapping the SDK's HTTP layer (e.g. retry middleware keyed by method) must update accordingly.
-- `PayWithCreditCardRequest::$creditCard`, `$creditCardHolderInfo`, and `$remoteIp` are now optional (`?CreditCard`, `?CreditCardHolderInfo`, `?string`) to support the new token-only flow. Constructors using positional args keep working; consumers relying on the previous "throws when missing" semantics will no longer see those exceptions and must validate at their own boundaries.
-- `Connector::postMultipart()` no longer throws on an empty `$files` array — `$files` is now optional with a `[]` default. Custom `Connector` implementations must update their signature to match (`array $files = []`). The change unblocks form-only multipart endpoints (`/v3/fiscalInfo/`, `/v3/myAccount/paymentCheckoutConfig/`) where the binary file is optional. The previous "at least one file" invariant was an artificial guard, not a protocol requirement.
-
-### Added — DTO fields
-
-- `CreatePaymentRequest`: `daysAfterDueDateToRegistrationCancellation`, `installmentCount`, `installmentValue`, `totalValue`, `pixAutomaticAuthorizationId`.
-- `UpdatePaymentRequest`: `daysAfterDueDateToRegistrationCancellation`, `callback`.
-- `PayWithCreditCardRequest`: `creditCardToken` (lets you pay using a saved-card token without sending card details again).
-- `AccountRequest`: `loginEmail`, `webhooks` (list of `CreateWebhookRequest`; coerced from raw arrays), and `accessTokenConfig` (`{name, permissions[]}`) — set the initial subaccount API key's name and permission scope at creation time so the key ships ready for `TRANSFER`, `PIX_*`, `WEBHOOK`, etc. without a manual visit to the painel. If omitted, Asaas's default (all permissions in `READ_WRITE`) still applies.
-- `AccessTokenRequest`: `permissions` (`list<AccessTokenPermissionConfig>`) — same shape, accepted by `accounts()->updateAccessToken(...)` for adjusting an existing key's permissions.
-- `CommercialInfoRequest`: `personType` (uses existing `OwnerPro\Asaas\Account\PersonType` enum), `companyName`.
-- `CreateInvoiceRequest`, `UpdateInvoiceRequest`: `updatePayment` (auto-discount taxes from the payment value).
-- `CreateBillPaymentRequest`: `value` (required for credit-card bills whose digitable line carries no embedded amount).
-- `TransferRequest`: `recurring` (Pix-recurrence object; nested `Recurring` value object with `frequency` enum + `quantity`).
-
-### Added — value objects + enums
-
-- `OwnerPro\Asaas\Support\DTO\Discount` (`{value, dueDateLimitDays, type}`), `Interest` (`{value}`), `Fine` (`{value, type}`). Each ships a static `coerce()` helper that accepts a float (legacy shape, wrapped as `value`), a raw array, an instance, `Missing::Value`, or `null`. The Payment Create/Update DTOs now hold typed instances on `$discount`, `$interest`, `$fine` (previously `?float` — see Migration below).
-- `OwnerPro\Asaas\Payment\DiscountType` (`FIXED`, `PERCENTAGE`).
-- `OwnerPro\Asaas\Payment\FineType` (`FIXED`, `PERCENTAGE`).
-- `OwnerPro\Asaas\Transfer\Request\Recurring` value object + `OwnerPro\Asaas\Transfer\TransferRecurrenceFrequency` enum (`WEEKLY`, `MONTHLY`).
-- `OwnerPro\Asaas\Transfer\Request\InternalTransferRequest` (for the `POST /v3/transfers/` internal-transfer endpoint).
-- `OwnerPro\Asaas\Support\DTO\Callback` gains a `coerce()` static helper consistent with the other value objects.
-- `BillingType` enum gains `MUNDIPAGG_CIELO`, `VOUCHER_CARD`, `ASAAS_MONEY` (still string-pass-through, but typed callers can now use the cases).
-- `OwnerPro\Asaas\Account\AccessTokenPermission` enum — all 33 documented permission codes (`PAYMENT`, `TRANSFER`, `WEBHOOK`, `PIX_*`, `INVOICE`, `BILL`, …).
-- `OwnerPro\Asaas\Account\AccessTokenScope` enum (`READ`, `READ_WRITE`).
-- `OwnerPro\Asaas\Account\Request\AccessTokenPermissionConfig` — `{name, scope}` pair; the DTO that goes inside `permissions[]`.
-- `OwnerPro\Asaas\Account\Request\AccessTokenConfig` — `{name, permissions[]}`; the object form Asaas expects under `accessTokenConfig`.
-
-### Added — resource endpoints
-
-- `PaymentResource::createWithCreditCard(array|CreatePaymentRequest $data)` — `POST /v3/payments/` (trailing slash) for the one-shot create-with-card flow.
-- `PaymentResource::listRefunds(string $id)` — `GET /v3/payments/{id}/refunds`.
-- `PaymentResource::refundBankSlip(string $id)` — `POST /v3/payments/{id}/bankSlip/refund`.
-- `PaymentResource::getChargeback(string $id)` — `GET /v3/payments/{id}/chargeback`.
-- `PaymentResource::getEscrow(string $id)` — `GET /v3/payments/{id}/escrow`.
-- `PaymentResource::finishEscrow(string $id)` — `POST /v3/escrow/{id}/finish` to release escrow on a payment.
-- `PaymentResource::uploadDocument(...)`, `listDocuments(string $paymentId)`, `findDocument(string $paymentId, string $documentId)`, `updateDocument(string $paymentId, string $documentId, array|UpdatePaymentDocumentRequest $data)`, `deleteDocument(string $paymentId, string $documentId)` — full CRUD for `/v3/payments/{id}/documents/*` (upload is multipart with `type`, `availableAfterPayment`, and the file).
-- `PaymentResource::listSplitsPaid(array $query = [])`, `findSplitPaid(string $id)`, `listSplitsReceived(array $query = [])`, `findSplitReceived(string $id)` — the four `/v3/payments/splits/(paid|received)/*` endpoints.
-- `AccountResource::createAccessToken($accountId, $data = null)` now accepts an optional `AccessTokenRequest` (or array) body with `name`/`expirationDate`.
-- `AccountResource::findAccessToken(string $accountId, string $tokenId)` — `GET /v3/accounts/{id}/accessTokens/{accessTokenId}`, the single-token retrieve that the original audit missed.
-- `AccountResource::escrowConfig(string $accountId)`, `setEscrowConfig(string $accountId, array|EscrowConfigRequest $data)`, `defaultEscrowConfig()`, `setDefaultEscrowConfig(array|EscrowConfigRequest $data)` — manage escrow accounts at both the per-subaccount level (`/v3/accounts/{id}/escrow`) and the default-for-all level (`/v3/accounts/escrow`).
-- `MyAccountResource::accountNumber()` — `GET /v3/myAccount/accountNumber`.
-- `MyAccountResource::fees()` — `GET /v3/myAccount/fees/`.
-- `MyAccountResource::paymentCheckoutConfig()` and `updatePaymentCheckoutConfig(array|PaymentCheckoutConfigRequest $data, mixed $logoFile = null, ?string $logoFilename = null)` — GET / POST `/v3/myAccount/paymentCheckoutConfig/`. The save call is multipart and accepts an optional logo binary.
-- `MyAccountResource::wallets(array $query = [])` — `GET /v3/wallets/`, the walletId listing.
-- `StatementResource::balance()` — `GET /v3/finance/balance`.
-- `StatementResource::paymentStatistics(array $query = [])` — `GET /v3/finance/payment/statistics`.
-- `StatementResource::splitStatistics(array $query = [])` — `GET /v3/finance/split/statistics`.
-- `TransferResource::createInternal(array|InternalTransferRequest $data)` — `POST /v3/transfers/` (trailing slash) for the internal-Asaas-account flow with `walletId`.
-
-### Added — new resources
-
-- `OwnerPro\Asaas\FiscalInfo\FiscalInfoResource` (resolved via `Asaas::fiscalInfo()` / `$client->fiscalInfo()`) covering `/v3/fiscalInfo/*`: `recover()`, `save(array|FiscalInfoRequest $data, mixed $certificateFile = null, ?string $certificateFilename = null)` (multipart, optional A1 certificate), `municipalOptions()`, `services()`, `federalServiceCodes()`, `nbsCodes()`, `operationIndicatorCodes()`, `taxClassificationCodes()`, `taxSituationCodes()`, and `configureNationalPortal(bool $enabled)`.
-- `OwnerPro\Asaas\Payment\LeanPaymentResource` (resolved via `Asaas::leanPayments()` / `$client->leanPayments()`) covering `/v3/lean/payments/*` — slim-response variants of the standard payment endpoints: `create()`, `createWithCreditCard()`, `find()`, `captureAuthorized()`, `restore()`, `refund()`, `receiveInCash()`, `undoReceivedInCash()`. Reuses the same request DTOs as `PaymentResource`.
-
-### Added — DTOs and enums
-
-- `OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoRequest` — partial-update DTO for the `POST /v3/fiscalInfo/` body (every form field except the binary).
-- `OwnerPro\Asaas\Payment\PaymentDocumentType` enum (`INVOICE`, `CONTRACT`, `MEDIA`, `DOCUMENT`, `SPREADSHEET`, `PROGRAM`, `OTHER`).
-- `OwnerPro\Asaas\Payment\Request\UpdatePaymentDocumentRequest` — required-fields DTO for `PUT /v3/payments/{id}/documents/{documentId}`.
-- `OwnerPro\Asaas\Account\Request\EscrowConfigRequest` — `{daysToExpire, enabled?, isFeePayer?}` for the four escrow-config endpoints.
-- `OwnerPro\Asaas\Account\Request\PaymentCheckoutConfigRequest` — `{logoBackgroundColor, infoBackgroundColor, fontColor, enabled?}` for the checkout-personalisation save.
-
-### Migration notes
-
-- `discount` / `interest` / `fine` on `CreatePaymentRequest` and `UpdatePaymentRequest`: passing a float keeps working — the SDK wraps it as `Discount(value: $float)` / `Interest(...)` / `Fine(...)`. Wire output is now the documented object shape (`{value: ..., dueDateLimitDays: ..., type: ...}`), which is what Asaas's validator describes. If you were relying on the older scalar-on-wire behavior, audit your downstream consumers accordingly.
-- `PayWithCreditCardRequest::fromArray` no longer throws on missing `creditCard`, `creditCardHolderInfo`, or `remoteIp` — required validation moves to the server. Provide either `creditCardToken` **or** the full card/holder/IP triple.
-- `TransferResource::cancel()`: confirmed via the audit that the spec uses DELETE. If you reverse-proxy or log by HTTP method, update mappings.
-- Custom `Connector` implementations: the `postMultipart()` interface signature changed from `(string, array, array)` to `(string, array, array = [])`. Native PHP signatures must include the default value to remain LSP-compatible.
-
-### Internal
-
-- `Discount`, `Interest`, `Fine`, `Callback` each expose a static `coerce()` helper, normalising union inputs (`array | float | DTO | Missing | null`) into a normalized DTO instance. This kept `UpdatePaymentRequest`'s constructor cognitive complexity under PHPStan's class threshold without weakening the public API.
-- Wire-level integration tests added to `AccountResourceTest` pinning that `POST /v3/accounts` carries `accessTokenConfig` end-to-end (both via raw array and via `AccessTokenConfig` DTO with enum cases), and that `PUT /v3/accounts/{id}/accessTokens/{tokenId}` carries `permissions` in the documented `{name, scope}` shape. Closes the e2e coverage gap on the feature that motivated this release (subaccount keys ship with `TRANSFER` permission so `POST /transfers` no longer blocks production).
-
-### Documentation
-
-- README: documented the `Discount` / `Interest` / `Fine` value objects in the nested-DTOs table and added a usage example showing both legacy float and typed-DTO forms — this is the load-bearing breaking change of 2.0.0 (property type changed from `?float` to `?Discount|?Interest|?Fine`) and was previously CHANGELOG-only.
-- README: updated the Custom Connector example to match the new `postMultipart(string, array, array = [])` signature.
 
 ## [1.4.0] - 2026-05-12
 
@@ -366,8 +340,7 @@ Initial public release. See [README](README.md) for full feature documentation.
 - Pagination helpers `paginate()` and `all()` (generator).
 - `WebhookVerifier` with timing-safe token comparison and configurable IP allowlist.
 
-[Unreleased]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v2.0.0...HEAD
-[2.0.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.4.0...v2.0.0
+[Unreleased]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.4.0...HEAD
 [1.4.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.2.0...v1.2.1
