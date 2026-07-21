@@ -18,7 +18,7 @@ final class AsaasServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/asaas.php', 'asaas');
 
         $this->app->singleton(AsaasClient::class, function (): AsaasClient {
-            /** @var array{api_key: ?string, environment: string, timeout: int, connect_timeout: int, throw_on_transport_failure: bool} $config */
+            /** @var array{api_key: ?string, environment: string, timeout: int, connect_timeout: int} $config */
             $config = config('asaas');
 
             if (! is_string($config['api_key']) || $config['api_key'] === '') {
@@ -33,7 +33,6 @@ final class AsaasServiceProvider extends ServiceProvider
                     environment: $config['environment'],
                     timeout: $config['timeout'],
                     connectTimeout: $config['connect_timeout'],
-                    throwOnTransportFailure: $config['throw_on_transport_failure'],
                 )
             );
         });

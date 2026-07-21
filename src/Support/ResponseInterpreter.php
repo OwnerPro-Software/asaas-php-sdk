@@ -16,7 +16,7 @@ use Illuminate\Http\Client\Response;
  */
 final class ResponseInterpreter
 {
-    public static function toResult(Response $response, bool $throwOnTransportFailure): AsaasResult
+    public static function toResult(Response $response): AsaasResult
     {
         $rawResponse = new RawResponse($response);
 
@@ -24,7 +24,7 @@ final class ResponseInterpreter
         // server (or a proxy in front of it) saying it could not answer. The
         // request may well have been processed, so it belongs to the
         // indeterminate category. Only 4xx carries an actual verdict.
-        if ($throwOnTransportFailure && $response->serverError()) {
+        if ($response->serverError()) {
             throw new IndeterminateResultException('server', response: $rawResponse);
         }
 
@@ -32,11 +32,11 @@ final class ResponseInterpreter
             return AsaasResult::failure(ErrorEnvelope::extract($response), $rawResponse);
         }
 
-        return AsaasResult::success(self::data($response, $rawResponse, $throwOnTransportFailure), $rawResponse);
+        return AsaasResult::success(self::data($response, $rawResponse), $rawResponse);
     }
 
     /** @return array<string, mixed> */
-    private static function data(Response $response, RawResponse $rawResponse, bool $throwOnTransportFailure): array
+    private static function data(Response $response, RawResponse $rawResponse): array
     {
         $json = $response->json();
 
@@ -48,7 +48,7 @@ final class ResponseInterpreter
         // 204 No Content is a definitive success with an intentionally empty
         // body (e.g. deleteAccessToken, removeBackoff) — never an
         // unreadable-body transport failure.
-        if ($throwOnTransportFailure && $response->status() !== 204) {
+        if ($response->status() !== 204) {
             throw new IndeterminateResultException('body', response: $rawResponse);
         }
 

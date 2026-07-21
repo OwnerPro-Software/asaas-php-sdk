@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\AsaasClient;
+use OwnerPro\Asaas\Support\IndeterminateResultException;
 use OwnerPro\Asaas\Testing\FakeAsaasClient;
 
 mutates(FakeAsaasClient::class);
@@ -48,10 +49,7 @@ it('stubException() simulates a connection failure', function (): void {
         new ConnectionException('timeout'),
     );
 
-    $result = $fake->payments()->find('pay_1');
-
-    expect($result->success)->toBeFalse();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
+    expect(fn () => $fake->payments()->find('pay_1'))->toThrow(IndeterminateResultException::class);
 });
 
 it('supports glob patterns with * (single segment)', function (): void {

@@ -87,15 +87,14 @@ final class AsaasClient implements AsaasClientContract, Redactable
         Environment|string $environment = Environment::Sandbox,
         int $timeout = 30,
         int $connectTimeout = 10,
-        bool $throwOnTransportFailure = false,
     ): self {
-        return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure));
+        return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout, $connectTimeout));
     }
 
     /** @param array<string, array<string, mixed>|PromiseInterface|ResponseSequence|Closure> $stubs */
-    public static function fake(array $stubs = [], Environment|string $environment = Environment::Sandbox, bool $throwOnTransportFailure = false): FakeAsaasClient
+    public static function fake(array $stubs = [], Environment|string $environment = Environment::Sandbox): FakeAsaasClient
     {
-        return new FakeAsaasClient($stubs, $environment, $throwOnTransportFailure);
+        return new FakeAsaasClient($stubs, $environment);
     }
 
     public function payments(): PaymentResource

@@ -6,9 +6,9 @@ namespace OwnerPro\Asaas\Support;
 
 /**
  * Base type for transport-level failures: no complete, readable response was
- * received from the Asaas API. Thrown only when the connector is built with
- * `throwOnTransportFailure: true`. Catching a subclass tells the caller
- * whether a blind retry is safe (`RequestNotDeliveredException`) or whether
- * reconciliation is required first (`IndeterminateResultException`).
+ * received from the Asaas API — or the response received was a 5xx, which
+ * reports that the server could not answer. Catching a subclass tells the
+ * caller whether a blind retry is safe (`RequestNotDeliveredException`) or
+ * whether reconciliation is required first (`IndeterminateResultException`).
  */
 abstract class TransportException extends AsaasException {}

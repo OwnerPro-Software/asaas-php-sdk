@@ -23,10 +23,6 @@ final readonly class AsaasConnector implements Connector, Redactable
     public function __construct(
         private PendingRequest $pendingRequest,
         private string $baseUrl,
-        // Default-argument evaluation is attributed to call sites, never to this
-        // line, so a FalseToTrue mutant here is structurally unkillable — every
-        // in-tree caller passes the flag explicitly. Factory defaults ARE pinned.
-        private bool $throwOnTransportFailure = false, // @pest-mutate-ignore: FalseToTrue
     ) {}
 
     /** @return array{baseUrl: string} */
@@ -58,14 +54,14 @@ final readonly class AsaasConnector implements Connector, Redactable
         throw new LogicException(self::class.' cannot be unserialized.');
     }
 
-    public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10, bool $throwOnTransportFailure = false): self
+    public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10): self
     {
-        return self::make(PendingRequestFactory::standalone(), $apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure);
+        return self::make(PendingRequestFactory::standalone(), $apiKey, $environment, $timeout, $connectTimeout);
     }
 
-    public static function forLaravel(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10, bool $throwOnTransportFailure = false): self
+    public static function forLaravel(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10): self
     {
-        return self::make(PendingRequestFactory::laravel(), $apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure);
+        return self::make(PendingRequestFactory::laravel(), $apiKey, $environment, $timeout, $connectTimeout);
     }
 
     /** @param array<string, mixed> $query */
@@ -155,7 +151,7 @@ final readonly class AsaasConnector implements Connector, Redactable
         });
     }
 
-    private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout, bool $throwOnTransportFailure): self
+    private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout): self
     {
         if ($apiKey === '') {
             throw new InvalidArgumentException('The API key must not be empty.');
@@ -178,7 +174,6 @@ final readonly class AsaasConnector implements Connector, Redactable
                 ->timeout($timeout)
                 ->withOptions(['verify' => true]),
             $environment->baseUrl(),
-            $throwOnTransportFailure,
         );
     }
 
@@ -209,15 +204,9 @@ final readonly class AsaasConnector implements Connector, Redactable
             /** @var Response $response */
             $response = $httpCall();
         } catch (ConnectionException $connectionException) {
-            if ($this->throwOnTransportFailure) {
-                throw TransportFailureClassifier::classify($connectionException);
-            }
-
-            return AsaasResult::failure(
-                [['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']],
-            );
+            throw TransportFailureClassifier::classify($connectionException);
         }
 
-        return ResponseInterpreter::toResult($response, $this->throwOnTransportFailure);
+        return ResponseInterpreter::toResult($response);
     }
 }

@@ -91,17 +91,34 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   `stub()`, `stubError()`, `stubPages()`, `stubException()`,
   `stubRequestNotDelivered()` and `stubIndeterminateResult()`. Tests that
   asserted the throw at request time need to expect it at registration.
-- **With `throwOnTransportFailure: true`, a 5xx now throws
-  `IndeterminateResultException` instead of returning a failure result.** The
-  connector treated `$response->failed()` — 4xx *and* 5xx — as a definitive
-  answer. A 5xx is not Asaas answering about the operation: it is the server, or
-  a proxy in front of it, reporting that it could not answer, so the request may
-  well have been processed. On `POST /v3/transfers` that misclassification is
+- **`throwOnTransportFailure` is gone; the typed transport exceptions are now
+  the only behaviour.** The flag, the `asaas.throw_on_transport_failure` config
+  key and the `ASAAS_THROW_ON_TRANSPORT_FAILURE` env var were removed, and with
+  them the `CONNECTION_ERROR` result path (`statusCode 0`,
+  `errors[0]['code'] === 'CONNECTION_ERROR'`) deprecated in 2.1.0. There was
+  never a good reason to prefer it: it reports a request whose outcome is
+  unknown as a definitive rejection, which is exactly how a retried transfer
+  moves money twice. An `AsaasResult` now only ever carries an answer — a 2xx
+  the SDK could read, or a 4xx verdict from Asaas.
+
+  Named arguments `throwOnTransportFailure:` on `AsaasClient::for()`,
+  `Asaas::for()`, `AsaasClient::fake()`, `new FakeAsaasClient()`,
+  `AsaasConnector::forStandalone()` / `forLaravel()` and the connector
+  constructor now raise an "unknown named parameter" error; drop them. Code
+  matching on `CONNECTION_ERROR` becomes dead — replace it with
+  `catch (RequestNotDeliveredException)` (safe to retry) and
+  `catch (IndeterminateResultException)` (reconcile first), or a single
+  `catch (TransportException)` where the distinction does not matter. Republish
+  `config/asaas.php` if you had it published.
+- **A 5xx now throws `IndeterminateResultException` instead of returning a
+  failure result.** The connector treated `$response->failed()` — 4xx *and*
+  5xx — as a definitive answer. A 5xx is not Asaas answering about the
+  operation: it is the server, or a proxy in front of it, reporting that it
+  could not answer, so the request may well have been processed. On `POST /v3/transfers` that misclassification is
   the difference between reconciling and retrying real money. The exception
   carries `phase: 'server'` (a new value in the `phase` union) and the received
   `response`, so status and body stay loggable. **4xx is unchanged** — it stays
-  an `AsaasResult` failure, including `408` and `429`. With the flag off
-  (default) nothing changes: 5xx still returns a failure result.
+  an `AsaasResult` failure, including `408` and `429`.
   `FakeAsaasClient::stubIndeterminateResult()` accepts `phase: 'server'`, which
   stubs a `502`.
 - **`$result->errors[0]['description']` can now hold `***` where it held the

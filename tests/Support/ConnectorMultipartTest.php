@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\Environment;
+use OwnerPro\Asaas\Support\IndeterminateResultException;
 
 mutates(AsaasConnector::class);
 
@@ -144,15 +145,12 @@ it('sends form-only multipart when no files are attached', function (): void {
     });
 });
 
-it('returns failure on multipart connection error', function (): void {
+it('throws on multipart connection error', function (): void {
     Http::fake(fn () => throw new ConnectionException('boom'));
 
-    $result = multipartConnector()->postMultipart('/myAccount/documents/x/files', [], [[
+    expect(fn () => multipartConnector()->postMultipart('/myAccount/documents/x/files', [], [[
         'name' => 'documentFile', 'contents' => 'x', 'filename' => 'x.png',
-    ]]);
-
-    expect($result->success)->toBeFalse();
-    expect($result->errors[0]['code'])->toBe('CONNECTION_ERROR');
+    ]]))->toThrow(IndeterminateResultException::class);
 });
 
 it('returns failure when API rejects the upload', function (): void {

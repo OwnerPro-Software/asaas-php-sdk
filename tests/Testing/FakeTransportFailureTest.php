@@ -9,11 +9,24 @@ use Illuminate\Http\Client\Response as ClientResponse;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\Support\IndeterminateResultException;
 use OwnerPro\Asaas\Support\RequestNotDeliveredException;
+use OwnerPro\Asaas\Support\TransportException;
 use OwnerPro\Asaas\Testing\FakeAsaasClient;
 use OwnerPro\Asaas\Testing\FakeTransportFailure;
 use PHPUnit\Framework\ExpectationFailedException;
 
 mutates(FakeTransportFailure::class, FakeAsaasClient::class);
+
+/**
+ * A transport-failure stub always throws now, but these tests are about what
+ * the failed call left behind on the recorder, not about the exception.
+ */
+function sendPastTransportFailure(FakeAsaasClient $fake): void
+{
+    try {
+        $fake->payments()->find('pay_1');
+    } catch (TransportException) {
+    }
+}
 
 // --- FakeTransportFailure builds production-shaped exceptions ---
 
@@ -55,10 +68,10 @@ it('stubIndeterminateResult rejects unknown phases listing body and server among
     AsaasClient::fake()->stubIndeterminateResult('transfers', 'bogus');
 })->throws(InvalidArgumentException::class, 'Unknown transport failure phase "bogus"; expected one of: body, read, server, transfer.');
 
-// --- fake with throwOnTransportFailure: true mirrors the typed contract ---
+// --- the fake mirrors the typed contract ---
 
 it('stubRequestNotDelivered throws the typed exception with the requested phase', function (): void {
-    $fake = AsaasClient::fake(throwOnTransportFailure: true)
+    $fake = AsaasClient::fake()
         ->stubRequestNotDelivered('transfers', 'dns');
 
     $exception = null;
@@ -73,7 +86,7 @@ it('stubRequestNotDelivered throws the typed exception with the requested phase'
 });
 
 it('stubRequestNotDelivered defaults to the connect phase', function (): void {
-    $fake = AsaasClient::fake(throwOnTransportFailure: true)
+    $fake = AsaasClient::fake()
         ->stubRequestNotDelivered('transfers');
 
     $exception = null;
@@ -87,7 +100,7 @@ it('stubRequestNotDelivered defaults to the connect phase', function (): void {
 });
 
 it('stubIndeterminateResult throws the typed exception with the requested phase', function (string $phase): void {
-    $fake = AsaasClient::fake(throwOnTransportFailure: true)
+    $fake = AsaasClient::fake()
         ->stubIndeterminateResult('transfers', $phase);
 
     $exception = null;
@@ -102,7 +115,7 @@ it('stubIndeterminateResult throws the typed exception with the requested phase'
 })->with(['read', 'transfer', 'body', 'server']);
 
 it('stubIndeterminateResult defaults to the read phase', function (): void {
-    $fake = AsaasClient::fake(throwOnTransportFailure: true)
+    $fake = AsaasClient::fake()
         ->stubIndeterminateResult('transfers');
 
     $exception = null;
@@ -116,7 +129,7 @@ it('stubIndeterminateResult defaults to the read phase', function (): void {
 });
 
 it('transport stubs are fluent and combine with regular stubs', function (): void {
-    $fake = AsaasClient::fake(throwOnTransportFailure: true)
+    $fake = AsaasClient::fake()
         ->stubRequestNotDelivered('transfers')
         ->stub('payments/*', ['id' => 'pay_1']);
 
@@ -124,24 +137,11 @@ it('transport stubs are fluent and combine with regular stubs', function (): voi
     expect($fake->payments()->find('pay_1')->success)->toBeTrue();
 });
 
-// --- fake without the flag mirrors the legacy contract ---
-
-it('FakeAsaasClient constructor defaults throwOnTransportFailure to false', function (): void {
+it('a directly constructed FakeAsaasClient throws the typed exception too', function (): void {
     $fake = (new FakeAsaasClient)->stubRequestNotDelivered('transfers');
 
-    $result = $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']);
-
-    expect($result->success)->toBeFalse();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
-});
-
-it('stubRequestNotDelivered returns the legacy CONNECTION_ERROR result when the flag is off', function (): void {
-    $fake = AsaasClient::fake()->stubRequestNotDelivered('transfers');
-
-    $result = $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']);
-
-    expect($result->success)->toBeFalse();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
+    expect(fn () => $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']))
+        ->toThrow(RequestNotDeliveredException::class);
 });
 
 /*
@@ -160,7 +160,7 @@ it('stubRequestNotDelivered returns the legacy CONNECTION_ERROR result when the 
 it('records the request behind a stubRequestNotDelivered so assertions can see it', function (): void {
     $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
 
-    $fake->payments()->find('pay_1');
+    sendPastTransportFailure($fake);
 
     expect($fake->recorded('payments'))->toHaveCount(1);
 
@@ -171,7 +171,7 @@ it('records the request behind a stubRequestNotDelivered so assertions can see i
 it('records the request behind a stubIndeterminateResult so assertions can see it', function (): void {
     $fake = AsaasClient::fake()->stubIndeterminateResult('payments', 'transfer');
 
-    $fake->payments()->find('pay_1');
+    sendPastTransportFailure($fake);
 
     $fake->assertSent('payments');
     $fake->assertSentCount(1);
@@ -180,7 +180,7 @@ it('records the request behind a stubIndeterminateResult so assertions can see i
 it('assertNotSent fails once a request was issued against a transport-failure stub', function (): void {
     $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
 
-    $fake->payments()->find('pay_1');
+    sendPastTransportFailure($fake);
 
     $fake->assertNotSent('payments');
 })->throws(ExpectationFailedException::class);
@@ -188,7 +188,7 @@ it('assertNotSent fails once a request was issued against a transport-failure st
 it('assertNothingSent fails once a request was issued against a transport-failure stub', function (): void {
     $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
 
-    $fake->payments()->find('pay_1');
+    sendPastTransportFailure($fake);
 
     $fake->assertNothingSent();
 })->throws(ExpectationFailedException::class);
@@ -196,7 +196,7 @@ it('assertNothingSent fails once a request was issued against a transport-failur
 it('records the failed request with its real url and a null response', function (): void {
     $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
 
-    $fake->payments()->find('pay_1');
+    sendPastTransportFailure($fake);
 
     [$request, $response] = $fake->recorded('payments')[0];
 
@@ -207,7 +207,7 @@ it('records the failed request with its real url and a null response', function 
 it('hands the null response to a matcher closure that accepts it', function (): void {
     $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
 
-    $fake->payments()->find('pay_1');
+    sendPastTransportFailure($fake);
 
     $fake->assertSent(
         'payments',
@@ -215,26 +215,8 @@ it('hands the null response to a matcher closure that accepts it', function (): 
     );
 });
 
-it('stubIndeterminateResult with body phase returns the legacy empty success when the flag is off', function (): void {
-    $fake = AsaasClient::fake()->stubIndeterminateResult('transfers', 'body');
-
-    $result = $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']);
-
-    expect($result->success)->toBeTrue();
-    expect($result->data)->toBe([]);
-});
-
-it('stubIndeterminateResult with server phase returns the legacy failure result when the flag is off', function (): void {
-    $fake = AsaasClient::fake()->stubIndeterminateResult('transfers', 'server');
-
-    $result = $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']);
-
-    expect($result->success)->toBeFalse();
-    expect($result->response?->status())->toBe(502);
-});
-
 it('stubIndeterminateResult with server phase carries the 5xx response on the thrown exception', function (): void {
-    $fake = AsaasClient::fake(throwOnTransportFailure: true)
+    $fake = AsaasClient::fake()
         ->stubIndeterminateResult('transfers', 'server');
 
     $exception = null;

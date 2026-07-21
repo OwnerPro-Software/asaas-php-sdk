@@ -33,10 +33,8 @@ function throwingTransportStub(array $context): Closure
 
 function throwingConnector(): AsaasConnector
 {
-    return AsaasConnector::forLaravel('key', Environment::Sandbox, 30, throwOnTransportFailure: true);
+    return AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
 }
-
-// --- throwOnTransportFailure: true ---
 
 it('throws RequestNotDeliveredException when the connection provably failed', function (): void {
     Http::fake(['*' => throwingTransportStub(['errno' => 7])]);
@@ -99,7 +97,7 @@ it('throws IndeterminateResultException with body phase on 2xx with empty body',
     expect($exception->phase)->toBe('body');
 });
 
-it('treats 204 No Content as definitive success when throwing is enabled', function (): void {
+it('treats 204 No Content as a definitive success', function (): void {
     Http::fake(['*' => Http::response('', 204)]);
 
     $result = throwingConnector()->delete('/accounts/acc_1/accessTokens');
@@ -157,6 +155,8 @@ it('throws IndeterminateResultException with server phase carrying the response 
 
 // The whole 5xx range is indeterminate, not just the gateway statuses: a 500
 // from the API itself is as unproven as a 502 from a proxy in front of it.
+// 599 is out of the registered range on purpose — the rule is the class, not
+// a list of known statuses.
 it('throws IndeterminateResultException across the 5xx range', function (int $status): void {
     Http::fake(['*' => Http::response(['errors' => [['code' => 'x', 'description' => 'y']]], $status)]);
 
@@ -173,17 +173,7 @@ it('throws on 5xx even when the body carries a canonical error envelope', functi
         ->toThrow(IndeterminateResultException::class);
 });
 
-it('keeps returning a failure result on 5xx by default', function (): void {
-    Http::fake(['*' => Http::response(['errors' => [['code' => 'internal', 'description' => 'boom']]], 500)]);
-
-    $result = AsaasConnector::forLaravel('key', Environment::Sandbox, 30)->get('/payments/pay_123');
-
-    expect($result->success)->toBeFalse();
-    expect($result->errors)->toBe([['code' => 'internal', 'description' => 'boom']]);
-    expect($result->response?->status())->toBe(500);
-});
-
-it('still returns a failure result on definitive HTTP errors when throwing is enabled', function (): void {
+it('still returns a failure result on definitive HTTP errors', function (): void {
     Http::fake(['*' => Http::response(['errors' => [['code' => 'invalid_value', 'description' => 'bad']]], 400)]);
 
     $result = throwingConnector()->get('/payments/pay_123');
@@ -195,7 +185,7 @@ it('still returns a failure result on definitive HTTP errors when throwing is en
 // 408 and 429 are not verdicts on the operation either, but they are left as
 // definitive failures on purpose: the SDK only promotes a status to
 // indeterminate when the server states it could not answer at all.
-it('keeps 4xx definitive when throwing is enabled, including 408 and 429', function (int $status): void {
+it('keeps 4xx definitive, including 408 and 429', function (int $status): void {
     Http::fake(['*' => Http::response(['errors' => [['code' => 'x', 'description' => 'y']]], $status)]);
 
     $result = throwingConnector()->get('/payments/pay_123');
@@ -204,7 +194,7 @@ it('keeps 4xx definitive when throwing is enabled, including 408 and 429', funct
     expect($result->response?->status())->toBe($status);
 })->with([408, 429, 499]);
 
-it('still returns a success result on healthy 2xx JSON when throwing is enabled', function (): void {
+it('still returns a success result on healthy 2xx JSON', function (): void {
     Http::fake(['*' => Http::response(['id' => 'pay_123'], 200)]);
 
     $result = throwingConnector()->get('/payments/pay_123');
@@ -248,14 +238,9 @@ it('propagates typed transport exceptions through all() iteration', function ():
     })->toThrow(IndeterminateResultException::class);
 });
 
-// --- throwOnTransportFailure: false (legacy default) ---
-
-// Pins the CHANGELOG promise: "Direct 2.0-style construction keeps working
-// unchanged" — two-argument construction must keep the legacy transport
-// behavior. (This does NOT kill the constructor-default mutant — Xdebug never
-// attributes default-argument evaluation to the parameter line, verified
-// empirically — hence the @pest-mutate-ignore on it; this test pins BC only.)
-it('2.0-style two-argument construction keeps the legacy CONNECTION_ERROR behavior', function (): void {
+// Direct construction is @internal (the fake uses it), but it must not be a
+// way back into a non-throwing connector: there is no flag left to omit.
+it('throws through direct two-argument construction as well', function (): void {
     $pendingRequest = (new PendingRequest)
         ->baseUrl('https://api-sandbox.asaas.com/v3')
         ->withHeader('access_token', 'test-key')
@@ -263,39 +248,6 @@ it('2.0-style two-argument construction keeps the legacy CONNECTION_ERROR behavi
         ->preventStrayRequests()
         ->stub([fn (): never => throw new ConnectionException('cURL error 28: Connection timed out')]);
 
-    $connector = new AsaasConnector($pendingRequest, '');
-    $result = $connector->get('/payments/pay_123');
-
-    expect($result->success)->toBeFalse();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
-});
-
-// Reflection justified (CLAUDE.md exception): forStandalone builds a raw
-// PendingRequest with no factory, so Http::fake cannot intercept it — the
-// default is unobservable through behavior without real network I/O, and a
-// wrong default here is the money-safety invariant of this feature.
-it('forStandalone defaults throwOnTransportFailure to false', function (): void {
-    $connector = AsaasConnector::forStandalone('key', Environment::Sandbox, 30);
-
-    $flag = (new ReflectionProperty(AsaasConnector::class, 'throwOnTransportFailure'))->getValue($connector);
-
-    expect($flag)->toBeFalse();
-});
-
-it('keeps the legacy CONNECTION_ERROR result by default', function (): void {
-    Http::fake(['*' => throwingTransportStub(['errno' => 7])]);
-
-    $result = AsaasConnector::forLaravel('key', Environment::Sandbox, 30)->get('/payments/pay_123');
-
-    expect($result->success)->toBeFalse();
-    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
-});
-
-it('keeps the legacy empty-data success on unreadable 2xx body by default', function (): void {
-    Http::fake(['*' => Http::response('{invalid-json', 200)]);
-
-    $result = AsaasConnector::forLaravel('key', Environment::Sandbox, 30)->get('/payments/pay_123');
-
-    expect($result->success)->toBeTrue();
-    expect($result->data)->toBe([]);
+    expect(fn () => (new AsaasConnector($pendingRequest, ''))->get('/payments/pay_123'))
+        ->toThrow(IndeterminateResultException::class);
 });

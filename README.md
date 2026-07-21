@@ -32,7 +32,6 @@ ASAAS_API_KEY=your-api-key
 ASAAS_ENVIRONMENT=sandbox       # or "production"
 ASAAS_TIMEOUT=30                # request timeout in seconds (default: 30)
 ASAAS_CONNECT_TIMEOUT=10        # TCP connect timeout in seconds (default: 10)
-ASAAS_THROW_ON_TRANSPORT_FAILURE=false  # opt-in typed transport exceptions (default: false)
 ```
 
 > `ASAAS_API_KEY` is required. The `AsaasServiceProvider` throws `RuntimeException` the first time `AsaasClient` is resolved from the container if the key is missing or empty — keep this in mind when bootstrapping in CI or test environments where the env var may not be set.
@@ -166,32 +165,17 @@ try {
     Asaas::payments()->find('pay_invalid')->orFail();
 } catch (AsaasRequestException $e) {
     $e->getMessage();    // First error description
-    $e->statusCode;      // HTTP status code (0 for connection errors)
+    $e->statusCode;      // HTTP status code — always a 4xx here
     $e->errors;          // Full error array from API
-    $e->response;        // ?RawResponse — null for connection errors
+    $e->response;        // ?RawResponse
 }
 ```
 
-### Transport Failures (opt-in typed exceptions)
+### Transport Failures (typed exceptions)
 
-> **Highly recommended: enable `throw_on_transport_failure` in every new integration.** The legacy default exists only for backward compatibility and will likely become the default in a future major. Without it, a timeout on a money-moving call is indistinguishable from a definitive API rejection — the exact ambiguity that leads to duplicated transfers under blind retry.
+An `AsaasResult` is only ever an **answer**: a 2xx the SDK could read, or a 4xx verdict from Asaas. Anything else — a timeout, a DNS error, a connection refused, an unreadable body, a 5xx — throws, because those cannot tell you the one thing that matters on money-moving endpoints: **whether the API processed the request or not**. A read timeout on `transfers()->create()` may mean the transfer *was* created; folding that into a failure result invites a blind retry that moves money twice.
 
-By default, a transport failure (timeout, DNS error, connection refused) is swallowed into an `AsaasResult` failure with a `CONNECTION_ERROR` code and `statusCode 0`. That shape cannot tell you the one thing that matters for money-moving endpoints: **whether the API processed the request or not**. A read timeout on `transfers()->create()` may mean the transfer *was* created — blindly retrying can move money twice.
-
-Opt in to typed transport exceptions to make that distinction explicit:
-
-```php
-// Standalone
-$client = AsaasClient::for(apiKey: '...', throwOnTransportFailure: true);
-
-// Laravel — config/asaas.php (or ASAAS_THROW_ON_TRANSPORT_FAILURE=true)
-'throw_on_transport_failure' => true,
-
-// Multi-tenant override
-$client = Asaas::for(apiKey: $tenantKey, throwOnTransportFailure: true);
-```
-
-With the flag on, the `CONNECTION_ERROR` result path no longer exists. Instead:
+There is no flag and no opt-out. The typed exceptions are the contract:
 
 ```php
 use OwnerPro\Asaas\Support\IndeterminateResultException;
@@ -214,15 +198,16 @@ try {
 }
 ```
 
-Both extend `TransportException` (itself an `AsaasException`), so a single `catch (TransportException $e)` works when the distinction doesn't matter.
+Both extend `TransportException` (itself an `AsaasException`), so a single `catch (TransportException $e)` works when the distinction doesn't matter. Since the SDK never returns a result for an unanswered request, a method that returns at all returned an answer — you can read `$result->success` without wondering which kind of failure it was.
 
 Classification is deliberately conservative: `RequestNotDeliveredException` is thrown only on unequivocal cURL evidence that no bytes reached the API (errno 6/7/35/58/60). A timeout (cURL 28) is **always** indeterminate — curl reports zeroed connection timers on reused keep-alive connections, so `connect_time` cannot prove a connect-phase timeout. Anything ambiguous classifies as indeterminate, because the costs are asymmetric — a mislabelled "not delivered" invites a duplicate transfer, while a mislabelled "indeterminate" costs one reconciliation lookup.
 
-Two additional behaviors change with the flag on:
+Two received-response cases also throw, for the same reason:
 
-- A 2xx response whose body is not a JSON object or array (invalid JSON, empty body, or a bare JSON scalar) throws `IndeterminateResultException` with `phase: 'body'` (by default it silently becomes a success with empty `data`). Exception: **204 No Content** endpoints (`deleteAccessToken`, `removeBackoff`) keep returning a success with empty `data` — an intentionally empty body is a definitive answer, not a transport failure.
-- A **5xx** response throws `IndeterminateResultException` with `phase: 'server'` and the response attached (by default it returns an `AsaasResult` failure). A 5xx is not Asaas answering about the operation — it is the server, or a proxy in front of it, reporting that it could not answer, so the operation may well have been processed. This holds for the whole range and regardless of the body: a 5xx carrying a canonical `{"errors":[...]}` envelope still throws.
-- **4xx** responses are **not** affected — they still return an `AsaasResult` failure. A 4xx is Asaas rejecting the operation: a definitive answer, not a transport failure. This includes `408` and `429`, which are safe to retry on your side but are left definitive here because the SDK only promotes a status when the server states it could not answer at all.
+- A 2xx response whose body is not a JSON object or array (invalid JSON, empty body, or a bare JSON scalar) throws `IndeterminateResultException` with `phase: 'body'`. Exception: **204 No Content** endpoints (`deleteAccessToken`, `removeBackoff`) return a success with empty `data` — an intentionally empty body is a definitive answer.
+- A **5xx** response throws `IndeterminateResultException` with `phase: 'server'` and the response attached. A 5xx is not Asaas answering about the operation — it is the server, or a proxy in front of it, reporting that it could not answer, so the operation may well have been processed. This holds for the whole range and regardless of the body: a 5xx carrying a canonical `{"errors":[...]}` envelope still throws.
+
+**4xx** responses return an `AsaasResult` failure, as always. A 4xx is Asaas rejecting the operation: a definitive answer. This includes `408` and `429`, which are safe to retry on your side but stay definitive here because the SDK only promotes a status when the server states it could not answer at all.
 
 ### Resource ID Validation
 
@@ -779,9 +764,9 @@ foreach (Asaas::payments()->all(['limit' => 100]) as $payment) {
 $allPayments = iterator_to_array(Asaas::payments()->all());
 ```
 
-If an API error occurs during pagination, the Generator yields an `AsaasPaginatedError` instead of throwing. This object carries:
+If Asaas rejects a page mid-iteration (a 4xx), the Generator yields an `AsaasPaginatedError` instead of throwing. This object carries:
 - `errors` — the error list from the API
-- `response` — the raw HTTP response (null for connection errors)
+- `response` — the raw HTTP response
 - `offset` — the page offset that failed
 - `limit` — the page size
 
@@ -1548,13 +1533,13 @@ $asaas = AsaasClient::fake()
 
 ### Simulating transport failures
 
-Pass `throwOnTransportFailure: true` to the fake to mirror the [typed transport exception contract](#transport-failures-opt-in-typed-exceptions), then stub failures per phase. The stubs raise a production-shaped Guzzle `ConnectException` carrying the real cURL errno, so they flow through the same classifier as live traffic and honour the flag either way:
+The fake mirrors the [typed transport exception contract](#transport-failures-typed-exceptions) — stub failures per phase. The stubs raise a production-shaped Guzzle `ConnectException` carrying the real cURL errno, so they flow through the same classifier as live traffic:
 
 ```php
 use OwnerPro\Asaas\Support\IndeterminateResultException;
 use OwnerPro\Asaas\Support\RequestNotDeliveredException;
 
-$asaas = AsaasClient::fake(throwOnTransportFailure: true)
+$asaas = AsaasClient::fake()
     ->stubRequestNotDelivered('transfers', phase: 'dns')       // 'connect'|'dns'|'tls'
     ->stubIndeterminateResult('pix/qrCodes/pay', phase: 'read'); // 'body'|'read'|'server'|'transfer'
 
@@ -1566,8 +1551,6 @@ try {
 ```
 
 `phase: 'body'` and `phase: 'server'` stub a response instead of a cURL error — an unreadable `200` and a `502` respectively — because that is what production sees in those cases.
-
-With `throwOnTransportFailure` omitted (default), the same stubs reproduce the legacy behavior: `stubRequestNotDelivered`/`stubIndeterminateResult` yield the `CONNECTION_ERROR` result, `phase: 'body'` yields a success with empty `data`, and `phase: 'server'` yields a failure result carrying the `502` — exactly what production returns without the flag.
 
 A request that fails in transport is still a request that was sent: the cURL-error stubs record it (with a `null` response), so `assertSent`/`assertSentCount` see it and `assertNotSent`/`assertNothingSent` correctly fail. Raw `stubException()` throws your exception as-is and bypasses that recording — reach for the phase stubs when the test asserts on what was sent.
 

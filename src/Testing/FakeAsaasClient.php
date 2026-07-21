@@ -49,7 +49,6 @@ final class FakeAsaasClient implements AsaasClientContract
     public function __construct(
         array $stubs = [],
         Environment|string $environment = Environment::Sandbox,
-        private readonly bool $throwOnTransportFailure = false,
     ) {
         $this->baseUrl = ($environment instanceof Environment ? $environment : Environment::from($environment))->baseUrl();
         $this->factory = new Factory;
@@ -183,9 +182,7 @@ final class FakeAsaasClient implements AsaasClientContract
 
     /**
      * Simulates a failure before any HTTP bytes reached the API (DNS, TCP
-     * connect, TLS). With `throwOnTransportFailure: true` the call throws
-     * `RequestNotDeliveredException`; without it, the legacy
-     * `CONNECTION_ERROR` result is returned — mirroring production.
+     * connect, TLS): the call throws `RequestNotDeliveredException`.
      *
      * @param  'connect'|'dns'|'tls'  $phase
      */
@@ -197,10 +194,8 @@ final class FakeAsaasClient implements AsaasClientContract
     /**
      * Simulates a failure after the request may have been processed (read
      * timeout, connection dropped mid-transfer, a 2xx with unreadable body for
-     * `phase: 'body'`, or a 5xx for `phase: 'server'`). With
-     * `throwOnTransportFailure: true` the call throws
-     * `IndeterminateResultException`; without it, the legacy behaviour is
-     * returned — mirroring production.
+     * `phase: 'body'`, or a 5xx for `phase: 'server'`): the call throws
+     * `IndeterminateResultException`.
      *
      * @param  'body'|'read'|'server'|'transfer'  $phase
      */
@@ -366,6 +361,6 @@ final class FakeAsaasClient implements AsaasClientContract
             ->withHeader('access_token', 'fake-key')
             ->withOptions(['verify' => true]);
 
-        return new AsaasClient(new AsaasConnector($pendingRequest, $this->baseUrl, $this->throwOnTransportFailure));
+        return new AsaasClient(new AsaasConnector($pendingRequest, $this->baseUrl));
     }
 }
