@@ -24,6 +24,8 @@ final class StubResponse
             return $stub;
         }
 
+        PageEnvelopeGuard::validate($stub, 'stub()');
+
         // A lone stub that already declares any pagination key keeps its envelope:
         // with no sequence around it there is nothing the SDK knows better than
         // the caller. `normalizePages()` does know better — see its docblock. The
@@ -72,9 +74,18 @@ final class StubResponse
      */
     public static function normalizePages(array $pages): array
     {
+        // Shape before sequence: a page declaring `totalCount` as a string is
+        // not a contradiction the sequence rules can reason about, and reading
+        // it as one would report the wrong defect.
+        $declaredCounts = [];
+
+        foreach ($pages as $index => $page) {
+            $declaredCounts[] = PageEnvelopeGuard::validate($page, sprintf('stubPages() page %d', $index + 1));
+        }
+
         $rowCounts = array_map(static fn (array $page): int => count(self::rowsOf($page)), $pages);
 
-        PageSequenceGuard::validate($pages, $rowCounts);
+        PageSequenceGuard::validate($pages, $rowCounts, $declaredCounts);
 
         $totalCount = array_sum($rowCounts);
         $lastIndex = count($pages) - 1;

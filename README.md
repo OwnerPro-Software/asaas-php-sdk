@@ -205,6 +205,7 @@ Classification is deliberately conservative: `RequestNotDeliveredException` is t
 Two received-response cases also throw, for the same reason:
 
 - A 2xx response whose body is not a JSON object or array (invalid JSON, empty body, or a bare JSON scalar) throws `IndeterminateResultException` with `phase: 'body'`. Exception: **204 No Content** endpoints (`deleteAccessToken`, `removeBackoff`) return a success with empty `data` — an intentionally empty body is a definitive answer.
+- A 2xx **list** response whose pagination envelope cannot be read throws the same way: `data` that is not a list of objects, or a `totalCount`/`limit` that is not an integer, or a `hasMore` that is not a boolean. Nothing is coerced — `totalCount` bounds the walk and `hasMore` continues it, so reading `"3"` as `3` would end a walk early or run one forever while still looking like a complete answer.
 - A **5xx** response throws `IndeterminateResultException` with `phase: 'server'` and the response attached. A 5xx is not Asaas answering about the operation — it is the server, or a proxy in front of it, reporting that it could not answer, so the operation may well have been processed. This holds for the whole range and regardless of the body: a 5xx carrying a canonical `{"errors":[...]}` envelope still throws.
 
 **4xx** responses return an `AsaasResult` failure, as always. A 4xx is Asaas rejecting the operation: a definitive answer. This includes `408` and `429`, which are safe to retry on your side but stay definitive here because the SDK only promotes a status when the server states it could not answer at all.
@@ -708,22 +709,30 @@ would otherwise report `0` for every page. `next()` advances by the number of
 rows the page actually delivered (not by `limit`, which a short page would
 overshoot) and returns `null` once a page comes back empty.
 
-`all()` has four brakes, and a walk that trips any of them past the first ends
-with a final `AsaasPaginatedError` rather than a quiet `return` — a silent stop
-would look exactly like a complete walk. Code that already checks each yielded
-item for `AsaasPaginatedError` needs no change.
+`all()` has four brakes. A walk that ends on anything but a plain empty page
+yields a final `AsaasPaginatedError` rather than returning quietly — a silent
+stop would look exactly like a complete walk. Code that already checks each
+yielded item for `AsaasPaginatedError` needs no change.
 
 | Brake | Fires when | Yields |
 | --- | --- | --- |
-| Empty page | the page carries no rows | nothing; the walk just ends |
+| Empty page | the page carries no rows | nothing, when the same page says `hasMore: false`; `PAGINATION_TRUNCATED` when it still promises another |
 | Repeated page | a page carries exactly the rows of the page before it **and still says `hasMore: true`** | `PAGINATION_STALLED` |
 | `totalCount` reached, `hasMore` still true | the envelope contradicts itself | `PAGINATION_INCONSISTENT` |
 | Page ceiling | 10 000 pages fetched and no brake above ever fired | `PAGINATION_RUNAWAY` |
 
+An empty page always ends the walk — there is nothing to advance past — but one
+that still sets `hasMore: true` is an envelope contradicting itself, and rows
+may be missing behind it. That is what `PAGINATION_TRUNCATED` reports.
+
 The ceiling is the last resort: an endpoint that ignores `offset` **and** answers
 in an unstable order repeats no page and reports no usable `totalCount`, so
-nothing else marks the walk complete. At the API's maximum page size of 100 it
-sits at a million rows — past any real account, so it only ever fires on a fault.
+nothing else marks the walk complete. It counts **pages**, so the row it stops at
+is 10 000 × whatever `limit` you passed: a million rows at the API's maximum page
+size of 100, but only 100 000 at `limit: 10`. A million is past any real account,
+so on a full-size page it only ever fires on a fault — with a small page size it
+can land in front of a set the walk would otherwise finish, which is why the
+error says to raise `limit` rather than blaming the endpoint.
 
 The last two matter on endpoints whose query parameters Asaas never documented.
 One that ignored `offset` would answer every request with the same non-empty
@@ -1552,7 +1561,9 @@ try {
 
 `phase: 'body'` and `phase: 'server'` stub a response instead of a cURL error — an unreadable `200` and a `502` respectively — because that is what production sees in those cases.
 
-A request that fails in transport is still a request that was sent: the cURL-error stubs record it (with a `null` response), so `assertSent`/`assertSentCount` see it and `assertNotSent`/`assertNothingSent` correctly fail. Raw `stubException()` throws your exception as-is and bypasses that recording — reach for the phase stubs when the test asserts on what was sent.
+A request that fails in transport is still a request that was sent: the cURL-error stubs record it (with a `null` response), so `assertSent`/`assertSentCount` see it and `assertNotSent`/`assertNothingSent` correctly fail. Raw `stubException()` bypasses that recording — reach for the phase stubs when the test asserts on what was sent.
+
+`stubException()` also does **not** guarantee the exception you passed is the one your test catches. It is raised where a real transport failure would be, so the connector classifies it on the way out: a `ConnectionException` surfaces as `RequestNotDeliveredException` or `IndeterminateResultException` exactly as production traffic does. Only an exception the connector does not handle travels through untouched. Assert on the typed exception, or use the phase stubs, which say what they produce.
 
 Closure stubs receive `(Illuminate\Http\Client\Request $request, array $options)` from Laravel's HTTP client and may return a `Response`, a `PromiseInterface`, or any value `Http::response()` accepts. The `$options` parameter can be ignored when not needed:
 

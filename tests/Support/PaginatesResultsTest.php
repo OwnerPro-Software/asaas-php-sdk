@@ -317,13 +317,28 @@ it('all yields error with correct offset on mid-pagination failure', function ()
 
 it('all stops when data is empty', function (): void {
     $connector = fakeConnector(fn (): AsaasResult => AsaasResult::success(
-        ['data' => [], 'totalCount' => 0, 'hasMore' => true, 'limit' => 10, 'offset' => 0],
+        ['data' => [], 'totalCount' => 0, 'hasMore' => false, 'limit' => 10, 'offset' => 0],
         RawResponse::fake(),
     ));
 
     $items = iterator_to_array($connector->all('/v3/payments', []));
 
     expect($items)->toBeEmpty();
+});
+
+it('all reports an empty page that still promises another', function (): void {
+    $connector = fakeConnector(fn (): AsaasResult => AsaasResult::success(
+        ['data' => [], 'totalCount' => 10, 'hasMore' => true, 'limit' => 10, 'offset' => 0],
+        RawResponse::fake(),
+    ));
+
+    $items = iterator_to_array($connector->all('/v3/payments', []));
+
+    expect($items)->toHaveCount(1);
+    expect($items[0])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[0]->errors[0]['code'])->toBe('PAGINATION_TRUNCATED');
+    expect($items[0]->errors[0]['description'])->toContain('empty page while the same response still set hasMore=true');
+    expect($items[0]->offset)->toBe(0);
 });
 
 it('all stops once the envelope\'s own totalCount has been delivered', function (): void {

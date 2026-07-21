@@ -5,6 +5,7 @@ declare(strict_types=1);
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Illuminate\Http\Client\Response;
 use OwnerPro\Asaas\AsaasClient;
+use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
@@ -193,6 +194,21 @@ it('redacts a credential on every row when a page is json-encoded', function ():
     expect($encoded)->not->toContain('secret-one')
         ->and($encoded)->not->toContain('secret-two')
         ->and($encoded)->toContain('"authToken":"***"');
+});
+
+it('redacts the error object a walk yields in place of a page', function (): void {
+    // This is what `all()` hands the caller when a page is rejected, so it
+    // reaches a log by the same two routes the results do.
+    $error = new AsaasPaginatedError(
+        [['code' => 'invalid_value', 'description' => 'rejected', 'apiKey' => '$aact_live_key']],
+        new RawResponse(new Response(new GuzzleResponse(400, [], '{}'))),
+        offset: 10,
+        limit: 10,
+    );
+
+    expect(json_encode($error))->not->toContain('$aact_live_key')
+        ->and(dumpToString($error))->not->toContain('$aact_live_key')
+        ->and($error->errors[0]['apiKey'])->toBe('$aact_live_key');
 });
 
 it('keeps the real value reachable on the property after json redaction', function (): void {

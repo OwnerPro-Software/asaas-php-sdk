@@ -26,6 +26,33 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   instead, or rebuild it with `AsaasClient::for()` from your own secret store.
   See *Security* below.
 - **`payments()->listRefunds()` returns `AsaasPaginatedResult`** — see *Changed*.
+- **A list response the pagination envelope cannot read throws
+  `IndeterminateResultException`.** `paginate()` handed `data`, `totalCount`,
+  `hasMore` and `limit` straight to typed parameters, so a 200 from a proxy or
+  WAF carrying `{"data": "oops"}` — or a `totalCount` as a numeric string —
+  raised a `TypeError` from the middle of the SDK, escaping the Result contract
+  entirely. Such a body is now refused as `phase: 'body'`, the phase that
+  already means "a 2xx arrived the SDK cannot interpret". Nothing is coerced:
+  `totalCount` bounds the walk and `hasMore` continues it, so silently reading
+  `"3"` as `3` would truncate a walk while still looking complete. Code that
+  caught `TypeError` around a list call — there should be none — must catch
+  `IndeterminateResultException` instead.
+- **`all()` reports an empty page that still promises another.** A page carrying
+  no rows while the same envelope says `hasMore: true` ended the walk in
+  silence, which is indistinguishable from a complete one — the exact failure
+  the other three brakes exist to avoid. It now yields a final
+  `PAGINATION_TRUNCATED` error object. The walk still ends there; only the
+  silence is gone. Code that already inspects each yielded item for
+  `AsaasPaginatedError` needs no change; a test asserting such a walk yields
+  nothing at all does.
+- **A stub declaring a pagination key the SDK cannot read is rejected at
+  registration.** `stub()` and `stubPages()` accepted
+  `['data' => [$row], 'totalCount' => '1']` and then raised
+  `IndeterminateResultException` from inside the call under test, blaming the
+  SDK for a defect in the fixture. `totalCount` and `limit` must be integers and
+  `hasMore` a boolean where the body describes a page; anything else now raises
+  `InvalidArgumentException` where it was written. `offset` is unaffected — the
+  SDK paginates by the offset it asked for and never reads the echoed one.
 - **`UpdateInvoiceRequest::$municipalServiceName` was removed.** The update
   endpoint does not accept the field. Passing it as a named argument now raises
   `TypeError`; drop it from the call.
@@ -241,6 +268,12 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   its context — and an encoder walking the public properties writes the live
   subaccount key, or every `authToken` on a page of `GET /webhooks`, into the
   log.
+- **`AsaasPaginatedError` was the one public result type left unredacted.** It is
+  what `all()` hands the caller in place of a page, and it exposed `$errors` on a
+  public property with neither `Redactable` nor `JsonSerializable`, so
+  `dump($error)` and `Log::info('walk', ['err' => $error])` printed it verbatim
+  while its sibling classes scrubbed the same rows. It now implements both, on
+  the same terms they do.
   Two gaps stay open by design and are documented in `README.md`: results still
   allow `serialize()` (unlike the client and the request DTOs, they are
   legitimately cached and queued), and `$result->data` is a plain array that
@@ -289,6 +322,14 @@ are collected under *Breaking* so an upgrade can be planned from one list.
 
 ### Fixed
 
+- **`PAGINATION_RUNAWAY` blamed the endpoint for a ceiling the caller chose.**
+  The message stated the endpoint "reported no usable totalCount and never
+  repeated a page", but the ceiling counts *pages*: a walk with a perfectly good
+  `totalCount` reaches it first whenever that count exceeds 10 000 × `limit`, so
+  `all(['limit' => 10])` over 150 000 rows stopped at 100 000 and reported a
+  fault that had not happened. The message now says which backstop did not fire,
+  that the ceiling counts pages rather than rows, and that raising `limit` moves
+  it.
 - **An equivalent stub pattern was accepted and never served.** `FakeAsaasClient`
   keyed its stub map by the raw pattern string while matching on the resolved
   glob, so `'payments/*'`, `'/payments/*'` and `' payments/*'` were three entries
@@ -340,9 +381,10 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   stub is one response replayed for every matching request, so it describes page
   one and nothing else — the walk kept re-requesting the same rows and never
   terminated, hanging the consumer's test suite with no error to read. Such a
-  stub now serves the declared page at offset 0 and the empty terminal page a
-  real endpoint would answer with beyond it, so `->list()` still observes the
-  declared `hasMore` while `->all()` ends. `stubPages()` remains the way to model
+  stub now serves its body at the offset it declares — see the entry on stubs
+  modelling a later page below — and the empty terminal page a real endpoint
+  would answer with beyond it, so `->list()` still observes the declared
+  `hasMore` while `->all()` ends. `stubPages()` remains the way to model
   a real multi-page walk, and it now rejects an empty page list at registration
   instead of failing later as an exhausted sequence.
 - **An empty upstream `description` produced an exception with no message.**

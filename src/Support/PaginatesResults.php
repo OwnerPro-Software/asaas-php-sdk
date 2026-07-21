@@ -15,9 +15,14 @@ trait PaginatesResults
      * `totalCount` is 0 when omitted, and the stall check needs a page carrying
      * exactly the rows of the one before it. An endpoint that ignores `offset`
      * *and* answers in an unstable order satisfies neither — it just keeps
-     * saying `hasMore` — and the walk would run until the process died. At the
-     * API's maximum page size of 100 this ceiling is a million rows, well past any
-     * real Asaas account, so it only ever fires on a fault.
+     * saying `hasMore` — and the walk would run until the process died.
+     *
+     * The ceiling counts **pages**, so the row it stops at is `MAX_PAGES` times
+     * whatever `limit` the caller chose: a million rows at the API's maximum
+     * page size of 100, a tenth of that at `limit: 10`. A million is well past
+     * any real Asaas account, but a small page size can put the ceiling in
+     * front of a set the walk would otherwise finish — which is why
+     * {@see self::runawayWalk()} says so rather than blaming the endpoint.
      *
      * The exact number is a policy choice rather than behaviour — a walk is
      * bounded at 9 999 or 10 001 just as well — so the value itself is not
@@ -44,9 +49,6 @@ trait PaginatesResults
             );
         }
 
-        /** @var array{data?: list<array<string, mixed>>, totalCount?: int, hasMore?: bool, limit?: int, offset?: int} $data */
-        $data = $asaasResult->data ?? [];
-
         $nextPageFetcher = fn (int $offset): AsaasPaginatedResult => $this->paginate(
             $path,
             array_merge($query, ['offset' => $offset]),
@@ -55,11 +57,16 @@ trait PaginatesResults
         /** @var RawResponse $rawResponse */
         $rawResponse = $asaasResult->response;
 
+        // Read through the envelope rather than off the raw body: the fields
+        // below are typed, and an upstream that answers 200 with a shape none
+        // of them can hold must not throw a TypeError out of the SDK.
+        $paginationEnvelope = PaginationEnvelope::from($asaasResult->data ?? [], $rawResponse);
+
         return AsaasPaginatedResult::success(
-            data: $data['data'] ?? [],
-            totalCount: $data['totalCount'] ?? 0,
-            hasMore: $data['hasMore'] ?? false,
-            limit: $data['limit'] ?? 0,
+            data: $paginationEnvelope->data,
+            totalCount: $paginationEnvelope->totalCount,
+            hasMore: $paginationEnvelope->hasMore,
+            limit: $paginationEnvelope->limit,
             // The offset we asked for, not the echoed one: it is always
             // present, whereas an envelope omitting `offset` would pin the
             // cursor at 0 and make `next()` re-request page one forever.
@@ -105,6 +112,10 @@ trait PaginatesResults
             }
 
             if ($result->data === []) {
+                if ($result->hasMore) {
+                    yield self::truncatedWalk($result, $delivered);
+                }
+
                 break;
             }
 
@@ -190,11 +201,42 @@ trait PaginatesResults
     }
 
     /**
-     * The walk hit its page ceiling with neither backstop having fired.
+     * The page carries no rows while the same envelope still says there is
+     * more to fetch.
      *
-     * Reported rather than stopped quietly, for the same reason as the other
-     * two: a silent stop is indistinguishable from a complete walk. See
-     * {@see self::MAX_PAGES} for what gets a walk here.
+     * An empty page is the ordinary end of a walk, and ending there is the only
+     * thing to do — there is nothing to advance past. But a page that also
+     * promises another is the envelope contradicting itself, and stopping
+     * quietly would leave a truncated walk indistinguishable from a complete
+     * one. Same reason `PAGINATION_INCONSISTENT` exists; a different
+     * contradiction, so a different code.
+     */
+    private static function truncatedWalk(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
+    {
+        return new AsaasPaginatedError(
+            [[
+                'code' => 'PAGINATION_TRUNCATED',
+                'description' => sprintf(
+                    'Walk stopped after %d rows: the endpoint answered offset %d with an empty page while the same response still set hasMore=true. There is nothing to advance past, so the walk ends here — but the endpoint is contradicting itself and rows may be missing. Page manually with next() if you need to inspect this.',
+                    $delivered,
+                    $asaasPaginatedResult->offset,
+                ),
+            ]],
+            $asaasPaginatedResult->response,
+            $asaasPaginatedResult->offset,
+            $asaasPaginatedResult->limit,
+        );
+    }
+
+    /**
+     * The walk hit its page ceiling with no other backstop having fired.
+     *
+     * Reported rather than stopped quietly, for the same reason as the others:
+     * a silent stop is indistinguishable from a complete walk. See
+     * {@see self::MAX_PAGES} for what gets a walk here — and note the ceiling
+     * counts pages, so the message must not claim the envelope withheld a
+     * `totalCount`: a walk with a perfectly good count reaches the ceiling
+     * first whenever that count exceeds `MAX_PAGES * limit`.
      */
     private static function runawayWalk(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
     {
@@ -202,7 +244,7 @@ trait PaginatesResults
             [[
                 'code' => 'PAGINATION_RUNAWAY',
                 'description' => sprintf(
-                    'Walk stopped after %d pages and %d rows without the endpoint ever reporting the end. It reported no usable totalCount and never repeated a page, so nothing marks the walk complete. Rows may be missing, and rows already yielded may repeat. Page manually with next() if you need to inspect this.',
+                    'Walk stopped after %d pages and %d rows, the page ceiling, before anything marked it complete: the endpoint never repeated a page, and the totalCount backstop did not fire — the envelope either omitted the count or reported one the walk had not delivered yet. Rows may be missing, and rows already yielded may repeat. The ceiling counts pages rather than rows, so a small limit reaches it on a set a larger one would finish: raise limit, or page manually with next().',
                     self::MAX_PAGES,
                     $delivered,
                 ),

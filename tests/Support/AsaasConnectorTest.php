@@ -810,7 +810,12 @@ it('all() stops when API returns hasMore true with empty data', function (): voi
     $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
     $items = iterator_to_array($connector->all('/payments', []));
 
-    expect($items)->toBeEmpty();
+    // There is nothing to advance past, so the walk still ends here — but the
+    // envelope contradicted itself, and a silent stop would read as a complete
+    // walk.
+    expect($items)->toHaveCount(1);
+    expect($items[0])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[0]->errors[0]['code'])->toBe('PAGINATION_TRUNCATED');
 
     Http::assertSentCount(1);
 });
