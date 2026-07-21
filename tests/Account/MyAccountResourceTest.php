@@ -24,7 +24,7 @@ function myAccountResource(): MyAccountResource
     return new MyAccountResource(myAccountConnector());
 }
 
-it('fetches the account status from /myAccount/status', function (): void {
+it('fetches the account status from /myAccount/status/', function (): void {
     Http::fake(['*' => Http::response([
         'general' => 'AWAITING_APPROVAL',
         'commercialInfo' => 'APPROVED',
@@ -42,10 +42,10 @@ it('fetches the account status from /myAccount/status', function (): void {
     ]);
 
     Http::assertSent(fn ($request): bool => $request->method() === 'GET'
-        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/status');
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/status/');
 });
 
-it('propagates failure from /myAccount/status', function (): void {
+it('propagates failure from /myAccount/status/', function (): void {
     Http::fake(['*' => Http::response(['errors' => [['description' => 'Unauthorized']]], 401)]);
 
     $result = myAccountResource()->status();
@@ -90,7 +90,7 @@ it('propagates 400 from approveSandbox when called against production', function
     expect($result->errors[0]['description'])->toBe('Only allowed in sandbox');
 });
 
-it('reads commercial info from /myAccount/commercialInfo', function (): void {
+it('reads commercial info from /myAccount/commercialInfo/', function (): void {
     Http::fake(['*' => Http::response([
         'name' => 'ACME', 'incomeValue' => 10000.0, 'companyType' => 'LIMITED',
     ], 200)]);
@@ -101,7 +101,7 @@ it('reads commercial info from /myAccount/commercialInfo', function (): void {
     expect($result->data['companyType'])->toBe('LIMITED');
 
     Http::assertSent(fn ($request): bool => $request->method() === 'GET'
-        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/commercialInfo');
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/commercialInfo/');
 });
 
 it('updates commercial info from array payload', function (): void {
@@ -116,7 +116,7 @@ it('updates commercial info from array payload', function (): void {
 
     Http::assertSent(function ($request): bool {
         return $request->method() === 'POST'
-            && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/commercialInfo'
+            && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/commercialInfo/'
             && $request['incomeValue'] === 12000.0
             && $request['companyType'] === 'LIMITED';
     });
@@ -144,7 +144,7 @@ it('sends personType and companyName on the wire when present', function (): voi
         'companyName' => 'Acme Ltda.',
     ]);
 
-    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/commercialInfo'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/commercialInfo/'
         && $request['personType'] === 'JURIDICA'
         && $request['companyName'] === 'Acme Ltda.');
 });
@@ -367,7 +367,7 @@ it('deletes the account with removeReason from array', function (): void {
 
     Http::assertSent(function ($request): bool {
         return $request->method() === 'DELETE'
-            && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount?removeReason=Migrating%20provider';
+            && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/?removeReason=Migrating%20provider';
     });
 });
 
@@ -381,7 +381,7 @@ it('deletes the account with removeReason from DeleteAccountRequest', function (
     expect($result->success)->toBeTrue();
 
     Http::assertSent(fn ($request): bool => $request->method() === 'DELETE'
-        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount?removeReason=Closing');
+        && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/?removeReason=Closing');
 });
 
 it('rejects empty removeReason on delete', function (): void {

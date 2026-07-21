@@ -20,7 +20,7 @@ final readonly class MyAccountResource
 
     public function status(): AsaasResult
     {
-        return $this->connector->get(self::BASE.'/status');
+        return $this->connector->get(self::BASE.'/status/');
     }
 
     /**
@@ -46,13 +46,13 @@ final readonly class MyAccountResource
 
     public function commercialInfo(): AsaasResult
     {
-        return $this->connector->get(self::BASE.'/commercialInfo');
+        return $this->connector->get(self::BASE.'/commercialInfo/');
     }
 
     /** @param array<string, mixed>|CommercialInfoRequest $data */
     public function updateCommercialInfo(array|CommercialInfoRequest $data): AsaasResult
     {
-        return $this->connector->post(self::BASE.'/commercialInfo', CommercialInfoRequest::resolveData($data));
+        return $this->connector->post(self::BASE.'/commercialInfo/', CommercialInfoRequest::resolveData($data));
     }
 
     public function documents(): AsaasResult
@@ -124,7 +124,7 @@ final readonly class MyAccountResource
     {
         $request = $data instanceof DeleteAccountRequest ? $data : DeleteAccountRequest::fromArray($data);
 
-        return $this->connector->delete(self::BASE.'?removeReason='.rawurlencode($request->removeReason));
+        return $this->connector->delete(self::BASE.'/?removeReason='.rawurlencode($request->removeReason));
     }
 
     public function paymentCheckoutConfig(): AsaasResult

@@ -27,4 +27,30 @@ final readonly class AccessTokenPermissionConfig implements Arrayable
             scope: $data['scope'] ?? throw new InvalidArgumentException('AccessTokenPermissionConfig: scope is required'),
         );
     }
+
+    /**
+     * Coerces the `permissions` list carried by every DTO that mints or
+     * amends an API key.
+     *
+     * An empty list collapses to `null` so the key is omitted from the body:
+     * omitting `permissions` mints the documented all-permissions `READ_WRITE`
+     * key, whereas `{"permissions": []}` has no documented meaning and would
+     * leave the key in an undefined permission state. `[]` is exactly what
+     * Laravel's `$request->validated()` yields for an absent client-supplied
+     * list, so it reaches these DTOs routinely.
+     *
+     * @param  list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|self>|null  $permissions
+     * @return list<self>|null
+     */
+    public static function coerceList(?array $permissions): ?array
+    {
+        if ($permissions === null || $permissions === []) {
+            return null;
+        }
+
+        return array_map(
+            fn (array|self $item): self => $item instanceof self ? $item : self::fromArray($item),
+            $permissions,
+        );
+    }
 }

@@ -33,10 +33,7 @@ final readonly class AccessTokenConfig implements Arrayable
         public ?string $name = null,
         ?array $permissions = null,
     ) {
-        $this->permissions = $permissions !== null ? array_map(
-            fn (array|AccessTokenPermissionConfig $item): AccessTokenPermissionConfig => $item instanceof AccessTokenPermissionConfig ? $item : AccessTokenPermissionConfig::fromArray($item),
-            $permissions,
-        ) : null;
+        $this->permissions = AccessTokenPermissionConfig::coerceList($permissions);
     }
 
     /** @param array{name?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>} $data */
@@ -58,10 +55,10 @@ final readonly class AccessTokenConfig implements Arrayable
      * a JSON array where Asaas declares an object. `JsonBody` only rescues the
      * top-level body; this is the nested counterpart.
      *
-     * An empty `permissions` list collapses for the same reason: omitting
-     * `accessTokenConfig` mints the documented all-permissions `READ_WRITE`
-     * key, whereas `{"permissions": []}` has no documented meaning and would
-     * leave the subaccount's initial key in an undefined permission state.
+     * An empty `permissions` list has already collapsed to `null` by then —
+     * see {@see AccessTokenPermissionConfig::coerceList()} for why — so a
+     * config carrying only `permissions: []` is indistinguishable here from
+     * one carrying nothing at all, and both drop out.
      *
      * @param  array{name?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>}|AccessTokenConfig|null  $value
      */
@@ -69,7 +66,7 @@ final readonly class AccessTokenConfig implements Arrayable
     {
         $config = is_array($value) ? self::fromArray($value) : $value;
 
-        if (! $config instanceof self || ($config->name === null && ($config->permissions === null || $config->permissions === []))) {
+        if (! $config instanceof self || ($config->name === null && $config->permissions === null)) {
             return null;
         }
 

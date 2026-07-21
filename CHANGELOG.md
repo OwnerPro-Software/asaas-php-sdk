@@ -27,6 +27,23 @@ they rely on. Every fix is pinned by a test that fails without it.
 
 ### Fixed
 
+- **`permissions: []` shipped on two of the three DTOs that carry it.**
+  `AccessTokenConfig` deliberately collapsed an empty permissions list so a new
+  subaccount key keeps its all-permissions `READ_WRITE` default, but
+  `CreateAccessTokenRequest` and `UpdateAccessTokenRequest` carried the same
+  field through plain `HasArrayFactory::toArray()`, which filters only `null`.
+  Feeding either from `$request->validated()` — where an absent list arrives as
+  `[]` — sent `{"permissions": []}`, a shape Asaas does not document and that
+  leaves the key in an undefined permission state. The coercion now lives once
+  on `AccessTokenPermissionConfig::coerceList()`, shared by all three.
+- **Three `myAccount` endpoints dropped the trailing slash the spec declares.**
+  `status()`, `commercialInfo()`/`updateCommercialInfo()` and `delete()` emitted
+  `/myAccount/status`, `/myAccount/commercialInfo` and `/myAccount?removeReason=`
+  while `specs/domains/my-account.json` — and this README — declare all three
+  with the slash, and five sibling endpoints already preserved it.
+  `POST /myAccount/commercialInfo/` carried the real exposure: should Asaas
+  tighten its router to a 301, Guzzle's non-strict redirect handling downgrades
+  POST to GET and the update would silently no-op.
 - **A list that lost its sequence shipped as a JSON object.** `array_filter()`
   over a list leaves the surviving keys in place, and `json_encode()` renders
   the gap as an object — so `'split' => array_filter($splits, ...)` reached the

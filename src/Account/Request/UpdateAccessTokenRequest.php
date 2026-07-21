@@ -26,10 +26,7 @@ final readonly class UpdateAccessTokenRequest
         public string $expirationDate,
         ?array $permissions = null,
     ) {
-        $this->permissions = $permissions !== null ? array_map(
-            fn (array|AccessTokenPermissionConfig $item): AccessTokenPermissionConfig => $item instanceof AccessTokenPermissionConfig ? $item : AccessTokenPermissionConfig::fromArray($item),
-            $permissions,
-        ) : null;
+        $this->permissions = AccessTokenPermissionConfig::coerceList($permissions);
     }
 
     /** @param array{name?: string, enabled?: bool, expirationDate?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>} $data */

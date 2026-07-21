@@ -24,10 +24,7 @@ final readonly class CreateAccessTokenRequest
         public ?string $expirationDate = null,
         ?array $permissions = null,
     ) {
-        $this->permissions = $permissions !== null ? array_map(
-            fn (array|AccessTokenPermissionConfig $item): AccessTokenPermissionConfig => $item instanceof AccessTokenPermissionConfig ? $item : AccessTokenPermissionConfig::fromArray($item),
-            $permissions,
-        ) : null;
+        $this->permissions = AccessTokenPermissionConfig::coerceList($permissions);
     }
 
     /** @param array{name?: string, expirationDate?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>} $data */

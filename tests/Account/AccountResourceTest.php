@@ -463,3 +463,18 @@ it('sets the default escrow config', function (): void {
         return ($r->data()['daysToExpire'] ?? null) === 60;
     });
 });
+
+it('omits an empty permissions list so the key keeps its default scope', function (string $method, string $verb, array $payload): void {
+    Http::fake(['*' => Http::response(['id' => 'tok_1'], 200)]);
+
+    accountResource()->{$method}('acc_123', ...$payload);
+
+    Http::assertSent(function ($request) use ($verb): bool {
+        expect($request->data())->not->toHaveKey('permissions');
+
+        return $request->method() === $verb;
+    });
+})->with([
+    'createAccessToken' => ['createAccessToken', 'POST', [['name' => 'Onboarding', 'permissions' => []]]],
+    'updateAccessToken' => ['updateAccessToken', 'PUT', ['tok_1', ['name' => 'Widened', 'enabled' => true, 'expirationDate' => '2027-01-01', 'permissions' => []]]],
+]);

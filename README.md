@@ -1066,6 +1066,8 @@ Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRe
 
 `AccessTokenPermission` covers all 33 permission codes documented by Asaas (`PAYMENT`, `TRANSFER`, `WEBHOOK`, `PIX_*`, `INVOICE`, `BILL`, etc.); `AccessTokenScope` is `READ` or `READ_WRITE`. Both DTOs accept the enum **or** the raw string for forward-compat.
 
+> **An empty `permissions` list is omitted, not sent.** `permissions: []` — what `$request->validated()` yields for an absent client-supplied list — drops out of the body entirely, so the key keeps the all-permissions `READ_WRITE` default. `{"permissions": []}` has no documented meaning at Asaas, and sending it would leave the key in an undefined permission state. Pass at least one `AccessTokenPermissionConfig` when you mean to restrict a key.
+
 #### Permission ↔ endpoint mapping (heuristic)
 
 > **Heuristic mapping — not normative.** Asaas does not publish an official permission ↔ endpoint correspondence: the OpenAPI spec declares `security` only at the top of each domain file (no per-operation `security` or `x-permission` extension), and the public docs page that once described the mapping no longer resolves. The table below is our best inference from the enum names and Asaas API domains. Treat it as best-effort documentation, not contract: validate in sandbox before restricting a production key, and report drift via a GitHub issue if a restricted key returns `401/403` on an endpoint listed here.

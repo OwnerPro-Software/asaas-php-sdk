@@ -415,7 +415,7 @@ it('keeps an accessTokenConfig carrying a name but no permissions', function ():
     ]);
 
     expect($request->accessTokenConfig)->not->toBeNull();
-    expect($request->toArray()['accessTokenConfig'])->toEqual(['name' => 'Onboarding', 'permissions' => []]);
+    expect($request->toArray()['accessTokenConfig'])->toEqual(['name' => 'Onboarding']);
 });
 
 it('keeps an accessTokenConfig carrying only permissions', function (): void {
