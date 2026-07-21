@@ -24,6 +24,13 @@ final class StubResponse
             return $stub;
         }
 
+        // A lone stub that already declares any pagination key is left untouched:
+        // with no sequence around it there is nothing the SDK knows better than
+        // the caller. `normalizePages()` does know better — see its docblock.
+        if (array_key_exists('hasMore', $stub) || array_key_exists('totalCount', $stub)) {
+            return Factory::response($stub);
+        }
+
         return Factory::response(self::inferPagination($stub, hasMore: false, totalCount: count(self::rowsOf($stub))));
     }
 
@@ -79,10 +86,6 @@ final class StubResponse
         }
 
         if (! is_array($body['data']) || ! array_is_list($body['data'])) {
-            return $body;
-        }
-
-        if (array_key_exists('hasMore', $body) || array_key_exists('totalCount', $body)) {
             return $body;
         }
 

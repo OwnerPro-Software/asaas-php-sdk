@@ -178,3 +178,33 @@ it('stubPages() infers a single page as the end of the walk', function (): void 
 
     expect($fake->payments()->list()->hasMore)->toBeFalse();
 });
+
+it('stubPages() still infers hasMore when a page declares its own totalCount', function (): void {
+    // `hasMore` is a property of the position in the sequence, never of the page
+    // in isolation — a page volunteering `totalCount` must not suppress it, or
+    // the walk stops on the first page.
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']], 'totalCount' => 2],
+        ['data' => [['id' => 'b']]],
+    ]);
+
+    $ids = [];
+
+    foreach ($fake->payments()->all() as $row) {
+        $ids[] = $row['id'];
+    }
+
+    expect($ids)->toBe(['a', 'b']);
+});
+
+it('stubPages() keeps a page-declared totalCount over the inferred one', function (): void {
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']], 'totalCount' => 99],
+        ['data' => [['id' => 'b']]],
+    ]);
+
+    $first = $fake->payments()->list();
+
+    expect($first->totalCount)->toBe(99);
+    expect($first->hasMore)->toBeTrue();
+});

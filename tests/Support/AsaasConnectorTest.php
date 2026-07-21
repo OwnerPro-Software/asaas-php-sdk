@@ -1118,3 +1118,35 @@ it('still sends a populated body as a JSON object', function (): void {
 
     Http::assertSent(fn (Request $request): bool => $request->body() === '{"value":100}');
 });
+
+it('falls back when the errors list carries scalars instead of objects', function (): void {
+    // A list of strings has an index 0, but reading ['description'] off it is a
+    // TypeError — same breakage as the object-shaped envelope, so same fallback.
+    Http::fake(['*' => Http::response(['errors' => ['boom']], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors[0]['code'])->toBe('UNKNOWN_ERROR');
+    expect($result->errors[0]['description'])->toBe('{"errors":["boom"]}');
+});
+
+it('falls back when the errors list mixes an object with a scalar', function (): void {
+    Http::fake(['*' => Http::response(['errors' => [['code' => 'X', 'description' => 'Y'], 'boom']], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors[0]['code'])->toBe('UNKNOWN_ERROR');
+});
+
+it('falls back when the error body is markup with no readable text', function (): void {
+    // strip_tags() on a WAF page leaves only whitespace; without trimming that
+    // reaches the caller's log as a blank exception message.
+    Http::fake(['*' => Http::response('   <html>  <body> </body> </html>  ', 503)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors)->toBe([[
+        'code' => 'UNKNOWN_ERROR',
+        'description' => 'Asaas returned status 503 with no readable error body.',
+    ]]);
+});

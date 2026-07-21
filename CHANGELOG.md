@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Bug-hunt pass over the whole package: eight defects found by auditing the
+Bug-hunt passes over the whole package: thirty defects found by auditing the
 resources against `specs/domains/*.json`, the DTO factories against their own
 constructors, and the Laravel/testing seams against the framework internals
 they rely on. Every fix is pinned by a test that fails without it.
@@ -233,8 +233,32 @@ they rely on. Every fix is pinned by a test that fails without it.
   way `stub()` and the constructor do. A page written as `['data' => [...]]` —
   the self-describing shape `README.md` documents — came back with `totalCount`
   and `limit` at 0, so paging assertions failed for a reason that had nothing to
-  do with the code under test. Declaring `hasMore` or `totalCount` still
-  disables inference, as documented.
+  do with the code under test. On a lone `stub()`, declaring `hasMore` or
+  `totalCount` still disables inference, as documented.
+- **A page declaring `totalCount` stopped the `stubPages()` walk.** The
+  "caller declared pagination, hands off" rule lived in the inference helper
+  shared by `stub()` and `stubPages()`, so a page volunteering `totalCount` (or
+  `hasMore`) also suppressed the `hasMore` that only the full sequence can know.
+  `stubPages([['data' => [$a], 'totalCount' => 2], ['data' => [$b]]])` ended the
+  walk after page one: `->all()` yielded `[$a]` and looked like a complete
+  result. The rule now applies to `stub()` only, where there is no sequence to
+  reason about; `stubPages()` always fills in `hasMore` and still lets each page
+  keep every pagination key it declares.
+- **A scalar inside the `errors` list broke `$errors[0]['description']`.**
+  Widening the guard to reject object-shaped envelopes left the sibling case
+  open: `{"errors": ["boom"]}` is a list, so it passed through annotated as a
+  `list<array{…}>` it was not, and the documented read
+  `$result->errors[0]['description']` raised `TypeError: Cannot access offset of
+  type string on string` — an uncaught throw out of the Result-based contract.
+  Every item is now checked, and a list carrying scalars falls back to the
+  synthesized `UNKNOWN_ERROR` row like any other non-canonical envelope.
+- **A markup-only error body produced a blank exception message.** `describe()`
+  tested the stripped body for emptiness without trimming, so a proxy or WAF page
+  with no text left `strip_tags()` returning whitespace — non-empty, hence
+  preferred over the status fallback. `AsaasRequestException::getMessage()` came
+  back as a run of spaces, the same "nothing to act on in the log" failure the
+  empty-body fix above was meant to close. The body is now trimmed before the
+  check.
 
 ### Changed
 

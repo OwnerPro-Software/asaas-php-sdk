@@ -28,11 +28,11 @@ final class ErrorEnvelope
     {
         $errors = $response->json('errors');
 
-        // A list is the canonical envelope. Anything else — absent, a scalar, or
-        // a single error object rather than a list of them — falls back, because
-        // callers read `$errors[0]['description']` and an object-shaped envelope
-        // has no index 0 to read.
-        if (! is_array($errors) || ! array_is_list($errors)) {
+        // A list of error objects is the canonical envelope. Anything else —
+        // absent, a scalar, a single error object rather than a list of them, or
+        // a list carrying scalars — falls back, because callers read
+        // `$errors[0]['description']` and only that shape has an offset to read.
+        if (! self::isCanonical($errors)) {
             return [['code' => 'UNKNOWN_ERROR', 'description' => self::describe($response)]];
         }
 
@@ -45,9 +45,28 @@ final class ErrorEnvelope
     }
 
     /**
-     * Never returns an empty string: a proxy, gateway or WAF answering with no
-     * body at all would otherwise produce an `AsaasRequestException` carrying no
-     * message, leaving the caller's log with nothing to act on.
+     * @phpstan-assert-if-true list<array<string, mixed>> $errors
+     */
+    private static function isCanonical(mixed $errors): bool
+    {
+        if (! is_array($errors) || ! array_is_list($errors)) {
+            return false;
+        }
+
+        foreach ($errors as $error) {
+            if (! is_array($error)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Never returns an empty string: a proxy, gateway or WAF answering with a
+     * body that is blank or pure markup would otherwise produce an
+     * `AsaasRequestException` carrying no message, leaving the caller's log with
+     * nothing to act on.
      */
     private static function describe(Response $response): string
     {
@@ -57,7 +76,7 @@ final class ErrorEnvelope
             return $message;
         }
 
-        $body = mb_substr(strip_tags($response->body()), 0, 350);
+        $body = trim(mb_substr(strip_tags($response->body()), 0, 350));
 
         if ($body !== '') {
             return $body;
