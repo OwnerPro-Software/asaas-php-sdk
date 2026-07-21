@@ -12,6 +12,40 @@ resources against `specs/domains/*.json`, the DTO factories against their own
 constructors, and the Laravel/testing seams against the framework internals
 they rely on. Every fix is pinned by a test that fails without it.
 
+**This release is a major.** Several of the corrections below change a signature
+or start throwing where the previous version silently accepted the input; they
+are collected under *Breaking* so an upgrade can be planned from one list.
+
+### Breaking
+
+- **`serialize()` now throws on `AsaasClient` and `AsaasConnector`.** Both reach
+  the API key, and `serialize()` honours neither `__debugInfo()` nor the
+  VarDumper caster, so a queued job holding a client wrote the key into the
+  jobs table in clear. Both now raise `LogicException`. A job that carried the
+  client as a property must resolve it from the container inside `handle()`
+  instead, or rebuild it with `AsaasClient::for()` from your own secret store.
+  See *Security* below.
+- **`payments()->listRefunds()` returns `AsaasPaginatedResult`** — see *Changed*.
+- **`UpdateInvoiceRequest::$municipalServiceName` was removed.** The update
+  endpoint does not accept the field. Passing it as a named argument now raises
+  `TypeError`; drop it from the call.
+- **`payments()->finishEscrow()` renamed its parameter to `$escrowId`.** It
+  always took the escrow guarantee id rather than the payment id — the name said
+  otherwise. Only named-argument call sites are affected.
+- **`pix()->createKey()` rejects every key type but `EVP`.** The create endpoint
+  mints random keys only; the other four types are registered in the Asaas panel.
+  What used to be a remote 400 is now an `InvalidArgumentException` at
+  construction.
+- **`FakeAsaasClient::recorded()` yields `?Response`.** A request that failed in
+  transport is recorded with no response. Matcher closures typed
+  `fn (Request $r, Response $response)` raise `TypeError` the moment such a
+  request is in the stream — widen them to `?Response`.
+- **`assertSent()` rejects two closures**, and **stub/assertion patterns reject
+  an absolute URL**. Both forms previously produced an assertion that could not
+  fail; both now throw `InvalidArgumentException`.
+- **`MasksSensitiveData::mask()` emits a constant-width fill.** Tests asserting
+  on the exact masked string need updating — see *Security*.
+
 ### Changed
 
 - **BREAKING: `payments()->listRefunds()` now returns `AsaasPaginatedResult`.**
@@ -24,6 +58,52 @@ they rely on. Every fix is pinned by a test that fails without it.
   notice it by. It now takes an optional `$query` and returns
   `AsaasPaginatedResult`; `allRefunds()` was added to walk every page. Callers
   reading `$result->data` keep working — the rows are still there.
+
+### Security
+
+- **`dump()`, `dd()` and framework error pages published raw secrets.** The SDK
+  relied on `__debugInfo()` alone, which PHP's `var_dump()` honours but Symfony
+  VarDumper — behind Laravel's `dump()`/`dd()` and the Ignition/Flare error
+  pages — *merges* over the real property list rather than replacing it, so the
+  API key, PAN, CVV and CPF/CNPJ stayed visible next to their masked twins. A
+  VarDumper caster now replaces the list outright. It is keyed on the new
+  `Support\Redactable` interface, so every implementor is covered by one
+  registration, installed from `AsaasServiceProvider::boot()` for Laravel and
+  from `AsaasClient::for()` for plain-PHP hosts. Custom classes join by
+  implementing the interface.
+- **Credentials Asaas sends back were carried verbatim on public properties.**
+  Redaction was request-side only, so `AsaasResult`, `AsaasPaginatedResult` and
+  `RawResponse` disclosed any secret in the response body. Four response fields
+  hold a live credential: `apiKey` (the subaccount key `POST /accounts` returns
+  once), `accessToken`, `authToken` (echoed by `GET /webhooks`, one per row on a
+  page) and `creditCardToken`. The new `Support\SecretRedactor` scrubs them
+  recursively and case-insensitively, and the response body is scrubbed *before*
+  it is truncated — truncating first leaves unparseable JSON, which falls
+  through to the raw text the scrub exists to withhold.
+  Two gaps stay open by design and are documented in `README.md`: results still
+  allow `serialize()` (unlike the client and the request DTOs, they are
+  legitimately cached and queued), and `$result->data` is a plain array that
+  nothing intercepts once a caller passes it on.
+- **`serialize()` is refused on `AsaasClient` and `AsaasConnector`.** See
+  *Breaking* above for the migration.
+- **Upload filenames could break out of the `Content-Disposition` header.**
+  Guzzle interpolates both `name` and `filename` into
+  `Content-Disposition: form-data; name="..."; filename="..."` with no escaping,
+  so a caller forwarding a browser-supplied `getClientOriginalName()` let the
+  uploader forge extra form fields inside the request body. The new
+  `Support\ContentDispositionGuard` strips directory components from the
+  filename — an absolute local path would otherwise ship to Asaas, and an empty
+  name makes Guzzle fall back to the stream's `uri` metadata and ship it anyway —
+  and rejects a double quote, a **backslash** (RFC 2616 reads `\"` as a
+  quoted-pair, so a trailing one escapes the closing quote just as effectively),
+  every control character, and anything over 255 chars. Both header values are
+  validated before the first `attach()`: a rejection mid-loop would leave the
+  already-attached files pending on the reused `PendingRequest` and smuggle them
+  into the next upload.
+- **The mask published the exact length of the value it hid.** One asterisk per
+  hidden character distinguishes an 11-digit CPF from a 14-digit CNPJ and narrows
+  a brute-force search over a token. `mask()` now emits a constant-width fill,
+  and a value no longer than the visible suffix is masked whole.
 
 ### Fixed
 
