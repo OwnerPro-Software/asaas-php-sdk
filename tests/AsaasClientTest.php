@@ -59,6 +59,28 @@ it('for() accepts custom connect timeout', function (): void {
     expect($options['connect_timeout'])->toBe(5);
 });
 
+// Reflection justified (CLAUDE.md exception) here and in the next test:
+// for() wires a standalone raw PendingRequest (no factory), so Http::fake
+// cannot observe the flag behaviorally without real network I/O — and the
+// default of this flag is the money-safety invariant of the feature.
+it('for() defaults throwOnTransportFailure to false', function (): void {
+    $client = AsaasClient::for(apiKey: 'test-key');
+
+    $connector = (new ReflectionProperty(AsaasClient::class, 'connector'))->getValue($client);
+    $flag = (new ReflectionProperty(AsaasConnector::class, 'throwOnTransportFailure'))->getValue($connector);
+
+    expect($flag)->toBeFalse();
+});
+
+it('for() passes throwOnTransportFailure to the connector', function (): void {
+    $client = AsaasClient::for(apiKey: 'test-key', throwOnTransportFailure: true);
+
+    $connector = (new ReflectionProperty(AsaasClient::class, 'connector'))->getValue($client);
+    $flag = (new ReflectionProperty(AsaasConnector::class, 'throwOnTransportFailure'))->getValue($connector);
+
+    expect($flag)->toBeTrue();
+});
+
 it('creates client via for() with overrides', function (): void {
     $client = AsaasClient::for(apiKey: 'test-key', environment: Environment::Production, timeout: 60);
 

@@ -17,8 +17,9 @@ final class Asaas extends Facade
         Environment|string|null $environment = null,
         ?int $timeout = null,
         ?int $connectTimeout = null,
+        ?bool $throwOnTransportFailure = null,
     ): AsaasClient {
-        /** @var array{environment: string, timeout: int, connect_timeout: int} $config */
+        /** @var array{environment: string, timeout: int, connect_timeout: int, throw_on_transport_failure: bool} $config */
         $config = config('asaas');
 
         return new AsaasClient(
@@ -27,6 +28,7 @@ final class Asaas extends Facade
                 environment: $environment ?? $config['environment'],
                 timeout: $timeout ?? $config['timeout'],
                 connectTimeout: $connectTimeout ?? $config['connect_timeout'],
+                throwOnTransportFailure: $throwOnTransportFailure ?? $config['throw_on_transport_failure'],
             )
         );
     }

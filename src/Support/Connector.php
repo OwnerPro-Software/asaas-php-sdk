@@ -6,17 +6,37 @@ namespace OwnerPro\Asaas\Support;
 
 use Generator;
 
+/**
+ * Every request-sending method returns an `AsaasResult` for definitive API
+ * answers (2xx/4xx/5xx). When the implementation is built with
+ * `throwOnTransportFailure: true`, transport failures throw a
+ * `TransportException` subclass instead of being folded into a failure
+ * result; with the flag off (default), no transport exception is ever thrown.
+ */
 interface Connector
 {
-    /** @param array<string, mixed> $query */
+    /**
+     * @param  array<string, mixed>  $query
+     *
+     * @throws TransportException only when built with `throwOnTransportFailure: true`
+     */
     public function get(string $path, array $query = []): AsaasResult;
 
-    /** @param array<string, mixed> $data */
+    /**
+     * @param  array<string, mixed>  $data
+     *
+     * @throws TransportException only when built with `throwOnTransportFailure: true`
+     */
     public function post(string $path, array $data = []): AsaasResult;
 
-    /** @param array<string, mixed> $data */
+    /**
+     * @param  array<string, mixed>  $data
+     *
+     * @throws TransportException only when built with `throwOnTransportFailure: true`
+     */
     public function put(string $path, array $data = []): AsaasResult;
 
+    /** @throws TransportException only when built with `throwOnTransportFailure: true` */
     public function delete(string $path): AsaasResult;
 
     /**
@@ -32,10 +52,16 @@ interface Connector
      *     filename?: string,
      *     headers?: array<string, string>
      * }> $files
+     *
+     * @throws TransportException only when built with `throwOnTransportFailure: true`
      */
     public function postMultipart(string $path, array $data, array $files = []): AsaasResult;
 
-    /** @param array<string, mixed> $query */
+    /**
+     * @param  array<string, mixed>  $query
+     *
+     * @throws TransportException only when built with `throwOnTransportFailure: true`
+     */
     public function paginate(string $path, array $query): AsaasPaginatedResult;
 
     /**
@@ -43,6 +69,8 @@ interface Connector
      *
      * @param  array<string, mixed>  $filters
      * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
+     *
+     * @throws TransportException only when built with `throwOnTransportFailure: true`
      */
     public function all(string $path, array $filters): Generator;
 }

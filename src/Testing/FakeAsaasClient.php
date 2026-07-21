@@ -12,6 +12,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Http\Client\ResponseSequence;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use OwnerPro\Asaas\Account\AccountResource;
 use OwnerPro\Asaas\Account\MyAccountResource;
 use OwnerPro\Asaas\AsaasClient;
@@ -46,8 +47,11 @@ final class FakeAsaasClient implements AsaasClientContract
     private array $stubs = [];
 
     /** @param array<string, array<string, mixed>|PromiseInterface|ResponseSequence|Closure> $stubs */
-    public function __construct(array $stubs = [], Environment|string $environment = Environment::Sandbox)
-    {
+    public function __construct(
+        array $stubs = [],
+        Environment|string $environment = Environment::Sandbox,
+        private readonly bool $throwOnTransportFailure = false,
+    ) {
         $this->baseUrl = ($environment instanceof Environment ? $environment : Environment::from($environment))->baseUrl();
         $this->factory = new Factory;
 
@@ -163,6 +167,46 @@ final class FakeAsaasClient implements AsaasClientContract
         );
 
         return $this;
+    }
+
+    /**
+     * Simulates a failure before any HTTP bytes reached the API (DNS, TCP
+     * connect, TLS). With `throwOnTransportFailure: true` the call throws
+     * `RequestNotDeliveredException`; without it, the legacy
+     * `CONNECTION_ERROR` result is returned — mirroring production.
+     *
+     * @param  'connect'|'dns'|'tls'  $phase
+     */
+    public function stubRequestNotDelivered(string $pattern, string $phase = 'connect'): self
+    {
+        return $this->stubException($pattern, FakeTransportFailure::requestNotDelivered($phase));
+    }
+
+    /**
+     * Simulates a failure after the request may have been processed (read
+     * timeout, connection dropped mid-transfer, or a 2xx with unreadable
+     * body for `phase: 'body'`). With `throwOnTransportFailure: true` the
+     * call throws `IndeterminateResultException`; without it, the legacy
+     * behaviour is returned — mirroring production.
+     *
+     * @param  'body'|'read'|'transfer'  $phase
+     */
+    public function stubIndeterminateResult(string $pattern, string $phase = 'read'): self
+    {
+        if ($phase === 'body') {
+            $this->register($pattern, Http::response('{invalid-json'));
+
+            return $this;
+        }
+
+        if (! in_array($phase, ['read', 'transfer'], true)) {
+            throw new InvalidArgumentException(sprintf(
+                'Unknown transport failure phase "%s"; expected one of: body, read, transfer.',
+                $phase,
+            ));
+        }
+
+        return $this->stubException($pattern, FakeTransportFailure::indeterminateResult($phase));
     }
 
     /** @param list<array<string, mixed>> $pages */
@@ -285,6 +329,6 @@ final class FakeAsaasClient implements AsaasClientContract
             ->withHeader('access_token', 'fake-key')
             ->withOptions(['verify' => true]);
 
-        return new AsaasClient(new AsaasConnector($pendingRequest, $this->baseUrl));
+        return new AsaasClient(new AsaasConnector($pendingRequest, $this->baseUrl, $this->throwOnTransportFailure));
     }
 }

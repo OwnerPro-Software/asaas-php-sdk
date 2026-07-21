@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support;
 
-use RuntimeException;
-
-final class AsaasRequestException extends RuntimeException
+final class AsaasRequestException extends AsaasException
 {
     public readonly int $statusCode;
 

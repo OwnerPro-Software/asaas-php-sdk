@@ -63,14 +63,15 @@ final class AsaasClient implements AsaasClientContract
         Environment|string $environment = Environment::Sandbox,
         int $timeout = 30,
         int $connectTimeout = 10,
+        bool $throwOnTransportFailure = false,
     ): self {
-        return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout, $connectTimeout));
+        return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure));
     }
 
     /** @param array<string, array<string, mixed>|PromiseInterface|ResponseSequence|Closure> $stubs */
-    public static function fake(array $stubs = [], Environment|string $environment = Environment::Sandbox): FakeAsaasClient
+    public static function fake(array $stubs = [], Environment|string $environment = Environment::Sandbox, bool $throwOnTransportFailure = false): FakeAsaasClient
     {
-        return new FakeAsaasClient($stubs, $environment);
+        return new FakeAsaasClient($stubs, $environment, $throwOnTransportFailure);
     }
 
     public function payments(): PaymentResource

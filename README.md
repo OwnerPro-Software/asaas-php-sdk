@@ -32,6 +32,7 @@ ASAAS_API_KEY=your-api-key
 ASAAS_ENVIRONMENT=sandbox       # or "production"
 ASAAS_TIMEOUT=30                # request timeout in seconds (default: 30)
 ASAAS_CONNECT_TIMEOUT=10        # TCP connect timeout in seconds (default: 10)
+ASAAS_THROW_ON_TRANSPORT_FAILURE=false  # opt-in typed transport exceptions (default: false)
 ```
 
 > `ASAAS_API_KEY` is required. The `AsaasServiceProvider` throws `RuntimeException` the first time `AsaasClient` is resolved from the container if the key is missing or empty — keep this in mind when bootstrapping in CI or test environments where the env var may not be set.
@@ -165,6 +166,56 @@ try {
     $e->response;        // ?RawResponse — null for connection errors
 }
 ```
+
+### Transport Failures (opt-in typed exceptions)
+
+> **Highly recommended: enable `throw_on_transport_failure` in every new integration.** The legacy default exists only for backward compatibility and will likely become the default in a future major. Without it, a timeout on a money-moving call is indistinguishable from a definitive API rejection — the exact ambiguity that leads to duplicated transfers under blind retry.
+
+By default, a transport failure (timeout, DNS error, connection refused) is swallowed into an `AsaasResult` failure with a `CONNECTION_ERROR` code and `statusCode 0`. That shape cannot tell you the one thing that matters for money-moving endpoints: **whether the API processed the request or not**. A read timeout on `transfers()->create()` may mean the transfer *was* created — blindly retrying can move money twice.
+
+Opt in to typed transport exceptions to make that distinction explicit:
+
+```php
+// Standalone
+$client = AsaasClient::for(apiKey: '...', throwOnTransportFailure: true);
+
+// Laravel — config/asaas.php (or ASAAS_THROW_ON_TRANSPORT_FAILURE=true)
+'throw_on_transport_failure' => true,
+
+// Multi-tenant override
+$client = Asaas::for(apiKey: $tenantKey, throwOnTransportFailure: true);
+```
+
+With the flag on, the `CONNECTION_ERROR` result path no longer exists. Instead:
+
+```php
+use OwnerPro\Asaas\Support\IndeterminateResultException;
+use OwnerPro\Asaas\Support\RequestNotDeliveredException;
+
+try {
+    $result = $client->transfers()->create($transferRequest);
+} catch (RequestNotDeliveredException $e) {
+    // The request provably never reached the API (DNS, TCP connect, TLS).
+    // Nothing was processed — a direct retry is safe.
+    $e->phase;          // 'connect'|'dns'|'tls'
+    $e->getPrevious();  // original Illuminate\Http\Client\ConnectionException
+} catch (IndeterminateResultException $e) {
+    // The API MAY have processed the request: read timeout, connection lost
+    // mid-transfer, or a 2xx with an unreadable body. NEVER retry blindly —
+    // reconcile first (e.g. via the Asaas withdrawal-validation webhook).
+    $e->phase;          // 'body'|'read'|'transfer'|null
+    $e->response;       // ?RawResponse — the uninterpretable 2xx when phase is 'body', null otherwise
+}
+```
+
+Both extend `TransportException` (itself an `AsaasException`), so a single `catch (TransportException $e)` works when the distinction doesn't matter.
+
+Classification is deliberately conservative: `RequestNotDeliveredException` is thrown only on unequivocal cURL evidence that no bytes reached the API (errno 6/7/35/58/60). A timeout (cURL 28) is **always** indeterminate — curl reports zeroed connection timers on reused keep-alive connections, so `connect_time` cannot prove a connect-phase timeout. Anything ambiguous classifies as indeterminate, because the costs are asymmetric — a mislabelled "not delivered" invites a duplicate transfer, while a mislabelled "indeterminate" costs one reconciliation lookup.
+
+Two additional behaviors change with the flag on:
+
+- A 2xx response whose body is not a JSON object or array (invalid JSON, empty body, or a bare JSON scalar) throws `IndeterminateResultException` with `phase: 'body'` (by default it silently becomes a success with empty `data`). Exception: **204 No Content** endpoints (`deleteAccessToken`, `removeBackoff`) keep returning a success with empty `data` — an intentionally empty body is a definitive answer, not a transport failure.
+- Definitive HTTP errors (4xx/5xx) are **not** affected — they still return an `AsaasResult` failure. An error response from Asaas is a definitive answer, not a transport failure.
 
 ### Resource ID Validation
 
@@ -1329,6 +1380,27 @@ $asaas = AsaasClient::fake()
     ->stubError('payments', status: 400, body: ['errors' => [['code' => 'invalid_value']]])
     ->stubException('payments/*', new \Illuminate\Http\Client\ConnectionException('timeout'));
 ```
+
+### Simulating transport failures
+
+Pass `throwOnTransportFailure: true` to the fake to mirror the [typed transport exception contract](#transport-failures-opt-in-typed-exceptions), then stub failures per phase. The stubs build production-shaped exceptions (an `Illuminate` `ConnectionException` wrapping a Guzzle `ConnectException` with the real cURL errno), so they flow through the same classifier as live traffic and honour the flag either way:
+
+```php
+use OwnerPro\Asaas\Support\IndeterminateResultException;
+use OwnerPro\Asaas\Support\RequestNotDeliveredException;
+
+$asaas = AsaasClient::fake(throwOnTransportFailure: true)
+    ->stubRequestNotDelivered('transfers', phase: 'dns')       // 'connect'|'dns'|'tls'
+    ->stubIndeterminateResult('pix/qrCodes/pay', phase: 'read'); // 'body'|'read'|'transfer'
+
+try {
+    $asaas->transfers()->create([...]);
+} catch (RequestNotDeliveredException $e) {
+    // safe-retry branch under test
+}
+```
+
+With `throwOnTransportFailure` omitted (default), the same stubs reproduce the legacy behavior: `stubRequestNotDelivered`/`stubIndeterminateResult` yield the `CONNECTION_ERROR` result, and `phase: 'body'` yields a success with empty `data` — exactly what production returns without the flag.
 
 Closure stubs receive `(Illuminate\Http\Client\Request $request, array $options)` from Laravel's HTTP client and may return a `Response`, a `PromiseInterface`, or any value `Http::response()` accepts. The `$options` parameter can be ignored when not needed:
 

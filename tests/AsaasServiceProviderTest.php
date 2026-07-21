@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
 use OwnerPro\Asaas\Asaas;
@@ -10,6 +11,7 @@ use OwnerPro\Asaas\AsaasServiceProvider;
 use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Environment;
+use OwnerPro\Asaas\Support\IndeterminateResultException;
 
 mutates(AsaasServiceProvider::class, Asaas::class);
 
@@ -49,10 +51,52 @@ it('merges the package config defaults on register', function () {
 
     expect(config('asaas'))
         ->toBeArray()
-        ->toHaveKeys(['api_key', 'environment', 'timeout', 'connect_timeout']);
+        ->toHaveKeys(['api_key', 'environment', 'timeout', 'connect_timeout', 'throw_on_transport_failure']);
     expect(config('asaas.environment'))->toBe('sandbox');
     expect(config('asaas.timeout'))->toBe(30);
     expect(config('asaas.connect_timeout'))->toBe(10);
+    expect(config('asaas.throw_on_transport_failure'))->toBeFalse();
+});
+
+it('passes throw_on_transport_failure config to the singleton connector', function () {
+    $this->app['config']->set('asaas.throw_on_transport_failure', true);
+    $this->app->forgetInstance(AsaasClient::class);
+    Http::fake(['*' => fn (): never => throw new ConnectionException('timeout')]);
+
+    app(AsaasClient::class)->payments()->find('pay_1');
+})->throws(IndeterminateResultException::class);
+
+it('Asaas::for() inherits throw_on_transport_failure from config', function () {
+    $this->app['config']->set('asaas.throw_on_transport_failure', true);
+    Http::fake(['*' => fn (): never => throw new ConnectionException('timeout')]);
+
+    Asaas::for(apiKey: 'tenant-key')->payments()->find('pay_1');
+})->throws(IndeterminateResultException::class);
+
+it('Asaas::for() overrides throw_on_transport_failure per tenant', function () {
+    $this->app['config']->set('asaas.throw_on_transport_failure', false);
+    Http::fake(['*' => fn (): never => throw new ConnectionException('timeout')]);
+
+    Asaas::for(apiKey: 'tenant-key', throwOnTransportFailure: true)->payments()->find('pay_1');
+})->throws(IndeterminateResultException::class);
+
+it('Asaas::for() explicit false beats enabled config', function () {
+    $this->app['config']->set('asaas.throw_on_transport_failure', true);
+    Http::fake(['*' => fn (): never => throw new ConnectionException('timeout')]);
+
+    $result = Asaas::for(apiKey: 'tenant-key', throwOnTransportFailure: false)->payments()->find('pay_1');
+
+    expect($result->success)->toBeFalse();
+    expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
+});
+
+it('falls back to disabled throw_on_transport_failure when env var is absent', function () {
+    putenv('ASAAS_THROW_ON_TRANSPORT_FAILURE');
+    unset($_ENV['ASAAS_THROW_ON_TRANSPORT_FAILURE'], $_SERVER['ASAAS_THROW_ON_TRANSPORT_FAILURE']);
+
+    $config = require __DIR__.'/../config/asaas.php';
+
+    expect($config['throw_on_transport_failure'])->toBeFalse();
 });
 
 it('publishes the config file from the correct source path on boot', function () {

@@ -16,9 +16,17 @@ final readonly class AsaasConnector implements Connector
 {
     use PaginatesResults;
 
+    /**
+     * @internal Construct via {@see forStandalone()} / {@see forLaravel()} —
+     * they validate inputs and carry the public defaults.
+     */
     public function __construct(
         private PendingRequest $pendingRequest,
         private string $baseUrl,
+        // Default-argument evaluation is attributed to call sites, never to this
+        // line, so a FalseToTrue mutant here is structurally unkillable — every
+        // in-tree caller passes the flag explicitly. Factory defaults ARE pinned.
+        private bool $throwOnTransportFailure = false, // @pest-mutate-ignore: FalseToTrue
     ) {}
 
     /** @return array{baseUrl: string} */
@@ -27,14 +35,14 @@ final readonly class AsaasConnector implements Connector
         return ['baseUrl' => $this->baseUrl];
     }
 
-    public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10): self
+    public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10, bool $throwOnTransportFailure = false): self
     {
-        return self::make(new PendingRequest, $apiKey, $environment, $timeout, $connectTimeout);
+        return self::make(new PendingRequest, $apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure);
     }
 
-    public static function forLaravel(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10): self
+    public static function forLaravel(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10, bool $throwOnTransportFailure = false): self
     {
-        return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout, $connectTimeout);
+        return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure);
     }
 
     /** @param array<string, mixed> $query */
@@ -99,7 +107,7 @@ final readonly class AsaasConnector implements Connector
         });
     }
 
-    private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout): self
+    private static function make(PendingRequest $pendingRequest, #[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout, bool $throwOnTransportFailure): self
     {
         if ($apiKey === '') {
             throw new InvalidArgumentException('The API key must not be empty.');
@@ -122,6 +130,7 @@ final readonly class AsaasConnector implements Connector
                 ->timeout($timeout)
                 ->withOptions(['verify' => true]),
             $environment->baseUrl(),
+            $throwOnTransportFailure,
         );
     }
 
@@ -130,7 +139,11 @@ final readonly class AsaasConnector implements Connector
         try {
             /** @var Response $response */
             $response = $httpCall();
-        } catch (ConnectionException) {
+        } catch (ConnectionException $connectionException) {
+            if ($this->throwOnTransportFailure) {
+                throw TransportFailureClassifier::classify($connectionException);
+            }
+
             return AsaasResult::failure(
                 [['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']],
             );
@@ -145,53 +158,27 @@ final readonly class AsaasConnector implements Connector
 
         if ($response->failed()) {
             return AsaasResult::failure(
-                $this->extractErrors($response),
+                ErrorEnvelope::extract($response),
                 $rawResponse,
             );
         }
 
         $json = $response->json();
 
-        /** @var array<string, mixed> $data */
-        $data = is_array($json) ? $json : [];
-
-        return AsaasResult::success($data, $rawResponse);
-    }
-
-    /**
-     * Normalize the upstream error envelope into the shape `AsaasResult` exposes.
-     *
-     * The returned list is **best-effort**: when Asaas (or an intermediary proxy)
-     * returns the canonical envelope (`{"errors": [{"code", "description"}]}`)
-     * each item carries `code` and `description`. Otherwise the SDK falls back
-     * to a synthesized `UNKNOWN_ERROR` row whose `description` is either the
-     * upstream `message` field (alternative shape) or the response body trimmed
-     * to 350 chars with HTML stripped. The empty-array case is synthesized too,
-     * so `$result->errors[0]['description']` is always populated.
-     *
-     * @return non-empty-list<array{code?: string, description?: string}>
-     */
-    private function extractErrors(Response $response): array
-    {
-        $errors = $response->json('errors');
-
-        if (! is_array($errors)) {
-            $message = $response->json('message');
-
-            if (is_string($message) && $message !== '') {
-                return [['code' => 'UNKNOWN_ERROR', 'description' => $message]];
+        if (! is_array($json)) {
+            // 204 No Content is a definitive success with an intentionally
+            // empty body (e.g. deleteAccessToken, removeBackoff) — never an
+            // unreadable-body transport failure.
+            if ($this->throwOnTransportFailure && $response->status() !== 204) {
+                throw new IndeterminateResultException('body', response: $rawResponse);
             }
 
-            $body = mb_substr(strip_tags($response->body()), 0, 350);
-
-            return [['code' => 'UNKNOWN_ERROR', 'description' => $body]];
+            $json = [];
         }
 
-        if ($errors === []) {
-            return [['code' => 'UNKNOWN_ERROR', 'description' => sprintf('Asaas returned empty errors array (status %d)', $response->status())]];
-        }
+        /** @var array<string, mixed> $data */
+        $data = $json;
 
-        /** @var non-empty-list<array{code?: string, description?: string}> $errors */
-        return $errors;
+        return AsaasResult::success($data, $rawResponse);
     }
 }

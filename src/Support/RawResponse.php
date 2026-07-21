@@ -7,7 +7,11 @@ namespace OwnerPro\Asaas\Support;
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Http\Client\Response;
 
-/** @internal The underlying Response is intentionally not exposed to prevent API key leakage via request headers. */
+/**
+ * Public read-only view of the HTTP response carried by results and
+ * transport exceptions. The underlying `Illuminate` Response is intentionally
+ * not exposed to prevent API key leakage via request headers.
+ */
 final readonly class RawResponse
 {
     public function __construct(private Response $response) {}
