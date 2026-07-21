@@ -32,19 +32,30 @@ final readonly class AccessTokenPermissionConfig implements Arrayable
      * Coerces the `permissions` list carried by every DTO that mints or
      * amends an API key.
      *
-     * An empty list collapses to `null` so the key is omitted from the body:
-     * omitting `permissions` mints the documented all-permissions `READ_WRITE`
-     * key, whereas `{"permissions": []}` has no documented meaning and would
-     * leave the key in an undefined permission state. `[]` is exactly what
-     * Laravel's `$request->validated()` yields for an absent client-supplied
-     * list, so it reaches these DTOs routinely.
+     * `null` — the absent key — omits `permissions` from the body, which is the
+     * documented way to mint an all-permissions `READ_WRITE` key.
+     *
+     * An explicit `[]` is **rejected** rather than folded into that omission.
+     * The two inputs mean opposite things: a caller writing `permissions: []`
+     * is asking for a key with no privileges, and silently omitting the key
+     * would hand them the most privileged one Asaas issues. `{"permissions": []}`
+     * has no documented meaning either, so there is no third option that both
+     * reaches the wire and behaves — the caller has to say which one they meant.
      *
      * @param  list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|self>|null  $permissions
      * @return list<self>|null
+     *
+     * @throws InvalidArgumentException when handed an explicitly empty list
      */
     public static function coerceList(?array $permissions): ?array
     {
-        if ($permissions === null || $permissions === []) {
+        if ($permissions === []) {
+            throw new InvalidArgumentException(
+                'An empty permissions list is ambiguous: omitting the key mints a key with ALL permissions (READ_WRITE), which is the opposite of what an empty list reads as. Pass at least one AccessTokenPermissionConfig to scope the key, or omit `permissions` entirely to accept the all-permissions default.',
+            );
+        }
+
+        if ($permissions === null) {
             return null;
         }
 

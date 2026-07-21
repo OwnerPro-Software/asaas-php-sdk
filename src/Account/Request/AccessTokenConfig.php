@@ -55,10 +55,11 @@ final readonly class AccessTokenConfig implements Arrayable
      * a JSON array where Asaas declares an object. `JsonBody` only rescues the
      * top-level body; this is the nested counterpart.
      *
-     * An empty `permissions` list has already collapsed to `null` by then —
-     * see {@see AccessTokenPermissionConfig::coerceList()} for why — so a
-     * config carrying only `permissions: []` is indistinguishable here from
-     * one carrying nothing at all, and both drop out.
+     * A config carrying only `permissions: []` never reaches this point: the
+     * constructor rejects the empty list outright, because dropping it here
+     * would create the subaccount with the all-permissions key that
+     * `accessTokenConfig` exists to prevent. See
+     * {@see AccessTokenPermissionConfig::coerceList()}.
      *
      * @param  array{name?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>}|AccessTokenConfig|null  $value
      */

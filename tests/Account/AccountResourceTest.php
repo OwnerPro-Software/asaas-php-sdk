@@ -464,7 +464,19 @@ it('sets the default escrow config', function (): void {
     });
 });
 
-it('omits an empty permissions list so the key keeps its default scope', function (string $method, string $verb, array $payload): void {
+it('rejects an empty permissions list instead of silently minting an all-permissions key', function (string $method, array $payload): void {
+    Http::fake(['*' => Http::response(['id' => 'tok_1'], 200)]);
+
+    expect(fn () => accountResource()->{$method}('acc_123', ...$payload))
+        ->toThrow(InvalidArgumentException::class, 'An empty permissions list is ambiguous');
+
+    Http::assertNothingSent();
+})->with([
+    'createAccessToken' => ['createAccessToken', [['name' => 'Onboarding', 'permissions' => []]]],
+    'updateAccessToken' => ['updateAccessToken', ['tok_1', ['name' => 'Widened', 'enabled' => true, 'expirationDate' => '2027-01-01', 'permissions' => []]]],
+]);
+
+it('omits an absent permissions key so the key keeps its default scope', function (string $method, string $verb, array $payload): void {
     Http::fake(['*' => Http::response(['id' => 'tok_1'], 200)]);
 
     accountResource()->{$method}('acc_123', ...$payload);
@@ -475,6 +487,6 @@ it('omits an empty permissions list so the key keeps its default scope', functio
         return $request->method() === $verb;
     });
 })->with([
-    'createAccessToken' => ['createAccessToken', 'POST', [['name' => 'Onboarding', 'permissions' => []]]],
-    'updateAccessToken' => ['updateAccessToken', 'PUT', ['tok_1', ['name' => 'Widened', 'enabled' => true, 'expirationDate' => '2027-01-01', 'permissions' => []]]],
+    'createAccessToken' => ['createAccessToken', 'POST', [['name' => 'Onboarding']]],
+    'updateAccessToken' => ['updateAccessToken', 'PUT', ['tok_1', ['name' => 'Widened', 'enabled' => true, 'expirationDate' => '2027-01-01']]],
 ]);

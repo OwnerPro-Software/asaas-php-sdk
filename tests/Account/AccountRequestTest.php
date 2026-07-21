@@ -379,11 +379,11 @@ it('omits an empty accessTokenConfig instance too', function (): void {
     expect($request->toArray())->not->toHaveKey('accessTokenConfig');
 });
 
-it('omits an accessTokenConfig whose permissions list is empty', function (): void {
-    // `{"permissions": []}` has no documented meaning: omitting the field mints
-    // the all-permissions READ_WRITE key, so shipping the empty list would leave
-    // the subaccount's initial key in an undefined permission state.
-    $request = AccountRequest::fromArray([
+it('rejects an accessTokenConfig whose permissions list is empty', function (): void {
+    // Omitting the field mints the all-permissions READ_WRITE key, so folding
+    // `permissions: []` into an omission would answer "no privileges" with the
+    // most privileged key Asaas issues. The caller has to say which they meant.
+    expect(fn (): AccountRequest => AccountRequest::fromArray([
         'name' => 'John Doe',
         'email' => 'john@example.com',
         'cpfCnpj' => '12345678901',
@@ -394,14 +394,11 @@ it('omits an accessTokenConfig whose permissions list is empty', function (): vo
         'province' => 'Centro',
         'postalCode' => '01001000',
         'accessTokenConfig' => ['permissions' => []],
-    ]);
-
-    expect($request->accessTokenConfig)->toBeNull();
-    expect($request->toArray())->not->toHaveKey('accessTokenConfig');
+    ]))->toThrow(InvalidArgumentException::class, 'An empty permissions list is ambiguous');
 });
 
-it('keeps an accessTokenConfig carrying a name but no permissions', function (): void {
-    $request = AccountRequest::fromArray([
+it('rejects an accessTokenConfig carrying a name alongside an empty permissions list', function (): void {
+    expect(fn (): AccountRequest => AccountRequest::fromArray([
         'name' => 'John Doe',
         'email' => 'john@example.com',
         'cpfCnpj' => '12345678901',
@@ -412,6 +409,21 @@ it('keeps an accessTokenConfig carrying a name but no permissions', function ():
         'province' => 'Centro',
         'postalCode' => '01001000',
         'accessTokenConfig' => ['name' => 'Onboarding', 'permissions' => []],
+    ]))->toThrow(InvalidArgumentException::class, 'ALL permissions');
+});
+
+it('keeps an accessTokenConfig carrying a name and no permissions key at all', function (): void {
+    $request = AccountRequest::fromArray([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'cpfCnpj' => '12345678901',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua',
+        'addressNumber' => '1',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'accessTokenConfig' => ['name' => 'Onboarding'],
     ]);
 
     expect($request->accessTokenConfig)->not->toBeNull();
