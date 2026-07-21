@@ -407,6 +407,29 @@ it('synthesizes UNKNOWN_ERROR from {message: ...} shape when errors key is absen
     expect($result->data)->toBeNull();
 });
 
+it('scrubs a credential an upstream pasted into the message field', function (): void {
+    // describe() was the one route that skipped the scrub the body branch
+    // beside it runs, so a proxy echoing a subaccount payload inside `message`
+    // put a live key into $result->errors and the exception message. A message
+    // that is a sentence has no field names to key on and is untouched.
+    $pendingRequest = (new PendingRequest)
+        ->baseUrl('https://api-sandbox.asaas.com/v3')
+        ->withHeader('access_token', 'test-key')
+        ->timeout(30)
+        ->preventStrayRequests()
+        ->stub([fn ($request, $options) => Factory::response(
+            ['message' => '{"id":"acc_1","apiKey":"$aact_live_key"}'],
+            502,
+        )]);
+
+    $connector = new AsaasConnector($pendingRequest, '', false);
+    $result = $connector->get('/accounts');
+
+    expect($result->errors[0]['description'])
+        ->toContain('"apiKey":"***"')
+        ->not->toContain('$aact_live_key');
+});
+
 it('falls through to body fallback when {message: ""} is empty string', function (): void {
     $pendingRequest = (new PendingRequest)
         ->baseUrl('https://api-sandbox.asaas.com/v3')

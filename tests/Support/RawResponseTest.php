@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Http\Client\Response;
+use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\RawResponse;
 
 mutates(RawResponse::class);
@@ -137,4 +138,22 @@ it('collapses a repeated secret header to one placeholder, publishing no count',
 
     expect((new RawResponse(new Response($psr)))->__debugInfo()['headers'])
         ->toBe(['authToken' => ['***']]);
+});
+
+it('carries the redacted view when a result is json-encoded, not an empty object', function (): void {
+    // AsaasResult::jsonSerialize() hands this object on whole, and json_encode
+    // walks public properties — of which there are none here, so the log line
+    // used to read `"response":{}` where the redacted view belonged.
+    $result = AsaasResult::success(
+        ['id' => 'acc_1'],
+        RawResponse::fake(200, ['X-Trace' => 'abc'], '{"id":"acc_1","apiKey":"$aact_live_key"}'),
+    );
+
+    $encoded = (string) json_encode($result);
+
+    expect($encoded)
+        ->toContain('"status":200')
+        ->toContain('"X-Trace":["abc"]')
+        ->toContain('\"apiKey\":\"***\"')
+        ->not->toContain('$aact_live_key');
 });

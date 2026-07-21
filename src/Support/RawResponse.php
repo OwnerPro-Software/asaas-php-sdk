@@ -6,13 +6,14 @@ namespace OwnerPro\Asaas\Support;
 
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Http\Client\Response;
+use JsonSerializable;
 
 /**
  * Public read-only view of the HTTP response carried by results and
  * transport exceptions. The underlying `Illuminate` Response is intentionally
  * not exposed to prevent API key leakage via request headers.
  */
-final readonly class RawResponse implements Redactable
+final readonly class RawResponse implements JsonSerializable, Redactable
 {
     public function __construct(private Response $response) {}
 
@@ -48,6 +49,19 @@ final readonly class RawResponse implements Redactable
                 ? $body
                 : mb_substr($body, 0, $limit).'... <truncated; '.$length.' chars total>',
         ];
+    }
+
+    /**
+     * `AsaasResult::jsonSerialize()` hands this object on whole, and
+     * `json_encode()` walks *public* properties — of which there are none here,
+     * so the encoded result carried `"response":{}` where the redacted view was
+     * meant to be. The dump path had the caster; this one had nothing.
+     *
+     * @return array{status: int, headers: array<string, list<string>>, body: string}
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->__debugInfo();
     }
 
     public function status(): int

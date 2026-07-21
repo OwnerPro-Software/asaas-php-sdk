@@ -29,6 +29,21 @@ final class ContentDispositionGuard
      */
     private const string UNSAFE_PATTERN = '/["\\\\\x00-\x1F\x7F]/';
 
+    /**
+     * The Unicode bidirectional formatting characters, matched as their UTF-8
+     * bytes rather than through `/u`: an `/u` pattern answers `false` on a
+     * subject that is not valid UTF-8, which a filename forwarded from a
+     * Latin-1 client legitimately is not, and that answer is indistinguishable
+     * from "no match" at a `=== 1` check.
+     *
+     * They break out of nothing — the header stays well-formed — but they
+     * reverse how the name *reads*: `fpdf\u{202E}gpj.exe` renders as
+     * `fpdf‮gpj.exe` in the Asaas panel, so an executable presents itself as an
+     * image to whoever reviews the upload. Covers U+200E/U+200F, U+202A–U+202E
+     * and U+2066–U+2069.
+     */
+    private const string BIDI_PATTERN = '/\xE2\x80[\x8E\x8F\xAA-\xAE]|\xE2\x81[\xA6-\xA9]/';
+
     /** RFC 7230 `token`: the character set a header field name is drawn from. */
     private const string HEADER_NAME_PATTERN = '/^[!#$%&\'*+.^_`|~0-9A-Za-z-]+$/D';
 
@@ -163,6 +178,12 @@ final class ContentDispositionGuard
         if (preg_match(self::UNSAFE_PATTERN, $value) === 1) {
             throw new InvalidArgumentException(
                 sprintf("Invalid %s: '%s'. Quotes, backslashes and control characters are not allowed.", $label, $value),
+            );
+        }
+
+        if (preg_match(self::BIDI_PATTERN, $value) === 1) {
+            throw new InvalidArgumentException(
+                sprintf('Invalid %s: Unicode bidirectional formatting characters are not allowed, as they disguise what the name reads as.', $label),
             );
         }
 

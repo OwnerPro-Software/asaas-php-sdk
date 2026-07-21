@@ -165,3 +165,31 @@ it('names the stripped filename in the error, not the caller local path', functi
     expect(fn (): string => ContentDispositionGuard::filename('/srv/app/storage/uploads/0'))
         ->toThrow(InvalidArgumentException::class, "Invalid upload filename: '0'.");
 });
+
+it('refuses a filename that disguises its extension with a bidi override', function (string $marker): void {
+    // U+202E reverses what follows, so `fpdf<RLO>gpj.exe` renders as an image
+    // name in the Asaas panel while remaining an executable. No header breaks,
+    // which is why the quote/control guard never saw it.
+    expect(fn (): string => ContentDispositionGuard::filename('fpdf'.$marker.'gpj.exe'))
+        ->toThrow(InvalidArgumentException::class, 'bidirectional formatting characters');
+})->with([
+    'RLO' => "\u{202E}",
+    'LRO' => "\u{202D}",
+    'RLM' => "\u{200F}",
+    'RLI' => "\u{2067}",
+    'PDI' => "\u{2069}",
+]);
+
+it('refuses a bidi override in a part name too', function (): void {
+    expect(fn (): string => ContentDispositionGuard::partName("documentFile\u{202E}"))
+        ->toThrow(InvalidArgumentException::class, 'bidirectional formatting characters');
+});
+
+it('keeps an accented filename that is not valid UTF-8', function (): void {
+    // A Latin-1 client sends `relatório.pdf` as bytes no `/u` pattern can read.
+    // Matching the bidi bytes directly keeps such a name working rather than
+    // failing it on an unreadable-subject error.
+    $latin1 = "relat\xF3rio.pdf";
+
+    expect(ContentDispositionGuard::filename($latin1))->toBe($latin1);
+});

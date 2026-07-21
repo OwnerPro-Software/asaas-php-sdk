@@ -89,10 +89,16 @@ final class ErrorEnvelope
         $message = $response->json('message');
 
         if (is_string($message) && $message !== '') {
-            return $message;
+            // Scrubbed on the same terms as the body branch below. This was the
+            // one route out of describe() that skipped it, and an upstream
+            // pasting a payload into `message` reaches `$result->errors` and the
+            // exception message by exactly this path. A `message` that is a
+            // sentence rather than JSON has no field names to key on and comes
+            // back untouched — the asymmetry was the defect, not the reach.
+            return self::scrubbed($message);
         }
 
-        $body = trim(mb_substr(strip_tags(self::redactedBody($response)), 0, 350));
+        $body = trim(mb_substr(strip_tags(self::scrubbed($response->body())), 0, 350));
 
         if ($body !== '') {
             return $body;
@@ -111,15 +117,13 @@ final class ErrorEnvelope
      * `Log::info(['result' => $result])` from printing a live key beside the
      * `***` that {@see RawResponse::__debugInfo()} shows for the same bytes.
      *
-     * Scrubbed before truncation, for the reason given in
+     * Applied before truncation, for the reason given in
      * {@see RawResponse::__debugInfo()}: cutting first leaves JSON that
-     * {@see SecretRedactor::scrubJson()} can no longer parse. A body that is
-     * not JSON at all has no field names to key on and is returned as-is.
+     * {@see SecretRedactor::scrubJson()} can no longer parse. Text that is not
+     * JSON at all has no field names to key on and is returned as-is.
      */
-    private static function redactedBody(Response $response): string
+    private static function scrubbed(string $text): string
     {
-        $body = $response->body();
-
-        return SecretRedactor::scrubJson($body) ?? $body;
+        return SecretRedactor::scrubJson($text) ?? $text;
     }
 }
