@@ -100,27 +100,10 @@ trait PaginatesResults
         do {
             $pages += 1;
 
-            if (! $result->success) {
-                yield new AsaasPaginatedError(
-                    $result->errors ?? [],
-                    $result->response,
-                    $result->offset,
-                    $result->limit,
-                );
+            $stop = self::stopBeforeRows($result, $previousRows, $delivered);
 
-                break;
-            }
-
-            if ($result->data === []) {
-                if ($result->hasMore) {
-                    yield self::truncatedWalk($result, $delivered);
-                }
-
-                break;
-            }
-
-            if (self::isStalled($result, $previousRows)) {
-                yield self::stalledPage($result, $delivered);
+            if ($stop !== null) {
+                yield from $stop;
 
                 break;
             }
@@ -132,22 +115,73 @@ trait PaginatesResults
             $delivered += count($result->data);
             $previousRows = $result->data;
 
-            if (self::hasDeliveredWholeSet($result, $delivered)) {
-                if ($result->hasMore) {
-                    yield self::contradictedCount($result, $delivered);
-                }
+            $stop = self::stopAfterRows($result, $delivered, $pages);
 
-                break;
-            }
-
-            if ($pages >= self::MAX_PAGES) {
-                yield self::runawayWalk($result, $delivered);
+            if ($stop !== null) {
+                yield from $stop;
 
                 break;
             }
 
             $result = $result->next();
         } while ($result !== null);
+    }
+
+    /**
+     * Whether the walk ends before this page's rows go out, and with what.
+     *
+     * `null` means carry on. A list means stop — and `yield from` it, which is
+     * how one shape covers both endings: an empty list is a walk that finished
+     * with nothing to report, a one-element list a walk that stopped with
+     * something the caller has to see. The two are not interchangeable, and
+     * keeping them in one return value is what stops the loop from having to
+     * ask *why* it is stopping.
+     *
+     * The stall check comes first among the ending conditions for the reason
+     * {@see self::stalledPage()} gives: those rows must not be handed over.
+     *
+     * @param  ?list<array<string, mixed>>  $previousRows
+     * @return ?list<AsaasPaginatedError>
+     */
+    private static function stopBeforeRows(AsaasPaginatedResult $asaasPaginatedResult, ?array $previousRows, int $delivered): ?array
+    {
+        if (! $asaasPaginatedResult->success) {
+            return [new AsaasPaginatedError(
+                $asaasPaginatedResult->errors ?? [],
+                $asaasPaginatedResult->response,
+                $asaasPaginatedResult->offset,
+                $asaasPaginatedResult->limit,
+            )];
+        }
+
+        if ($asaasPaginatedResult->data === []) {
+            return $asaasPaginatedResult->hasMore ? [self::truncatedWalk($asaasPaginatedResult, $delivered)] : [];
+        }
+
+        if (self::isStalled($asaasPaginatedResult, $previousRows)) {
+            return [self::stalledPage($asaasPaginatedResult, $delivered)];
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether the walk ends now that this page's rows have gone out, and with
+     * what. Same contract as {@see self::stopBeforeRows()}.
+     *
+     * @return ?list<AsaasPaginatedError>
+     */
+    private static function stopAfterRows(AsaasPaginatedResult $asaasPaginatedResult, int $delivered, int $pages): ?array
+    {
+        if (self::hasDeliveredWholeSet($asaasPaginatedResult, $delivered)) {
+            return $asaasPaginatedResult->hasMore ? [self::contradictedCount($asaasPaginatedResult, $delivered)] : [];
+        }
+
+        if ($pages >= self::MAX_PAGES) {
+            return [self::runawayWalk($asaasPaginatedResult, $delivered)];
+        }
+
+        return null;
     }
 
     /**

@@ -107,18 +107,20 @@ jobs:
       - name: Run mutation tests
         run: ./vendor/bin/pest --mutate --min=100 --parallel
 
+  # Runs on the newest supported PHP so a deprecation the toolchain trips over
+  # surfaces here rather than in a consumer's upgrade.
   quality:
-    name: Quality (PHP 8.4)
+    name: Quality (PHP 8.5)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PHP 8.4
+      - name: Setup PHP 8.5
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           coverage: none
           tools: composer:v2
 
