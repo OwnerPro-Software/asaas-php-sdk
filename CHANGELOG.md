@@ -73,6 +73,16 @@ they rely on. Every fix is pinned by a test that fails without it.
   other DTO produces — and under Laravel's `HandleExceptions` the warning
   surfaces first as an `ErrorException`, so callers saw a third, unrelated
   exception class. Both now guard like the rest of the package.
+- **The recorded request/response pair was typed as non-nullable.**
+  `FakeAsaasClient::recorded()` and the `RecordsHttpAssertions` helpers declared
+  `list<array{0: Request, 1: Response}>`, but Laravel records `[$request, null]`
+  for a request that failed in transport — exactly what `stubRequestNotDelivered()`
+  and `stubIndeterminateResult()` produce, and what `README.md` advertises. A
+  matcher closure written against that type (`fn (Request $r, Response $resp)`)
+  raised `TypeError: Argument #2 ($resp) must be of type Response, null given`,
+  and static analysis blessed `$entry[1]->status()` on a value that can be null.
+  The type is now `?Response` everywhere, with the nullability documented on the
+  trait and in `README.md`.
 
 ### Changed
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request;
+use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Http\Client\Response as ClientResponse;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\Support\IndeterminateResultException;
 use OwnerPro\Asaas\Support\RequestNotDeliveredException;
@@ -200,6 +202,17 @@ it('records the failed request with its real url and a null response', function 
 
     expect($request->url())->toBe('https://api-sandbox.asaas.com/v3/payments/pay_1');
     expect($response)->toBeNull();
+});
+
+it('hands the null response to a matcher closure that accepts it', function (): void {
+    $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
+
+    $fake->payments()->find('pay_1');
+
+    $fake->assertSent(
+        'payments',
+        fn (ClientRequest $request, ?ClientResponse $response): bool => $response === null,
+    );
 });
 
 it('stubIndeterminateResult with body phase returns the legacy empty success when the flag is off', function (): void {

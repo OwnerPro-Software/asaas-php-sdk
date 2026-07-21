@@ -231,11 +231,11 @@ final class FakeAsaasClient implements AsaasClientContract
     }
 
     /**
-     * @return list<array{0: Request, 1: Response}>
+     * @return list<array{0: Request, 1: ?Response}>
      */
     public function recorded(?string $pattern = null): array
     {
-        /** @var list<array{0: Request, 1: Response}> $all */
+        /** @var list<array{0: Request, 1: ?Response}> $all */
         $all = $this->factory->recorded()->all();
 
         if ($pattern === null) {
@@ -244,7 +244,7 @@ final class FakeAsaasClient implements AsaasClientContract
 
         $absolute = $this->resolvePattern($pattern);
 
-        /** @var list<array{0: Request, 1: Response}> $filtered */
+        /** @var list<array{0: Request, 1: ?Response}> $filtered */
         $filtered = array_values(array_filter(
             $all,
             static fn (array $entry): bool => Str::is(Str::start($absolute, '*'), $entry[0]->url()),

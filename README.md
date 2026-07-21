@@ -1464,8 +1464,20 @@ $asaas->assertSentInOrder([
 ]);
 
 // Inspect raw recordings.
-$asaas->recorded();             // list<array{Request, Response}>
+$asaas->recorded();             // list<array{Request, ?Response}>
 $asaas->recorded('payments');
+```
+
+A matcher closure may accept the response as a second parameter, but it **must**
+be typed as nullable — a request that failed in transport is recorded with a
+`null` response (see [Simulating transport failures](#simulating-transport-failures)),
+and a non-nullable `Response` hint raises a `TypeError` as soon as one is in the
+stream:
+
+```php
+use Illuminate\Http\Client\Response;
+
+$asaas->assertSent('payments', fn (Request $r, ?Response $response): bool => $response?->status() === 201);
 ```
 
 Recordings accumulate for the lifetime of the fake — there is no `flush()` or `forget()`. Build a fresh `AsaasClient::fake()` per test (the recommended pattern) to start with a clean slate.

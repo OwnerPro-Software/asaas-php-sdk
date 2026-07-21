@@ -15,11 +15,18 @@ use PHPUnit\Framework\Assert;
  *
  * Extracted from FakeAsaasClient to keep that class focused on HTTP
  * orchestration; this trait consumes recorded(...) and resolvePattern(...).
+ *
+ * The recorded response is **nullable**: a request that fails in transport
+ * (`stubRequestNotDelivered()` / `stubIndeterminateResult()`) is recorded with
+ * a `null` response, because no response was ever received. Matcher closures
+ * must therefore type the second parameter as `?Response` — a non-nullable
+ * `Response` hint raises a `TypeError` the moment such a request is in the
+ * stream.
  */
 trait RecordsHttpAssertions
 {
     /**
-     * @return list<array{0: Request, 1: Response}>
+     * @return list<array{0: Request, 1: ?Response}>
      */
     abstract public function recorded(?string $pattern = null): array;
 
@@ -102,7 +109,7 @@ trait RecordsHttpAssertions
     abstract protected function resolvePattern(string $pattern): string;
 
     /**
-     * @param  array{0: Request, 1: Response}  $entry
+     * @param  array{0: Request, 1: ?Response}  $entry
      */
     private function entryMatches(array $entry, string|Closure $matcher): bool
     {
@@ -140,7 +147,7 @@ trait RecordsHttpAssertions
     }
 
     /**
-     * @param  list<array{0: Request, 1: Response}>  $entries
+     * @param  list<array{0: Request, 1: ?Response}>  $entries
      */
     private function advanceCursor(array $entries, int $cursor, string|Closure $matcher, int $index): int
     {
