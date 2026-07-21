@@ -764,7 +764,7 @@ foreach (Asaas::payments()->all(['limit' => 100]) as $payment) {
 $allPayments = iterator_to_array(Asaas::payments()->all());
 ```
 
-If Asaas rejects a page mid-iteration (a 4xx), the Generator yields an `AsaasPaginatedError` instead of throwing. This object carries:
+If Asaas rejects a page mid-iteration (a 4xx), the Generator yields an `AsaasPaginatedError` instead of throwing — the rows read so far are already in hand, and the walk ends without breaking out of your `foreach`. A [transport failure](#transport-failures-typed-exceptions) is the other case: the outcome of that page is unknown, so it throws out of the iteration after yielding the rows already read. This object carries:
 - `errors` — the error list from the API
 - `response` — the raw HTTP response
 - `offset` — the page offset that failed

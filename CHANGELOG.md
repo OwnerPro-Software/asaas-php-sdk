@@ -121,6 +121,16 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   an `AsaasResult` failure, including `408` and `429`.
   `FakeAsaasClient::stubIndeterminateResult()` accepts `phase: 'server'`, which
   stubs a `502`.
+- **`AsaasPaginatedError` now only covers a 4xx page.** It exists so a rejected
+  page ends the walk without throwing out of a `foreach`; a request whose
+  outcome is unknown is not that, so `all()` and `paginate()` propagate the
+  transport exception instead of yielding one last error row. A loop over
+  `all()` that used to end quietly on a timeout — with the rows it had already
+  read plus a final `AsaasPaginatedError` — now yields those same rows and then
+  throws out of the `foreach`. Wrap the iteration in
+  `try`/`catch (TransportException)` if it must survive that; the rows yielded
+  before the throw are still valid, and the page that failed is the one after
+  them.
 - **`$result->errors[0]['description']` can now hold `***` where it held the
   response body.** This is the one redaction in the SDK that replaces a value
   rather than a view of it, because a description is free text and nothing
