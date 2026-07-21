@@ -949,3 +949,26 @@ it('returns failure on API error', function (array $errorFixture): void {
     expect($result->response->status())->toBe(400);
     expect($result->errors[0]['description'])->toBe('The value field is required');
 })->with('error_fixture');
+
+it('ships a gap-carrying split list as a JSON array on the wire', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $splits = [
+        ['walletId' => 'wallet_drop', 'fixedValue' => 1.00],
+        ['walletId' => 'wallet_keep', 'fixedValue' => 2.00],
+    ];
+
+    paymentResource()->create([
+        'customer' => 'cus_456',
+        'billingType' => 'PIX',
+        'value' => 150.00,
+        'dueDate' => '2026-04-01',
+        'split' => array_filter($splits, fn (array $split): bool => $split['walletId'] !== 'wallet_drop'),
+    ]);
+
+    Http::assertSent(function ($request): bool {
+        expect($request->body())->toContain('"split":[{"walletId":"wallet_keep"');
+
+        return $request->url() === 'https://api-sandbox.asaas.com/v3/payments';
+    });
+})->with('payment_fixture');

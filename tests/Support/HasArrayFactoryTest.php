@@ -377,3 +377,52 @@ it('serializes mixed enum and string items in arrays', function (): void {
 
     expect($array['events'])->toBe(['PAYMENT_CREATED', 'PAYMENT_UPDATED']);
 });
+
+it('re-indexes an integer-keyed list so it encodes as a JSON array', function (): void {
+    $splits = [
+        ['walletId' => 'wallet_keep_1'],
+        ['walletId' => 'wallet_drop'],
+        ['walletId' => 'wallet_keep_2'],
+    ];
+
+    $request = CreatePaymentRequest::fromArray([
+        'customer' => 'cus_1',
+        'billingType' => 'PIX',
+        'value' => 10.0,
+        'dueDate' => '2026-01-01',
+        'split' => array_filter($splits, fn (array $split): bool => $split['walletId'] !== 'wallet_drop'),
+    ]);
+
+    expect(array_keys($request->toArray()['split']))->toBe([0, 1]);
+    expect(json_encode($request->toArray()['split']))->toStartWith('[');
+});
+
+it('re-indexes an integer-keyed list of scalars', function (): void {
+    $events = [WebhookEvent::PaymentCreated, WebhookEvent::PaymentDeleted, WebhookEvent::PaymentUpdated];
+
+    $request = CreateWebhookRequest::fromArray([
+        'url' => 'https://example.com',
+        'email' => 'test@test.com',
+        'events' => array_filter($events, fn (WebhookEvent $event): bool => $event !== WebhookEvent::PaymentDeleted),
+    ]);
+
+    expect($request->toArray()['events'])->toBe(['PAYMENT_CREATED', 'PAYMENT_UPDATED']);
+});
+
+it('leaves a string-keyed map untouched so its keys stay payload', function (): void {
+    $request = new class
+    {
+        use HasArrayFactory;
+
+        /** @var array<string, string> */
+        public array $metadata = ['orderId' => 'ord_1', 'tenant' => 'acme'];
+
+        /** @param array<string, mixed> $data */
+        public static function fromArray(array $data): static
+        {
+            throw new LogicException('unused');
+        }
+    };
+
+    expect($request->toArray()['metadata'])->toBe(['orderId' => 'ord_1', 'tenant' => 'acme']);
+});

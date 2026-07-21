@@ -252,18 +252,10 @@ final class FakeAsaasClient implements AsaasClientContract
         return $filtered;
     }
 
-    /**
-     * Joins baseUrl + pattern and unconditionally appends `*`. This makes
-     * path-only patterns ('payments') match the same URLs they would if the
-     * user typed 'payments*' — including those carrying query strings or
-     * trailing segments — so users don't have to remember to wildcard every
-     * GET endpoint. Patterns that already end in `*` get a redundant trailing
-     * `*` (`payments/**`); `Str::is` treats `**` and `*` identically so
-     * matching behaviour stays the same.
-     */
+    /** @see StubPattern::absolute() for the matching and rejection rules. */
     protected function resolvePattern(string $pattern): string
     {
-        return self::buildAbsolutePattern($this->baseUrl, $pattern);
+        return StubPattern::absolute($this->baseUrl, $pattern);
     }
 
     /**
@@ -277,11 +269,6 @@ final class FakeAsaasClient implements AsaasClientContract
         });
 
         return $this;
-    }
-
-    private static function buildAbsolutePattern(string $baseUrl, string $pattern): string
-    {
-        return sprintf('%s/%s', $baseUrl, ltrim($pattern, '/')).'*';
     }
 
     /** @param array<string, mixed>|PromiseInterface|ResponseSequence|Closure $stub */
@@ -300,7 +287,7 @@ final class FakeAsaasClient implements AsaasClientContract
      * factory stable means recordings accumulate naturally across the fake's
      * lifetime — register() doesn't need to wipe and re-fake anything.
      *
-     * Pattern resolution is delegated to buildAbsolutePattern() — single source
+     * Pattern resolution is delegated to StubPattern::absolute() — single source
      * of truth shared with resolvePattern(). Stub dispatch uses is_callable():
      * it covers both Closure and ResponseSequence (which exposes __invoke)
      * without producing the equivalent-mutation pairs that explicit instanceof
@@ -316,7 +303,7 @@ final class FakeAsaasClient implements AsaasClientContract
 
         $this->factory->fake(['*' => static function (Request $request, array $options) use (&$stubs, $baseUrl): mixed {
             foreach ($stubs as $pattern => $stub) {
-                $absolute = self::buildAbsolutePattern($baseUrl, $pattern);
+                $absolute = StubPattern::absolute($baseUrl, $pattern);
 
                 if (! Str::is(Str::start($absolute, '*'), $request->url())) {
                     continue;

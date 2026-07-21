@@ -27,6 +27,21 @@ they rely on. Every fix is pinned by a test that fails without it.
 
 ### Fixed
 
+- **A list that lost its sequence shipped as a JSON object.** `array_filter()`
+  over a list leaves the surviving keys in place, and `json_encode()` renders
+  the gap as an object — so `'split' => array_filter($splits, ...)` reached the
+  wire as `{"split":{"1":{...}}}` where Asaas declares `"type": "array"`. The
+  400 that came back named no field the caller could act on. `toArray()` now
+  re-indexes integer-keyed arrays at the serialization boundary, covering
+  `split`, `splitRefunds`, `permissions`, `webhooks`, `events` and
+  `billingTypes` alike; string-keyed maps are left untouched.
+- **An absolute pattern made `assertNotSent()` incapable of failing.** The fake
+  prefixed its base URL onto every pattern without checking whether the pattern
+  was already absolute, so `assertNotSent('https://api-sandbox.asaas.com/v3/payments*')`
+  — the form muscle memory produces from `Http::assertNotSent()` — resolved to a
+  doubled URL that matches nothing and passed unconditionally, as did
+  `recorded()` and `assertSent(..., times: 0)`. Absolute patterns now throw
+  `InvalidArgumentException` in stubs and assertions alike.
 - **A lone `stub()` declaring `hasMore: true` hung `->all()` forever.** A single
   stub is one response replayed for every matching request, so it describes page
   one and nothing else — the walk kept re-requesting the same rows and never

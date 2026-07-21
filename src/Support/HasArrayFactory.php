@@ -47,17 +47,42 @@ trait HasArrayFactory
             }
 
             if (is_array($value)) {
-                return array_map(
+                return self::reindexList(array_map(
                     fn (mixed $item): mixed => match (true) {
                         $item instanceof BackedEnum => $item->value,
                         $item instanceof Arrayable => $item->toArray(),
                         default => $item,
                     },
                     $value,
-                );
+                ));
             }
 
             return $value;
         }, $vars);
+    }
+
+    /**
+     * Keeps an integer-keyed array encoding as a JSON **array**.
+     *
+     * `array_filter()` over a list — the idiomatic way to drop entries before
+     * handing them to the SDK — leaves the surviving keys in place, and
+     * `json_encode()` renders the resulting gap as an object. Asaas declares
+     * `split`, `splitRefunds`, `permissions`, `events` and `billingTypes` as
+     * `"type": "array"` and answers a 400 the caller cannot diagnose.
+     *
+     * String-keyed maps are returned untouched: there the key *is* payload.
+     *
+     * @param  array<array-key, mixed>  $items
+     * @return array<array-key, mixed>
+     */
+    private static function reindexList(array $items): array
+    {
+        foreach (array_keys($items) as $key) {
+            if (! is_int($key)) {
+                return $items;
+            }
+        }
+
+        return array_values($items);
     }
 }

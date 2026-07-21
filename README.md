@@ -1501,7 +1501,7 @@ $asaas->stubError('payments', status: 429, body: [], headers: ['Retry-After' => 
 
 ### Path patterns
 
-Stub paths are **relative** to the API base URL — no `https://...`, no `/v3` prefix. Patterns use `Str::is` semantics where `*` is a glob.
+Stub paths are **relative** to the API base URL — no `https://...`, no `/v3` prefix. Patterns use `Str::is` semantics where `*` is a glob. A pattern starting with `http://` or `https://` throws `InvalidArgumentException`, in stubs and in assertions alike: prefixing the base URL onto an already-absolute pattern yields a glob that matches nothing, which would silently turn `assertNotSent()` — and `assertSent(..., times: 0)` — into assertions that can never fail.
 
 A trailing `*` is appended automatically when the pattern doesn't already end in one, so path-only patterns also match URLs that carry query strings or extra segments. `'payments'` matches `/payments`, `/payments?limit=10`, `/payments/pay_123`. Use an explicit suffix when you need a tighter match — e.g. `'payments/*'` matches only individual-payment paths, never the index endpoint.
 

@@ -510,3 +510,18 @@ it('still accepts a lone closure predicate', function (): void {
     expect(fn () => $fake->assertSent(fn (Request $request): bool => $request->method() === 'POST'))
         ->toThrow(AssertionFailedError::class);
 });
+
+it('rejects an absolute pattern instead of letting assertNotSent() pass unconditionally', function (string $method): void {
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    expect(fn () => $fake->{$method}('https://api-sandbox.asaas.com/v3/payments*'))
+        ->toThrow(InvalidArgumentException::class, 'must be relative to the Asaas base URL');
+})->with(['assertSent', 'assertNotSent', 'recorded']);
+
+it('rejects an absolute stub pattern', function (): void {
+    $fake = AsaasClient::fake(['http://api-sandbox.asaas.com/v3/payments' => ['id' => 'pay_1']]);
+
+    expect(fn () => $fake->payments()->find('pay_1'))
+        ->toThrow(InvalidArgumentException::class, 'must be relative to the Asaas base URL');
+});
