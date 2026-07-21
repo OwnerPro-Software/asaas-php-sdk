@@ -1184,7 +1184,7 @@ $tenantClient->myAccount()->uploadDocumentFile(
 //    Monitor $status['bankAccountInfo'] to track approval (PENDING → APPROVED).
 ```
 
-Every upload filename (`uploadDocumentFile`, `updateDocumentFile`, `updatePaymentCheckoutConfig`, `payments()->uploadDocument`, `fiscalInfo()->update`) is validated before it reaches the HTTP client: directory components are stripped, and an empty name, a name over 255 chars, or one carrying a double quote or a control character throws `InvalidArgumentException`. Those characters would break out of the multipart `Content-Disposition` header and let a caller-supplied name forge extra form fields — so a browser-supplied `getClientOriginalName()` can be passed straight through.
+Every upload filename (`uploadDocumentFile`, `updateDocumentFile`, `updatePaymentCheckoutConfig`, `payments()->uploadDocument`, `fiscalInfo()->update`) is validated before it reaches the HTTP client: directory components are stripped, and an empty name, a name over 255 chars, or one carrying a double quote, a backslash or a control character throws `InvalidArgumentException`. Those characters break out of the multipart `Content-Disposition` header — the double quote closes the value outright, and a trailing backslash escapes the closing quote — and would let a caller-supplied name forge extra form fields. A browser-supplied `getClientOriginalName()` can therefore be passed straight through. The part name each file is sent under is validated by the same rules, for callers reaching `Connector::postMultipart()` directly.
 
 Listen to the `ACCOUNT_STATUS_*` webhook events (already in `WebhookEvent`) to react to approvals and rejections asynchronously.
 

@@ -264,6 +264,52 @@ it('refuses an empty filename that would leak the local file path', function ():
     Http::assertNothingSent();
 });
 
+it('refuses a filename whose trailing backslash escapes the closing quote', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', [], [[
+        'name' => 'documentFile', 'contents' => 'x', 'filename' => 'ok.png\\',
+    ]]))->toThrow(InvalidArgumentException::class);
+
+    Http::assertNothingSent();
+});
+
+it('refuses a part name that would inject part headers into the multipart body', function (string $partName): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', [], [[
+        'name' => $partName, 'contents' => 'x', 'filename' => 'rg.png',
+    ]]))->toThrow(InvalidArgumentException::class);
+
+    Http::assertNothingSent();
+})->with([
+    'quote' => 'documentFile"; filename="evil.exe',
+    'trailing backslash' => 'documentFile\\',
+    'crlf' => "documentFile\r\nX-Injected: 1",
+    'empty' => '',
+]);
+
+it('does not attach earlier files when a later part name is rejected', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $connector = multipartConnector();
+
+    expect(fn (): AsaasResult => $connector->postMultipart('/u', [], [
+        ['name' => 'documentFile', 'contents' => 'FIRST', 'filename' => 'first.png'],
+        ['name' => "documentFile\r\n", 'contents' => 'EVIL', 'filename' => 'evil.png'],
+    ]))->toThrow(InvalidArgumentException::class);
+
+    $connector->postMultipart('/u', [], [[
+        'name' => 'documentFile', 'contents' => 'SECOND', 'filename' => 'second.png',
+    ]]);
+
+    $body = (string) Http::recorded()[0][0]->body();
+
+    expect($body)->toContain('second.png')
+        ->and($body)->not->toContain('first.png')
+        ->and($body)->not->toContain('FIRST');
+});
+
 it('restores JSON body format even when the multipart upload fails', function (): void {
     Http::fakeSequence()
         ->push(['errors' => [['description' => 'rejected']]], 400)
