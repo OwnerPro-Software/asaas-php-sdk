@@ -142,7 +142,18 @@ it('stubRequestNotDelivered returns the legacy CONNECTION_ERROR result when the 
     expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
 });
 
-// --- a failed request is still a sent request ---
+/*
+ * --- a failed request is still a sent request ---
+ *
+ * Contract guard for the illuminate/http version in use: the transport stubs
+ * make the request visible to the assertion helpers by throwing a Guzzle
+ * ConnectException, relying on PendingRequest::marshalConnectionException()
+ * to call Factory::recordRequestResponsePair($request, null) before rethrowing
+ * as an Illuminate ConnectionException. If a framework version stops recording
+ * there, these tests fail loudly instead of silently restoring the vacuous
+ * assertNotSent() they were written to kill. Runs against every version in the
+ * CI matrix — check them first on a Laravel major bump.
+ */
 
 it('records the request behind a stubRequestNotDelivered so assertions can see it', function (): void {
     $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');

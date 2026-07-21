@@ -702,12 +702,19 @@ $result = Asaas::payments()->list(['limit' => 10]);
 $result->data;        // list of arrays (each array is a raw API response)
 $result->totalCount;  // total items available
 $result->hasMore;     // more pages available?
-$result->limit;
-$result->offset;
+$result->limit;       // as echoed by the API
+$result->offset;      // as requested by the SDK for this page
 
 // Fetch next page
 $nextPage = $result->next();
 ```
+
+The two paging fields have different provenance, which matters only if you
+assert on them. `limit` is whatever the API echoed. `offset` is the value the
+SDK asked for, because it is always known — an envelope that omits `offset`
+would otherwise report `0` for every page. `next()` advances by the number of
+rows the page actually delivered (not by `limit`, which a short page would
+overshoot) and returns `null` once a page comes back empty.
 
 ### Lazy Iteration
 
