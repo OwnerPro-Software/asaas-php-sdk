@@ -5,6 +5,100 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Bug-hunt pass over the whole package: eight defects found by auditing the
+resources against `specs/domains/*.json`, the DTO factories against their own
+constructors, and the Laravel/testing seams against the framework internals
+they rely on. Every fix is pinned by a test that fails without it.
+
+### Fixed
+
+- **`MyAccountResource::uploadDocumentFile()` posted to a route that does not
+  exist.** It built `POST /v3/myAccount/documents/{id}/files`; the endpoint is
+  `POST /v3/myAccount/documents/{id}` (`specs/domains/my-account-documents.json`
+  declares only `/documents`, `/documents/{id}` and `/documents/files/{id}` —
+  the `/files` suffix exists on the file triplet, not on the upload route). The
+  multipart body was already correct, so every white-label KYC document upload
+  failed on the URL alone and subaccount onboarding could not be completed
+  through the SDK. `README.md` already documented the correct path.
+- **The `Asaas` facade escaped the documented fake swap.** The facade accessor
+  returned the concrete `AsaasClient` while the container seam is
+  `alias(AsaasClient::class, AsaasClientContract::class)`. `Container::instance()`
+  unsets the alias it overrides, so
+  `$this->app->instance(AsaasClientContract::class, AsaasClient::fake())` — the
+  recipe in `README.md` — detached the alias and left the `AsaasClient` binding
+  untouched: injected code saw the fake while `Asaas::payments()` still resolved
+  the real client and issued live HTTP with the configured API key. The accessor
+  now resolves `AsaasClientContract`, so one override covers both surfaces.
+- **`all()` skipped rows and truncated silently.** `AsaasPaginatedResult::next()`
+  computed the next offset as `offset + limit` from the response envelope. A page
+  returning fewer rows than its limit skipped the difference (a 100-row limit
+  answered with 10 rows jumped straight to offset 100), and an envelope omitting
+  `limit` fell into the `limit < 1` guard, ending the walk while `hasMore` still
+  said otherwise — with no error, indistinguishable from a clean end-of-list. The
+  cursor now advances by the number of rows actually delivered and terminates on
+  an empty page, which is the case that genuinely cannot make progress.
+- **`CreateInvoiceRequest::fromArray()` and `BankAccount::fromArray()` rejected
+  nested DTOs.** Both called `Taxes::fromArray()` / `Bank::fromArray()` eagerly
+  instead of handing the raw value to their constructor, which already coerces
+  `array|DTO`. Passing a typed DTO inside an array payload — e.g.
+  `invoices()->create(['taxes' => new Taxes(...)])` or
+  `transfers()->create(['bankAccount' => ['bank' => new Bank('001')]])` — raised
+  `TypeError` before any request was sent, breaking the array-or-DTO contract
+  documented in `README.md`.
+- **Transport-failure stubs recorded nothing, making assertions vacuous.**
+  `stubRequestNotDelivered()` / `stubIndeterminateResult()` threw an Illuminate
+  `ConnectionException` straight from the stub closure, bypassing
+  `PendingRequest::marshalConnectionException()` — the only place Laravel records
+  the request/response pair. The request never reached `recorded()`, so
+  `assertNotSent()` and `assertNothingSent()` passed regardless of what the code
+  under test did, on exactly the failure path those tests exist to pin. The stubs
+  now raise the Guzzle `ConnectException` with the real PSR request, so Laravel
+  marshals it like a live cURL error: the pair is recorded with a `null` response
+  before the Illuminate exception is raised.
+- **`StubResponse` dropped unknown top-level keys.** Pagination inference
+  rebuilt the body from a fixed key set, so stubbing a realistic envelope with
+  an extra field the code under test reads silently lost it — as did a non-list
+  body that merely happened to carry a list under `data`. The inferred defaults
+  are now merged *under* the caller's body.
+- **`IdGuard::validate()` accepted a trailing newline.** PCRE's `$` also matches
+  just before a final `\n`, so an untrimmed id (`"pay_123\n"`, e.g. read from a
+  file without `trim()`) passed the guard and reached the URL percent-encoded as
+  `pay_123%0A`, turning the intended `InvalidArgumentException` into a wasted
+  round-trip and an HTTP 404. Anchored with the `D` modifier.
+- **`PaymentCheckoutConfigRequest` and `UpdatePaymentDocumentRequest` read
+  required keys without a guard.** A missing key emitted `Undefined array key`
+  plus a `TypeError` instead of the descriptive `InvalidArgumentException` every
+  other DTO produces — and under Laravel's `HandleExceptions` the warning
+  surfaces first as an `ErrorException`, so callers saw a third, unrelated
+  exception class. Both now guard like the rest of the package.
+
+### Changed
+
+- `AsaasPaginatedResult::$offset` now reports the offset the SDK requested for
+  that page rather than the one echoed by the server. The two agree whenever the
+  API echoes what it was asked for; the requested value is used because it is
+  always present, whereas an envelope omitting `offset` would pin the cursor at
+  `0`. Only visible if you assert on `$result->offset` for a page whose envelope
+  disagreed with the request.
+- `AsaasPaginatedResult::next()` no longer returns `null` when the envelope
+  reports `limit < 1`; it returns `null` on an empty page instead. Callers
+  driving pagination manually via `next()` now keep walking through envelopes
+  that omit `limit`.
+- `FakeTransportFailure` (test-support class) now exposes
+  `notDeliveredErrno(phase)`, `indeterminateErrno(phase)` and
+  `connectException(errno, request)` in place of `requestNotDelivered(phase)` /
+  `indeterminateResult(phase)`, which returned a ready-made Illuminate
+  `ConnectionException`. The errno lookups are separate from the exception
+  builder so a phase can still be validated eagerly at stub-registration time
+  while construction waits for the actual request. `stubRequestNotDelivered()`
+  and `stubIndeterminateResult()` are unchanged — this only affects code calling
+  `FakeTransportFailure` directly.
+- `Asaas` facade `@mixin` points at `AsaasClientContract` instead of
+  `AsaasClient`. The two surfaces are identical apart from `__debugInfo()`,
+  which is never reached through a facade call.
+
 ## [2.1.0] - 2026-07-20
 
 Opt-in typed transport exceptions for timeout reconciliation (PulsarApi #463).
@@ -448,6 +542,7 @@ Initial public release. See [README](README.md) for full feature documentation.
 - Pagination helpers `paginate()` and `all()` (generator).
 - `WebhookVerifier` with timing-safe token comparison and configurable IP allowlist.
 
+[Unreleased]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v2.1.0...HEAD
 [2.0.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.4.0...v2.0.0
 [1.4.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.2.1...v1.3.0
