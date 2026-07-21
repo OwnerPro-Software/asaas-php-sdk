@@ -979,6 +979,12 @@ Asaas::invoices()->cancel(string $id, array|CancelInvoiceRequest|null $data = nu
 Asaas::invoices()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
 
+`municipalServiceName` is a create-only field. `PUT /v3/invoices/{id}` accepts
+only `serviceDescription`, `observations`, `externalReference`, `value`,
+`deductions`, `effectiveDate`, `updatePayment` and `taxes`, so
+`UpdateInvoiceRequest` does not carry it — passing the key in an array is
+ignored rather than sent.
+
 ### Accounts (`accounts()`)
 
 ```php

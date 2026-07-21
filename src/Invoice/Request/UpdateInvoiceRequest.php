@@ -24,7 +24,6 @@ final readonly class UpdateInvoiceRequest
         public float|Missing $value = Missing::Value,
         public float|Missing $deductions = Missing::Value,
         public string|Missing $effectiveDate = Missing::Value,
-        public string|Missing $municipalServiceName = Missing::Value,
         array|Taxes|Missing $taxes = Missing::Value,
         public string|Missing $externalReference = Missing::Value,
         public bool|Missing $updatePayment = Missing::Value,
@@ -32,7 +31,7 @@ final readonly class UpdateInvoiceRequest
         $this->taxes = is_array($taxes) ? Taxes::fromArray($taxes) : $taxes;
     }
 
-    /** @param array{serviceDescription?: string, observations?: string, value?: float, deductions?: float, effectiveDate?: string, municipalServiceName?: string, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes, externalReference?: string, updatePayment?: bool} $data */
+    /** @param array{serviceDescription?: string, observations?: string, value?: float, deductions?: float, effectiveDate?: string, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes, externalReference?: string, updatePayment?: bool} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -41,7 +40,6 @@ final readonly class UpdateInvoiceRequest
             value: array_key_exists('value', $data) ? $data['value'] : Missing::Value,
             deductions: array_key_exists('deductions', $data) ? $data['deductions'] : Missing::Value,
             effectiveDate: array_key_exists('effectiveDate', $data) ? $data['effectiveDate'] : Missing::Value,
-            municipalServiceName: array_key_exists('municipalServiceName', $data) ? $data['municipalServiceName'] : Missing::Value,
             taxes: array_key_exists('taxes', $data)
                 ? (is_array($data['taxes']) ? Taxes::fromArray($data['taxes']) : $data['taxes'])
                 : Missing::Value,

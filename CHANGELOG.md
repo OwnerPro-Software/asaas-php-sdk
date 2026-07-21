@@ -107,6 +107,20 @@ they rely on. Every fix is pinned by a test that fails without it.
   it now matches the docs, and the reasoning is pinned on the method and by an
   empty-body assertion in the test.
 
+### Removed
+
+- **`UpdateInvoiceRequest::$municipalServiceName`** — the field is create-only.
+  `PUT /v3/invoices/{id}` accepts exactly `serviceDescription`, `observations`,
+  `externalReference`, `value`, `deductions`, `effectiveDate`, `updatePayment`
+  and `taxes` (`specs/domains/invoices.json`, confirmed against
+  https://docs.asaas.com/reference/atualizar-nota-fiscal); `municipalServiceName`
+  exists only on `POST /v3/invoices`, and no `concept-fields.md` entry covers it,
+  so by the spec-doc-authority rule it does not belong on the update DTO. Passing
+  the key in an array is now ignored instead of being sent. **Breaking** for
+  callers using the named argument `municipalServiceName:` on
+  `new UpdateInvoiceRequest(...)` or reading the property. `CreateInvoiceRequest`
+  is untouched.
+
 ### Changed
 
 - `AsaasPaginatedResult::$offset` now reports the offset the SDK requested for

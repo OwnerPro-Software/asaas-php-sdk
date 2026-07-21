@@ -302,6 +302,14 @@ it('UpdateInvoiceRequest: omitted fields never reach the wire as null', function
     });
 })->with('invoice_fixture');
 
+it('UpdateInvoiceRequest: drops municipalServiceName, which the PUT schema does not accept', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    invoiceResource()->update('inv_123', ['value' => 1500.00, 'municipalServiceName' => 'IT Services']);
+
+    Http::assertSent(fn ($request): bool => $request->data() === ['value' => 1500.00]);
+})->with('invoice_fixture');
+
 it('returns failure on API error', function (array $errorFixture): void {
     Http::fake(['*' => Http::response($errorFixture, 400)]);
 
