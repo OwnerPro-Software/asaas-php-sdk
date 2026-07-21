@@ -721,7 +721,7 @@ would otherwise report `0` for every page. `next()` advances by the number of
 rows the page actually delivered (not by `limit`, which a short page would
 overshoot) and returns `null` once a page comes back empty.
 
-`all()` has three brakes, and a walk that trips any of them past the first ends
+`all()` has four brakes, and a walk that trips any of them past the first ends
 with a final `AsaasPaginatedError` rather than a quiet `return` — a silent stop
 would look exactly like a complete walk. Code that already checks each yielded
 item for `AsaasPaginatedError` needs no change.
@@ -731,6 +731,12 @@ item for `AsaasPaginatedError` needs no change.
 | Empty page | the page carries no rows | nothing; the walk just ends |
 | Repeated page | a page carries exactly the rows of the page before it **and still says `hasMore: true`** | `PAGINATION_STALLED` |
 | `totalCount` reached, `hasMore` still true | the envelope contradicts itself | `PAGINATION_INCONSISTENT` |
+| Page ceiling | 10 000 pages fetched and no brake above ever fired | `PAGINATION_RUNAWAY` |
+
+The ceiling is the last resort: an endpoint that ignores `offset` **and** answers
+in an unstable order repeats no page and reports no usable `totalCount`, so
+nothing else marks the walk complete. At the API's maximum page size of 100 it
+sits at a million rows — past any real account, so it only ever fires on a fault.
 
 The last two matter on endpoints whose query parameters Asaas never documented.
 One that ignored `offset` would answer every request with the same non-empty

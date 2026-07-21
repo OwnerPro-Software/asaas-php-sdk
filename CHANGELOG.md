@@ -120,6 +120,22 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   printed the live `apiKey` in full and merely appended the redacted view below
   it. The `Support\DumpRedaction` class that expressed that registration is gone
   with it; nothing replaces it, because there is no longer a call to make.
+- **`$result->response` vanished from an encoded result.** `RawResponse` holds
+  its `Illuminate` response privately and implemented no `JsonSerializable`, so
+  `json_encode($result)` — the path `Log::info(['result' => $result])` takes
+  through Monolog — wrote `"response":{}` where the redacted status, headers and
+  body belonged. It now serializes the same view the dumper shows.
+- **An upstream `message` reached `$result->errors` unscrubbed.** `ErrorEnvelope`
+  scrubbed the response body it pastes into a synthesized description but not
+  the `message` field beside it, which is the branch that wins when present. A
+  proxy echoing a subaccount payload there put a live key into the errors row and
+  the exception message. Both branches now run the same scrub.
+- **Upload names could disguise what they read as.** The filename and part-name
+  guard rejected quotes, backslashes and control characters, but not the Unicode
+  bidirectional formatting characters: `fpdf<U+202E>gpj.exe` renders as an image
+  name in the Asaas panel while remaining an executable. They are now rejected,
+  matched as UTF-8 bytes so a Latin-1 filename is not failed on an
+  unreadable-subject error.
 - **A body that could not be re-encoded was printed raw.** `SecretRedactor::scrubJson()`
   answered `null` when `json_encode()` refused the payload it had just scrubbed,
   and both callers fall back to the untouched body on `null` — so a body
@@ -233,6 +249,21 @@ are collected under *Breaking* so an upgrade can be planned from one list.
 
 ### Fixed
 
+- **An equivalent stub pattern was accepted and never served.** `FakeAsaasClient`
+  keyed its stub map by the raw pattern string while matching on the resolved
+  glob, so `'payments/*'`, `'/payments/*'` and `' payments/*'` were three entries
+  collapsing onto one: the first registered always won, and the rest sat there
+  dead — no `NoMatchingStubException` is raised while some entry matches, so a
+  test that thought it had re-stubbed an endpoint saw no error anywhere. The map
+  is keyed by the resolved pattern now, so registering an equivalent one replaces
+  the stub it is equivalent to, in place.
+- **A walk could run without a ceiling.** Both of `all()`'s diagnostic brakes
+  need a signal the envelope may withhold — `totalCount` reports 0 when omitted,
+  and the stall check needs a repeated page. An endpoint ignoring `offset` while
+  answering in an unstable order gives neither and just keeps saying `hasMore`. A
+  10 000-page ceiling now ends such a walk with the new `PAGINATION_RUNAWAY`
+  code; at the maximum page size that is a million rows, so it only fires on a
+  fault.
 - **`permissions: []` shipped on two of the three DTOs that carry it.**
   `AccessTokenConfig` deliberately collapsed an empty permissions list so a new
   subaccount key keeps its all-permissions `READ_WRITE` default, but
@@ -291,8 +322,11 @@ are collected under *Breaking* so an upgrade can be planned from one list.
 - **`accessTokenConfig` shipped an undefined permission state.**
   `{"permissions": []}` survived the empty-config collapse, yet omitting
   `accessTokenConfig` entirely is what mints the documented all-permissions
-  `READ_WRITE` key — an explicitly empty list has no documented meaning. A config
-  whose only content is an empty permissions list is now omitted too.
+  `READ_WRITE` key — an explicitly empty list has no documented meaning. It was
+  first folded into an omission; that turned out to silently mint the very key
+  the caller was trying to restrict, so the list is now **rejected** instead —
+  see *Breaking* and *Security*. Nothing about `permissions: []` is silently
+  accepted any more.
 - **A nested all-optional payload shipped as a JSON array.** `accessTokenConfig`
   carries two optional fields, so `accounts()->create([… 'accessTokenConfig' => []])`
   — the shape Laravel's `$request->validated()` produces for an empty
