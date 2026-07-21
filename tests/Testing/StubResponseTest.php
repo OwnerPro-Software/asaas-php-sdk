@@ -77,6 +77,28 @@ it('preserves explicit object/limit/offset values during inference', function ()
     ]);
 });
 
+it('preserves unknown top-level keys during inference', function (): void {
+    $factory = new Factory;
+    $factory->fake(['*' => StubResponse::normalize([
+        'data' => [['id' => 'acc_1']],
+        'walletId' => 'wallet-123',
+        'customField' => 'kept',
+    ])]);
+
+    $response = $factory->createPendingRequest()->get('https://example.test/api/v3/accounts');
+
+    expect($response->json())->toBe([
+        'object' => 'list',
+        'hasMore' => false,
+        'totalCount' => 1,
+        'limit' => 1,
+        'offset' => 0,
+        'data' => [['id' => 'acc_1']],
+        'walletId' => 'wallet-123',
+        'customField' => 'kept',
+    ]);
+});
+
 it('skips inference when data is not a list', function (): void {
     $factory = new Factory;
     $factory->fake(['*' => StubResponse::normalize(['data' => ['key' => 'value']])]);

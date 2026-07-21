@@ -42,13 +42,15 @@ final class StubResponse
 
         $count = count($body['data']);
 
-        return [
-            'object' => $body['object'] ?? 'list',
+        // Defaults first so the stub wins on every key it declares: the caller's
+        // envelope is preserved whole, extra fields included, and only the
+        // pagination keys it left out are filled in.
+        return array_merge([
+            'object' => 'list',
             'hasMore' => false,
             'totalCount' => $count,
-            'limit' => $body['limit'] ?? $count,
-            'offset' => $body['offset'] ?? 0,
-            'data' => $body['data'],
-        ];
+            'limit' => $count,
+            'offset' => 0,
+        ], $body);
     }
 }
