@@ -325,3 +325,95 @@ it('all stops when data is empty', function (): void {
 
     expect($items)->toBeEmpty();
 });
+
+it('all stops once the envelope\'s own totalCount has been delivered', function (): void {
+    // The endpoint below ignores `offset` and answers every request with the
+    // same non-empty page and `hasMore: true` — a real possibility on the routes
+    // whose query parameters Asaas never documented. The empty-page check never
+    // fires, so without the totalCount backstop the generator emits duplicates
+    // forever.
+    $calls = 0;
+
+    $connector = fakeConnector(function () use (&$calls): AsaasResult {
+        $calls++;
+
+        return AsaasResult::success(
+            ['data' => [['id' => 'r1'], ['id' => 'r2']], 'totalCount' => 2, 'hasMore' => true, 'limit' => 2, 'offset' => 0],
+            RawResponse::fake(),
+        );
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments/pay_1/refunds', []));
+
+    // Stopping is the only way not to loop, but a quiet stop would be a
+    // truncated walk indistinguishable from a complete one, so the
+    // contradiction is reported as the last item of the stream.
+    expect($items[0])->toBe(['id' => 'r1']);
+    expect($items[1])->toBe(['id' => 'r2']);
+    expect($items[2])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[2]->errors[0]['code'])->toBe('PAGINATION_INCONSISTENT');
+    expect($items[2]->errors[0]['description'])->toContain('hasMore=true');
+    expect($calls)->toBe(1);
+});
+
+it('all stops quietly when the envelope agrees the walk is over', function (): void {
+    // Same backstop, no contradiction: totalCount reached and hasMore false, so
+    // there is nothing to report — the stream carries rows only.
+    $connector = fakeConnector(fn (): AsaasResult => AsaasResult::success(
+        ['data' => [['id' => 'r1'], ['id' => 'r2']], 'totalCount' => 2, 'hasMore' => false, 'limit' => 2, 'offset' => 0],
+        RawResponse::fake(),
+    ));
+
+    expect(iterator_to_array($connector->all('/v3/payments', [])))
+        ->toBe([['id' => 'r1'], ['id' => 'r2']]);
+});
+
+it('all keeps walking while the envelope reports more rows than delivered so far', function (): void {
+    $pages = [
+        ['data' => [['id' => 'a']], 'totalCount' => 3, 'hasMore' => true, 'limit' => 1, 'offset' => 0],
+        ['data' => [['id' => 'b']], 'totalCount' => 3, 'hasMore' => true, 'limit' => 1, 'offset' => 1],
+        ['data' => [['id' => 'c']], 'totalCount' => 3, 'hasMore' => false, 'limit' => 1, 'offset' => 2],
+    ];
+
+    $connector = fakeConnector(function () use (&$pages): AsaasResult {
+        return AsaasResult::success(array_shift($pages), RawResponse::fake());
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 1]), preserve_keys: false);
+
+    expect($items)->toBe([['id' => 'a'], ['id' => 'b'], ['id' => 'c']]);
+});
+
+it('all ignores a totalCount the envelope omits, so the walk is driven by hasMore alone', function (): void {
+    $pages = [
+        ['data' => [['id' => 'a']], 'hasMore' => true, 'limit' => 1, 'offset' => 0],
+        ['data' => [['id' => 'b']], 'hasMore' => false, 'limit' => 1, 'offset' => 1],
+    ];
+
+    $connector = fakeConnector(function () use (&$pages): AsaasResult {
+        return AsaasResult::success(array_shift($pages), RawResponse::fake());
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 1]), preserve_keys: false);
+
+    expect($items)->toBe([['id' => 'a'], ['id' => 'b']]);
+});
+
+it('all stops on a single-row totalCount, not just on larger ones', function (): void {
+    $calls = 0;
+
+    $connector = fakeConnector(function () use (&$calls): AsaasResult {
+        $calls++;
+
+        return AsaasResult::success(
+            ['data' => [['id' => 'r1']], 'totalCount' => 1, 'hasMore' => true, 'limit' => 1, 'offset' => 0],
+            RawResponse::fake(),
+        );
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments', []));
+
+    expect($items[0])->toBe(['id' => 'r1']);
+    expect($items[1])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($calls)->toBe(1);
+});

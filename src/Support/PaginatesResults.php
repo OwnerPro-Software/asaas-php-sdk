@@ -68,6 +68,8 @@ trait PaginatesResults
             array_merge($filters, ['offset' => 0, 'limit' => $limit]),
         );
 
+        $delivered = 0;
+
         do {
             if (! $result->success) {
                 yield new AsaasPaginatedError(
@@ -77,7 +79,7 @@ trait PaginatesResults
                     $result->limit,
                 );
 
-                return;
+                break;
             }
 
             if ($result->data === []) {
@@ -86,6 +88,43 @@ trait PaginatesResults
 
             foreach ($result->data as $item) {
                 yield $item;
+            }
+
+            $delivered += count($result->data);
+
+            // The envelope's own count is the walk's backstop. Every domain
+            // spec defines `totalCount` as "quantidade total de itens para os
+            // filtros informados" — the whole filtered set, not the page — so
+            // having delivered that many rows means the walk is done. Without
+            // this, an endpoint that ignored `offset` (a real possibility on
+            // the routes whose query parameters Asaas never documented) would
+            // answer every request with the same non-empty page and
+            // `hasMore: true`, which the empty-page check above never catches:
+            // the generator would emit duplicates forever. `totalCount` is 0
+            // when the envelope omits it, and then there is nothing to compare
+            // against.
+            if ($result->totalCount > 0 && $delivered >= $result->totalCount) {
+                if ($result->hasMore) {
+                    // The envelope contradicts itself: the whole filtered set has
+                    // been delivered, yet the server still claims another page.
+                    // Stopping is the only way not to loop, but stopping quietly
+                    // would be a truncated walk indistinguishable from a complete
+                    // one — the exact failure this backstop exists beside. Say so.
+                    yield new AsaasPaginatedError(
+                        [[
+                            'code' => 'PAGINATION_INCONSISTENT',
+                            'description' => sprintf(
+                                'Walk stopped after %d rows, the totalCount the API reported, but the same response still set hasMore=true. The endpoint is contradicting itself — rows may be missing. Page manually with next() if you need to inspect this.',
+                                $delivered,
+                            ),
+                        ]],
+                        $result->response,
+                        $result->offset,
+                        $result->limit,
+                    );
+                }
+
+                break;
             }
 
             $result = $result->next();

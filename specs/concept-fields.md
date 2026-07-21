@@ -75,3 +75,12 @@ Maintenance rule: if a future spec refresh adds an entry here to `asaas_openapi.
 - **Source:** https://docs.asaas.com/reference/recuperar-walletid — page omits the section, but the endpoint follows Asaas's universal `offset`/`limit` pagination convention used on every other list endpoint.
 - **Accepted query params:** `offset` (int, default 0), `limit` (int, default 100).
 - **SDK method:** `OwnerPro\Asaas\Account\MyAccountResource::wallets(array $query = []): AsaasPaginatedResult`.
+
+---
+
+## `/v3/payments/{id}/refunds` GET query parameters
+
+- **Endpoint** is in spec (`specs/domains/payment-refunds.json`), but its `parameters` array carries only the `id` path param.
+- **Source:** https://docs.asaas.com/reference/listar-estornos-de-uma-cobranca — page documents no query parameters. The *response* schema in the same spec file declares the standard envelope (`object`, `hasMore`, `totalCount`, `limit`, `offset`, `data`), so the endpoint is paginated even though the request side is undocumented; it follows Asaas's universal `offset`/`limit` convention as `/v3/wallets/` does.
+- **Accepted query params:** `offset` (int, default 0), `limit` (int, default 100). **Unverified against a live endpoint** — unlike the other entries here, this one is inferred from the response envelope rather than read off a doc page. `PaginatesResults::all()` terminates on `totalCount` as well as on an empty page, so a server that ignored `offset` would stop the walk rather than loop.
+- **SDK methods:** `OwnerPro\Asaas\Payment\PaymentResource::listRefunds(string $id, array $query = []): AsaasPaginatedResult`, `::allRefunds(string $id, array $filters = []): Generator`.
