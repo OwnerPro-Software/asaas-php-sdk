@@ -1383,7 +1383,7 @@ $asaas = AsaasClient::fake()
 
 ### Simulating transport failures
 
-Pass `throwOnTransportFailure: true` to the fake to mirror the [typed transport exception contract](#transport-failures-opt-in-typed-exceptions), then stub failures per phase. The stubs build production-shaped exceptions (an `Illuminate` `ConnectionException` wrapping a Guzzle `ConnectException` with the real cURL errno), so they flow through the same classifier as live traffic and honour the flag either way:
+Pass `throwOnTransportFailure: true` to the fake to mirror the [typed transport exception contract](#transport-failures-opt-in-typed-exceptions), then stub failures per phase. The stubs raise a production-shaped Guzzle `ConnectException` carrying the real cURL errno, so they flow through the same classifier as live traffic and honour the flag either way:
 
 ```php
 use OwnerPro\Asaas\Support\IndeterminateResultException;
@@ -1401,6 +1401,8 @@ try {
 ```
 
 With `throwOnTransportFailure` omitted (default), the same stubs reproduce the legacy behavior: `stubRequestNotDelivered`/`stubIndeterminateResult` yield the `CONNECTION_ERROR` result, and `phase: 'body'` yields a success with empty `data` — exactly what production returns without the flag.
+
+A request that fails in transport is still a request that was sent: both stubs record it (with a `null` response), so `assertSent`/`assertSentCount` see it and `assertNotSent`/`assertNothingSent` correctly fail. Raw `stubException()` throws your exception as-is and bypasses that recording — reach for the phase stubs when the test asserts on what was sent.
 
 Closure stubs receive `(Illuminate\Http\Client\Request $request, array $options)` from Laravel's HTTP client and may return a `Response`, a `PromiseInterface`, or any value `Http::response()` accepts. The `$options` parameter can be ignored when not needed:
 

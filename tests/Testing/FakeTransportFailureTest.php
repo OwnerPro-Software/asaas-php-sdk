@@ -3,48 +3,50 @@
 declare(strict_types=1);
 
 use GuzzleHttp\Exception\ConnectException;
-use Illuminate\Http\Client\ConnectionException;
+use GuzzleHttp\Psr7\Request;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\Support\IndeterminateResultException;
 use OwnerPro\Asaas\Support\RequestNotDeliveredException;
 use OwnerPro\Asaas\Testing\FakeAsaasClient;
 use OwnerPro\Asaas\Testing\FakeTransportFailure;
+use PHPUnit\Framework\ExpectationFailedException;
 
 mutates(FakeTransportFailure::class, FakeAsaasClient::class);
 
 // --- FakeTransportFailure builds production-shaped exceptions ---
 
-it('requestNotDelivered builds a ConnectionException wrapping a Guzzle ConnectException with the phase errno', function (string $phase, int $errno): void {
-    $exception = FakeTransportFailure::requestNotDelivered($phase);
-
-    expect($exception)->toBeInstanceOf(ConnectionException::class);
-
-    $previous = $exception->getPrevious();
-    expect($previous)->toBeInstanceOf(ConnectException::class);
-    expect($previous->getHandlerContext()['errno'])->toBe($errno);
+it('notDeliveredErrno maps each phase to its cURL errno', function (string $phase, int $errno): void {
+    expect(FakeTransportFailure::notDeliveredErrno($phase))->toBe($errno);
 })->with([
     'dns' => ['dns', 6],
     'connect' => ['connect', 7],
     'tls' => ['tls', 35],
 ]);
 
-it('indeterminateResult builds a ConnectionException wrapping a Guzzle ConnectException with the phase errno', function (string $phase, int $errno): void {
-    $exception = FakeTransportFailure::indeterminateResult($phase);
-
-    $previous = $exception->getPrevious();
-    expect($previous)->toBeInstanceOf(ConnectException::class);
-    expect($previous->getHandlerContext()['errno'])->toBe($errno);
+it('indeterminateErrno maps each phase to its cURL errno', function (string $phase, int $errno): void {
+    expect(FakeTransportFailure::indeterminateErrno($phase))->toBe($errno);
 })->with([
     'read' => ['read', 28],
     'transfer' => ['transfer', 56],
 ]);
 
-it('requestNotDelivered rejects unknown phases', function (): void {
-    FakeTransportFailure::requestNotDelivered('read');
+it('connectException carries the errno in the handler context and the given request', function (): void {
+    $request = new Request('POST', 'https://asaas.test/v3/transfers');
+
+    $exception = FakeTransportFailure::connectException(7, $request);
+
+    expect($exception)->toBeInstanceOf(ConnectException::class);
+    expect($exception->getHandlerContext()['errno'])->toBe(7);
+    expect($exception->getRequest())->toBe($request);
+    expect($exception->getMessage())->toBe('Simulated transport failure (cURL error 7)');
+});
+
+it('notDeliveredErrno rejects unknown phases', function (): void {
+    FakeTransportFailure::notDeliveredErrno('read');
 })->throws(InvalidArgumentException::class, 'Unknown transport failure phase "read"; expected one of: dns, connect, tls.');
 
-it('indeterminateResult rejects unknown phases', function (): void {
-    FakeTransportFailure::indeterminateResult('dns');
+it('indeterminateErrno rejects unknown phases', function (): void {
+    FakeTransportFailure::indeterminateErrno('dns');
 })->throws(InvalidArgumentException::class, 'Unknown transport failure phase "dns"; expected one of: read, transfer.');
 
 it('stubIndeterminateResult rejects unknown phases listing body among the valid ones', function (): void {
@@ -138,6 +140,55 @@ it('stubRequestNotDelivered returns the legacy CONNECTION_ERROR result when the 
 
     expect($result->success)->toBeFalse();
     expect($result->errors)->toBe([['code' => 'CONNECTION_ERROR', 'description' => 'Unable to connect to the Asaas API.']]);
+});
+
+// --- a failed request is still a sent request ---
+
+it('records the request behind a stubRequestNotDelivered so assertions can see it', function (): void {
+    $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
+
+    $fake->payments()->find('pay_1');
+
+    expect($fake->recorded('payments'))->toHaveCount(1);
+
+    $fake->assertSent('payments');
+    $fake->assertSentCount(1);
+});
+
+it('records the request behind a stubIndeterminateResult so assertions can see it', function (): void {
+    $fake = AsaasClient::fake()->stubIndeterminateResult('payments', 'transfer');
+
+    $fake->payments()->find('pay_1');
+
+    $fake->assertSent('payments');
+    $fake->assertSentCount(1);
+});
+
+it('assertNotSent fails once a request was issued against a transport-failure stub', function (): void {
+    $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
+
+    $fake->payments()->find('pay_1');
+
+    $fake->assertNotSent('payments');
+})->throws(ExpectationFailedException::class);
+
+it('assertNothingSent fails once a request was issued against a transport-failure stub', function (): void {
+    $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
+
+    $fake->payments()->find('pay_1');
+
+    $fake->assertNothingSent();
+})->throws(ExpectationFailedException::class);
+
+it('records the failed request with its real url and a null response', function (): void {
+    $fake = AsaasClient::fake()->stubRequestNotDelivered('payments');
+
+    $fake->payments()->find('pay_1');
+
+    [$request, $response] = $fake->recorded('payments')[0];
+
+    expect($request->url())->toBe('https://api-sandbox.asaas.com/v3/payments/pay_1');
+    expect($response)->toBeNull();
 });
 
 it('stubIndeterminateResult with body phase returns the legacy empty success when the flag is off', function (): void {

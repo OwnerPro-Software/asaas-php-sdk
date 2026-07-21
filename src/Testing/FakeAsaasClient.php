@@ -157,6 +157,12 @@ final class FakeAsaasClient implements AsaasClientContract
         return $this;
     }
 
+    /**
+     * Throws `$throwable` instead of returning a response. The request is not
+     * recorded — only failures Laravel itself marshals (see
+     * `stubRequestNotDelivered()` / `stubIndeterminateResult()`) stay visible
+     * to `assertSent`/`assertNotSent`.
+     */
     public function stubException(string $pattern, Throwable $throwable): self
     {
         $this->register(
@@ -179,7 +185,7 @@ final class FakeAsaasClient implements AsaasClientContract
      */
     public function stubRequestNotDelivered(string $pattern, string $phase = 'connect'): self
     {
-        return $this->stubException($pattern, FakeTransportFailure::requestNotDelivered($phase));
+        return $this->stubTransportFailure($pattern, FakeTransportFailure::notDeliveredErrno($phase));
     }
 
     /**
@@ -207,7 +213,7 @@ final class FakeAsaasClient implements AsaasClientContract
             ));
         }
 
-        return $this->stubException($pattern, FakeTransportFailure::indeterminateResult($phase));
+        return $this->stubTransportFailure($pattern, FakeTransportFailure::indeterminateErrno($phase));
     }
 
     /** @param list<array<string, mixed>> $pages */
@@ -259,6 +265,19 @@ final class FakeAsaasClient implements AsaasClientContract
     protected function resolvePattern(string $pattern): string
     {
         return self::buildAbsolutePattern($this->baseUrl, $pattern);
+    }
+
+    /**
+     * Register a stub that fails the way cURL does, so Laravel marshals it
+     * through `marshalConnectionException()` and records the request.
+     */
+    private function stubTransportFailure(string $pattern, int $errno): self
+    {
+        $this->register($pattern, static function (Request $request) use ($errno): never {
+            throw FakeTransportFailure::connectException($errno, $request->toPsrRequest());
+        });
+
+        return $this;
     }
 
     private static function buildAbsolutePattern(string $baseUrl, string $pattern): string

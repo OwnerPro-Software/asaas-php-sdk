@@ -5,56 +5,71 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Testing;
 
 use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Psr7\Request;
-use Illuminate\Http\Client\ConnectionException;
 use InvalidArgumentException;
+use Psr\Http\Message\RequestInterface;
 
 /**
- * Builds the same exception shape a real transport failure produces: an
- * Illuminate `ConnectionException` wrapping a Guzzle `ConnectException` whose
- * handler context carries the cURL errno for the requested phase. Stubs built
- * here therefore flow through `TransportFailureClassifier` exactly like
- * production failures, so fakes honour the connector's
- * `throwOnTransportFailure` flag instead of bypassing it.
+ * Builds the same exception a real transport failure produces: a Guzzle
+ * `ConnectException` whose handler context carries the cURL errno for the
+ * requested phase.
+ *
+ * Stubs throw the Guzzle exception rather than an Illuminate
+ * `ConnectionException` so the failure flows through
+ * `PendingRequest::marshalConnectionException()` exactly like a production
+ * cURL error: the request/response pair is recorded on the factory (making it
+ * visible to `assertSent`/`assertNotSent`) before the Illuminate exception is
+ * raised. Throwing the Illuminate exception directly would skip that step and
+ * leave the request invisible to the assertion helpers.
+ *
+ * The errno lookups are separate from the exception builder so callers can
+ * validate a phase eagerly, at stub-registration time, while deferring
+ * construction until the request is in hand.
  */
 final class FakeTransportFailure
 {
     /** @param 'connect'|'dns'|'tls' $phase */
-    public static function requestNotDelivered(string $phase): ConnectionException
+    public static function notDeliveredErrno(string $phase): int
     {
-        return self::connectionException(self::context($phase, self::notDeliveredPhases()));
+        return self::errno($phase, self::notDeliveredPhases());
     }
 
     /** @param 'read'|'transfer' $phase */
-    public static function indeterminateResult(string $phase): ConnectionException
+    public static function indeterminateErrno(string $phase): int
     {
-        return self::connectionException(self::context($phase, self::indeterminatePhases()));
+        return self::errno($phase, self::indeterminatePhases());
     }
 
-    /** @return array<string, array<string, int|float>> */
+    public static function connectException(int $errno, RequestInterface $request): ConnectException
+    {
+        return new ConnectException(
+            sprintf('Simulated transport failure (cURL error %d)', $errno),
+            $request,
+            null,
+            ['errno' => $errno],
+        );
+    }
+
+    /** @return array<string, int> */
     private static function notDeliveredPhases(): array
     {
         return [
-            'dns' => ['errno' => 6], // CURLE_COULDNT_RESOLVE_HOST
-            'connect' => ['errno' => 7], // CURLE_COULDNT_CONNECT
-            'tls' => ['errno' => 35], // CURLE_SSL_CONNECT_ERROR
+            'dns' => 6, // CURLE_COULDNT_RESOLVE_HOST
+            'connect' => 7, // CURLE_COULDNT_CONNECT
+            'tls' => 35, // CURLE_SSL_CONNECT_ERROR
         ];
     }
 
-    /** @return array<string, array<string, int|float>> */
+    /** @return array<string, int> */
     private static function indeterminatePhases(): array
     {
         return [
-            'read' => ['errno' => 28], // CURLE_OPERATION_TIMEDOUT
-            'transfer' => ['errno' => 56], // CURLE_RECV_ERROR
+            'read' => 28, // CURLE_OPERATION_TIMEDOUT
+            'transfer' => 56, // CURLE_RECV_ERROR
         ];
     }
 
-    /**
-     * @param  array<string, array<string, int|float>>  $phases
-     * @return array<string, int|float>
-     */
-    private static function context(string $phase, array $phases): array
+    /** @param array<string, int> $phases */
+    private static function errno(string $phase, array $phases): int
     {
         if (! isset($phases[$phase])) {
             throw new InvalidArgumentException(sprintf(
@@ -65,18 +80,5 @@ final class FakeTransportFailure
         }
 
         return $phases[$phase];
-    }
-
-    /** @param array<string, int|float> $context */
-    private static function connectionException(array $context): ConnectionException
-    {
-        $connectException = new ConnectException(
-            sprintf('Simulated transport failure (cURL error %d)', $context['errno']),
-            new Request('POST', 'https://asaas.test/simulated'),
-            null,
-            $context,
-        );
-
-        return new ConnectionException($connectException->getMessage(), previous: $connectException);
     }
 }
