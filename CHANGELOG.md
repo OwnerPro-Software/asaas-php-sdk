@@ -56,6 +56,39 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   `false`. On non-final pages `hasMore` remains a default, so a page declaring
   `hasMore: false` still ends the walk there — that is the only way to pin the
   termination contract. Every other key a page declares is honoured either way.
+- **`Connector::postMultipart()` requires a `filename` on every entry of
+  `$files`.** Omitting it never reached the filename guard at all: `attach()`
+  leaves the key out and the HTTP client substitutes the local file's name,
+  disclosing it. The key was already passed by every caller in the SDK; a part
+  that is not a file belongs in `$data`. Omitting it now raises
+  `InvalidArgumentException`. See *Security*.
+- **A multipart part may not carry its own `Content-Disposition` header.**
+  Guzzle writes its own only when the caller supplied none, so this header
+  silently replaced the `name` and `filename` the guard had just validated.
+  Rejected with `InvalidArgumentException`; pass the part's `name` and
+  `filename` instead. `Content-Length` is deliberately still accepted even
+  though Guzzle defers to it the same way — a non-seekable stream cannot report
+  its size, and supplying the length is the only way to describe such a part.
+- **`$data` may not describe file parts.** Laravel promotes any `$data` entry
+  that is an array carrying both `name` and `contents` to a multipart element,
+  with its own `filename` and `headers` — none of which passed
+  `ContentDispositionGuard`. Writing the part in the wrong argument therefore
+  bypassed the whole guard, and a bare file handle in `$data` reached the same
+  local-filename fallback. Both now raise `InvalidArgumentException`.
+- **Invalid stub and assertion patterns now throw where they are written.** The
+  fake validated a pattern inside its router, which is reached only when no
+  earlier stub matched first — so a bad pattern sitting behind a catch-all was
+  never validated at all, and the caller silently got the generic stub. The
+  check now runs in the constructor and in every method that registers a stub:
+  `stub()`, `stubError()`, `stubPages()`, `stubException()`,
+  `stubRequestNotDelivered()` and `stubIndeterminateResult()`. Tests that
+  asserted the throw at request time need to expect it at registration.
+- **`$result->errors[0]['description']` can now hold `***` where it held the
+  response body.** This is the one redaction in the SDK that replaces a value
+  rather than a view of it, because a description is free text and nothing
+  downstream can recognise a credential inside it at print time — see
+  *Security*. Code matching on the description of a non-canonical error no
+  longer sees the raw body; read `$result->response->body()` for that.
 
 ### Security
 
@@ -69,6 +102,42 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   registration, installed from `AsaasServiceProvider::boot()` for Laravel and
   from `AsaasClient::for()` for plain-PHP hosts. Custom classes join by
   implementing the interface.
+- **An upload filename of `'0'` leaked the local file's name.** The guard
+  rejected an empty name because the HTTP client then falls back to the stream's
+  `uri` metadata — but it tested `=== ''` while Guzzle tests `empty()`, so the
+  one-character name `'0'` passed the guard and was substituted on the wire.
+  (Guzzle special-cases `'0'` where it writes the header, but not where it
+  decides to substitute.) Both are now rejected, as is an omitted `filename` —
+  see *Breaking*. `'0.png'` and the like are unaffected.
+- **`username` is redacted out of responses.** The `/fiscalInfo/` endpoints echo
+  the municipal-portal login, and `FiscalInfoRequest` already marks it
+  `#[SensitiveParameter]` and masks it on the way out — redacting the request
+  while printing the response in full was not a defensible line. It is the only
+  field named `username` in `specs/domains/`.
+- **Response headers go through the scrub too.** Asaas puts no credential in
+  one, but `RawResponse` is also shown for whatever answered in its place, and a
+  proxy echoing an `authToken` header is worth not printing. `headers()` still
+  answers the untouched values, as `body()` does.
+- **A rejected request could print a live credential in `$result->errors`.**
+  When the response is not the canonical error envelope, `ErrorEnvelope`
+  synthesizes an `UNKNOWN_ERROR` row whose `description` is the response body —
+  and a rejected `POST /accounts` answers with the subaccount payload, `apiKey`
+  included. `$errors` is the one part of a result no downstream scrub reached:
+  the result classes scrub `data` by field name, and a credential pasted into a
+  description is a string, not a field they can recognise. The same `dump()`
+  therefore showed `apiKey: ***` for the response body and the live key two
+  fields away. The body is now scrubbed before it becomes a description — and
+  before it is truncated, for the reason given above. A body that is not JSON
+  has no field names to key on and is unchanged. Unlike every other redaction
+  here, this one replaces the stored value rather than the view of it: the scrub
+  has to happen when the row is synthesized, because a description is free text
+  and no print-time hook can pick a credential out of it. Listed under
+  *Breaking* as well.
+  A row Asaas passed through untouched needs the other kind of cover, so the
+  result classes now scrub `errors` by field name in `__debugInfo()` /
+  `jsonSerialize()` as they already did for `data`. The two layers answer
+  different questions — a credential *pasted into* a description versus one
+  carried *as a field* on a row — and neither substitutes for the other.
 - **Credentials Asaas sends back were carried verbatim on public properties.**
   Redaction was request-side only, so `AsaasResult`, `AsaasPaginatedResult` and
   `RawResponse` disclosed any secret in the response body. Four response fields
@@ -354,7 +423,6 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   export, the entry was steering the SDK toward an endpoint that is not there;
   it now matches the docs, and the reasoning is pinned on the method and by an
   empty-body assertion in the test.
-
 - **`UpdateInvoiceRequest` sent `municipalServiceName`, which the update
   endpoint does not accept.** `PUT /v3/invoices/{id}` accepts exactly
   `serviceDescription`, `observations`, `externalReference`, `value`,
@@ -424,7 +492,21 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   back as a run of spaces, the same "nothing to act on in the log" failure the
   empty-body fix above was meant to close. The body is now trimmed before the
   check.
-
+- **An error row shaped as a list was passed through as if it were an object.**
+  `{"errors": [[1, 2]]}` survived the `is_array()` check and reached the caller
+  annotated as carrying `code`/`description`, which it has no way to. Unreadable
+  rows are now dropped, and the envelope falls back to the synthesized row only
+  when *nothing* in the list can be read as an error object — discarding a
+  readable `invalid_cpfCnpj` because a sibling entry is junk would replace the
+  diagnosis the caller needed with a dump of the body. `{}` — which decodes to
+  the same PHP value as `[]` — is still a canonical row and is still passed
+  through; `AsaasRequestException` substitutes its own message for it.
+- **The terminal page of a lone `hasMore: true` stub dropped the envelope the
+  stub declared.** It answered with a fixed `object: 'list'` and discarded any
+  extra top-level field, so a test describing a different envelope got a page
+  its own assertions could not recognise — the opposite of the rule
+  `stubPages()` follows. It now keeps the stub's envelope and replaces only the
+  walk-position keys.
 - **A stub modelling a later page answered with an empty one.** A lone `stub()`
   declaring `hasMore: true` served its body only at offset 0, so a stub written
   as page two (`'offset' => 10`) answered `->list(['offset' => 10])` with the
@@ -452,15 +534,31 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   which `allRefunds()` now walks. The walk also stops once the envelope's own
   `totalCount` has been delivered — every domain spec defines that field as
   "quantidade total de itens para os filtros informados", the whole filtered set
-  rather than the page. An envelope omitting `totalCount` reports `0` and only
-  the empty-page rule applies. When the brake fires while the same response
-  still says `hasMore: true`, the endpoint is contradicting itself and rows may
-  be missing, so the generator yields a final `AsaasPaginatedError` with code
+  rather than the page. When that brake fires while the same response still says
+  `hasMore: true`, the endpoint is contradicting itself and rows may be missing,
+  so the generator yields a final `AsaasPaginatedError` with code
   `PAGINATION_INCONSISTENT` instead of stopping quietly — a silent stop there
   would be indistinguishable from a complete walk, which is the failure this
   backstop sits beside. `specs/concept-fields.md` records the refunds
   query-parameter gap and flags it as inferred from the response envelope rather
   than read off a doc page.
+- **`all()` handed the caller the same row several times before stopping, and
+  did not stop at all without `totalCount`.** The backstop above only fires once
+  as many rows as the whole filtered set have been delivered; on a page shorter
+  than that set, those rows are the *same* rows handed over repeatedly, so a
+  consumer summing a `value` field had already double-counted by the time the
+  error arrived. An envelope omitting `totalCount` reports `0` and never reached
+  the backstop at all, leaving that walk unbounded. The walk now also stops when
+  a page carries exactly the rows of the page before it — `next()` always
+  advances the cursor by the rows just delivered, so a page repeating the one
+  before it *while still saying `hasMore: true`* means the endpoint disregarded
+  the offset it was sent. The check runs *before* the rows are yielded, so no
+  duplicate reaches the caller, and it yields a final `AsaasPaginatedError` with
+  the new code `PAGINATION_STALLED`. Two qualifiers carry weight: the pages must
+  be *consecutive* (a row set reappearing after a different page in between is a
+  real walk), and the repeat must still promise another page — a page saying the
+  walk is over ends it either way, and a sequence of fixtures in `stubPages()`
+  produces exactly the shape a stalled endpoint does.
 
 ### Changed
 
@@ -950,6 +1048,7 @@ Initial public release. See [README](README.md) for full feature documentation.
 - `WebhookVerifier` with timing-safe token comparison and configurable IP allowlist.
 
 [Unreleased]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.4.0...v2.0.0
 [1.4.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.2.1...v1.3.0

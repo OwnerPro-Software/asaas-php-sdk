@@ -721,19 +721,36 @@ would otherwise report `0` for every page. `next()` advances by the number of
 rows the page actually delivered (not by `limit`, which a short page would
 overshoot) and returns `null` once a page comes back empty.
 
-`all()` stops on an empty page **and** once it has delivered the envelope's own
-`totalCount` — which every domain spec defines as the total for the filters
-sent, not the page. The second brake matters on endpoints whose query parameters
-Asaas never documented: one that ignored `offset` would answer every request
-with the same non-empty page and `hasMore: true`, and the generator would emit
-duplicates forever. An envelope that omits `totalCount` reports `0`, and then
-only the empty-page rule applies.
+`all()` has three brakes, and a walk that trips any of them past the first ends
+with a final `AsaasPaginatedError` rather than a quiet `return` — a silent stop
+would look exactly like a complete walk. Code that already checks each yielded
+item for `AsaasPaginatedError` needs no change.
 
-If that brake fires while the response *still* says `hasMore: true`, the
-endpoint is contradicting itself and rows may be missing. Rather than stop
-quietly — which would look exactly like a complete walk — the generator yields a
-final `AsaasPaginatedError` carrying code `PAGINATION_INCONSISTENT`. Code that
-already checks each yielded item for `AsaasPaginatedError` needs no change.
+| Brake | Fires when | Yields |
+| --- | --- | --- |
+| Empty page | the page carries no rows | nothing; the walk just ends |
+| Repeated page | a page carries exactly the rows of the page before it **and still says `hasMore: true`** | `PAGINATION_STALLED` |
+| `totalCount` reached, `hasMore` still true | the envelope contradicts itself | `PAGINATION_INCONSISTENT` |
+
+The last two matter on endpoints whose query parameters Asaas never documented.
+One that ignored `offset` would answer every request with the same non-empty
+page and `hasMore: true`, and the empty-page rule alone would let the generator
+emit duplicates forever.
+
+The repeated-page brake is what catches that, and it fires **before** the
+duplicate rows are handed over: `next()` always advances the cursor by the rows
+just delivered, so a page repeating the one before it while still promising
+another is an endpoint that disregarded the offset. `totalCount` alone is not
+enough — on a page shorter than the filtered set it only fires after the same
+rows have gone out several times, and a consumer summing a `value` field would
+already have double-counted. An envelope that omits `totalCount` reports `0` and
+never reaches that brake at all; the repeated-page check ends those walks too.
+
+`hasMore` is load-bearing there. Two consecutive pages carrying the same rows
+are ambiguous on their own — a sequence of fixtures in `stubPages()` produces
+exactly the shape a stalled endpoint does — but a page saying the walk is over
+ends it either way, so only a repeat that still promises another page is a walk
+that cannot advance.
 
 ### Lazy Iteration
 
@@ -1200,7 +1217,11 @@ $tenantClient->myAccount()->uploadDocumentFile(
 //    Monitor $status['bankAccountInfo'] to track approval (PENDING → APPROVED).
 ```
 
-Every upload filename (`uploadDocumentFile`, `updateDocumentFile`, `updatePaymentCheckoutConfig`, `payments()->uploadDocument`, `fiscalInfo()->update`) is validated before it reaches the HTTP client: directory components are stripped, and an empty name, a name over 255 chars, or one carrying a double quote, a backslash or a control character throws `InvalidArgumentException`. Those characters break out of the multipart `Content-Disposition` header — the double quote closes the value outright, and a trailing backslash escapes the closing quote — and would let a caller-supplied name forge extra form fields. A browser-supplied `getClientOriginalName()` can therefore be passed straight through. The part name each file is sent under is validated by the same rules, for callers reaching `Connector::postMultipart()` directly — as are any extra `headers` such a caller hangs on a part: the HTTP client writes them into the part preamble as `"{$name}: {$value}\r\n"` with no validation of its own, so a CR or LF in either half would close the header block and append arbitrary parts. Header names must be RFC 7230 tokens and values must carry no control characters; quotes and backslashes are allowed there, since a header value is not a quoted string.
+Every upload filename (`uploadDocumentFile`, `updateDocumentFile`, `updatePaymentCheckoutConfig`, `payments()->uploadDocument`, `fiscalInfo()->save`) is validated before it reaches the HTTP client: directory components are stripped, and a name over 255 chars, or one carrying a double quote, a backslash or a control character, throws `InvalidArgumentException`. Those characters break out of the multipart `Content-Disposition` header — the double quote closes the value outright, and a trailing backslash escapes the closing quote — and would let a caller-supplied name forge extra form fields. A browser-supplied `getClientOriginalName()` can therefore be passed straight through.
+
+A name the HTTP client would read as **absent** is rejected for a different reason: it then falls back to the stream's `uri` metadata and ships the local file's name, disclosing what your server called it. "Absent" is Guzzle's definition rather than PHP's — it tests the name with `empty()`, so `''` and the single character `'0'` are both rejected (`'0.png'` is fine). For the same reason `Connector::postMultipart()` requires a `filename` on every entry of `$files`: omitting it skips the guard entirely. A part that is not a file belongs in `$data`.
+
+The part name each file is sent under is validated by the same rules, for callers reaching `Connector::postMultipart()` directly — as are any extra `headers` such a caller hangs on a part: the HTTP client writes them into the part preamble as `"{$name}: {$value}\r\n"` with no validation of its own, so a CR or LF in either half would close the header block and append arbitrary parts. Header names must be RFC 7230 tokens and values must carry no control characters; quotes and backslashes are allowed there, since a header value is not a quoted string. One name is refused outright: a part may not carry its own `Content-Disposition`, because Guzzle writes its own only when the caller supplied none — so it would silently replace the name and filename just validated.
 
 Listen to the `ACCOUNT_STATUS_*` webhook events (already in `WebhookEvent`) to react to approvals and rejections asynchronously.
 
@@ -1418,11 +1439,11 @@ dd(AsaasClient::for(apiKey: 'my-secret-key'));
 
 The mask is a constant width, not one asterisk per hidden character — the length of a secret is not published either.
 
-Redaction never touches the wire — `toArray()` still returns the real values, so the payload Asaas receives is unaffected.
+Redaction never touches the wire — `toArray()` still returns the real values, so the payload Asaas receives is unaffected. On the way back it is also view-only, with one exception: see [`$result->errors`](#secrets-asaas-sends-back) below.
 
 ### Secrets Asaas sends back
 
-Four response fields carry a live credential, and a result object exposes the response body on a public property:
+Five response fields carry a credential, and a result object exposes the response body on a public property:
 
 | Field | Returned by |
 | --- | --- |
@@ -1430,8 +1451,11 @@ Four response fields carry a live credential, and a result object exposes the re
 | `accessToken` | the `accounts()->…AccessToken…()` endpoints |
 | `authToken` | `webhooks()->list()` / `get()` — the webhook shared secret |
 | `creditCardToken` | the card tokenization endpoints |
+| `username` | `fiscalInfo()->recover()` / `save()` — the municipal-portal login |
 
-`AsaasResult` and `AsaasPaginatedResult` scrub those field names — at any nesting depth, and in every row of a page — before `print_r()`, `var_dump()`, `dump()`, `dd()`, `json_encode()` or an error page can print them. The `json_encode()` path is the one that reaches a log file: `Log::info('created', ['result' => $result])` hands the result to Monolog, which encodes its context. `RawResponse` scrubs them out of the body it shows while debugging:
+The first four grant the same authority as the value they stand in for. `username` is half a credential rather than a whole one, and is on the list because the request side already masks it — redacting it on the way out and printing it on the way back is not a line worth drawing.
+
+`AsaasResult` and `AsaasPaginatedResult` scrub those field names — at any nesting depth, and in every row of a page — before `print_r()`, `var_dump()`, `dump()`, `dd()`, `json_encode()` or an error page can print them. The `json_encode()` path is the one that reaches a log file: `Log::info('created', ['result' => $result])` hands the result to Monolog, which encodes its context. `RawResponse` scrubs both the body and the headers it shows while debugging:
 
 ```php
 $result = $asaas->accounts()->create([...]);
@@ -1443,10 +1467,12 @@ $result->data['apiKey'];      // the real key — store it, it is shown once
 $result->response->body();    // the exact bytes Asaas sent, unredacted
 ```
 
+**`$result->errors` is the exception to all of the above: there the value itself is replaced, not the view of it.** When Asaas answers a failure with something other than the canonical error envelope, the SDK synthesizes a row whose `description` is the response body — and a rejected `accounts()->create()` answers with the subaccount payload, key included. A description is a free-text string, so nothing downstream can recognise a credential inside it at print time; the scrub therefore happens when the row is built, and `$result->errors[0]['description']` holds `***` from then on. Reach for `$result->response->body()` if you need what Asaas actually sent. Code matching on description text should not expect the raw body back.
+
 Two things this does **not** do, by design:
 
 - **`serialize()` is allowed on results.** Unlike `AsaasClient` and the request DTOs, results are legitimately cached and queued, so they do not refuse it — and a serialized result of `accounts()->create()` carries the subaccount key in clear. Persist the fields you need, not the result.
-- **`$result->data` is a plain array.** `Log::info('created', $result->data)` logs the real key: nothing can intercept an array you pass on yourself. Reach for `$result->data['apiKey']` to store the key, never to print it.
+- **`$result->data` is a plain array.** `Log::info('created', $result->data)` logs the real key: nothing can intercept an array you pass on yourself. Reach for `$result->data['apiKey']` to store the key, never to print it. Unlike `errors`, `data` is redacted only in the debug views — the array itself always holds the real values.
 
 `dump()` / `dd()` coverage needs the caster to be installed. That happens automatically: the Laravel service provider does it on boot, and `AsaasClient::for()` does it for standalone use. If you build the client by hand (`new AsaasClient(new AsaasConnector(...))`) and want the caster before that point, register it yourself:
 

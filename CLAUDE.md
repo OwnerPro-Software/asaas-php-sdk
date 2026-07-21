@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API. Works both as a Laravel package (auto-discovered `ServiceProvider` + `Asaas` facade) and as a standalone library in plain PHP via `AsaasClient::for(apiKey: ...)`. Target: PHP 8.2+, `illuminate/http` 10/11/12.
+PHP SDK for the [Asaas](https://www.asaas.com/) payment platform API. Works both as a Laravel package (auto-discovered `ServiceProvider` + `Asaas` facade) and as a standalone library in plain PHP via `AsaasClient::for(apiKey: ...)`. Target: PHP 8.3+, `illuminate/http` 12/13 (see `composer.json` — it is the source of truth for the supported range).
 
 The public, user-facing contract is documented in `README.md` — consult it before changing any public API surface and update it whenever methods, parameters, or behavior change.
 
