@@ -519,11 +519,54 @@ it('rejects an absolute pattern instead of letting assertNotSent() pass uncondit
         ->toThrow(InvalidArgumentException::class, 'must be relative to the Asaas base URL');
 })->with(['assertSent', 'assertNotSent', 'recorded']);
 
-it('rejects an absolute stub pattern', function (): void {
-    $fake = AsaasClient::fake(['http://api-sandbox.asaas.com/v3/payments' => ['id' => 'pay_1']]);
+it('rejects a host-carrying pattern no matter how it is dressed up', function (string $pattern): void {
+    // Each of these names a host of its own and would be concatenated onto the
+    // base URL, building a doubled address that matches nothing — so
+    // assertNotSent() could not fail. The leading-slash form is the one that
+    // used to slip through: the guard read the raw pattern while the version
+    // guard beside it read the slash-stripped one.
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
 
-    expect(fn () => $fake->payments()->find('pay_1'))
+    expect(fn () => $fake->assertNotSent($pattern))
         ->toThrow(InvalidArgumentException::class, 'must be relative to the Asaas base URL');
+})->with([
+    '/https://api-sandbox.asaas.com/v3/payments*',
+    '///https://api-sandbox.asaas.com/v3/payments*',
+    'HTTPS://api-sandbox.asaas.com/v3/payments*',
+    'ftp://api-sandbox.asaas.com/v3/payments*',
+    '//api-sandbox.asaas.com/v3/payments*',
+]);
+
+it('still resolves a relative pattern whose first segment merely looks host-like', function (): void {
+    // The guard keys on the `://` marker, not on dots in a segment: a path is
+    // not a host just because it carries one.
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    expect($fake->recorded('api.asaas.com/payments'))->toBe([]);
+});
+
+it('rejects an absolute stub pattern where it was written', function (): void {
+    expect(fn () => AsaasClient::fake(['http://api-sandbox.asaas.com/v3/payments' => ['id' => 'pay_1']]))
+        ->toThrow(InvalidArgumentException::class, 'must be relative to the Asaas base URL');
+});
+
+it('rejects an invalid stub pattern even when an earlier stub would match first', function (): void {
+    // The router reaches a pattern only if nothing before it matched, so a bad
+    // pattern behind a catch-all used never to be validated at all: the caller
+    // wrote a specific stub, silently got the generic one, and saw no error.
+    expect(fn () => AsaasClient::fake([
+        'payments' => ['id' => 'catch_all'],
+        'https://api-sandbox.asaas.com/v3/payments/pay_1' => ['id' => 'specific'],
+    ]))->toThrow(InvalidArgumentException::class, 'must be relative to the Asaas base URL');
+});
+
+it('rejects an invalid pattern passed to stub() after construction', function (): void {
+    $fake = AsaasClient::fake();
+
+    expect(fn () => $fake->stub('v3/payments', ['id' => 'pay_1']))
+        ->toThrow(InvalidArgumentException::class, "already ends in '/v3'");
 });
 
 it('rejects a v3-prefixed pattern instead of letting assertNotSent() pass unconditionally', function (string $method): void {
@@ -555,9 +598,23 @@ it('does not mistake a path merely starting with v3 for the version segment', fu
     expect($fake->recorded('v3things'))->toBe([]);
 });
 
-it('rejects a v3-prefixed stub pattern', function (): void {
-    $fake = AsaasClient::fake(['v3/payments' => ['id' => 'pay_1']]);
-
-    expect(fn () => $fake->payments()->find('pay_1'))
+it('rejects a v3-prefixed stub pattern where it was written', function (): void {
+    expect(fn () => AsaasClient::fake(['v3/payments' => ['id' => 'pay_1']]))
         ->toThrow(InvalidArgumentException::class, "already ends in '/v3'");
 });
+
+it('rejects a host-carrying pattern padded with whitespace', function (string $pattern): void {
+    // Both guards anchor at `^`, so a single leading space used to walk a
+    // scheme — or a `v3/` — straight past them into the doubled URL they exist
+    // to reject, leaving assertNotSent unable to fail.
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    expect(fn () => $fake->assertNotSent($pattern))->toThrow(InvalidArgumentException::class);
+})->with([
+    ' https://api-sandbox.asaas.com/v3/payments*',
+    "\thttps://api-sandbox.asaas.com/v3/payments*",
+    '  //api-sandbox.asaas.com/v3/payments*',
+    ' v3/payments',
+    "v3/payments\n",
+]);

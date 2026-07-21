@@ -69,7 +69,7 @@ final class StubResponse
      * whereas a suppressed early stop would not be recoverable at all.
      *
      * @param  list<array<string, mixed>>  $pages
-     * @return list<PromiseInterface|Closure>
+     * @return list<PromiseInterface>
      */
     public static function normalizePages(array $pages): array
     {

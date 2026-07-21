@@ -23,6 +23,17 @@ use PHPUnit\Framework\Assert;
  * must therefore type the second parameter as `?Response` — a non-nullable
  * `Response` hint raises a `TypeError` the moment such a request is in the
  * stream.
+ *
+ * A transport-failed request is also recorded **without its multipart body**.
+ * Laravel rebuilds the `Request` from the PSR-7 message when it marshals the
+ * failure, and that path does not carry the multipart data across the way the
+ * recorder does on the success path; `Request::data()` can reconstruct JSON and
+ * form bodies from the raw body, but not multipart. So on a failed upload
+ * `$request->data()` is `[]` and `$request->hasFile('documentFile')` is
+ * `false` — meaning `assertSent(..., fn ($r) => $r->hasFile(...))` fails and
+ * `assertNotSent(..., fn ($r) => $r->hasFile(...))` passes for reasons that
+ * have nothing to do with what was sent. Assert on the URL and method for
+ * those, and pin the body with a separate test that lets the upload succeed.
  */
 trait RecordsHttpAssertions
 {

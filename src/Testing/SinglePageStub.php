@@ -56,19 +56,23 @@ final class SinglePageStub
     }
 
     /**
+     * The stub's own envelope is kept and only the walk-position keys are
+     * replaced, so the terminal page answers with the same shape the stub
+     * described — same rule `StubResponse::inferPagination()` states, and for
+     * the same reason: a caller who put `object` or an extra top-level field on
+     * the stub is describing the endpoint, and a page that quietly drops them
+     * is a page their assertions cannot recognise.
+     *
      * @param  array<string, mixed>  $body
      * @return array<string, mixed>
      */
     private static function terminalPage(array $body, int $offset, int $rowCount): array
     {
-        return [
-            'object' => 'list',
-            'hasMore' => false,
-            'totalCount' => $body['totalCount'] ?? $rowCount,
-            'limit' => $body['limit'] ?? $rowCount,
-            'offset' => $offset,
-            'data' => [],
-        ];
+        return array_merge(
+            ['object' => 'list', 'totalCount' => $rowCount, 'limit' => $rowCount],
+            $body,
+            ['hasMore' => false, 'offset' => $offset, 'data' => []],
+        );
     }
 
     /**

@@ -55,7 +55,7 @@ final class FakeAsaasClient implements AsaasClientContract
         $this->factory = new Factory;
 
         foreach ($stubs as $pattern => $stub) {
-            $this->stubs[$pattern] = $stub instanceof ResponseSequence ? $stub : StubResponse::normalize($stub);
+            $this->register($pattern, $stub);
         }
 
         $this->installRouter();
@@ -157,10 +157,17 @@ final class FakeAsaasClient implements AsaasClientContract
     }
 
     /**
-     * Throws `$throwable` instead of returning a response. The request is not
-     * recorded — only failures Laravel itself marshals (see
-     * `stubRequestNotDelivered()` / `stubIndeterminateResult()`) stay visible
-     * to `assertSent`/`assertNotSent`.
+     * Throws `$throwable` instead of returning a response.
+     *
+     * Whether the request stays visible to `assertSent`/`assertNotSent` depends
+     * on what is thrown, because recording happens inside Laravel's handler
+     * stack. `PendingRequest` marshals exactly two shapes —
+     * `GuzzleHttp\Exception\ConnectException` and `RequestException` — and each
+     * is recorded with a `null` response on the way past. Everything else,
+     * including a plain `TransferException`, propagates before the recorder
+     * runs and leaves no entry at all. Reach for `stubRequestNotDelivered()` /
+     * `stubIndeterminateResult()` when the point is to model a transport
+     * failure: they pick a shape that records.
      */
     public function stubException(string $pattern, Throwable $throwable): self
     {
@@ -220,8 +227,8 @@ final class FakeAsaasClient implements AsaasClientContract
     {
         $sequence = $this->factory->sequence();
 
-        foreach (StubResponse::normalizePages($pages) as $response) {
-            $sequence->pushResponse($response);
+        foreach (StubResponse::normalizePages($pages) as $promise) {
+            $sequence->pushResponse($promise);
         }
 
         $this->register($pattern, $sequence);
@@ -271,9 +278,19 @@ final class FakeAsaasClient implements AsaasClientContract
         return $this;
     }
 
-    /** @param array<string, mixed>|PromiseInterface|ResponseSequence|Closure $stub */
+    /**
+     * The pattern is resolved here, not only inside the router, so an invalid
+     * one is reported where it was written. The router reaches a pattern only
+     * when no earlier stub matched first, so a bad pattern sitting behind a
+     * catch-all was never validated at all: the caller wrote a specific stub,
+     * silently got the generic one, and saw no error anywhere.
+     *
+     * @param  array<string, mixed>|PromiseInterface|ResponseSequence|Closure  $stub
+     */
     private function register(string $pattern, array|PromiseInterface|ResponseSequence|Closure $stub): void
     {
+        $this->resolvePattern($pattern);
+
         $this->stubs[$pattern] = $stub instanceof ResponseSequence ? $stub : StubResponse::normalize($stub);
     }
 

@@ -36,9 +36,12 @@ final class StubPattern
      */
     public static function absolute(string $baseUrl, string $pattern): string
     {
-        $relative = ltrim($pattern, '/');
+        // Whitespace is stripped before anything else: both guards below anchor
+        // at `^`, so a single leading space walked a scheme — or a `v3/` — past
+        // them and into the doubled URL they exist to reject.
+        $relative = ltrim(trim($pattern), '/');
 
-        if (str_starts_with($pattern, 'http://') || str_starts_with($pattern, 'https://')) {
+        if (self::carriesHost($pattern, $relative)) {
             throw new InvalidArgumentException(sprintf(
                 "Stub and assertion patterns must be relative to the Asaas base URL; got '%s'. Drop the scheme and host — write 'payments/pay_1' rather than '%s/payments/pay_1'.",
                 $pattern,
@@ -56,5 +59,30 @@ final class StubPattern
         }
 
         return sprintf('%s/%s', $baseUrl, $relative).'*';
+    }
+
+    /**
+     * Answers whether the pattern names a host of its own.
+     *
+     * The scheme is looked for on the **leading-slash-stripped** pattern, the
+     * same string the version guard below reads and the same one that ends up
+     * concatenated onto the base URL. Reading the raw pattern instead left
+     * `/https://host/payments*` — one stray slash, a form `recorded()` accepts
+     * everywhere else — walking straight past the guard and into the doubled
+     * URL it exists to reject, which matches nothing and turns `assertNotSent`
+     * into an assertion that cannot fail.
+     *
+     * Any scheme is rejected, not just `http`/`https`, and the match is
+     * case-insensitive: the point is that the pattern carries a host, and
+     * `HTTPS://` and `ftp://` carry one just as `https://` does.
+     *
+     * The protocol-relative form `//host/path` names a host without a scheme,
+     * so it is read off the raw pattern — `ltrim()` has already eaten the
+     * marker by the time `$relative` exists.
+     */
+    private static function carriesHost(string $pattern, string $relative): bool
+    {
+        return preg_match('#^[a-z][a-z0-9+.-]*://#i', $relative) === 1
+            || str_starts_with(trim($pattern), '//');
     }
 }

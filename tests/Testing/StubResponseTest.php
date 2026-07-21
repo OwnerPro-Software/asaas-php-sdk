@@ -27,7 +27,7 @@ it('infers hasMore=false and totalCount=count when shape has data only', functio
 
     // Key order is not part of the contract — the body is decoded as a map —
     // so the envelope is compared by content.
-    expect($response->json())->toEqualCanonicalizing([
+    expect($response->json())->toEqual([
         'object' => 'list',
         'hasMore' => false,
         'totalCount' => 2,
@@ -69,7 +69,7 @@ it('preserves explicit object/limit/offset values during inference', function ()
 
     $response = $factory->createPendingRequest()->get('https://example.test/api/v3/y');
 
-    expect($response->json())->toEqualCanonicalizing([
+    expect($response->json())->toEqual([
         'object' => 'custom',
         'hasMore' => false,
         'totalCount' => 1,
@@ -89,7 +89,7 @@ it('preserves unknown top-level keys during inference', function (): void {
 
     $response = $factory->createPendingRequest()->get('https://example.test/api/v3/accounts');
 
-    expect($response->json())->toEqualCanonicalizing([
+    expect($response->json())->toEqual([
         'object' => 'list',
         'hasMore' => false,
         'totalCount' => 1,
@@ -199,7 +199,12 @@ it('serves the terminal page past page one, keeping the declared envelope', func
 
     $response = $factory->createPendingRequest()->get('https://example.test/api/v3/x?offset=1');
 
-    expect($response->json())->toBe([
+    // toEqual, not toBe: the terminal page merges the walk position over the
+    // stub's own envelope, so key order follows the stub. Order carries no
+    // meaning in a JSON object and pinning it would fail on a rearrangement
+    // that changes nothing. Not toEqualCanonicalizing, which would also sort
+    // nested arrays and stop pinning row order the day `data` is non-empty.
+    expect($response->json())->toEqual([
         'object' => 'list',
         'hasMore' => false,
         'totalCount' => 9,
@@ -218,12 +223,37 @@ it('derives the terminal totalCount and limit from the rows when undeclared', fu
 
     $response = $factory->createPendingRequest()->get('https://example.test/api/v3/x?offset=5');
 
-    expect($response->json())->toBe([
+    expect($response->json())->toEqual([
         'object' => 'list',
         'hasMore' => false,
         'totalCount' => 2,
         'limit' => 2,
         'offset' => 5,
+        'data' => [],
+    ]);
+});
+
+it('keeps the envelope the stub declared on the terminal page too', function (): void {
+    // Same rule inferPagination() states: a caller who put `object` or an extra
+    // top-level field on the stub is describing the endpoint, and a page that
+    // drops them is a page their assertions cannot recognise.
+    $factory = new Factory;
+    $factory->fake(['*' => StubResponse::normalize([
+        'object' => 'refundList',
+        'data' => [['id' => 'a']],
+        'hasMore' => true,
+        'requestUrl' => 'https://asaas.test/refund/abc',
+    ])]);
+
+    $response = $factory->createPendingRequest()->get('https://example.test/api/v3/x?offset=1');
+
+    expect($response->json())->toEqual([
+        'object' => 'refundList',
+        'requestUrl' => 'https://asaas.test/refund/abc',
+        'hasMore' => false,
+        'totalCount' => 1,
+        'limit' => 1,
+        'offset' => 1,
         'data' => [],
     ]);
 });
