@@ -285,13 +285,22 @@ final class FakeAsaasClient implements AsaasClientContract
      * catch-all was never validated at all: the caller wrote a specific stub,
      * silently got the generic one, and saw no error anywhere.
      *
+     * The **resolved** pattern is the key. Keying by the raw string made
+     * `'payments/*'`, `'/payments/*'` and `' payments/*'` three separate entries
+     * collapsing onto one glob, where the first registered always won and the
+     * rest sat in the map as dead weight — a stub that was accepted, never
+     * served, and never reported, since no `NoMatchingStubException` is raised
+     * while some entry does match. Registering an equivalent pattern now
+     * replaces the stub it is equivalent to, keeping its position in the map so
+     * the order the caller established still decides ties.
+     *
      * @param  array<string, mixed>|PromiseInterface|ResponseSequence|Closure  $stub
      */
     private function register(string $pattern, array|PromiseInterface|ResponseSequence|Closure $stub): void
     {
-        $this->resolvePattern($pattern);
-
-        $this->stubs[$pattern] = $stub instanceof ResponseSequence ? $stub : StubResponse::normalize($stub);
+        $this->stubs[$this->resolvePattern($pattern)] = $stub instanceof ResponseSequence
+            ? $stub
+            : StubResponse::normalize($stub);
     }
 
     /**
@@ -304,8 +313,9 @@ final class FakeAsaasClient implements AsaasClientContract
      * factory stable means recordings accumulate naturally across the fake's
      * lifetime — register() doesn't need to wipe and re-fake anything.
      *
-     * Pattern resolution is delegated to StubPattern::absolute() — single source
-     * of truth shared with resolvePattern(). Stub dispatch uses is_callable():
+     * The keys are already the resolved globs — register() stores them that way
+     * — so the router matches against them directly rather than re-resolving a
+     * raw pattern on every request. Stub dispatch uses is_callable():
      * it covers both Closure and ResponseSequence (which exposes __invoke)
      * without producing the equivalent-mutation pairs that explicit instanceof
      * checks generate (Laravel's outer Factory wrapper invokes returned
@@ -316,12 +326,9 @@ final class FakeAsaasClient implements AsaasClientContract
     private function installRouter(): void
     {
         $stubs = &$this->stubs;
-        $baseUrl = $this->baseUrl;
 
-        $this->factory->fake(['*' => static function (Request $request, array $options) use (&$stubs, $baseUrl): mixed {
-            foreach ($stubs as $pattern => $stub) {
-                $absolute = StubPattern::absolute($baseUrl, $pattern);
-
+        $this->factory->fake(['*' => static function (Request $request, array $options) use (&$stubs): mixed {
+            foreach ($stubs as $absolute => $stub) {
                 if (! Str::is(Str::start($absolute, '*'), $request->url())) {
                     continue;
                 }

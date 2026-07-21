@@ -119,3 +119,25 @@ it('FakeAsaasClient constructor accepts environment as a string', function (): v
     expect($fake->recorded()[0][0]->url())
         ->toBe('https://api.asaas.com/v3/payments/pay_1');
 });
+
+it('replaces the stub an equivalent pattern already registered', function (string $second): void {
+    // The map used to be keyed by the raw string, so these spellings were
+    // separate entries collapsing onto one glob: the first registered won and
+    // the later one sat there dead — accepted, never served, and never
+    // reported, since a match by some entry keeps NoMatchingStubException away.
+    $fake = AsaasClient::fake(['payments/*' => ['id' => 'FIRST']])->stub($second, ['id' => 'SECOND']);
+
+    expect($fake->payments()->find('pay_1')->data['id'])->toBe('SECOND');
+})->with(['payments/*', '/payments/*', ' payments/*']);
+
+it('keeps the position of the stub an equivalent pattern replaces', function (): void {
+    // Order decides ties, so a replacement must not jump the queue: the broad
+    // stub was registered first and still wins over the specific one behind it.
+    $fake = AsaasClient::fake([
+        'payments/*' => ['id' => 'BROAD'],
+        'payments/pay_1' => ['id' => 'SPECIFIC'],
+    ])->stub('/payments/*', ['id' => 'BROAD_AGAIN']);
+
+    expect($fake->payments()->find('pay_1')->data['id'])->toBe('BROAD_AGAIN');
+    expect($fake->payments()->find('pay_2')->data['id'])->toBe('BROAD_AGAIN');
+});
