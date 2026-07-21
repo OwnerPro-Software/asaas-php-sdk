@@ -9,9 +9,10 @@ use JsonSerializable;
 use OwnerPro\Asaas\Support\Arrayable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
+use OwnerPro\Asaas\Support\Redactable;
 use SensitiveParameter;
 
-final readonly class CreditCardHolderInfo implements Arrayable, JsonSerializable
+final readonly class CreditCardHolderInfo implements Arrayable, JsonSerializable, Redactable
 {
     use HasArrayFactory;
     use MasksSensitiveData;

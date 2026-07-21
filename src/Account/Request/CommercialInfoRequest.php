@@ -10,9 +10,10 @@ use OwnerPro\Asaas\Account\PersonType;
 use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Support\Missing;
+use OwnerPro\Asaas\Support\Redactable;
 use SensitiveParameter;
 
-final readonly class CommercialInfoRequest implements JsonSerializable
+final readonly class CommercialInfoRequest implements JsonSerializable, Redactable
 {
     use HasUpdatableArrayFactory;
     use MasksSensitiveData;

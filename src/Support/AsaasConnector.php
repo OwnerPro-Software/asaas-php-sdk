@@ -11,7 +11,7 @@ use Illuminate\Http\Client\Response;
 use InvalidArgumentException;
 use SensitiveParameter;
 
-final readonly class AsaasConnector implements Connector
+final readonly class AsaasConnector implements Connector, Redactable
 {
     use PaginatesResults;
 

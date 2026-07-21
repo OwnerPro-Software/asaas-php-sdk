@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Override;
 use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\DumpRedaction;
 use RuntimeException;
 
 final class AsaasServiceProvider extends ServiceProvider
@@ -43,6 +44,8 @@ final class AsaasServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        DumpRedaction::register();
+
         $this->publishes([
             __DIR__.'/../config/asaas.php' => config_path('asaas.php'),
         ], 'asaas-config');

@@ -9,6 +9,7 @@ use JsonSerializable;
 use OwnerPro\Asaas\Support\Arrayable;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
+use OwnerPro\Asaas\Support\Redactable;
 use OwnerPro\Asaas\Webhook\WebhookEvent;
 use OwnerPro\Asaas\Webhook\WebhookSendType;
 use SensitiveParameter;
@@ -25,7 +26,7 @@ use SensitiveParameter;
  * This is intentionally stricter than the spec to surface mistakes at
  * construction time rather than after the first failed delivery.
  */
-final readonly class CreateWebhookRequest implements Arrayable, JsonSerializable
+final readonly class CreateWebhookRequest implements Arrayable, JsonSerializable, Redactable
 {
     use HasArrayFactory;
     use MasksSensitiveData;

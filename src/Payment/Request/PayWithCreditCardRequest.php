@@ -10,6 +10,7 @@ use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
+use OwnerPro\Asaas\Support\Redactable;
 use SensitiveParameter;
 
 /**
@@ -22,7 +23,7 @@ use SensitiveParameter;
  * Anything else throws `InvalidArgumentException` at construction time, before
  * the request reaches Asaas.
  */
-final readonly class PayWithCreditCardRequest implements JsonSerializable
+final readonly class PayWithCreditCardRequest implements JsonSerializable, Redactable
 {
     use HasArrayFactory;
     use MasksSensitiveData;

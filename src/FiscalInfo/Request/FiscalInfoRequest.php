@@ -8,6 +8,7 @@ use JsonSerializable;
 use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Support\Missing;
+use OwnerPro\Asaas\Support\Redactable;
 use SensitiveParameter;
 
 /**
@@ -31,7 +32,7 @@ use SensitiveParameter;
  * that never explicitly set the field will follow the new behaviour; pin the
  * value at the call site if you need stability across releases.
  */
-final readonly class FiscalInfoRequest implements JsonSerializable
+final readonly class FiscalInfoRequest implements JsonSerializable, Redactable
 {
     use HasUpdatableArrayFactory;
     use MasksSensitiveData;

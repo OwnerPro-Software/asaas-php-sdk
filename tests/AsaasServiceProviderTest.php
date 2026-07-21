@@ -10,8 +10,11 @@ use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\AsaasServiceProvider;
 use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\Support\AsaasConnector;
+use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Support\IndeterminateResultException;
+use OwnerPro\Asaas\Support\Redactable;
+use Symfony\Component\VarDumper\Cloner\AbstractCloner;
 
 mutates(AsaasServiceProvider::class, Asaas::class);
 
@@ -128,6 +131,18 @@ it('publishes the config file from the correct source path on boot', function ()
     $sourcePath = array_key_first($paths);
     expect($sourcePath)->toEndWith('config/asaas.php');
     expect(file_exists($sourcePath))->toBeTrue();
+});
+
+it('installs the dump redaction caster on boot', function () {
+    unset(AbstractCloner::$defaultCasters[Redactable::class]);
+
+    (new AsaasServiceProvider($this->app))->boot();
+
+    $caster = AbstractCloner::$defaultCasters[Redactable::class] ?? null;
+
+    expect($caster)->toBeInstanceOf(Closure::class);
+    expect($caster(new CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737')))
+        ->toBe(['holderName' => 'JOHN DOE', 'number' => '************1111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '***']);
 });
 
 it('Asaas::for() returns AsaasClient with config defaults', function () {

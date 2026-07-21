@@ -11,10 +11,11 @@ use OwnerPro\Asaas\Account\AccessTokenScope;
 use OwnerPro\Asaas\Account\CompanyType;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
+use OwnerPro\Asaas\Support\Redactable;
 use OwnerPro\Asaas\Webhook\Request\CreateWebhookRequest;
 use SensitiveParameter;
 
-final readonly class AccountRequest implements JsonSerializable
+final readonly class AccountRequest implements JsonSerializable, Redactable
 {
     use HasArrayFactory;
     use MasksSensitiveData;

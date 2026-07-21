@@ -11,11 +11,12 @@ use OwnerPro\Asaas\Support\BankAccountType;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
+use OwnerPro\Asaas\Support\Redactable;
 use OwnerPro\Asaas\Transfer\TransferOperationType;
 use OwnerPro\Asaas\Transfer\TransferRecurrenceFrequency;
 use SensitiveParameter;
 
-final readonly class TransferRequest implements JsonSerializable
+final readonly class TransferRequest implements JsonSerializable, Redactable
 {
     use HasArrayFactory;
     use MasksSensitiveData;

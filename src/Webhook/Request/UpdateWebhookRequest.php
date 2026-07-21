@@ -8,11 +8,12 @@ use JsonSerializable;
 use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
 use OwnerPro\Asaas\Support\Missing;
+use OwnerPro\Asaas\Support\Redactable;
 use OwnerPro\Asaas\Webhook\WebhookEvent;
 use OwnerPro\Asaas\Webhook\WebhookSendType;
 use SensitiveParameter;
 
-final readonly class UpdateWebhookRequest implements JsonSerializable
+final readonly class UpdateWebhookRequest implements JsonSerializable, Redactable
 {
     use HasUpdatableArrayFactory;
     use MasksSensitiveData;

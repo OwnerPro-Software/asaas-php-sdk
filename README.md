@@ -1369,6 +1369,46 @@ Every `list($query = [])` method accepts an associative array of filters. Below 
 
 `billPayments()->list()` and `webhooks()->list()` only support `offset` / `limit`. `fiscalInfo()` lookup endpoints (`federalServiceCodes`, `nbsCodes`, `services`, `taxClassificationCodes`, `taxSituationCodes`, `operationIndicatorCodes`) accept `code` / `description` / `codeDescription` / `taxSituationCode` depending on the endpoint.
 
+## Sensitive data in debug output
+
+Objects that hold secrets — your API key, card numbers, CVVs, CPF/CNPJ, bank account numbers, holder e-mail and phone — redact themselves before anything can print them. This covers the whole debugging surface:
+
+| Path | Result |
+| --- | --- |
+| `var_dump()`, `print_r()` | redacted via `__debugInfo()` |
+| `dump()`, `dd()`, Ignition / Flare error pages | redacted via a VarDumper caster |
+| `json_encode()`, `(string)` | redacted via `jsonSerialize()` / `__toString()` |
+| `serialize()` | throws — secrets must never reach a queue, cache or session |
+| stack traces | redacted via `#[SensitiveParameter]` |
+
+```php
+$card = new CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737');
+
+dd($card);
+// OwnerPro\Asaas\Support\DTO\CreditCard {
+//   holderName: "JOHN DOE"
+//   number: "************1111"
+//   ccv: "***"
+// }
+
+dd(AsaasClient::for(apiKey: 'my-secret-key'));
+// OwnerPro\Asaas\AsaasClient { resources: array:14 [...] }   // no API key, no headers
+```
+
+Redaction never touches the wire — `toArray()` still returns the real values, so the payload Asaas receives is unaffected.
+
+`dump()` / `dd()` coverage needs the caster to be installed. That happens automatically: the Laravel service provider does it on boot, and `AsaasClient::for()` does it for standalone use. If you build the client by hand (`new AsaasClient(new AsaasConnector(...))`) and want the caster before that point, register it yourself:
+
+```php
+use OwnerPro\Asaas\Support\DumpRedaction;
+
+DumpRedaction::register();
+```
+
+The call is idempotent and a no-op when `symfony/var-dumper` is not installed.
+
+Custom classes join in by implementing `OwnerPro\Asaas\Support\Redactable` and returning the safe view from `__debugInfo()` — the caster is keyed on the interface, so no further wiring is needed. The `MasksSensitiveData` trait supplies `mask()`, `__toString()`, `jsonSerialize()` and the serialization guards.
+
 ## Custom Connector
 
 All resources depend on the `Connector` interface (`OwnerPro\Asaas\Support\Connector`) rather than the concrete `AsaasConnector`. You can provide your own implementation for testing, logging, caching, or any custom behavior.

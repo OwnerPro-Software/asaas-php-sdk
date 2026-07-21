@@ -12,7 +12,7 @@ use Illuminate\Http\Client\Response;
  * transport exceptions. The underlying `Illuminate` Response is intentionally
  * not exposed to prevent API key leakage via request headers.
  */
-final readonly class RawResponse
+final readonly class RawResponse implements Redactable
 {
     public function __construct(private Response $response) {}
 

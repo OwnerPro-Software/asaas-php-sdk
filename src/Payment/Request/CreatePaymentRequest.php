@@ -18,9 +18,10 @@ use OwnerPro\Asaas\Support\DTO\Interest;
 use OwnerPro\Asaas\Support\DTO\Split;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
+use OwnerPro\Asaas\Support\Redactable;
 use SensitiveParameter;
 
-final readonly class CreatePaymentRequest implements JsonSerializable
+final readonly class CreatePaymentRequest implements JsonSerializable, Redactable
 {
     use HasArrayFactory;
     use MasksSensitiveData;

@@ -9,9 +9,10 @@ use JsonSerializable;
 use OwnerPro\Asaas\Support\DTO\QrCodePayload;
 use OwnerPro\Asaas\Support\HasArrayFactory;
 use OwnerPro\Asaas\Support\MasksSensitiveData;
+use OwnerPro\Asaas\Support\Redactable;
 use SensitiveParameter;
 
-final readonly class PayQrCodeRequest implements JsonSerializable
+final readonly class PayQrCodeRequest implements JsonSerializable, Redactable
 {
     use HasArrayFactory;
     use MasksSensitiveData;
