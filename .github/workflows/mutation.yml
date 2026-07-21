@@ -1,0 +1,82 @@
+name: Mutation
+
+# Mutation testing is the long pole of CI — ~19 minutes against ~25 seconds for
+# a test cell — and it says nothing about a change that cannot alter a mutant.
+# A commit touching only README.md, CHANGELOG.md or specs/ used to pay the full
+# 19 minutes for an answer that could not differ from the previous run, so this
+# workflow only wakes up for the paths that feed it.
+#
+# It is one job on purpose. Nothing in mutation testing varies with the PHP or
+# Laravel version, so running it per matrix cell buys four identical answers.
+#
+# Sharding it with `--mutate --path=` was measured and rejected: the plugin runs
+# only the tests associated with the mutated path, so a mutant whose killing
+# test lives in another folder is reported as escaped. `src/Invoice` alone
+# scores 78.57% — six `CoalesceRemoveLeft` survivors in `CreateInvoiceRequest`
+# whose killer sits in `tests/Support/HasArrayFactoryTest.php` — against 100%
+# for the same mutants in the whole run. Shards would fail on healthy code.
+#
+# The run is deliberately uncached: the plugin reuses kill-results per source
+# hash, which hides a weakened test behind a stale pass.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'composer.json'
+      - '.github/workflows/mutation.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'composer.json'
+      - '.github/workflows/mutation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mutation:
+    name: Mutation (PHP 8.4 / Laravel 13)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: xdebug
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-mutation-${{ hashFiles('composer.json') }}
+          restore-keys: composer-mutation-
+
+      - name: Install dependencies
+        run: |
+          composer require --no-update --no-interaction --dev \
+            "orchestra/testbench:11.*"
+          composer require --no-update --no-interaction \
+            "illuminate/http:13.*" \
+            "illuminate/support:13.*"
+          composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Run mutation tests
+        run: ./vendor/bin/pest --mutate --min=100 --parallel
