@@ -201,6 +201,24 @@ it('does not leak attached files between sequential multipart calls', function (
     expect($secondBody)->not->toContain('first.png');
 });
 
+it('sends a multipart Content-Type on every sequential upload', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $connector = multipartConnector();
+
+    $connector->postMultipart('/u', [], [[
+        'name' => 'documentFile', 'contents' => 'FIRST', 'filename' => 'first.png',
+    ]]);
+    $connector->postMultipart('/u', [], [[
+        'name' => 'documentFile', 'contents' => 'SECOND', 'filename' => 'second.png',
+    ]]);
+
+    $requests = Http::recorded();
+
+    expect((string) $requests[0][0]->header('Content-Type')[0])->toStartWith('multipart/form-data; boundary=');
+    expect((string) $requests[1][0]->header('Content-Type')[0])->toStartWith('multipart/form-data; boundary=');
+});
+
 it('restores JSON body format even when the multipart upload fails', function (): void {
     Http::fakeSequence()
         ->push(['errors' => [['description' => 'rejected']]], 400)

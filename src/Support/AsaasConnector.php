@@ -102,7 +102,11 @@ final readonly class AsaasConnector implements Connector
 
                 return $this->pendingRequest->asMultipart()->post($path, $data);
             } finally {
-                $this->pendingRequest->asJson();
+                // Restore the body format only. `asJson()` would also pin an explicit
+                // `Content-Type: application/json` header, and Guzzle skips its own
+                // `multipart/form-data; boundary=...` header when one is already set —
+                // so every subsequent upload would ship a multipart body labelled JSON.
+                $this->pendingRequest->bodyFormat('json');
             }
         });
     }
