@@ -525,3 +525,39 @@ it('rejects an absolute stub pattern', function (): void {
     expect(fn () => $fake->payments()->find('pay_1'))
         ->toThrow(InvalidArgumentException::class, 'must be relative to the Asaas base URL');
 });
+
+it('rejects a v3-prefixed pattern instead of letting assertNotSent() pass unconditionally', function (string $method): void {
+    // docs.asaas.com writes every endpoint as `/v3/payments/{id}`, so this is the
+    // shape muscle memory produces. The base URL already ends in `/v3`, and the
+    // doubled `…/v3/v3/payments*` it would build matches nothing — so the
+    // request-was-never-sent assertion could not fail.
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    expect(fn () => $fake->{$method}('v3/payments/pay_1'))
+        ->toThrow(InvalidArgumentException::class, "already ends in '/v3'");
+})->with(['assertSent', 'assertNotSent', 'recorded']);
+
+it('rejects a bare v3 pattern and a leading-slash v3 pattern alike', function (string $pattern): void {
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    expect(fn () => $fake->assertNotSent($pattern))
+        ->toThrow(InvalidArgumentException::class, "already ends in '/v3'");
+})->with(['v3', 'v3/', '/v3/payments']);
+
+it('does not mistake a path merely starting with v3 for the version segment', function (): void {
+    // The guard keys on the `v3/` segment, not on the two characters: a real
+    // endpoint named `v3things` must still resolve normally.
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    expect($fake->recorded('v3things'))->toBe([]);
+});
+
+it('rejects a v3-prefixed stub pattern', function (): void {
+    $fake = AsaasClient::fake(['v3/payments' => ['id' => 'pay_1']]);
+
+    expect(fn () => $fake->payments()->find('pay_1'))
+        ->toThrow(InvalidArgumentException::class, "already ends in '/v3'");
+});
