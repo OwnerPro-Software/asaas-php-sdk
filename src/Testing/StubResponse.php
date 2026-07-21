@@ -7,7 +7,6 @@ namespace OwnerPro\Asaas\Testing;
 use Closure;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Factory;
-use Illuminate\Http\Client\Request;
 use InvalidArgumentException;
 
 /**
@@ -30,14 +29,21 @@ final class StubResponse
         // with no sequence around it there is nothing the SDK knows better than
         // the caller. `normalizePages()` does know better — see its docblock. The
         // one thing a single response cannot honour is `hasMore: true`, which
-        // promises a page it has no way to serve — see `pageOneOnly()`.
+        // promises a page it has no way to serve — see {@see SinglePageStub}.
         if (array_key_exists('hasMore', $stub) || array_key_exists('totalCount', $stub)) {
             return ($stub['hasMore'] ?? false) === true
-                ? self::pageOneOnly($stub)
+                ? SinglePageStub::serve($stub, count(self::rowsOf($stub)))
                 : Factory::response($stub);
         }
 
-        return Factory::response(self::inferPagination($stub, hasMore: false, totalCount: count(self::rowsOf($stub))));
+        // No `hasMore` reached the branch above, so the default and the verdict
+        // are the same thing here: a lone stub is the whole result set.
+        return Factory::response(
+            self::withWalkPosition(
+                self::inferPagination($stub, totalCount: count(self::rowsOf($stub))),
+                hasMore: false,
+            ),
+        );
     }
 
     /**
@@ -48,6 +54,19 @@ final class StubResponse
      * page (as normalizing them one by one does) stops `all()` after the first.
      * Knowing the full sequence also lets `totalCount` describe the walk instead
      * of the single page.
+     *
+     * On the **last** page `hasMore` is overridden to `false` rather than
+     * merely defaulted: a final page declaring `hasMore: true` promises a page
+     * the sequence cannot serve, and the walk runs off the end into Laravel's
+     * raw "response sequence is empty". No test means to assert that.
+     *
+     * On every **other** page it is only a default, so a page declaring
+     * `hasMore: false` keeps it and ends the walk there. That is a legitimate
+     * thing to pin — "the walk stops when the server says it does" is the
+     * termination contract — and nothing else can express it. The cost is that
+     * one realistic fixture pasted into several slots carries `hasMore: false`
+     * everywhere and stops after the first; that is visible in the fixture,
+     * whereas a suppressed early stop would not be recoverable at all.
      *
      * @param  list<array<string, mixed>>  $pages
      * @return list<PromiseInterface|Closure>
@@ -66,66 +85,16 @@ final class StubResponse
         $responses = [];
 
         foreach ($pages as $index => $page) {
+            $body = self::inferPagination($page, totalCount: $totalCount);
+
             $responses[] = Factory::response(
-                self::inferPagination($page, hasMore: $index < $lastIndex, totalCount: $totalCount),
+                $index === $lastIndex
+                    ? self::withWalkPosition($body, hasMore: false)
+                    : self::withDefaultWalkPosition($body, hasMore: true),
             );
         }
 
         return $responses;
-    }
-
-    /**
-     * Serves a `hasMore: true` stub as page one and nothing beyond it.
-     *
-     * A lone stub is a single response, replayed for every matching request.
-     * Declaring `hasMore: true` on one therefore describes a walk whose next
-     * page is forever identical to the current one: `->all()` re-requests the
-     * same rows and never terminates. Requests past page one get the empty
-     * terminal page a real endpoint answers with, so `->list()` still observes
-     * the declared `hasMore` while the walk ends. Use `stubPages()` to model an
-     * actual multi-page walk.
-     *
-     * @param  array<string, mixed>  $body
-     * @return Closure(Request): PromiseInterface
-     */
-    private static function pageOneOnly(array $body): Closure
-    {
-        return static function (Request $request) use ($body): PromiseInterface {
-            $offset = self::requestedOffset($request);
-
-            return Factory::response($offset === 0 ? $body : self::terminalPage($body, $offset));
-        };
-    }
-
-    /**
-     * @param  array<string, mixed>  $body
-     * @return array<string, mixed>
-     */
-    private static function terminalPage(array $body, int $offset): array
-    {
-        return [
-            'object' => 'list',
-            'hasMore' => false,
-            'totalCount' => $body['totalCount'] ?? count(self::rowsOf($body)),
-            'limit' => $body['limit'] ?? count(self::rowsOf($body)),
-            'offset' => $offset,
-            'data' => [],
-        ];
-    }
-
-    private static function requestedOffset(Request $request): int
-    {
-        $query = parse_url($request->url(), PHP_URL_QUERY);
-
-        if (! is_string($query)) {
-            return 0;
-        }
-
-        parse_str($query, $params);
-
-        $offset = $params['offset'] ?? null;
-
-        return is_numeric($offset) ? (int) $offset : 0;
     }
 
     /**
@@ -134,8 +103,55 @@ final class StubResponse
      */
     private static function rowsOf(array $body): array
     {
-        if (! isset($body['data']) || ! is_array($body['data']) || ! array_is_list($body['data'])) {
-            return [];
+        return self::pageRows($body) ?? [];
+    }
+
+    /**
+     * Imposes the walk's verdict on `hasMore` over whatever the body declared.
+     * Bodies that are not pages are left alone — a response with no `data`, or
+     * whose `data` is an object, is opaque rather than a page of a walk.
+     *
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>
+     */
+    private static function withWalkPosition(array $body, bool $hasMore): array
+    {
+        if (self::pageRows($body) === null) {
+            return $body;
+        }
+
+        $body['hasMore'] = $hasMore;
+
+        return $body;
+    }
+
+    /**
+     * Fills in `hasMore` only where the body left it out, so a page that states
+     * its own position keeps it.
+     *
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>
+     */
+    private static function withDefaultWalkPosition(array $body, bool $hasMore): array
+    {
+        if (array_key_exists('hasMore', $body)) {
+            return $body;
+        }
+
+        return self::withWalkPosition($body, $hasMore);
+    }
+
+    /**
+     * The rows of a page, or `null` when the body is not a page at all —
+     * distinct from `[]`, which is a genuinely empty page.
+     *
+     * @param  array<string, mixed>  $body
+     * @return ?list<mixed>
+     */
+    private static function pageRows(array $body): ?array
+    {
+        if (! array_key_exists('data', $body) || ! is_array($body['data']) || ! array_is_list($body['data'])) {
+            return null;
         }
 
         return $body['data'];
@@ -145,24 +161,23 @@ final class StubResponse
      * @param  array<string, mixed>  $body
      * @return array<string, mixed>
      */
-    private static function inferPagination(array $body, bool $hasMore, int $totalCount): array
+    private static function inferPagination(array $body, int $totalCount): array
     {
-        if (! array_key_exists('data', $body)) {
-            return $body;
-        }
+        $rows = self::pageRows($body);
 
-        if (! is_array($body['data']) || ! array_is_list($body['data'])) {
+        if ($rows === null) {
             return $body;
         }
 
         // Defaults first so the stub wins on every key it declares: the caller's
         // envelope is preserved whole, extra fields included, and only the
-        // pagination keys it left out are filled in.
+        // pagination keys it left out are filled in. `hasMore` is absent from
+        // the defaults on purpose — the walk-position helpers are the single
+        // place that decides it, for both a lone stub and a sequence.
         return array_merge([
             'object' => 'list',
-            'hasMore' => $hasMore,
             'totalCount' => $totalCount,
-            'limit' => count($body['data']),
+            'limit' => count($rows),
             'offset' => 0,
         ], $body);
     }

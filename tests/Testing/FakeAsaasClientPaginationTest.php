@@ -61,15 +61,41 @@ it('stubPages() infers the pagination envelope like stub() does', function (): v
     expect($result->hasMore)->toBeFalse();
 });
 
-it('stubPages() leaves a declared envelope untouched', function (): void {
+it('stubPages() overrides hasMore on the last page, which cannot promise another', function (): void {
+    // A final page declaring `hasMore: true` would send the walk past the end of
+    // the sequence and surface as Laravel's raw "response sequence is empty" —
+    // an error no test means to assert. Every other declared key is kept.
     $fake = AsaasClient::fake()->stubPages('webhooks', [
-        ['data' => [['id' => 'a']], 'hasMore' => true, 'totalCount' => 9],
+        ['data' => [['id' => 'a']], 'hasMore' => true, 'totalCount' => 9, 'limit' => 3],
     ]);
 
     $result = $fake->webhooks()->list();
 
     expect($result->totalCount)->toBe(9);
-    expect($result->hasMore)->toBeTrue();
+    expect($result->limit)->toBe(3);
+    expect($result->hasMore)->toBeFalse();
+});
+
+it('stubPages() lets a non-final page declare hasMore:false and end the walk there', function (): void {
+    // "The walk stops when the server says it does" is the termination contract,
+    // and a sequence is the only way to pin it: page two exists but is never
+    // requested. Overriding hasMore here would make that untestable.
+    $fake = AsaasClient::fake()->stubPages('webhooks', [
+        ['data' => [['id' => 'a']], 'hasMore' => false],
+        ['data' => [['id' => 'b']]],
+    ]);
+
+    expect(iterator_to_array($fake->webhooks()->all()))->toBe([['id' => 'a']]);
+});
+
+it('stubPages() still fills in hasMore on a non-final page that declares none', function (): void {
+    $fake = AsaasClient::fake()->stubPages('webhooks', [
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'b']], 'hasMore' => false],
+    ]);
+
+    expect(iterator_to_array($fake->webhooks()->all()))
+        ->toBe([['id' => 'a'], ['id' => 'b']]);
 });
 
 it('stubPages() returns the fake (fluent)', function (): void {
@@ -297,4 +323,51 @@ it('replays a lone stub that declares hasMore=false at any offset', function ():
 it('rejects an empty stubPages() sequence at registration', function (): void {
     expect(fn (): FakeAsaasClient => AsaasClient::fake()->stubPages('payments', []))
         ->toThrow(InvalidArgumentException::class, 'stubPages() requires at least one page');
+});
+
+it('serves a stub that models a later page to the request that asks for it', function (): void {
+    // A stub declaring `offset: 10` describes page two. Cutting on a literal
+    // offset 0 would hand the test an empty page it never described.
+    $fake = AsaasClient::fake(['payments' => [
+        'hasMore' => true,
+        'totalCount' => 30,
+        'limit' => 10,
+        'offset' => 10,
+        'data' => [['id' => 'p11'], ['id' => 'p12']],
+    ]]);
+
+    $result = $fake->payments()->list(['offset' => 10, 'limit' => 10]);
+
+    expect($result->data)->toBe([['id' => 'p11'], ['id' => 'p12']])
+        ->and($result->hasMore)->toBeTrue();
+});
+
+it('still terminates the walk from a stub that models a later page', function (): void {
+    $fake = AsaasClient::fake(['payments' => [
+        'hasMore' => true,
+        'totalCount' => 30,
+        'limit' => 10,
+        'offset' => 10,
+        'data' => [['id' => 'p11'], ['id' => 'p12']],
+    ]]);
+
+    $second = $fake->payments()->list(['offset' => 10, 'limit' => 10])->next();
+
+    expect($second)->not->toBeNull()
+        ->and($second->data)->toBe([])
+        ->and($second->hasMore)->toBeFalse();
+});
+
+it('reads a stub-declared offset that arrives as a string', function (): void {
+    // Fixtures pasted from a raw JSON capture can carry `"offset": "10"`.
+    $fake = AsaasClient::fake(['payments' => [
+        'hasMore' => true,
+        'totalCount' => 30,
+        'limit' => 10,
+        'offset' => '10',
+        'data' => [['id' => 'p11']],
+    ]]);
+
+    expect($fake->payments()->list(['offset' => 10, 'limit' => 10])->data)
+        ->toBe([['id' => 'p11']]);
 });

@@ -25,7 +25,9 @@ it('infers hasMore=false and totalCount=count when shape has data only', functio
 
     $response = $factory->createPendingRequest()->get('https://example.test/api/v3/payments');
 
-    expect($response->json())->toBe([
+    // Key order is not part of the contract — the body is decoded as a map —
+    // so the envelope is compared by content.
+    expect($response->json())->toEqualCanonicalizing([
         'object' => 'list',
         'hasMore' => false,
         'totalCount' => 2,
@@ -67,7 +69,7 @@ it('preserves explicit object/limit/offset values during inference', function ()
 
     $response = $factory->createPendingRequest()->get('https://example.test/api/v3/y');
 
-    expect($response->json())->toBe([
+    expect($response->json())->toEqualCanonicalizing([
         'object' => 'custom',
         'hasMore' => false,
         'totalCount' => 1,
@@ -87,7 +89,7 @@ it('preserves unknown top-level keys during inference', function (): void {
 
     $response = $factory->createPendingRequest()->get('https://example.test/api/v3/accounts');
 
-    expect($response->json())->toBe([
+    expect($response->json())->toEqualCanonicalizing([
         'object' => 'list',
         'hasMore' => false,
         'totalCount' => 1,
@@ -247,4 +249,17 @@ it('treats an absent, empty or non-numeric offset as page one', function (string
 it('rejects an empty stubPages() sequence', function (): void {
     expect(fn (): array => StubResponse::normalizePages([]))
         ->toThrow(InvalidArgumentException::class, 'stubPages() requires at least one page');
+});
+
+it('leaves a stubPages entry with no data key untouched', function (): void {
+    // A body with no `data` is not a page of a walk — inference treats it as an
+    // opaque response, and the sequence has no verdict to impose on it.
+    $factory = new Factory;
+    $factory->fake(['*' => $factory->sequence()->pushResponse(
+        StubResponse::normalizePages([['id' => 'pay_1', 'status' => 'CONFIRMED']])[0],
+    )]);
+
+    $response = $factory->createPendingRequest()->get('https://example.test/api/v3/payments');
+
+    expect($response->json())->toBe(['id' => 'pay_1', 'status' => 'CONFIRMED']);
 });
