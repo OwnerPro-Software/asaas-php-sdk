@@ -96,3 +96,23 @@ it('truncates body in debug info when over the size limit', function (): void {
     expect($debug['body'])->toBe('A'.str_repeat('x', 349).'... <truncated; 351 chars total>');
     expect($rawResponse->body())->toBe($body);
 });
+
+it('scrubs a credential out of the body shown in debug info', function (): void {
+    $body = '{"id":"acc_1","apiKey":"$aact_LIVE_SUBACCOUNT_KEY"}';
+    $rawResponse = new RawResponse(new Response(new Psr7Response(200, [], $body)));
+
+    expect($rawResponse->__debugInfo()['body'])->toBe('{"id":"acc_1","apiKey":"***"}');
+});
+
+it('still exposes the untouched body through body(), so the wire view is unchanged', function (): void {
+    $body = '{"id":"acc_1","apiKey":"$aact_LIVE_SUBACCOUNT_KEY"}';
+    $rawResponse = new RawResponse(new Response(new Psr7Response(200, [], $body)));
+
+    expect($rawResponse->body())->toBe($body);
+});
+
+it('keeps a non-JSON body in debug info, since there is nothing to scrub', function (): void {
+    $rawResponse = new RawResponse(new Response(new Psr7Response(502, [], '<html>502 Bad Gateway</html>')));
+
+    expect($rawResponse->__debugInfo()['body'])->toBe('<html>502 Bad Gateway</html>');
+});

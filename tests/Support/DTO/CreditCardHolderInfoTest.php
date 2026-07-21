@@ -89,7 +89,7 @@ it('masks short cpfCnpj without negative repeat', function (): void {
         phone: '1199999999',
     );
 
-    expect($info->__debugInfo()['cpfCnpj'])->toBe('**');
+    expect($info->__debugInfo()['cpfCnpj'])->toBe('********');
 });
 
 it('masks sensitive data in json serialization', function (): void {

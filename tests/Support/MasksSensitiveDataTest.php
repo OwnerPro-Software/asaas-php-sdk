@@ -134,10 +134,35 @@ it('mask keeps the specified number of trailing characters visible', function ()
     $results = $object->results();
 
     expect($results[0])->toBe('********901');
-    expect($results[1])->toBe('************1111');
-    expect($results[2])->toBe('***89');
-    expect($results[3])->toBe('**');
-    expect($results[4])->toBe('');
+    expect($results[1])->toBe('********1111');
+    expect($results[2])->toBe('********89');
+    expect($results[3])->toBe('********');
+    expect($results[4])->toBe('********');
+});
+
+it('mask hides the length of the value, so inputs of different sizes are indistinguishable', function (): void {
+    $object = new class implements JsonSerializable
+    {
+        use MasksSensitiveData;
+
+        public function __debugInfo(): array
+        {
+            return [];
+        }
+
+        public function exposeMask(string $value, int $visibleSuffix): string
+        {
+            return self::mask($value, $visibleSuffix);
+        }
+    };
+
+    // A proportional fill would publish the exact secret length: an 11-digit
+    // CPF and a 14-digit CNPJ sharing a suffix would be told apart by counting
+    // asterisks. With a constant fill they render identically.
+    expect($object->exposeMask('12345678901', 3))
+        ->toBe($object->exposeMask('12345678000901', 3));
+
+    expect($object->exposeMask(str_repeat('9', 64).'abc', 3))->toBe('********abc');
 });
 
 it('mask fully masks when string length equals visibleSuffix', function (): void {
@@ -156,6 +181,6 @@ it('mask fully masks when string length equals visibleSuffix', function (): void
         }
     };
 
-    expect($object->exposeMask('abc', 3))->toBe('***');
-    expect($object->exposeMask('abcd', 3))->toBe('*bcd');
+    expect($object->exposeMask('abc', 3))->toBe('********');
+    expect($object->exposeMask('abcd', 3))->toBe('********bcd');
 });

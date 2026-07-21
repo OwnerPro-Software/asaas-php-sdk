@@ -55,7 +55,7 @@ it('keeps the pan and cvv out of a dumped credit card', function (): void {
     expect($output)
         ->not->toContain('4111111111111111')
         ->not->toContain('737')
-        ->toContain('************1111')
+        ->toContain('********1111')
         ->toContain('JOHN DOE');
 });
 

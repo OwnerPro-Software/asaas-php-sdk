@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support;
 
-final readonly class AsaasResult
+final readonly class AsaasResult implements Redactable
 {
     use ThrowsOnFailure;
 
@@ -18,6 +18,27 @@ final readonly class AsaasResult
         public ?array $errors,
         public ?RawResponse $response,
     ) {}
+
+    /**
+     * `$data` is the response body verbatim, so the credential-bearing
+     * endpoints — `POST /accounts`, the `accessTokens` pair, `GET /webhooks`,
+     * card tokenization — put a live secret on a public property. Printing the
+     * result while debugging would otherwise disclose it.
+     *
+     * `$response` stays an object: it is {@see Redactable} in its own right and
+     * scrubs its body when the dumper reaches it.
+     *
+     * @return array{success: bool, data: ?array<string, mixed>, errors: ?list<array{code?: string, description?: string}>, response: ?RawResponse}
+     */
+    public function __debugInfo(): array
+    {
+        return [
+            'success' => $this->success,
+            'data' => $this->data === null ? null : SecretRedactor::scrub($this->data),
+            'errors' => $this->errors,
+            'response' => $this->response,
+        ];
+    }
 
     /** @param array<string, mixed> $data */
     public static function success(array $data, RawResponse $rawResponse): self

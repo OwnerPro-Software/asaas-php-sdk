@@ -142,7 +142,7 @@ it('installs the dump redaction caster on boot', function () {
 
     expect($caster)->toBeInstanceOf(Closure::class);
     expect($caster(new CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737')))
-        ->toBe(['holderName' => 'JOHN DOE', 'number' => '************1111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '***']);
+        ->toBe(['holderName' => 'JOHN DOE', 'number' => '********1111', 'expiryMonth' => '12', 'expiryYear' => '2030', 'ccv' => '***']);
 });
 
 it('Asaas::for() returns AsaasClient with config defaults', function () {

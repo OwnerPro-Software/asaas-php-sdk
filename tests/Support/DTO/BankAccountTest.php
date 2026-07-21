@@ -99,7 +99,7 @@ it('masks sensitive data in debug info', function (): void {
         'ownerName' => 'John Doe',
         'cpfCnpj' => '********901',
         'agency' => '1234',
-        'account' => '***89',
+        'account' => '********89',
         'accountDigit' => '*',
         'bank' => ['code' => '001'],
         'accountName' => 'Main Account',
@@ -122,7 +122,7 @@ it('masks sensitive data in debug info with null optionals', function (): void {
         'ownerName' => 'John Doe',
         'cpfCnpj' => '********901',
         'agency' => '1234',
-        'account' => '***89',
+        'account' => '********89',
         'accountDigit' => '*',
         'bank' => null,
         'accountName' => null,
@@ -143,8 +143,8 @@ it('masks short cpfCnpj and account without negative repeat', function (): void 
 
     $debug = $account->__debugInfo();
 
-    expect($debug['cpfCnpj'])->toBe('**');
-    expect($debug['account'])->toBe('*');
+    expect($debug['cpfCnpj'])->toBe('********');
+    expect($debug['account'])->toBe('********');
 });
 
 it('masks sensitive data in json serialization', function (): void {
@@ -160,7 +160,7 @@ it('masks sensitive data in json serialization', function (): void {
     $json = json_decode(json_encode($account), true);
 
     expect($json['cpfCnpj'])->toBe('********901');
-    expect($json['account'])->toBe('***89');
+    expect($json['account'])->toBe('********89');
     expect($json['accountDigit'])->toBe('*');
     expect($json['ownerBirthDate'])->toBe('***');
 });

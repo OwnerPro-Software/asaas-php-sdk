@@ -52,7 +52,7 @@ it('masks sensitive data in debug info', function (): void {
     $debug = $card->__debugInfo();
 
     expect($debug['holderName'])->toBe('John Doe');
-    expect($debug['number'])->toBe('************1111');
+    expect($debug['number'])->toBe('********1111');
     expect($debug['expiryMonth'])->toBe('12');
     expect($debug['expiryYear'])->toBe('2030');
     expect($debug['ccv'])->toBe('***');
@@ -67,7 +67,7 @@ it('masks short card number in debug info', function (): void {
         ccv: '123',
     );
 
-    expect($card->__debugInfo()['number'])->toBe('**');
+    expect($card->__debugInfo()['number'])->toBe('********');
 });
 
 it('masks sensitive data in json serialization', function (): void {
@@ -82,7 +82,7 @@ it('masks sensitive data in json serialization', function (): void {
     $json = json_decode(json_encode($card), true);
 
     expect($json['holderName'])->toBe('John Doe');
-    expect($json['number'])->toBe('************1111');
+    expect($json['number'])->toBe('********1111');
     expect($json['expiryMonth'])->toBe('12');
     expect($json['expiryYear'])->toBe('2030');
     expect($json['ccv'])->toBe('***');

@@ -6,7 +6,7 @@ namespace OwnerPro\Asaas\Support;
 
 use Closure;
 
-final readonly class AsaasPaginatedResult
+final readonly class AsaasPaginatedResult implements Redactable
 {
     use ThrowsOnFailure;
 
@@ -26,6 +26,30 @@ final readonly class AsaasPaginatedResult
         public ?RawResponse $response,
         private ?Closure $nextPageFetcher,
     ) {}
+
+    /**
+     * A page of `GET /webhooks` carries one `authToken` per row, and a page of
+     * `GET /accounts/{id}/accessTokens` one `accessToken` per row, so the rows
+     * are scrubbed before anything prints them.
+     *
+     * `$nextPageFetcher` is omitted: it is a private cursor closure, not state
+     * a reader can act on.
+     *
+     * @return array{success: bool, data: array<array-key, mixed>, totalCount: int, hasMore: bool, limit: int, offset: int, errors: ?list<array{code?: string, description?: string}>, response: ?RawResponse}
+     */
+    public function __debugInfo(): array
+    {
+        return [
+            'success' => $this->success,
+            'data' => SecretRedactor::scrub($this->data),
+            'totalCount' => $this->totalCount,
+            'hasMore' => $this->hasMore,
+            'limit' => $this->limit,
+            'offset' => $this->offset,
+            'errors' => $this->errors,
+            'response' => $this->response,
+        ];
+    }
 
     /**
      * @param  list<array<string, mixed>>  $data

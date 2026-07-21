@@ -16,10 +16,17 @@ final readonly class RawResponse implements Redactable
 {
     public function __construct(private Response $response) {}
 
-    /** @return array{status: int, headers: array<string, list<string>>, body: string} */
+    /**
+     * The body is scrubbed before it is truncated, never after: truncation
+     * leaves invalid JSON that {@see SecretRedactor::scrubJson()} cannot parse,
+     * and an unparseable body falls through to its raw text — which is exactly
+     * the credential this is meant to withhold.
+     *
+     * @return array{status: int, headers: array<string, list<string>>, body: string}
+     */
     public function __debugInfo(): array
     {
-        $body = $this->body();
+        $body = SecretRedactor::scrubJson($this->body()) ?? $this->body();
         $length = mb_strlen($body);
         $limit = 350;
 

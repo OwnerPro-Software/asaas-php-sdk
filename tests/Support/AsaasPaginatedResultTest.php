@@ -219,3 +219,64 @@ it('orFail() returns self on success', function (): void {
 
     expect($result->orFail())->toBe($result);
 });
+
+// A page of `GET /webhooks` carries one live `authToken` per row.
+it('scrubs the per-row credential in debug output', function (): void {
+    $result = AsaasPaginatedResult::success(
+        data: [
+            ['id' => 'w_1', 'authToken' => 'row-secret-one'],
+            ['id' => 'w_2', 'authToken' => 'row-secret-two'],
+        ],
+        totalCount: 2,
+        hasMore: false,
+        limit: 10,
+        offset: 0,
+        rawResponse: RawResponse::fake(200),
+        nextPageFetcher: null,
+    );
+
+    expect($result->__debugInfo()['data'])->toBe([
+        ['id' => 'w_1', 'authToken' => '***'],
+        ['id' => 'w_2', 'authToken' => '***'],
+    ])
+        ->and(print_r($result, true))->not->toContain('row-secret-one');
+});
+
+it('reports every paginated field verbatim in debug output, omitting the private cursor', function (): void {
+    $response = RawResponse::fake(200);
+    $result = AsaasPaginatedResult::success(
+        data: [['id' => 'w_1']],
+        totalCount: 7,
+        hasMore: true,
+        limit: 5,
+        offset: 20,
+        rawResponse: $response,
+        nextPageFetcher: fn (int $offset): AsaasPaginatedResult => AsaasPaginatedResult::failure([]),
+    );
+
+    expect($result->__debugInfo())->toBe([
+        'success' => true,
+        'data' => [['id' => 'w_1']],
+        'totalCount' => 7,
+        'hasMore' => true,
+        'limit' => 5,
+        'offset' => 20,
+        'errors' => null,
+        'response' => $response,
+    ]);
+});
+
+it('reports the failure fields verbatim in debug output', function (): void {
+    $result = AsaasPaginatedResult::failure([['code' => 'x']], null, offset: 20, limit: 5);
+
+    expect($result->__debugInfo())->toBe([
+        'success' => false,
+        'data' => [],
+        'totalCount' => 0,
+        'hasMore' => false,
+        'limit' => 5,
+        'offset' => 20,
+        'errors' => [['code' => 'x']],
+        'response' => null,
+    ]);
+});

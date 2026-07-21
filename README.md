@@ -1382,7 +1382,7 @@ Objects that hold secrets — your API key, card numbers, CVVs, CPF/CNPJ, bank a
 | `var_dump()`, `print_r()` | redacted via `__debugInfo()` |
 | `dump()`, `dd()`, Ignition / Flare error pages | redacted via a VarDumper caster |
 | `json_encode()`, `(string)` | redacted via `jsonSerialize()` / `__toString()` |
-| `serialize()` | throws — secrets must never reach a queue, cache or session; `AsaasClient` and `AsaasConnector` refuse it too |
+| `serialize()` | throws on request DTOs, `AsaasClient` and `AsaasConnector` — secrets must never reach a queue, cache or session (results are exempt, see [below](#secrets-asaas-sends-back)) |
 | stack traces | redacted via `#[SensitiveParameter]` |
 | `var_export()` | **not** redacted — the function ignores `__debugInfo()`; never point it at a client or a DTO |
 
@@ -1392,7 +1392,7 @@ $card = new CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737');
 dd($card);
 // OwnerPro\Asaas\Support\DTO\CreditCard {
 //   holderName: "JOHN DOE"
-//   number: "************1111"
+//   number: "********1111"
 //   ccv: "***"
 // }
 
@@ -1400,7 +1400,37 @@ dd(AsaasClient::for(apiKey: 'my-secret-key'));
 // OwnerPro\Asaas\AsaasClient { resources: array:14 [...] }   // no API key, no headers
 ```
 
+The mask is a constant width, not one asterisk per hidden character — the length of a secret is not published either.
+
 Redaction never touches the wire — `toArray()` still returns the real values, so the payload Asaas receives is unaffected.
+
+### Secrets Asaas sends back
+
+Four response fields carry a live credential, and a result object exposes the response body on a public property:
+
+| Field | Returned by |
+| --- | --- |
+| `apiKey` | `accounts()->create()` — the subaccount key, shown once |
+| `accessToken` | the `accounts()->…AccessToken…()` endpoints |
+| `authToken` | `webhooks()->list()` / `get()` — the webhook shared secret |
+| `creditCardToken` | the card tokenization endpoints |
+
+`AsaasResult` and `AsaasPaginatedResult` scrub those field names — at any nesting depth, and in every row of a page — before `print_r()`, `var_dump()`, `dump()`, `dd()` or an error page can print them. `RawResponse` scrubs them out of the body it shows while debugging:
+
+```php
+$result = $asaas->accounts()->create([...]);
+
+dd($result);
+// data: array:3 [ "id" => "acc_1", "walletId" => "w_1", "apiKey" => "***" ]
+
+$result->data['apiKey'];      // the real key — store it, it is shown once
+$result->response->body();    // the exact bytes Asaas sent, unredacted
+```
+
+Two things this does **not** do, by design:
+
+- **`serialize()` is allowed on results.** Unlike `AsaasClient` and the request DTOs, results are legitimately cached and queued, so they do not refuse it — and a serialized result of `accounts()->create()` carries the subaccount key in clear. Persist the fields you need, not the result.
+- **`$result->data` is a plain array.** `Log::info('created', $result->data)` logs the real key: nothing can intercept an array you pass on yourself. Reach for `$result->data['apiKey']` to store the key, never to print it.
 
 `dump()` / `dd()` coverage needs the caster to be installed. That happens automatically: the Laravel service provider does it on boot, and `AsaasClient::for()` does it for standalone use. If you build the client by hand (`new AsaasClient(new AsaasConnector(...))`) and want the caster before that point, register it yourself:
 

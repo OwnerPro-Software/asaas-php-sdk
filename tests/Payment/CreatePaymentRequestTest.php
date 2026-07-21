@@ -316,7 +316,7 @@ it('produces an exact debug info shape with all scalar fields and masked nested 
         'callback' => $callback,
         'creditCard' => [
             'holderName' => 'John',
-            'number' => '************1111',
+            'number' => '********1111',
             'expiryMonth' => '12',
             'expiryYear' => '2030',
             'ccv' => '***',

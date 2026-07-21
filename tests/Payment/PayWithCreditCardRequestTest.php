@@ -74,7 +74,7 @@ it('produces an exact debug info shape with masked nested DTOs', function (): vo
     expect($request->__debugInfo())->toBe([
         'creditCard' => [
             'holderName' => 'John',
-            'number' => '************1111',
+            'number' => '********1111',
             'expiryMonth' => '12',
             'expiryYear' => '2030',
             'ccv' => '***',

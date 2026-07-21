@@ -64,7 +64,7 @@ it('produces an exact debug info shape with masked qr payload', function (): voi
 
     expect($request->__debugInfo())->toBe([
         'qrCode' => [
-            'payload' => '************ccddeeff',
+            'payload' => '********ccddeeff',
             'changeValue' => 5.00,
         ],
         'value' => 100.00,

@@ -100,7 +100,7 @@ it('produces an exact debug info shape with masked pix key and all scalar fields
 
     expect($request->__debugInfo())->toBe([
         'value' => 100.00,
-        'pixAddressKey' => '************.com',
+        'pixAddressKey' => '********.com',
         'pixAddressKeyType' => PixAddressKeyType::Email,
         'bankAccount' => null,
         'operationType' => TransferOperationType::Ted,
@@ -131,7 +131,7 @@ it('produces an exact debug info shape with masked nested bank account', functio
             'ownerName' => 'John',
             'cpfCnpj' => '********900',
             'agency' => '0001',
-            'account' => '***45',
+            'account' => '********45',
             'accountDigit' => '*',
             'bank' => null,
             'accountName' => null,

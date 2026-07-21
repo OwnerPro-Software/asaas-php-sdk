@@ -36,12 +36,23 @@ trait MasksSensitiveData
         return $this->__debugInfo();
     }
 
+    /**
+     * The fill is a constant width rather than one asterisk per hidden
+     * character: a proportional mask publishes the exact length of the value it
+     * hides, which narrows a brute-force search over a token and distinguishes
+     * a CPF from a CNPJ. Length is free entropy to hand out, so it is not.
+     *
+     * Values no longer than `$visibleSuffix` are masked whole — a suffix cannot
+     * be revealed without revealing the value.
+     */
     protected static function mask(string $value, int $visibleSuffix): string
     {
+        $fill = str_repeat('*', 8);
+
         if (strlen($value) <= $visibleSuffix) {
-            return str_repeat('*', strlen($value));
+            return $fill;
         }
 
-        return str_repeat('*', strlen($value) - $visibleSuffix).substr($value, -$visibleSuffix);
+        return $fill.substr($value, -$visibleSuffix);
     }
 }
