@@ -39,6 +39,9 @@ final class SecretRedactor
 {
     public const string PLACEHOLDER = '***';
 
+    /** Stands in for a body that decoded as JSON but could not be re-encoded. */
+    public const string UNENCODABLE = '*** <redacted; the body could not be re-encoded after scrubbing>';
+
     /**
      * Lowercased for a case-insensitive match: the wire spells these in
      * camelCase, but a proxy or a future endpoint answering `apikey` would
@@ -91,6 +94,15 @@ final class SecretRedactor
      * nothing to walk, so the caller keeps its own raw-text handling instead of
      * receiving a lossy re-encode.
      *
+     * A body that *did* decode is never answered raw, not even when re-encoding
+     * it fails. `json_decode()` accepts inputs `json_encode()` refuses — a float
+     * literal past the double range decodes to `INF`, which cannot be encoded —
+     * and both callers fall back to the untouched body on null. Answering null
+     * there would hand back the very credential the scrub had already found and
+     * replaced, so the failure answers a placeholder instead: fail closed, since
+     * the one thing known about this body is that it decoded far enough to be
+     * walked.
+     *
      * The returned JSON is re-encoded rather than patched in place, so
      * insignificant whitespace from the wire is not preserved. This is debug
      * output; `body()` still answers the exact bytes Asaas sent.
@@ -105,7 +117,7 @@ final class SecretRedactor
 
         $encoded = json_encode(self::scrub($decoded), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-        return is_string($encoded) ? $encoded : null;
+        return is_string($encoded) ? $encoded : self::UNENCODABLE;
     }
 
     /**

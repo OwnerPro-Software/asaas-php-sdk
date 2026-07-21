@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use OwnerPro\Asaas\Support\RawResponse;
 use OwnerPro\Asaas\Support\SecretRedactor;
 
 mutates(SecretRedactor::class);
@@ -69,6 +70,24 @@ it('scrubJson answers null for a body that is not a JSON array or object', funct
     'json null' => 'null',
     'truncated json' => '{"id":"acc_1","apiKey":"$aact_l',
 ]);
+
+it('scrubJson withholds a decoded body it cannot re-encode', function (): void {
+    // json_decode accepts what json_encode refuses: a float literal past the
+    // double range decodes to INF. Answering null here would send both callers
+    // down their `?? $body` fallback and print the live key the scrub had
+    // already replaced.
+    $body = '{"apiKey":"$aact_live_key","n":1e999}';
+
+    expect(SecretRedactor::scrubJson($body))
+        ->toBe(SecretRedactor::UNENCODABLE)
+        ->not->toContain('$aact_live_key');
+});
+
+it('withholds the same body from the debug view of a response', function (): void {
+    $debug = RawResponse::fake(200, [], '{"apiKey":"$aact_live_key","n":1e999}')->__debugInfo();
+
+    expect($debug['body'])->toBe(SecretRedactor::UNENCODABLE);
+});
 
 it('scrubJson keeps slashes and unicode unescaped', function (): void {
     $body = '{"url":"https://example.com/path","name":"José"}';
