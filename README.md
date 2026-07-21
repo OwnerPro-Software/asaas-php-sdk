@@ -1481,6 +1481,8 @@ Swap the fake in tests by overriding the contract binding:
 $this->app->instance(\OwnerPro\Asaas\Contracts\AsaasClientContract::class, AsaasClient::fake([...]));
 ```
 
+The `Asaas` facade resolves through `AsaasClientContract` too, so the swap above covers facade calls (`Asaas::payments()->...`) as well as injected code — one override, both styles.
+
 `FakeAsaasClient` does **not** extend `AsaasClient` (the production class is `final`), so code that type-hints the concrete `AsaasClient` cannot receive the fake from the container. Migrate those constructor signatures to `AsaasClientContract` to make them testable.
 
 ## License

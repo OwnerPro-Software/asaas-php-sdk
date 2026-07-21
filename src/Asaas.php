@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas;
 
 use Illuminate\Support\Facades\Facade;
+use OwnerPro\Asaas\Contracts\AsaasClientContract;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Environment;
 use SensitiveParameter;
 
-/** @mixin AsaasClient */
+/** @mixin AsaasClientContract */
 final class Asaas extends Facade
 {
     public static function for(
@@ -33,8 +34,14 @@ final class Asaas extends Facade
         );
     }
 
+    /**
+     * Resolve through the contract, not the concrete class, so the documented
+     * test seam works: overriding the `AsaasClientContract` binding detaches
+     * the container alias, which would otherwise leave the facade pointing at
+     * the real client while injected code sees the fake.
+     */
     protected static function getFacadeAccessor(): string
     {
-        return AsaasClient::class;
+        return AsaasClientContract::class;
     }
 }

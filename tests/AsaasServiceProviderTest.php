@@ -44,6 +44,23 @@ it('resolves AsaasClient via facade', function () {
     expect($client)->toBeInstanceOf(AsaasClient::class);
 });
 
+it('routes the facade through the contract so the documented fake swap applies', function () {
+    $fake = AsaasClient::fake(['payments' => ['id' => 'pay_fake']]);
+
+    $this->app->instance(AsaasClientContract::class, $fake);
+
+    expect(Asaas::getFacadeRoot())->toBe($fake);
+    expect(Asaas::payments()->find('pay_1')->data['id'])->toBe('pay_fake');
+});
+
+it('serves the same instance through the facade and an injected contract', function () {
+    $fake = AsaasClient::fake(['payments' => ['id' => 'pay_fake']]);
+
+    $this->app->instance(AsaasClientContract::class, $fake);
+
+    expect(Asaas::getFacadeRoot())->toBe(app(AsaasClientContract::class));
+});
+
 it('merges the package config defaults on register', function () {
     $this->app['config']->set('asaas', []);
 
