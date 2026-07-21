@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Support;
 
 use Closure;
+use JsonSerializable;
 
-final readonly class AsaasPaginatedResult implements Redactable
+final readonly class AsaasPaginatedResult implements JsonSerializable, Redactable
 {
     use ThrowsOnFailure;
 
@@ -49,6 +50,19 @@ final readonly class AsaasPaginatedResult implements Redactable
             'errors' => $this->errors,
             'response' => $this->response,
         ];
+    }
+
+    /**
+     * A page of `GET /webhooks` carries one `authToken` per row, so
+     * `Log::info('webhooks', ['page' => $page])` — whose context Monolog
+     * `json_encode()`s — would otherwise write every shared secret on the page
+     * into the log. See {@see AsaasResult::jsonSerialize()}.
+     *
+     * @return array{success: bool, data: array<array-key, mixed>, totalCount: int, hasMore: bool, limit: int, offset: int, errors: ?list<array{code?: string, description?: string}>, response: ?RawResponse}
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->__debugInfo();
     }
 
     /**

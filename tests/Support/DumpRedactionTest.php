@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use GuzzleHttp\Psr7\Response as GuzzleResponse;
+use Illuminate\Http\Client\Response;
 use OwnerPro\Asaas\AsaasClient;
+use OwnerPro\Asaas\Support\AsaasPaginatedResult;
+use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
@@ -138,4 +142,48 @@ it('answers with the redacted view and discards the collected properties', funct
     $cast = (AbstractCloner::$defaultCasters[Redactable::class])($creditCard, ['number' => '4111111111111111'], new Stub, false, 0);
 
     expect($cast)->toBe($creditCard->__debugInfo());
+});
+
+it('redacts credentials when a result is json-encoded, which is how it reaches a log', function (): void {
+    // `Log::info('created', ['result' => $result])` hands the result to Monolog,
+    // which json_encodes its context. Without `jsonSerialize()` the encoder
+    // walks the public properties and writes the live key into the log file.
+    $result = AsaasResult::success(
+        ['id' => 'acc_1', 'apiKey' => '$aact_live_key'],
+        new RawResponse(new Response(new GuzzleResponse(200, [], '{"id":"acc_1"}'))),
+    );
+
+    $encoded = json_encode($result);
+
+    expect($encoded)->toContain('"apiKey":"***"')
+        ->and($encoded)->not->toContain('$aact_live_key');
+});
+
+it('redacts a credential on every row when a page is json-encoded', function (): void {
+    $page = AsaasPaginatedResult::success(
+        [['id' => 'wh_1', 'authToken' => 'secret-one'], ['id' => 'wh_2', 'authToken' => 'secret-two']],
+        totalCount: 2,
+        hasMore: false,
+        limit: 10,
+        offset: 0,
+        rawResponse: new RawResponse(new Response(new GuzzleResponse(200, [], '{}'))),
+        nextPageFetcher: null,
+    );
+
+    $encoded = json_encode($page);
+
+    expect($encoded)->not->toContain('secret-one')
+        ->and($encoded)->not->toContain('secret-two')
+        ->and($encoded)->toContain('"authToken":"***"');
+});
+
+it('keeps the real value reachable on the property after json redaction', function (): void {
+    // Redaction is a display concern: the caller still has to store the key
+    // Asaas shows exactly once.
+    $result = AsaasResult::success(
+        ['apiKey' => '$aact_live_key'],
+        new RawResponse(new Response(new GuzzleResponse(200, [], '{}'))),
+    );
+
+    expect($result->data['apiKey'])->toBe('$aact_live_key');
 });

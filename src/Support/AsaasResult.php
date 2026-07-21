@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support;
 
-final readonly class AsaasResult implements Redactable
+use JsonSerializable;
+
+final readonly class AsaasResult implements JsonSerializable, Redactable
 {
     use ThrowsOnFailure;
 
@@ -38,6 +40,20 @@ final readonly class AsaasResult implements Redactable
             'errors' => $this->errors,
             'response' => $this->response,
         ];
+    }
+
+    /**
+     * The dump surface is not the only one that reaches a log file.
+     * `Log::info('created', ['result' => $result])` hands the result to
+     * Monolog, which `json_encode()`s its context — without this hook the
+     * encoder walks the public properties and writes the live `apiKey` of a
+     * freshly created subaccount into the log.
+     *
+     * @return array{success: bool, data: ?array<string, mixed>, errors: ?list<array{code?: string, description?: string}>, response: ?RawResponse}
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->__debugInfo();
     }
 
     /** @param array<string, mixed> $data */
