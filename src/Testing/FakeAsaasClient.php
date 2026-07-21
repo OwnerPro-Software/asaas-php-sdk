@@ -222,7 +222,7 @@ final class FakeAsaasClient implements AsaasClientContract
         $sequence = Http::sequence();
 
         foreach ($pages as $page) {
-            $sequence->push($page);
+            $sequence->pushResponse(StubResponse::normalize($page));
         }
 
         $this->register($pattern, $sequence);

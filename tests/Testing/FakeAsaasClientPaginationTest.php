@@ -49,6 +49,29 @@ it('stubPages() drives sequential ->all() iteration', function (): void {
     expect($items)->toBe([['id' => 'a'], ['id' => 'b']]);
 });
 
+it('stubPages() infers the pagination envelope like stub() does', function (): void {
+    $fake = AsaasClient::fake()->stubPages('webhooks', [
+        ['data' => [['id' => 'a'], ['id' => 'b']]],
+    ]);
+
+    $result = $fake->webhooks()->list();
+
+    expect($result->totalCount)->toBe(2);
+    expect($result->limit)->toBe(2);
+    expect($result->hasMore)->toBeFalse();
+});
+
+it('stubPages() leaves a declared envelope untouched', function (): void {
+    $fake = AsaasClient::fake()->stubPages('webhooks', [
+        ['data' => [['id' => 'a']], 'hasMore' => true, 'totalCount' => 9],
+    ]);
+
+    $result = $fake->webhooks()->list();
+
+    expect($result->totalCount)->toBe(9);
+    expect($result->hasMore)->toBeTrue();
+});
+
 it('stubPages() returns the fake (fluent)', function (): void {
     $fake = AsaasClient::fake();
 
