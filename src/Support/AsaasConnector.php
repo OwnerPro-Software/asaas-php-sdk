@@ -110,7 +110,9 @@ final readonly class AsaasConnector implements Connector, Redactable
      */
     public function postMultipart(string $path, array $data, array $files = []): AsaasResult
     {
-        $data = MultipartPayload::stringifyBooleans(MultipartPayload::rejectFileParts($data));
+        $data = MultipartPayload::stringifyBooleans(
+            MultipartPayload::guardFieldNames(MultipartPayload::rejectFileParts($data)),
+        );
 
         // Every caller-supplied header value is validated before the first
         // attach: a rejection mid-loop would leave the already-attached files

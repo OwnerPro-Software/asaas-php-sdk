@@ -436,6 +436,44 @@ it('refuses a bare file handle in $data, which would ship the local file name', 
     Http::assertNothingSent();
 });
 
+it('refuses a $data field name that would inject part headers, closing the other guard bypass', function (): void {
+    // The field name lands in the same unescaped `name="%s"` slot as a file
+    // part's name, so guarding only $files left the whole upload guard
+    // reachable around: this key closes the quote, appends a header of its own
+    // and forges a documentFile part with a filename no guard ever saw.
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $evil = "a\"\r\nX-Injected: yes\r\nContent-Disposition: form-data; name=\"documentFile\"; filename=\"evil.exe";
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', [$evil => 'payload']))
+        ->toThrow(InvalidArgumentException::class, 'Invalid multipart part name');
+
+    Http::assertNothingSent();
+});
+
+it('refuses an empty $data field name, which names no form field at all', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', ['' => 'orphan']))
+        ->toThrow(InvalidArgumentException::class, 'must not be empty');
+
+    Http::assertNothingSent();
+});
+
+it('accepts a numeric $data field name, which PHP narrows to an int key', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $result = multipartConnector()->postMultipart('/u', ['0' => 'zero']);
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        expect($request->body())->toContain('name="0"');
+
+        return true;
+    });
+});
+
 it('still accepts a nested $data array that is not a part', function (): void {
     Http::fake(['*' => Http::response(['ok' => true], 200)]);
 

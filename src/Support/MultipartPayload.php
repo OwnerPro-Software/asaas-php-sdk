@@ -47,6 +47,38 @@ final class MultipartPayload
     }
 
     /**
+     * Validates the field names of `$data` as the part names they become.
+     *
+     * `PendingRequest::parseMultipartBodyFormat()` turns each entry into
+     * `['name' => $key, 'contents' => $value]`, and `MultipartStream` then
+     * `sprintf()`s that name into `Content-Disposition: form-data; name="%s"`
+     * without escaping it — the same unescaped slot `$files[].name` lands in.
+     * Guarding only the `$files` side left the whole upload guard reachable
+     * around: a caller forwarding a browser-supplied field name could close the
+     * quote, append part headers of its own, and forge a `documentFile` part
+     * carrying a filename none of the other guards ever saw.
+     *
+     * A value that is itself an array becomes `"{$key}[]"`, so the bracket
+     * suffix rides on an already-validated name; the brackets themselves are
+     * ordinary characters inside a quoted header value.
+     *
+     * Keys are cast to string because PHP narrows a numeric one to `int` on the
+     * way into the array — `['0' => 'x']` arrives as `[0 => 'x']` and reaches
+     * the wire as the name `0`.
+     *
+     * @param  array<mixed, mixed>  $data
+     * @return array<mixed, mixed>
+     */
+    public static function guardFieldNames(array $data): array
+    {
+        foreach (array_keys($data) as $key) {
+            ContentDispositionGuard::partName((string) $key);
+        }
+
+        return $data;
+    }
+
+    /**
      * Coerce PHP `bool` values in a multipart payload to the literal strings 'true' / 'false'.
      *
      * Guzzle's MultipartStream casts booleans via (string), turning `true` into `"1"` and
