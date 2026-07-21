@@ -107,19 +107,23 @@ they rely on. Every fix is pinned by a test that fails without it.
   it now matches the docs, and the reasoning is pinned on the method and by an
   empty-body assertion in the test.
 
-### Removed
-
-- **`UpdateInvoiceRequest::$municipalServiceName`** — the field is create-only.
-  `PUT /v3/invoices/{id}` accepts exactly `serviceDescription`, `observations`,
-  `externalReference`, `value`, `deductions`, `effectiveDate`, `updatePayment`
-  and `taxes` (`specs/domains/invoices.json`, confirmed against
+- **`UpdateInvoiceRequest` sent `municipalServiceName`, which the update
+  endpoint does not accept.** `PUT /v3/invoices/{id}` accepts exactly
+  `serviceDescription`, `observations`, `externalReference`, `value`,
+  `deductions`, `effectiveDate`, `updatePayment` and `taxes`
+  (`specs/domains/invoices.json`, confirmed against
   https://docs.asaas.com/reference/atualizar-nota-fiscal); `municipalServiceName`
   exists only on `POST /v3/invoices`, and no `concept-fields.md` entry covers it,
-  so by the spec-doc-authority rule it does not belong on the update DTO. Passing
-  the key in an array is now ignored instead of being sent. **Breaking** for
-  callers using the named argument `municipalServiceName:` on
-  `new UpdateInvoiceRequest(...)` or reading the property. `CreateInvoiceRequest`
-  is untouched.
+  so by the spec-doc-authority rule it does not belong on the update DTO. The
+  field is dropped from the DTO; passing the key in an array is now ignored
+  instead of being put on the wire. `CreateInvoiceRequest` is untouched.
+  Classified as a fix rather than a breaking change: setting it never changed
+  anything about an invoice, so no caller could depend on its behaviour. Code
+  that passes it as a named argument (`new UpdateInvoiceRequest(municipalServiceName: …)`),
+  passes six or more positional arguments, or reads the property will fail
+  loudly and should simply drop the field. (The commit that introduced this,
+  `ad10b54`, is worded as a breaking change; this entry supersedes that
+  classification — see the note under Changed.)
 - **`PixKeyRequest` accepted key types the create endpoint cannot mint.** It
   took the full `PixAddressKeyType` enum, so `new PixKeyRequest(PixAddressKeyType::Cpf)`
   type-checked, serialized to `"CPF"` and earned a remote HTTP 400.
@@ -154,6 +158,14 @@ they rely on. Every fix is pinned by a test that fails without it.
 - `Asaas` facade `@mixin` points at `AsaasClientContract` instead of
   `AsaasClient`. The two surfaces are identical apart from `__debugInfo()`,
   which is never reached through a facade call.
+
+> **Release note — no breaking change in this cycle.** Commit `ad10b54` is
+> worded `fix(invoices)!` with a `BREAKING CHANGE:` footer. That classification
+> was reconsidered: the removed field never had any effect on an update, so it
+> carried no behaviour a caller could depend on. This release is a **minor**.
+> If the release tooling derives the version from commit trailers, override it
+> for this cycle — the trailer in `ad10b54` was left in place because rewriting
+> published history was not worth the churn.
 
 ## [2.1.0] - 2026-07-20
 
