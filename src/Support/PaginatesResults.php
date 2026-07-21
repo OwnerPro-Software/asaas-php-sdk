@@ -8,6 +8,24 @@ use Generator;
 
 trait PaginatesResults
 {
+    /**
+     * Hard ceiling on the pages one `all()` will fetch.
+     *
+     * The two diagnostic backstops each need a signal the envelope may withhold:
+     * `totalCount` is 0 when omitted, and the stall check needs a page carrying
+     * exactly the rows of the one before it. An endpoint that ignores `offset`
+     * *and* answers in an unstable order satisfies neither — it just keeps
+     * saying `hasMore` — and the walk would run until the process died. At the
+     * API's maximum page size of 100 this ceiling is a million rows, well past any
+     * real Asaas account, so it only ever fires on a fault.
+     *
+     * The exact number is a policy choice rather than behaviour — a walk is
+     * bounded at 9 999 or 10 001 just as well — so the value itself is not
+     * mutated. That there *is* a ceiling, and that reaching it reports
+     * `PAGINATION_RUNAWAY` rather than stopping quietly, is pinned by test.
+     */
+    private const int MAX_PAGES = 10_000; // @pest-mutate-ignore
+
     /** @param array<string, mixed> $query */
     abstract public function get(string $path, array $query = []): AsaasResult;
 
@@ -69,9 +87,12 @@ trait PaginatesResults
         );
 
         $delivered = 0;
+        $pages = 0;
         $previousRows = null;
 
         do {
+            $pages += 1;
+
             if (! $result->success) {
                 yield new AsaasPaginatedError(
                     $result->errors ?? [],
@@ -104,6 +125,12 @@ trait PaginatesResults
                 if ($result->hasMore) {
                     yield self::contradictedCount($result, $delivered);
                 }
+
+                break;
+            }
+
+            if ($pages >= self::MAX_PAGES) {
+                yield self::runawayWalk($result, $delivered);
 
                 break;
             }
@@ -153,6 +180,30 @@ trait PaginatesResults
                 'code' => 'PAGINATION_INCONSISTENT',
                 'description' => sprintf(
                     'Walk stopped after %d rows, the totalCount the API reported, but the same response still set hasMore=true. The endpoint is contradicting itself — rows may be missing. Page manually with next() if you need to inspect this.',
+                    $delivered,
+                ),
+            ]],
+            $asaasPaginatedResult->response,
+            $asaasPaginatedResult->offset,
+            $asaasPaginatedResult->limit,
+        );
+    }
+
+    /**
+     * The walk hit its page ceiling with neither backstop having fired.
+     *
+     * Reported rather than stopped quietly, for the same reason as the other
+     * two: a silent stop is indistinguishable from a complete walk. See
+     * {@see self::MAX_PAGES} for what gets a walk here.
+     */
+    private static function runawayWalk(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
+    {
+        return new AsaasPaginatedError(
+            [[
+                'code' => 'PAGINATION_RUNAWAY',
+                'description' => sprintf(
+                    'Walk stopped after %d pages and %d rows without the endpoint ever reporting the end. It reported no usable totalCount and never repeated a page, so nothing marks the walk complete. Rows may be missing, and rows already yielded may repeat. Page manually with next() if you need to inspect this.',
+                    self::MAX_PAGES,
                     $delivered,
                 ),
             ]],

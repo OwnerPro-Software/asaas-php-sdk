@@ -530,3 +530,30 @@ it('all does not call a repeated final page a stall', function (): void {
     expect(iterator_to_array($connector->all('/v3/payments', [])))
         ->toBe([['id' => 'r1'], ['id' => 'r1']]);
 });
+
+it('stops a walk that never reports the end and says why', function (): void {
+    // Neither diagnostic backstop can fire here: the envelope omits totalCount
+    // (which reports 0, so there is nothing to compare against) and the rows
+    // alternate, so no page ever repeats the one before it. Without a ceiling
+    // this endpoint keeps saying hasMore and the walk runs until the process
+    // dies.
+    $page = 0;
+
+    $connector = fakeConnector(function () use (&$page): AsaasResult {
+        $page++;
+
+        return AsaasResult::success(
+            ['data' => [['id' => $page % 2 === 0 ? 'a' : 'b']], 'hasMore' => true],
+            RawResponse::fake(200, [], '{}'),
+        );
+    });
+
+    $rows = iterator_to_array($connector->all('/payments', []), false);
+    $last = array_pop($rows);
+
+    expect($last)->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($last->errors[0]['code'])->toBe('PAGINATION_RUNAWAY');
+    expect($last->errors[0]['description'])
+        ->toContain('after 10000 pages and 10000 rows');
+    expect($rows)->toHaveCount(10_000);
+});
