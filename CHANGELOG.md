@@ -5,6 +5,69 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-07-20
+
+Opt-in typed transport exceptions for timeout reconciliation (PulsarApi #463).
+No breaking changes — with the flag off (default), behavior is byte-identical
+to 2.0.0.
+
+> **Highly recommended: enable `throw_on_transport_failure`.** The legacy
+> `CONNECTION_ERROR` default exists only for backward compatibility and will
+> likely become the default in a future major. Without the flag, a transport
+> failure is indistinguishable — by type — from a definitive API rejection,
+> which invites blind retries of operations that may have moved money.
+
+### Added
+
+- **`throwOnTransportFailure` flag** on `AsaasClient::for()`, `Asaas::for()`,
+  `AsaasConnector::forStandalone()/forLaravel()` and the
+  `asaas.throw_on_transport_failure` config key (env
+  `ASAAS_THROW_ON_TRANSPORT_FAILURE`, default `false`). When enabled, the
+  swallow-into-`CONNECTION_ERROR` path no longer exists; transport failures
+  throw one of two typed exceptions:
+  - `OwnerPro\Asaas\Support\RequestNotDeliveredException`
+    (`phase: 'connect'|'dns'|'tls'`) — the request provably never reached the
+    API (cURL 6/7/35/58/60); a direct retry is safe. Timeouts (cURL 28) are
+    never classified here: reused keep-alive connections report zeroed
+    connection timers, so a connect-phase timeout cannot be proven.
+  - `OwnerPro\Asaas\Support\IndeterminateResultException`
+    (`phase: 'body'|'read'|'transfer'|null`) — the API may or may not have
+    processed the request (read timeout, connection lost mid-transfer, 2xx
+    whose body is not a JSON object/array); never retry blindly — reconcile
+    first.
+  Classification biases toward indeterminate: any ambiguity (unknown errno,
+  missing handler context) classifies as `IndeterminateResultException` with
+  `phase: null`. The original `Illuminate\Http\Client\ConnectionException`
+  is preserved in `getPrevious()`. With the flag on, a 2xx response whose
+  body is not a JSON object/array throws (`phase: 'body'`) instead of
+  silently succeeding with empty `data` — except 204 No Content, which stays
+  a success. Definitive HTTP errors (4xx/5xx) still return `AsaasResult`
+  failures in both modes.
+- **Exception hierarchy**: new `OwnerPro\Asaas\Support\AsaasException` base
+  and abstract `TransportException` (parent of both typed exceptions).
+  `AsaasRequestException` now extends `AsaasException` (previously
+  `RuntimeException` directly — non-breaking, it still is one transitively).
+- **Transport failure fakes**: `AsaasClient::fake()` accepts
+  `throwOnTransportFailure:`; `FakeAsaasClient` gains
+  `stubRequestNotDelivered(pattern, phase)` and
+  `stubIndeterminateResult(pattern, phase)`. Stubs build production-shaped
+  exception chains (Guzzle `ConnectException` with real cURL errnos) that
+  flow through the same classifier as live traffic, so they honour the flag
+  in both modes.
+
+### Changed
+
+- `AsaasConnector::__construct()` gained an optional third parameter
+  (`throwOnTransportFailure = false`) and is now annotated `@internal` —
+  prefer constructing via `forStandalone()`/`forLaravel()`. Direct 2.0-style
+  construction keeps working unchanged.
+
+### Deprecated
+
+- The `CONNECTION_ERROR` result path (`statusCode 0`, `errors[0]['code'] ===
+  'CONNECTION_ERROR'`) is deprecated in favour of the typed exceptions. It
+  remains the default; a future major may flip the default.
+
 ## [2.0.0] - 2026-05-13
 
 Major release. Two consecutive spec-alignment audits against `specs/asaas_openapi.json`:
