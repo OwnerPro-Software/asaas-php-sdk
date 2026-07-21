@@ -133,6 +133,25 @@ they rely on. Every fix is pinned by a test that fails without it.
   https://docs.asaas.com/reference/criar-uma-chave). The DTO now rejects anything
   but `EVP` with an `InvalidArgumentException` at construction. The enum itself is
   unchanged: `TransferRequest::$pixAddressKeyType` legitimately accepts all five.
+- **Every multipart upload after the first shipped a JSON content type.**
+  `AsaasConnector::postMultipart()` restored the body format with `asJson()`,
+  which also pins an explicit `Content-Type: application/json` header — and
+  Guzzle supplies its own `multipart/form-data; boundary=...` only when no such
+  header is already set. The first call escaped it because
+  `PendingRequest::__construct` overwrites `options` after its own `asJson()`;
+  from the second call on, the boundary was gone and the multipart body arrived
+  mislabelled and unparseable. In Laravel `AsaasClient` is a container
+  singleton, so two document uploads in one request/worker were enough to hit
+  it, across all five upload routes (payment receipts, fiscal-info logos,
+  subaccount KYC documents). The body format is now restored with
+  `bodyFormat('json')`, which Guzzle already labels correctly on its own.
+- **`stubPages()` skipped pagination inference.** It pushed raw page arrays into
+  the sequence instead of routing them through `StubResponse::normalize()` the
+  way `stub()` and the constructor do. A page written as `['data' => [...]]` —
+  the self-describing shape `README.md` documents — came back with `totalCount`
+  and `limit` at 0, so paging assertions failed for a reason that had nothing to
+  do with the code under test. Declaring `hasMore` or `totalCount` still
+  disables inference, as documented.
 
 ### Changed
 
