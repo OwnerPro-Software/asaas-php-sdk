@@ -71,8 +71,8 @@ Maintenance rule: if a future spec refresh adds an entry here to `asaas_openapi.
 
 - **Spec gap:** absent from `specs/domains/payments.json`.
 - **Source:** https://docs.asaas.com/reference/estornar-boleto and https://docs.asaas.com/changelog/endpoint-para-estorno-de-boleto.
-- **SDK method:** `OwnerPro\Asaas\Payment\PaymentResource::refundBankSlip(string $id, array|RefundPaymentRequest $data = []): AsaasResult`.
-- **Body:** same shape as the standard `RefundPaymentRequest` (`value?`, `description?`, `refundOnCustomerCreditCard?`). Documented identical to the credit-card refund.
+- **SDK method:** `OwnerPro\Asaas\Payment\PaymentResource::refundBankSlip(string $id): AsaasResult`.
+- **Body:** none. The docs are explicit — *"Este endpoint não exige envio de parâmetros no corpo da requisição"* — and this is **not** the credit-card refund in another shape: it starts a customer-driven flow and returns a single `requestUrl` field, the link the payer opens to submit bank details and documents. There is no partial-refund amount to send, so no request DTO applies. `refundOnCustomerCreditCard` does not exist on this endpoint, nor on `POST /v3/payments/{id}/refund` (whose body is `value?` / `description?` / `splitRefunds?`, matching `RefundPaymentRequest`).
 
 ---
 

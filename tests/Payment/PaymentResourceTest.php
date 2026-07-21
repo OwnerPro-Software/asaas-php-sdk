@@ -687,14 +687,15 @@ it('lists refunds for a payment', function (): void {
         && $request->method() === 'GET');
 });
 
-it('refunds a bank slip payment', function (): void {
+it('refunds a bank slip payment without a body', function (): void {
     Http::fake(['*' => Http::response(['requestUrl' => 'https://sandbox.asaas.com/solicitar-estorno/xyz'], 200)]);
 
     $result = paymentResource()->refundBankSlip('pay_abc123');
 
     expect($result->success)->toBeTrue();
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/bankSlip/refund'
-        && $request->method() === 'POST');
+        && $request->method() === 'POST'
+        && $request->data() === []);
 });
 
 it('gets chargeback details for a payment', function (): void {

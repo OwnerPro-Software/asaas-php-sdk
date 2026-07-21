@@ -72,6 +72,12 @@ final readonly class PaymentResource
         return $this->connector->get($this->path($id, '/refunds'));
     }
 
+    /**
+     * Starts the customer-driven bank-slip refund flow. The endpoint takes no
+     * body — it is not the credit-card refund in another shape — and answers
+     * with a single `requestUrl`, the link the payer opens to submit bank
+     * details and documents. There is no partial-refund amount to send.
+     */
     public function refundBankSlip(string $id): AsaasResult
     {
         return $this->connector->post($this->path($id, '/bankSlip/refund'));

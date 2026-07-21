@@ -93,6 +93,19 @@ they rely on. Every fix is pinned by a test that fails without it.
   charset. The parameter is now `$escrowId`, documented on the method and in
   `README.md`, and the test that froze the wrong semantic now pins the
   guarantee id.
+- **`specs/concept-fields.md` described a `refundBankSlip()` signature and body
+  that do not exist.** It declared
+  `refundBankSlip(string $id, array|RefundPaymentRequest $data = [])` with a
+  body of `value?` / `description?` / `refundOnCustomerCreditCard?`, "identical
+  to the credit-card refund". `https://docs.asaas.com/reference/estornar-boleto`
+  says the opposite — *"Este endpoint não exige envio de parâmetros no corpo da
+  requisição"* — and the endpoint is a different concept entirely: it starts a
+  customer-driven flow and answers with a single `requestUrl`. The field
+  `refundOnCustomerCreditCard` exists on neither endpoint. Since
+  `concept-fields.md` is normative for wire surface absent from the OpenAPI
+  export, the entry was steering the SDK toward an endpoint that is not there;
+  it now matches the docs, and the reasoning is pinned on the method and by an
+  empty-body assertion in the test.
 
 ### Changed
 
