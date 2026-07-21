@@ -45,12 +45,18 @@ interface Connector
      * empty body, which Asaas treats as a missing field — boolean form fields like
      * `simplesNacional`, `enabled`, and `availableAfterPayment` would silently drop.
      *
+     * `filename` is required, not optional: omitting it makes Guzzle fall back
+     * to the stream's `uri` metadata and ship the local file's name, which is
+     * the disclosure {@see ContentDispositionGuard::filename()} exists to
+     * prevent — and the fallback happens past every guard. A part that is not a
+     * file belongs in `$data`.
+     *
      * @param  array<string, mixed>  $data
      * @param array<int, array{
      *     name: string,
      *     contents: string|resource,
-     *     filename?: string,
-     *     headers?: array<string, string>
+     *     filename: string,
+     *     headers?: array<array-key, string|int|float|bool>
      * }> $files
      *
      * @throws TransportException only when built with `throwOnTransportFailure: true`

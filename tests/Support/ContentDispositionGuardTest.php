@@ -35,11 +35,21 @@ it('rejects a filename that breaks out of the Content-Disposition header', funct
 
 it('rejects an empty filename', function (): void {
     ContentDispositionGuard::filename('');
-})->throws(InvalidArgumentException::class, 'Upload filename must not be empty');
+})->throws(InvalidArgumentException::class, 'reads it as absent');
 
 it('rejects a filename that has no name component left after stripping directories', function (): void {
     ContentDispositionGuard::filename('/');
-})->throws(InvalidArgumentException::class, 'Upload filename must not be empty');
+})->throws(InvalidArgumentException::class, 'reads it as absent');
+
+it('rejects the one-character name the HTTP client also reads as absent', function (string $filename): void {
+    // MultipartStream tests the filename with empty(), so '0' is substituted
+    // with the local file's name exactly as '' is.
+    ContentDispositionGuard::filename($filename);
+})->throws(InvalidArgumentException::class, 'reads it as absent')->with(['0', '/srv/uploads/0', './0']);
+
+it('still accepts a filename that merely begins with a zero', function (): void {
+    expect(ContentDispositionGuard::filename('0.png'))->toBe('0.png');
+});
 
 it('accepts a filename at the exact 255-char limit', function (): void {
     $filename = str_repeat('a', 255);
@@ -137,4 +147,21 @@ it('coerces a scalar header value and validates what will actually be sent', fun
     // outright would be a regression against callers who pass an int length.
     expect(ContentDispositionGuard::partHeaders(['Content-Length' => 123]))
         ->toBe(['Content-Length' => '123']);
+});
+
+it('rejects a caller-supplied Content-Disposition whatever its casing', function (string $header): void {
+    // Guzzle writes its own only when the caller supplied none, so this one
+    // would replace the name and filename just validated. Content-Length is
+    // deliberately still allowed — see the coercion test above: it is the only
+    // way to describe a part whose stream cannot report its size.
+    ContentDispositionGuard::partHeaders([$header => 'anything']);
+})->throws(InvalidArgumentException::class, 'may not carry its own')->with([
+    'Content-Disposition', 'content-disposition', 'CONTENT-DISPOSITION',
+]);
+
+it('names the stripped filename in the error, not the caller local path', function (): void {
+    // The disclosure this class prevents, pointed the other way: echoing the
+    // path back would put it in the caller's own logs.
+    expect(fn (): string => ContentDispositionGuard::filename('/srv/app/storage/uploads/0'))
+        ->toThrow(InvalidArgumentException::class, "Invalid upload filename: '0'.");
 });

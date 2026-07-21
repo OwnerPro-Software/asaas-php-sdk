@@ -104,13 +104,13 @@ final readonly class AsaasConnector implements Connector, Redactable
      * @param array<int, array{
      *     name: string,
      *     contents: string|resource,
-     *     filename?: string,
-     *     headers?: array<string, string>
+     *     filename: string,
+     *     headers?: array<array-key, string|int|float|bool>
      * }> $files
      */
     public function postMultipart(string $path, array $data, array $files = []): AsaasResult
     {
-        $data = MultipartPayload::stringifyBooleans($data);
+        $data = MultipartPayload::stringifyBooleans(MultipartPayload::rejectFileParts($data));
 
         // Every caller-supplied header value is validated before the first
         // attach: a rejection mid-loop would leave the already-attached files
@@ -122,7 +122,7 @@ final readonly class AsaasConnector implements Connector, Redactable
         );
 
         $filenames = array_map(
-            static fn (array $file): ?string => isset($file['filename']) ? ContentDispositionGuard::filename($file['filename']) : null,
+            static fn (array $file): string => ContentDispositionGuard::filename(self::filenameOf($file)),
             $files,
         );
 
@@ -178,6 +178,27 @@ final readonly class AsaasConnector implements Connector, Redactable
             $environment->baseUrl(),
             $throwOnTransportFailure,
         );
+    }
+
+    /**
+     * An omitted filename is rejected rather than forwarded as `null`:
+     * `attach()` then leaves the key out entirely, and Guzzle substitutes the
+     * local file's name — past every guard here. `Connector` declares the key
+     * required, but a PHPDoc shape is not enforced at runtime and this seam is
+     * public, so the check has to exist as code.
+     *
+     * @param  array{name: string, contents: string|resource, filename?: string, headers?: array<array-key, string|int|float|bool>}  $file
+     */
+    private static function filenameOf(array $file): string
+    {
+        if (! isset($file['filename'])) {
+            throw new InvalidArgumentException(sprintf(
+                "Multipart part '%s' has no filename. An upload must name the file it sends, or the HTTP client falls back to the local file's name and discloses it. A part that is not a file belongs in \$data.",
+                $file['name'],
+            ));
+        }
+
+        return $file['filename'];
     }
 
     private function sendRequest(Closure $httpCall): AsaasResult

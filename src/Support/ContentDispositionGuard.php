@@ -37,19 +37,30 @@ final class ContentDispositionGuard
 
     /**
      * Directory components are stripped: the caller's local path is not Asaas's
-     * business, and shipping it discloses the server's filesystem layout.
+     * business, and shipping its name discloses what the server called the file.
      *
-     * An empty result is rejected too — Guzzle then falls back to the stream's
-     * `uri` metadata and ships the absolute path of the local file, which is
-     * the disclosure this strips in the first place.
+     * A name Guzzle reads as absent is rejected, because it then falls back to
+     * the stream's `uri` metadata and ships `basename()` of the local file —
+     * the disclosure this strips in the first place. "Absent" is Guzzle's
+     * definition, not PHP's `=== ''`: `MultipartStream` tests the name with
+     * `empty()`, so the one-character name `'0'` is discarded along with the
+     * empty string. Guzzle special-cases `'0'` further down, where it writes
+     * the header, but not at the point where it decides to substitute — so a
+     * `'0'` that passed a `=== ''` check reached the wire as the local name.
      */
     public static function filename(string $filename): string
     {
         $name = basename($filename);
 
-        if ($name === '') {
+        if ($name === '' || $name === '0') {
+            // The stripped name, not the argument: echoing the caller's path
+            // back would put it in their logs, which is the disclosure this
+            // method is about — just pointed the other way.
             throw new InvalidArgumentException(
-                'Upload filename must not be empty: an empty name makes the HTTP client fall back to the local file path, leaking it to Asaas.',
+                sprintf(
+                    "Invalid upload filename: '%s'. The HTTP client reads it as absent and falls back to the local file's name, leaking it to Asaas.",
+                    $name,
+                ),
             );
         }
 
@@ -84,11 +95,29 @@ final class ContentDispositionGuard
      * Names and values are cast to string before they are checked, and the cast
      * result is what gets returned: the HTTP client interpolates them into the
      * preamble the same way, so validating the pre-cast value would leave a
-     * scalar reaching the wire unchecked. PHP also narrows a numeric array key
-     * to `int`, so a header literally named `5` arrives as one.
+     * scalar reaching the wire unchecked. PHP narrows a numeric array key to
+     * `int` on the way into the array, so a header literally named `5` arrives
+     * as one and leaves as one — hence the `array-key` on the return, which the
+     * cast to string cannot undo.
      *
-     * @param  array<string, string|int|float|bool>  $headers
-     * @return array<string, string>
+     * `Content-Disposition` is rejected outright. Guzzle writes its own only
+     * when the caller supplied none (`MultipartStream::createElement()`), so a
+     * caller-supplied one silently replaces the `name` and `filename` that
+     * {@see self::partName()} and {@see self::filename()} just validated,
+     * making this guard's other half unenforceable — and the part already has
+     * dedicated fields for both, so there is nothing it can express that is
+     * not available without it.
+     *
+     * `Content-Length` is deliberately *not* rejected, though Guzzle defers to
+     * it the same way. There the deference is a feature: `getSize()` answers
+     * null for a non-seekable stream and Guzzle then emits no length at all, so
+     * supplying one is the only way to describe such a part. A length that
+     * disagrees with the stream desynchronises the parser reading the body, but
+     * the caller owns both halves — that is a mistake to make, not a guard to
+     * defeat.
+     *
+     * @param  array<array-key, string|int|float|bool>  $headers
+     * @return array<array-key, string>
      */
     public static function partHeaders(array $headers): array
     {
@@ -100,6 +129,12 @@ final class ContentDispositionGuard
             if (preg_match(self::HEADER_NAME_PATTERN, $name) !== 1) {
                 throw new InvalidArgumentException(
                     sprintf("Invalid multipart part header name: '%s'. Header names are RFC 7230 tokens.", $name),
+                );
+            }
+
+            if (strcasecmp($name, 'Content-Disposition') === 0) {
+                throw new InvalidArgumentException(
+                    "A multipart part may not carry its own 'Content-Disposition' header: it would replace the validated name and filename. Pass them as the part's 'name' and 'filename' instead.",
                 );
             }
 

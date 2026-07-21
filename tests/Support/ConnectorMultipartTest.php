@@ -254,14 +254,39 @@ it('does not attach earlier files when a later filename is rejected', function (
         ->and($body)->not->toContain('FIRST');
 });
 
-it('refuses an empty filename that would leak the local file path', function (): void {
+it('refuses a filename the HTTP client reads as absent', function (string $filename): void {
+    // Both leak the local file's name: Guzzle tests the filename with empty(),
+    // so '0' is discarded and substituted exactly as '' is — even though it
+    // special-cases '0' further down, where it writes the header.
     Http::fake(['*' => Http::response(['ok' => true], 200)]);
 
     expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', [], [[
-        'name' => 'documentFile', 'contents' => 'x', 'filename' => '',
-    ]]))->toThrow(InvalidArgumentException::class);
+        'name' => 'documentFile', 'contents' => 'x', 'filename' => $filename,
+    ]]))->toThrow(InvalidArgumentException::class, 'reads it as absent');
 
     Http::assertNothingSent();
+})->with(['', '0', '/tmp/0', './0']);
+
+it('refuses an upload that names no file at all', function (): void {
+    // An omitted filename never reaches the guard: attach() leaves the key out
+    // and Guzzle substitutes the local name past every check here.
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', [], [[
+        'name' => 'documentFile', 'contents' => 'x',
+    ]]))->toThrow(InvalidArgumentException::class, 'has no filename');
+
+    Http::assertNothingSent();
+});
+
+it('still accepts a filename that merely starts with a zero', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    multipartConnector()->postMultipart('/u', [], [[
+        'name' => 'documentFile', 'contents' => 'x', 'filename' => '0.png',
+    ]]);
+
+    Http::assertSent(fn ($request): bool => str_contains((string) $request->body(), 'filename="0.png"'));
 });
 
 it('refuses a filename whose trailing backslash escapes the closing quote', function (): void {
@@ -342,6 +367,24 @@ it('rejects a header that would break out of the part preamble before anything i
     Http::assertNothingSent();
 });
 
+it('rejects a part header that would replace the validated content disposition', function (string $header): void {
+    // Guzzle writes its own Content-Disposition only when the caller supplied
+    // none, so this header would silently override the name and filename the
+    // guard just validated — leaving the other half of the guard unenforceable.
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
+
+    expect(fn (): AsaasResult => $connector->postMultipart('/myAccount/documents/doc_1', [], [[
+        'name' => 'documentFile',
+        'contents' => 'binary',
+        'filename' => 'doc.pdf',
+        'headers' => [$header => 'form-data; name="forged"; filename="evil.exe"'],
+    ]]))->toThrow(InvalidArgumentException::class, 'may not carry its own');
+
+    Http::assertNothingSent();
+})->with(['Content-Disposition', 'content-disposition', 'CONTENT-DISPOSITION']);
+
 it('passes valid part headers through to the request', function (): void {
     Http::fake(['*' => Http::response(['ok' => true], 200)]);
 
@@ -359,4 +402,44 @@ it('passes valid part headers through to the request', function (): void {
 
         return true;
     });
+});
+
+it('refuses a $data entry that describes a file part, closing the guard bypass', function (): void {
+    // Laravel forwards any $data entry carrying name+contents straight through
+    // as a multipart element, with its own filename and headers — none of which
+    // pass the guard. Writing the part in the wrong argument would otherwise
+    // bypass filename, part-name and header validation entirely.
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', [
+        'type' => 'IDENTIFICATION',
+        'evil' => [
+            'name' => 'documentFile',
+            'contents' => 'PAYLOAD',
+            'filename' => 'a"; name="injected',
+            'headers' => ['Content-Disposition' => "form-data; name=\"x\"\r\nX-Injected: yes"],
+        ],
+    ]))->toThrow(InvalidArgumentException::class, 'describes a file part');
+
+    Http::assertNothingSent();
+});
+
+it('refuses a bare file handle in $data, which would ship the local file name', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $handle = fopen('php://memory', 'r');
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', ['stray' => $handle]))
+        ->toThrow(InvalidArgumentException::class, 'is a file handle');
+
+    fclose($handle);
+    Http::assertNothingSent();
+});
+
+it('still accepts a nested $data array that is not a part', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $result = multipartConnector()->postMultipart('/u', ['meta' => ['name' => 'no contents key']]);
+
+    expect($result->success)->toBeTrue();
 });
