@@ -7,7 +7,6 @@ namespace OwnerPro\Asaas\Testing;
 use Closure;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Factory;
-use InvalidArgumentException;
 
 /**
  * Builds stub responses through `Factory::response()` rather than the `Http`
@@ -73,13 +72,11 @@ final class StubResponse
      */
     public static function normalizePages(array $pages): array
     {
-        if ($pages === []) {
-            throw new InvalidArgumentException(
-                'stubPages() requires at least one page; an empty sequence has no response to serve and would surface as an exhausted-sequence error at request time instead of here.',
-            );
-        }
+        $rowCounts = array_map(static fn (array $page): int => count(self::rowsOf($page)), $pages);
 
-        $totalCount = array_sum(array_map(static fn (array $page): int => count(self::rowsOf($page)), $pages));
+        PageSequenceGuard::validate($pages, $rowCounts);
+
+        $totalCount = array_sum($rowCounts);
         $lastIndex = count($pages) - 1;
 
         $responses = [];

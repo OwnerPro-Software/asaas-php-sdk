@@ -36,10 +36,21 @@ final class StubPattern
      */
     public static function absolute(string $baseUrl, string $pattern): string
     {
-        // Whitespace is stripped before anything else: both guards below anchor
-        // at `^`, so a single leading space walked a scheme — or a `v3/` — past
-        // them and into the doubled URL they exist to reject.
-        $relative = ltrim(trim($pattern), '/');
+        $trimmed = trim($pattern);
+
+        // Outer whitespace is forgiven; interior whitespace is not. Stripping
+        // the two edges is a single pass, so `'/ v3/payments'` — a slash, then a
+        // space — kept its space and walked past both guards below, which anchor
+        // at `^`. Rejecting the whitespace itself closes that off for good:
+        // there is no URL a space belongs in, so nothing legitimate is lost.
+        if (preg_match('/\s/', $trimmed) === 1) {
+            throw new InvalidArgumentException(sprintf(
+                "Stub and assertion patterns must not contain whitespace; got '%s'. Write 'payments/pay_1' rather than 'payments/ pay_1'.",
+                $pattern,
+            ));
+        }
+
+        $relative = ltrim($trimmed, '/');
 
         if (self::carriesHost($pattern, $relative)) {
             throw new InvalidArgumentException(sprintf(
@@ -49,7 +60,11 @@ final class StubPattern
             ));
         }
 
-        if ($relative === 'v3' || str_starts_with($relative, 'v3/')) {
+        // Matched case-insensitively, as the host guard is and for the same
+        // reason: `'V3/payments'` is the same muscle-memory slip as
+        // `'v3/payments'`, produces the same doubled URL that matches nothing,
+        // and would turn `assertNotSent` into an assertion that cannot fail.
+        if (strcasecmp($relative, 'v3') === 0 || stripos($relative, 'v3/') === 0) {
             throw new InvalidArgumentException(sprintf(
                 "Stub and assertion patterns must be relative to the Asaas base URL, which already ends in '/v3'; got '%s'. Drop the version segment — write '%s' rather than '%s'.",
                 $pattern,

@@ -325,6 +325,63 @@ it('rejects an empty stubPages() sequence at registration', function (): void {
         ->toThrow(InvalidArgumentException::class, 'stubPages() requires at least one page');
 });
 
+it('rejects a stubPages() count the walk exhausts before the last page', function (): void {
+    // The fake used to force `hasMore: true` onto the non-final page while
+    // honouring its declared totalCount, manufacturing the contradiction that
+    // all() reports: row `a` came out, then a PAGINATION_INCONSISTENT error
+    // object mid-row-stream, and row `b` was never delivered at all.
+    expect(fn (): FakeAsaasClient => AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']], 'totalCount' => 1],
+        ['data' => [['id' => 'b']]],
+    ]))->toThrow(InvalidArgumentException::class, 'stubPages() page 1 declares totalCount 1');
+});
+
+it('catches an exhausted count on a later page, past pages that declare none', function (): void {
+    // The pages before it declare no count and are simply passed over — the
+    // check keeps walking rather than stopping at the first one it cannot
+    // fault. Page 2 is the offender, and one page still waits behind it.
+    expect(fn (): FakeAsaasClient => AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'b']], 'totalCount' => 2],
+        ['data' => [['id' => 'c']]],
+    ]))->toThrow(
+        InvalidArgumentException::class,
+        'stubPages() page 2 declares totalCount 2, which the walk has already delivered by the end of that page, while 1 more page(s) wait behind it.',
+    );
+});
+
+it('leaves a zero count alone, which is the value an envelope omitting it reports', function (): void {
+    // `all()` cannot read a totalCount of 0 as "the set is complete" — it is
+    // what an envelope without the key reports — so it never stops the walk
+    // early and there is no contradiction to refuse.
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']], 'totalCount' => 0],
+        ['data' => [['id' => 'b']]],
+    ]);
+
+    expect(iterator_to_array($fake->payments()->all()))->toBe([['id' => 'a'], ['id' => 'b']]);
+});
+
+it('keeps serving a stubPages() count that describes the whole walk', function (): void {
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']], 'totalCount' => 2],
+        ['data' => [['id' => 'b']], 'totalCount' => 2],
+    ]);
+
+    expect(iterator_to_array($fake->payments()->all()))->toBe([['id' => 'a'], ['id' => 'b']]);
+});
+
+it('leaves a last-page count alone, since no page waits behind it', function (): void {
+    // The last page ends the walk on its own — a count it has already delivered
+    // is the normal, coherent case rather than a contradiction.
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'b']], 'totalCount' => 2],
+    ]);
+
+    expect(iterator_to_array($fake->payments()->all()))->toBe([['id' => 'a'], ['id' => 'b']]);
+});
+
 it('serves a stub that models a later page to the request that asks for it', function (): void {
     // A stub declaring `offset: 10` describes page two. Cutting on a literal
     // offset 0 would hand the test an empty page it never described.

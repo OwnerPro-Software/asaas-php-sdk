@@ -5,9 +5,10 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use OwnerPro\Asaas\Testing\PageSequenceGuard;
 use OwnerPro\Asaas\Testing\StubResponse;
 
-mutates(StubResponse::class);
+mutates(StubResponse::class, PageSequenceGuard::class);
 
 it('wraps raw associative array as 200 JSON response', function (): void {
     $factory = new Factory;

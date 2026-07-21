@@ -618,3 +618,38 @@ it('rejects a host-carrying pattern padded with whitespace', function (string $p
     ' v3/payments',
     "v3/payments\n",
 ]);
+
+it('rejects a v3 segment in any casing, as it rejects a scheme in any casing', function (string $pattern): void {
+    // Trimming the two edges was a single pass, so a slash followed by a space
+    // kept the space and cleared both `^`-anchored guards; and the version
+    // guard matched case-sensitively while the host guard beside it did not.
+    // Either slip built a doubled URL that matches nothing, which is an
+    // assertNotSent that cannot fail.
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    expect(fn () => $fake->assertNotSent($pattern))->toThrow(InvalidArgumentException::class);
+})->with([
+    'V3/payments/pay_1',
+    'V3',
+    'v3/payments',
+    '/ v3/payments',
+    '/ https://api-sandbox.asaas.com/v3/payments*',
+]);
+
+it('rejects interior whitespace, which no URL has a use for', function (): void {
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    expect(fn () => $fake->assertNotSent('payments/ pay_1'))
+        ->toThrow(InvalidArgumentException::class, 'must not contain whitespace');
+});
+
+it('still resolves a pattern whose segment merely starts with the version letters', function (): void {
+    // Case-insensitive on the `v3/` segment, not on the two letters: `V3things`
+    // is a path, not the version prefix.
+    $fake = AsaasClient::fake(['*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    expect($fake->recorded('V3things'))->toBe([]);
+});
