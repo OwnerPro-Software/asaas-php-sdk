@@ -326,3 +326,37 @@ it('restores JSON body format even when the multipart upload fails', function ()
     Http::assertSent(fn ($request): bool => str_contains($request->url(), '/payments')
         && str_contains((string) $request->header('Content-Type')[0], 'application/json'));
 });
+
+it('rejects a header that would break out of the part preamble before anything is sent', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
+
+    expect(fn (): AsaasResult => $connector->postMultipart('/myAccount/documents/doc_1', [], [[
+        'name' => 'documentFile',
+        'contents' => 'binary',
+        'filename' => 'doc.pdf',
+        'headers' => ['X-Meta' => "ok\r\nContent-Disposition: form-data; name=\"forged\""],
+    ]]))->toThrow(InvalidArgumentException::class, 'control characters are not allowed');
+
+    Http::assertNothingSent();
+});
+
+it('passes valid part headers through to the request', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
+
+    $connector->postMultipart('/myAccount/documents/doc_1', [], [[
+        'name' => 'documentFile',
+        'contents' => 'binary',
+        'filename' => 'doc.pdf',
+        'headers' => ['Content-Type' => 'application/pdf'],
+    ]]);
+
+    Http::assertSent(function ($request): bool {
+        expect($request->body())->toContain('Content-Type: application/pdf');
+
+        return true;
+    });
+});

@@ -88,3 +88,53 @@ it('rejects a part name one char over the limit without interpolating it', funct
     expect(fn () => ContentDispositionGuard::partName(str_repeat('a', 256)))
         ->toThrow(InvalidArgumentException::class, 'The multipart part name must be at most 255 chars; got 256.');
 });
+
+it('accepts part headers Guzzle can write verbatim', function (): void {
+    // A header value is not a quoted string, so quotes and backslashes are
+    // ordinary there — unlike in a Content-Disposition filename.
+    $headers = ['Content-Type' => 'text/plain; charset="utf-8"'];
+
+    expect(ContentDispositionGuard::partHeaders($headers))->toBe($headers);
+});
+
+it('accepts an empty header list', function (): void {
+    expect(ContentDispositionGuard::partHeaders([]))->toBe([]);
+});
+
+it('rejects a control character in a part header value', function (string $value): void {
+    // Guzzle writes each pair as "{$key}: {$value}\r\n" with no validation, so a
+    // CR or LF closes the part's header block and appends whatever follows.
+    expect(fn (): array => ContentDispositionGuard::partHeaders(['X-Meta' => $value]))
+        ->toThrow(InvalidArgumentException::class, "Invalid value for multipart part header 'X-Meta'");
+})->with([
+    'crlf' => "ok\r\nX-Injected: 1",
+    'lf' => "ok\nX-Injected: 1",
+    'cr' => "ok\rX-Injected: 1",
+    'nul' => "ok\0",
+    'del' => "ok\x7F",
+]);
+
+it('rejects a part header name that is not an RFC 7230 token', function (string $name): void {
+    expect(fn (): array => ContentDispositionGuard::partHeaders([$name => 'value']))
+        ->toThrow(InvalidArgumentException::class, 'Invalid multipart part header name');
+})->with([
+    'crlf' => "X-Meta\r\nX-Injected",
+    'colon' => 'X-Meta: injected',
+    'space' => 'X Meta',
+    'empty' => '',
+    'quote' => 'X-"Meta"',
+]);
+
+it('accepts a numerically-named part header, which PHP hands over as an int key', function (): void {
+    // `['5' => 'v']` becomes `[5 => 'v']`: the key reaches the guard as an int,
+    // and preg_match() under strict_types would reject it uncast.
+    expect(ContentDispositionGuard::partHeaders(['5' => 'digits']))->toBe([5 => 'digits']);
+});
+
+it('coerces a scalar header value and validates what will actually be sent', function (): void {
+    // The HTTP client interpolates whatever it is given; validating the pre-cast
+    // value would let a scalar reach the wire unchecked, and rejecting it
+    // outright would be a regression against callers who pass an int length.
+    expect(ContentDispositionGuard::partHeaders(['Content-Length' => 123]))
+        ->toBe(['Content-Length' => '123']);
+});

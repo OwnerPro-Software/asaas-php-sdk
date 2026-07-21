@@ -112,9 +112,10 @@ final readonly class AsaasConnector implements Connector, Redactable
     {
         $data = MultipartPayload::stringifyBooleans($data);
 
-        // Both header values are validated before the first attach: a rejection
-        // mid-loop would leave the already-attached files pending on the reused
-        // PendingRequest and smuggle them into the next upload.
+        // Every caller-supplied header value is validated before the first
+        // attach: a rejection mid-loop would leave the already-attached files
+        // pending on the reused PendingRequest and smuggle them into the next
+        // upload.
         $partNames = array_map(
             static fn (array $file): string => ContentDispositionGuard::partName($file['name']),
             $files,
@@ -125,14 +126,19 @@ final readonly class AsaasConnector implements Connector, Redactable
             $files,
         );
 
-        return $this->sendRequest(function () use ($path, $data, $files, $partNames, $filenames): Response {
+        $headers = array_map(
+            static fn (array $file): array => ContentDispositionGuard::partHeaders($file['headers'] ?? []),
+            $files,
+        );
+
+        return $this->sendRequest(function () use ($path, $data, $files, $partNames, $filenames, $headers): Response {
             try {
-                foreach ($files as $index => $file) {
+                foreach (array_keys($files) as $index) {
                     $this->pendingRequest->attach(
                         $partNames[$index],
-                        $file['contents'],
+                        $files[$index]['contents'],
                         $filenames[$index],
-                        $file['headers'] ?? [],
+                        $headers[$index],
                     );
                 }
 

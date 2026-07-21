@@ -7,8 +7,10 @@ namespace OwnerPro\Asaas\Support;
 use InvalidArgumentException;
 
 /**
- * Validates the two caller-supplied values Guzzle interpolates into a
- * multipart part's `Content-Disposition: form-data; name="..."; filename="..."`.
+ * Validates the caller-supplied values Guzzle interpolates into a multipart
+ * part's headers — the `name` and `filename` of
+ * `Content-Disposition: form-data; name="..."; filename="..."`, and any extra
+ * header the caller hangs on the part.
  *
  * Neither value is escaped on the way in, so both are breakout points. A
  * double quote closes the value outright, and a **trailing backslash** does the
@@ -26,6 +28,12 @@ final class ContentDispositionGuard
      * quote, the backslash that escapes it, and every control character.
      */
     private const string UNSAFE_PATTERN = '/["\\\\\x00-\x1F\x7F]/';
+
+    /** RFC 7230 `token`: the character set a header field name is drawn from. */
+    private const string HEADER_NAME_PATTERN = '/^[!#$%&\'*+.^_`|~0-9A-Za-z-]+$/D';
+
+    /** CR, LF and NUL included: any of them ends the header line Guzzle is writing. */
+    private const string CONTROL_PATTERN = '/[\x00-\x1F\x7F]/';
 
     /**
      * Directory components are stripped: the caller's local path is not Asaas's
@@ -61,6 +69,52 @@ final class ContentDispositionGuard
         }
 
         return self::guard($partName, 'multipart part name');
+    }
+
+    /**
+     * Validates the extra headers a caller can hang on a part.
+     *
+     * Guzzle writes them into the part preamble as `"{$key}: {$value}\r\n"`
+     * with no validation of its own, so a CR or LF in either half closes the
+     * header block early and appends whatever follows as further headers — or
+     * as a whole extra part. The double quote and backslash are *not* rejected
+     * here, unlike in a `Content-Disposition` value: a header value is not a
+     * quoted string, and `charset="utf-8"` is ordinary.
+     *
+     * Names and values are cast to string before they are checked, and the cast
+     * result is what gets returned: the HTTP client interpolates them into the
+     * preamble the same way, so validating the pre-cast value would leave a
+     * scalar reaching the wire unchecked. PHP also narrows a numeric array key
+     * to `int`, so a header literally named `5` arrives as one.
+     *
+     * @param  array<string, string|int|float|bool>  $headers
+     * @return array<string, string>
+     */
+    public static function partHeaders(array $headers): array
+    {
+        $validated = [];
+
+        foreach ($headers as $key => $value) {
+            $name = (string) $key;
+
+            if (preg_match(self::HEADER_NAME_PATTERN, $name) !== 1) {
+                throw new InvalidArgumentException(
+                    sprintf("Invalid multipart part header name: '%s'. Header names are RFC 7230 tokens.", $name),
+                );
+            }
+
+            $stringValue = (string) $value;
+
+            if (preg_match(self::CONTROL_PATTERN, $stringValue) === 1) {
+                throw new InvalidArgumentException(
+                    sprintf("Invalid value for multipart part header '%s': control characters are not allowed.", $name),
+                );
+            }
+
+            $validated[$name] = $stringValue;
+        }
+
+        return $validated;
     }
 
     private static function guard(string $value, string $label): string
