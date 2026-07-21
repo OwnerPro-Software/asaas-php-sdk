@@ -356,6 +356,99 @@ it('all stops once the envelope\'s own totalCount has been delivered', function 
     expect($calls)->toBe(1);
 });
 
+it('all stops before handing the caller a row twice', function (): void {
+    // Same endpoint that ignores `offset`, but a page shorter than the filtered
+    // set: the totalCount backstop only fires once four rows have gone out, and
+    // all four are the same row. A consumer summing a `value` field has already
+    // counted it four times by the time the error arrives, so the repeated page
+    // has to be caught before its rows are yielded.
+    $calls = 0;
+
+    $connector = fakeConnector(function () use (&$calls): AsaasResult {
+        $calls++;
+
+        return AsaasResult::success(
+            ['data' => [['id' => 'r1']], 'totalCount' => 4, 'hasMore' => true, 'limit' => 1, 'offset' => 0],
+            RawResponse::fake(),
+        );
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments/pay_1/refunds', []));
+
+    expect($items[0])->toBe(['id' => 'r1']);
+    expect($items)->toHaveCount(2);
+    expect($items[1])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[1]->errors[0]['code'])->toBe('PAGINATION_STALLED');
+    expect($items[1]->errors[0]['description'])->toContain('ignoring the offset');
+    expect($items[1]->offset)->toBe(1);
+    expect($items[1]->limit)->toBe(1);
+    expect($calls)->toBe(2);
+});
+
+it('all terminates on a repeated page even when the envelope omits totalCount', function (): void {
+    // Without totalCount the backstop reports 0 and never fires, so before the
+    // repeated-page check this walk had nothing to stop it at all.
+    $calls = 0;
+
+    $connector = fakeConnector(function () use (&$calls): AsaasResult {
+        $calls++;
+
+        return AsaasResult::success(
+            ['data' => [['id' => 'r1']], 'hasMore' => true, 'limit' => 1],
+            RawResponse::fake(),
+        );
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments/pay_1/refunds', []));
+
+    expect($items)->toHaveCount(2);
+    expect($items[1])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[1]->errors[0]['code'])->toBe('PAGINATION_STALLED');
+    expect($calls)->toBe(2);
+});
+
+it('all keeps walking when consecutive pages carry different rows', function (): void {
+    // The check compares payloads, not counts: an endpoint paging correctly
+    // must not be mistaken for a stalled one just because its pages are the
+    // same size.
+    $pages = [
+        ['data' => [['id' => 'r1']], 'totalCount' => 3, 'hasMore' => true, 'limit' => 1],
+        ['data' => [['id' => 'r2']], 'totalCount' => 3, 'hasMore' => true, 'limit' => 1],
+        ['data' => [['id' => 'r3']], 'totalCount' => 3, 'hasMore' => false, 'limit' => 1],
+    ];
+
+    $connector = fakeConnector(function (string $path, array $query) use ($pages): AsaasResult {
+        $offset = is_numeric($query['offset'] ?? null) ? (int) $query['offset'] : 0;
+
+        return AsaasResult::success($pages[$offset], RawResponse::fake());
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments', []));
+
+    expect($items)->toBe([['id' => 'r1'], ['id' => 'r2'], ['id' => 'r3']]);
+});
+
+it('all does not mistake a genuinely repeating row set across a longer walk', function (): void {
+    // Two pages carrying the same rows are only indistinguishable from a stall
+    // when they are consecutive. A row set that reappears after a different
+    // page in between is a real (if odd) walk and must not be cut short.
+    $pages = [
+        ['data' => [['id' => 'r1']], 'totalCount' => 3, 'hasMore' => true, 'limit' => 1],
+        ['data' => [['id' => 'r2']], 'totalCount' => 3, 'hasMore' => true, 'limit' => 1],
+        ['data' => [['id' => 'r1']], 'totalCount' => 3, 'hasMore' => false, 'limit' => 1],
+    ];
+
+    $connector = fakeConnector(function (string $path, array $query) use ($pages): AsaasResult {
+        $offset = is_numeric($query['offset'] ?? null) ? (int) $query['offset'] : 0;
+
+        return AsaasResult::success($pages[$offset], RawResponse::fake());
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments', []));
+
+    expect($items)->toBe([['id' => 'r1'], ['id' => 'r2'], ['id' => 'r1']]);
+});
+
 it('all stops quietly when the envelope agrees the walk is over', function (): void {
     // Same backstop, no contradiction: totalCount reached and hasMore false, so
     // there is nothing to report — the stream carries rows only.
@@ -416,4 +509,24 @@ it('all stops on a single-row totalCount, not just on larger ones', function ():
     expect($items[0])->toBe(['id' => 'r1']);
     expect($items[1])->toBeInstanceOf(AsaasPaginatedError::class);
     expect($calls)->toBe(1);
+});
+
+it('all does not call a repeated final page a stall', function (): void {
+    // A sequence of fixtures — stubPages() with one body pasted into two slots
+    // — produces exactly the shape a stalled endpoint does. `hasMore` is what
+    // separates them: a page saying the walk is over ends it either way, so
+    // there is no stall left to warn about.
+    $pages = [
+        ['data' => [['id' => 'r1']], 'hasMore' => true, 'limit' => 1],
+        ['data' => [['id' => 'r1']], 'hasMore' => false, 'limit' => 1],
+    ];
+
+    $connector = fakeConnector(function (string $path, array $query) use ($pages): AsaasResult {
+        $offset = is_numeric($query['offset'] ?? null) ? (int) $query['offset'] : 0;
+
+        return AsaasResult::success($pages[$offset], RawResponse::fake());
+    });
+
+    expect(iterator_to_array($connector->all('/v3/payments', [])))
+        ->toBe([['id' => 'r1'], ['id' => 'r1']]);
 });

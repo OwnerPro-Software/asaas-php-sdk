@@ -69,6 +69,7 @@ trait PaginatesResults
         );
 
         $delivered = 0;
+        $previousRows = null;
 
         do {
             if (! $result->success) {
@@ -86,42 +87,22 @@ trait PaginatesResults
                 break;
             }
 
+            if (self::isStalled($result, $previousRows)) {
+                yield self::stalledPage($result, $delivered);
+
+                break;
+            }
+
             foreach ($result->data as $item) {
                 yield $item;
             }
 
             $delivered += count($result->data);
+            $previousRows = $result->data;
 
-            // The envelope's own count is the walk's backstop. Every domain
-            // spec defines `totalCount` as "quantidade total de itens para os
-            // filtros informados" — the whole filtered set, not the page — so
-            // having delivered that many rows means the walk is done. Without
-            // this, an endpoint that ignored `offset` (a real possibility on
-            // the routes whose query parameters Asaas never documented) would
-            // answer every request with the same non-empty page and
-            // `hasMore: true`, which the empty-page check above never catches:
-            // the generator would emit duplicates forever. `totalCount` is 0
-            // when the envelope omits it, and then there is nothing to compare
-            // against.
-            if ($result->totalCount > 0 && $delivered >= $result->totalCount) {
+            if (self::hasDeliveredWholeSet($result, $delivered)) {
                 if ($result->hasMore) {
-                    // The envelope contradicts itself: the whole filtered set has
-                    // been delivered, yet the server still claims another page.
-                    // Stopping is the only way not to loop, but stopping quietly
-                    // would be a truncated walk indistinguishable from a complete
-                    // one — the exact failure this backstop exists beside. Say so.
-                    yield new AsaasPaginatedError(
-                        [[
-                            'code' => 'PAGINATION_INCONSISTENT',
-                            'description' => sprintf(
-                                'Walk stopped after %d rows, the totalCount the API reported, but the same response still set hasMore=true. The endpoint is contradicting itself — rows may be missing. Page manually with next() if you need to inspect this.',
-                                $delivered,
-                            ),
-                        ]],
-                        $result->response,
-                        $result->offset,
-                        $result->limit,
-                    );
+                    yield self::contradictedCount($result, $delivered);
                 }
 
                 break;
@@ -129,6 +110,97 @@ trait PaginatesResults
 
             $result = $result->next();
         } while ($result !== null);
+    }
+
+    /**
+     * The walk cannot advance: this page carries exactly the rows of the one
+     * before it and still promises another. See {@see self::stalledPage()} for
+     * why `hasMore` is what separates a stall from a coincidence.
+     *
+     * @param  ?list<array<string, mixed>>  $previousRows
+     */
+    private static function isStalled(AsaasPaginatedResult $asaasPaginatedResult, ?array $previousRows): bool
+    {
+        return $asaasPaginatedResult->hasMore && $asaasPaginatedResult->data === $previousRows;
+    }
+
+    /**
+     * Every row the filters match has been handed over. See
+     * {@see self::contradictedCount()} for why a `totalCount` of 0 — the value
+     * an envelope omitting it reports — cannot answer this.
+     */
+    private static function hasDeliveredWholeSet(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): bool
+    {
+        return $asaasPaginatedResult->totalCount > 0 && $delivered >= $asaasPaginatedResult->totalCount;
+    }
+
+    /**
+     * The envelope's own count is the walk's backstop. Every domain spec
+     * defines `totalCount` as "quantidade total de itens para os filtros
+     * informados" — the whole filtered set, not the page — so having delivered
+     * that many rows means the walk is done. `totalCount` is 0 when the
+     * envelope omits it, and then there is nothing to compare against.
+     *
+     * Reaching it while the same response still says `hasMore: true` is the
+     * envelope contradicting itself. Stopping is the only way not to loop, but
+     * stopping quietly would be a truncated walk indistinguishable from a
+     * complete one — the exact failure this backstop exists beside. Say so.
+     */
+    private static function contradictedCount(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
+    {
+        return new AsaasPaginatedError(
+            [[
+                'code' => 'PAGINATION_INCONSISTENT',
+                'description' => sprintf(
+                    'Walk stopped after %d rows, the totalCount the API reported, but the same response still set hasMore=true. The endpoint is contradicting itself — rows may be missing. Page manually with next() if you need to inspect this.',
+                    $delivered,
+                ),
+            ]],
+            $asaasPaginatedResult->response,
+            $asaasPaginatedResult->offset,
+            $asaasPaginatedResult->limit,
+        );
+    }
+
+    /**
+     * The walk is standing still: the page just fetched carries exactly the
+     * rows the previous one did, at a higher offset — `next()` always advances
+     * the cursor by the rows just delivered — and still says there is more.
+     *
+     * Caught before those rows are yielded, because the `totalCount` backstop
+     * fires only once as many rows as the whole filtered set have gone out, and
+     * on a page shorter than that set those are the *same* rows handed over
+     * repeatedly: a consumer summing a `value` field has already double-counted
+     * by the time the error arrives. An envelope omitting `totalCount` reports 0
+     * and never reaches that backstop at all, so this is what ends those walks.
+     *
+     * `hasMore` is what separates a stall from a coincidence. Two consecutive
+     * pages carrying the same rows are ambiguous on their own — a sequence of
+     * fixtures in a test double produces exactly the shape a stalled endpoint
+     * does — but a page that says the walk is over ends it either way, and
+     * warning about a walk that is terminating anyway would report a fault
+     * where none is left to avoid. Only a repeat that still promises another
+     * page is a walk that cannot advance.
+     *
+     * Reported rather than stopped quietly, for the same reason as
+     * `PAGINATION_INCONSISTENT` — a silent stop is indistinguishable from a
+     * complete walk.
+     */
+    private static function stalledPage(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
+    {
+        return new AsaasPaginatedError(
+            [[
+                'code' => 'PAGINATION_STALLED',
+                'description' => sprintf(
+                    'Walk stopped after %d rows: the endpoint answered offset %d with the same rows as the previous page, so it is ignoring the offset it was sent and the walk cannot advance. Rows may be missing. Page manually with next() if you need to inspect this.',
+                    $delivered,
+                    $asaasPaginatedResult->offset,
+                ),
+            ]],
+            $asaasPaginatedResult->response,
+            $asaasPaginatedResult->offset,
+            $asaasPaginatedResult->limit,
+        );
     }
 
     /** @param array<string, mixed> $query */
