@@ -59,7 +59,7 @@ final readonly class BankAccount implements Arrayable, JsonSerializable
         ];
     }
 
-    /** @param array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string} $data */
+    /** @param array{ownerName?: string, cpfCnpj?: string, agency?: string, account?: string, accountDigit?: string, bank?: array{code?: string}|Bank, accountName?: string, ownerBirthDate?: string, bankAccountType?: BankAccountType|string, ispb?: string} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -68,7 +68,7 @@ final readonly class BankAccount implements Arrayable, JsonSerializable
             agency: $data['agency'] ?? throw new InvalidArgumentException('BankAccount: agency is required'),
             account: $data['account'] ?? throw new InvalidArgumentException('BankAccount: account is required'),
             accountDigit: $data['accountDigit'] ?? throw new InvalidArgumentException('BankAccount: accountDigit is required'),
-            bank: isset($data['bank']) ? Bank::fromArray($data['bank']) : null,
+            bank: $data['bank'] ?? null,
             accountName: $data['accountName'] ?? null,
             ownerBirthDate: $data['ownerBirthDate'] ?? null,
             bankAccountType: $data['bankAccountType'] ?? null,

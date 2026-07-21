@@ -249,6 +249,28 @@ it('creates invoice with typed Taxes DTO', function (array $fixture): void {
     });
 })->with('invoice_fixture');
 
+it('creates invoice from an array carrying a typed Taxes DTO', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = invoiceResource()->create([
+        'serviceDescription' => 'Service',
+        'observations' => 'Obs',
+        'value' => 100.00,
+        'deductions' => 0.00,
+        'effectiveDate' => '2026-03-26',
+        'municipalServiceName' => 'IT Services',
+        'taxes' => new Taxes(retainIss: true, iss: 2.0, pis: 0.65, cofins: 3.0, csll: 1.0, inss: 11.0, ir: 1.5),
+    ]);
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body['taxes'] === ['retainIss' => true, 'iss' => 2.0, 'pis' => 0.65, 'cofins' => 3.0, 'csll' => 1.0, 'inss' => 11.0, 'ir' => 1.5];
+    });
+})->with('invoice_fixture');
+
 it('updates invoice with typed Taxes DTO', function (array $fixture): void {
     Http::fake(['*' => Http::response($fixture, 200)]);
 

@@ -37,7 +37,7 @@ final readonly class CreateInvoiceRequest
         $this->taxes = is_array($taxes) ? Taxes::fromArray($taxes) : $taxes;
     }
 
-    /** @param array{serviceDescription?: string, observations?: string, value?: float, deductions?: float, effectiveDate?: string, municipalServiceName?: string, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}, payment?: string, installment?: string, customer?: string, externalReference?: string, municipalServiceId?: string, municipalServiceCode?: string, updatePayment?: bool} $data */
+    /** @param array{serviceDescription?: string, observations?: string, value?: float, deductions?: float, effectiveDate?: string, municipalServiceName?: string, taxes?: array{retainIss?: bool, iss?: float, pis?: float, cofins?: float, csll?: float, inss?: float, ir?: float, nbsCode?: string, taxSituationCode?: string, taxClassificationCode?: string, operationIndicatorCode?: string, pisCofinsRetentionType?: string, pisCofinsTaxStatus?: string}|Taxes, payment?: string, installment?: string, customer?: string, externalReference?: string, municipalServiceId?: string, municipalServiceCode?: string, updatePayment?: bool} $data */
     public static function fromArray(array $data): static
     {
         return new self(
@@ -47,7 +47,7 @@ final readonly class CreateInvoiceRequest
             deductions: $data['deductions'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: deductions is required'),
             effectiveDate: $data['effectiveDate'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: effectiveDate is required'),
             municipalServiceName: $data['municipalServiceName'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: municipalServiceName is required'),
-            taxes: Taxes::fromArray($data['taxes'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: taxes is required')),
+            taxes: $data['taxes'] ?? throw new InvalidArgumentException('CreateInvoiceRequest: taxes is required'),
             payment: $data['payment'] ?? null,
             installment: $data['installment'] ?? null,
             customer: $data['customer'] ?? null,

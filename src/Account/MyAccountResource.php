@@ -70,7 +70,7 @@ final readonly class MyAccountResource
         $typeValue = $type instanceof DocumentType ? $type->value : $type;
 
         return $this->connector->postMultipart(
-            $this->documentFilesPath($documentId),
+            $this->documentPath($documentId),
             ['type' => $typeValue],
             [[
                 'name' => 'documentFile',
@@ -164,9 +164,9 @@ final readonly class MyAccountResource
         return $this->connector->paginate('/wallets/', $query);
     }
 
-    private function documentFilesPath(string $documentId): string
+    private function documentPath(string $documentId): string
     {
-        return sprintf('%s/documents/%s/files', self::BASE, IdGuard::validate($documentId));
+        return sprintf('%s/documents/%s', self::BASE, IdGuard::validate($documentId));
     }
 
     private function documentFilePath(string $fileId): string

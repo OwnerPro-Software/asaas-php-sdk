@@ -191,7 +191,7 @@ it('lists pending documents from /myAccount/documents', function (): void {
         && $request->url() === 'https://api-sandbox.asaas.com/v3/myAccount/documents');
 });
 
-it('uploads a KYC document file via multipart', function (): void {
+it('uploads a KYC document file via multipart POST /myAccount/documents/{id}', function (): void {
     Http::fake(['*' => Http::response([
         'id' => 'file_1',
         'documentId' => 'doc_1',
@@ -215,7 +215,7 @@ it('uploads a KYC document file via multipart', function (): void {
         if ($request->method() !== 'POST') {
             return false;
         }
-        if ($request->url() !== 'https://api-sandbox.asaas.com/v3/myAccount/documents/doc_1/files') {
+        if ($request->url() !== 'https://api-sandbox.asaas.com/v3/myAccount/documents/doc_1') {
             return false;
         }
         if (! str_contains((string) $request->header('Content-Type')[0], 'multipart/form-data')) {

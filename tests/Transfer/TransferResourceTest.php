@@ -166,6 +166,31 @@ it('creates transfer with typed BankAccount DTO', function (array $fixture): voi
     });
 })->with('transfer_fixture');
 
+it('creates transfer from an array carrying a typed Bank DTO inside bankAccount', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = transferResource()->create([
+        'value' => 500.00,
+        'bankAccount' => [
+            'ownerName' => 'John Doe',
+            'cpfCnpj' => '12345678901',
+            'agency' => '1234',
+            'account' => '56789',
+            'accountDigit' => '0',
+            'bank' => new Bank(code: '001'),
+        ],
+    ]);
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        $body = $request->data();
+
+        return $body['bankAccount']['ownerName'] === 'John Doe'
+            && $body['bankAccount']['bank'] === ['code' => '001'];
+    });
+})->with('transfer_fixture');
+
 it('returns failure on API error', function (array $errorFixture): void {
     Http::fake(['*' => Http::response($errorFixture, 400)]);
 
