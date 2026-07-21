@@ -199,6 +199,7 @@ final class FakeAsaasClient implements AsaasClientContract
             return $this;
         }
 
+        // @phpstan-ignore function.alreadyNarrowedType (PHPDoc unions are not runtime-enforced; the guard rejects invalid caller input)
         if (! in_array($phase, ['read', 'transfer'], true)) {
             throw new InvalidArgumentException(sprintf(
                 'Unknown transport failure phase "%s"; expected one of: body, read, transfer.',

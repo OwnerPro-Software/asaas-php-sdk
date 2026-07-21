@@ -112,11 +112,15 @@ it('stringifies boolean values inside nested arrays before Laravel flattens them
         'flags' => [false, true],
     ]);
 
+    // Laravel 12 flattens nested arrays to `flags[]`; Laravel 13.20+ to
+    // `flags[0]`/`flags[1]`. PHP-style servers parse both identically, so the
+    // index style is framework detail — the invariant pinned here is only
+    // that booleans arrive as the literal strings "false"/"true".
     Http::assertSent(function ($request): bool {
         $body = (string) $request->body();
 
-        return str_contains($body, "name=\"flags[]\"\r\nContent-Length: 5\r\n\r\nfalse")
-            && str_contains($body, "name=\"flags[]\"\r\nContent-Length: 4\r\n\r\ntrue");
+        return preg_match('/name="flags\[\d*\]"\r\nContent-Length: 5\r\n\r\nfalse/', $body) === 1
+            && preg_match('/name="flags\[\d*\]"\r\nContent-Length: 4\r\n\r\ntrue/', $body) === 1;
     });
 });
 
