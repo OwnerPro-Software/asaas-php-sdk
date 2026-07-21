@@ -868,7 +868,7 @@ Asaas::payments()->captureAuthorized($result->data['id']);
 ### Pix Keys (`pix()`)
 
 ```php
-Asaas::pix()->createKey(array|PixKeyRequest $data): AsaasResult
+Asaas::pix()->createKey(array|PixKeyRequest $data): AsaasResult  // type must be 'EVP' — see below
 Asaas::pix()->findKey(string $id): AsaasResult
 Asaas::pix()->listKeys(array $query = []): AsaasPaginatedResult
 Asaas::pix()->deleteKey(string $id): AsaasResult
@@ -877,6 +877,13 @@ Asaas::pix()->deleteStaticQrCode(string $id): AsaasResult
 Asaas::pix()->tokenBucket(): AsaasResult
 Asaas::pix()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
 ```
+
+`createKey()` only mints **random (EVP)** keys — `POST /v3/pix/addressKeys`
+declares `"enum": ["EVP"]`. CPF, CNPJ, EMAIL and PHONE keys are registered in
+the Asaas panel, not through the API, so `PixKeyRequest` rejects them with an
+`InvalidArgumentException` instead of letting the request earn a remote 400.
+The shared `PixAddressKeyType` enum still carries all five cases because
+transfers legitimately accept them (`TransferRequest::$pixAddressKeyType`).
 
 ### Pix Transactions (`pixTransactions()`)
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Http;
+use OwnerPro\Asaas\Pix\PixAddressKeyType;
 use OwnerPro\Asaas\Pix\PixResource;
 use OwnerPro\Asaas\Pix\Request\PixKeyRequest;
 use OwnerPro\Asaas\Pix\Request\StaticQrCodeRequest;
@@ -64,6 +65,24 @@ it('creates a pix key from request object', function (array $fixture): void {
 it('validates required type field', function (): void {
     pixResource()->createKey([]);
 })->throws(InvalidArgumentException::class);
+
+it('accepts EVP as the enum case', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    pixResource()->createKey(new PixKeyRequest(type: PixAddressKeyType::Evp));
+
+    Http::assertSent(fn ($request): bool => $request->data() === ['type' => 'EVP']);
+})->with('pix_key_fixture');
+
+it('rejects a key type the create endpoint does not mint', function (PixAddressKeyType|string $type): void {
+    pixResource()->createKey(['type' => $type]);
+})->with([
+    [PixAddressKeyType::Cpf],
+    [PixAddressKeyType::Cnpj],
+    [PixAddressKeyType::Email],
+    [PixAddressKeyType::Phone],
+    ['CPF'],
+])->throws(InvalidArgumentException::class, "PixKeyRequest: type must be 'EVP'");
 
 // --- listKeys ---
 

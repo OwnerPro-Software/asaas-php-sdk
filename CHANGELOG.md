@@ -120,6 +120,15 @@ they rely on. Every fix is pinned by a test that fails without it.
   callers using the named argument `municipalServiceName:` on
   `new UpdateInvoiceRequest(...)` or reading the property. `CreateInvoiceRequest`
   is untouched.
+- **`PixKeyRequest` accepted key types the create endpoint cannot mint.** It
+  took the full `PixAddressKeyType` enum, so `new PixKeyRequest(PixAddressKeyType::Cpf)`
+  type-checked, serialized to `"CPF"` and earned a remote HTTP 400.
+  `POST /v3/pix/addressKeys` declares `"enum": ["EVP"]` — Asaas only mints random
+  keys through the API, and CPF/CNPJ/EMAIL/PHONE keys are registered in the panel
+  (`specs/domains/pix.json`, confirmed against
+  https://docs.asaas.com/reference/criar-uma-chave). The DTO now rejects anything
+  but `EVP` with an `InvalidArgumentException` at construction. The enum itself is
+  unchanged: `TransferRequest::$pixAddressKeyType` legitimately accepts all five.
 
 ### Changed
 
