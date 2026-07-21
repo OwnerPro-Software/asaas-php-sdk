@@ -30,14 +30,27 @@ final readonly class AsaasResult implements JsonSerializable, Redactable
      * `$response` stays an object: it is {@see Redactable} in its own right and
      * scrubs its body when the dumper reaches it.
      *
-     * @return array{success: bool, data: ?array<string, mixed>, errors: ?list<array{code?: string, description?: string}>, response: ?RawResponse}
+     * The rows come back as loose maps rather than the `{code, description}`
+     * shape `$errors` declares: this is a debug view, and the scrub answers a
+     * map. Neither key is a credential name, so both survive — but that is a
+     * fact about the key list, not something the type can carry.
+     *
+     * @return array{success: bool, data: ?array<string, mixed>, errors: ?list<array<string, mixed>>, response: ?RawResponse}
      */
     public function __debugInfo(): array
     {
         return [
             'success' => $this->success,
             'data' => $this->data === null ? null : SecretRedactor::scrub($this->data),
-            'errors' => $this->errors,
+            // Two layers, because a row can carry a credential two ways.
+            // `ErrorEnvelope` scrubs the body it pastes into a synthesized
+            // `description`, which nothing here could recognise — that one is
+            // free text, not a field. This scrubs a *field* named like a
+            // credential on a row Asaas passed through untouched. Neither
+            // covers the other.
+            'errors' => $this->errors === null
+                ? null
+                : array_map(SecretRedactor::scrub(...), $this->errors),
             'response' => $this->response,
         ];
     }
@@ -49,7 +62,7 @@ final readonly class AsaasResult implements JsonSerializable, Redactable
      * encoder walks the public properties and writes the live `apiKey` of a
      * freshly created subaccount into the log.
      *
-     * @return array{success: bool, data: ?array<string, mixed>, errors: ?list<array{code?: string, description?: string}>, response: ?RawResponse}
+     * @return array{success: bool, data: ?array<string, mixed>, errors: ?list<array<string, mixed>>, response: ?RawResponse}
      */
     public function jsonSerialize(): array
     {

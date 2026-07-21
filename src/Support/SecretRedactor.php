@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Support;
 
+use OwnerPro\Asaas\FiscalInfo\Request\FiscalInfoRequest;
+
 /**
  * Replaces credential-bearing fields of an Asaas **response** payload with a
  * placeholder.
@@ -13,15 +15,25 @@ namespace OwnerPro\Asaas\Support;
  * arrives as a decoded array whose shape belongs to Asaas, not to the SDK — so
  * the field name is the only handle available.
  *
- * Four names carry a live credential:
+ * Five names carry a credential:
  *
  * - `apiKey` — the subaccount key returned once by `POST /accounts`
  * - `accessToken` — returned by the `/accounts/{id}/accessTokens` endpoints
  * - `authToken` — the webhook shared secret echoed by `GET /webhooks`
  * - `creditCardToken` — the reusable card token from the tokenization endpoints
+ * - `username` — the municipal-portal login echoed by the `/fiscalInfo/`
+ *   endpoints
  *
- * Each grants the same authority as the value it stands in for, so a result
- * printed into a log or an error page is a credential disclosure.
+ * The first four grant the same authority as the value they stand in for, so a
+ * result printed into a log or an error page is a credential disclosure.
+ *
+ * `username` is the one entry that is not a credential on its own — it is half
+ * of one, and the SDK already treats it as sensitive on the way out:
+ * {@see FiscalInfoRequest} marks it
+ * `#[SensitiveParameter]` and masks it in `__debugInfo()`. Redacting the
+ * request while printing the response in full is not a defensible place to
+ * draw the line. It is the only field named `username` anywhere in
+ * `specs/domains/`, so nothing else is caught by the name.
  */
 final class SecretRedactor
 {
@@ -39,6 +51,7 @@ final class SecretRedactor
         'accesstoken', // @pest-mutate-ignore
         'authtoken', // @pest-mutate-ignore
         'creditcardtoken', // @pest-mutate-ignore
+        'username', // @pest-mutate-ignore
     ];
 
     /**
@@ -95,8 +108,19 @@ final class SecretRedactor
         return is_string($encoded) ? $encoded : null;
     }
 
+    /**
+     * Exposed for callers whose values are not one-per-field — a header map
+     * holds a *list* of values per name, so {@see self::scrub()} would replace
+     * the list with a single placeholder and break the shape. They ask the
+     * question here and substitute in their own shape.
+     */
+    public static function isSecretName(string $name): bool
+    {
+        return in_array(strtolower($name), self::SECRET_KEYS, strict: true);
+    }
+
     private static function isSecret(int|string $key): bool
     {
-        return is_string($key) && in_array(strtolower($key), self::SECRET_KEYS, strict: true);
+        return is_string($key) && self::isSecretName($key);
     }
 }

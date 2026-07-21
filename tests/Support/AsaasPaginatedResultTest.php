@@ -280,3 +280,31 @@ it('reports the failure fields verbatim in debug output', function (): void {
         'response' => null,
     ]);
 });
+
+it('scrubs a credential carried as a field on a canonical error row', function (): void {
+    // Same two-layer reasoning as AsaasResult: ErrorEnvelope covers a
+    // credential pasted into a synthesized description, this covers one
+    // carried as a field on a row Asaas passed through.
+    $result = AsaasPaginatedResult::failure(
+        [['code' => 'x', 'description' => 'see key', 'apiKey' => 'aact_prod_LIVEKEY123']],
+        RawResponse::fake(status: 400),
+    );
+
+    expect(json_encode($result))->not->toContain('aact_prod_LIVEKEY123');
+    expect($result->__debugInfo()['errors'])
+        ->toBe([['code' => 'x', 'description' => 'see key', 'apiKey' => '***']]);
+});
+
+it('leaves a null errors list null on a successful page', function (): void {
+    $result = AsaasPaginatedResult::success(
+        data: [['id' => 'pay_1']],
+        totalCount: 1,
+        hasMore: false,
+        limit: 10,
+        offset: 0,
+        rawResponse: RawResponse::fake(),
+        nextPageFetcher: null,
+    );
+
+    expect($result->__debugInfo()['errors'])->toBeNull();
+});

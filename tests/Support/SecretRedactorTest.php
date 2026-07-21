@@ -75,3 +75,11 @@ it('scrubJson keeps slashes and unicode unescaped', function (): void {
 
     expect(SecretRedactor::scrubJson($body))->toBe($body);
 });
+
+it('scrubs the municipal-portal username the fiscalInfo endpoints echo back', function (): void {
+    // FiscalInfoRequest marks `username` #[SensitiveParameter] and masks it on
+    // the way out; printing the response in full would be redaction that only
+    // holds in one direction.
+    expect(SecretRedactor::scrub(['municipalInscription' => '123', 'username' => 'prefeitura-login']))
+        ->toBe(['municipalInscription' => '123', 'username' => '***']);
+});

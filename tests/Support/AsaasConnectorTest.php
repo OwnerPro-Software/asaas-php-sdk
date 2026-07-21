@@ -1145,12 +1145,47 @@ it('falls back when the errors list carries scalars instead of objects', functio
     expect($result->errors[0]['description'])->toBe('{"errors":["boom"]}');
 });
 
-it('falls back when the errors list mixes an object with a scalar', function (): void {
+it('keeps the object when the errors list mixes one with a scalar', function (): void {
+    // This used to fall back for the whole envelope. Dropping a readable error
+    // because a sibling entry is junk hands the caller a dump of the body in
+    // place of the diagnosis they needed; the scalar is dropped instead.
     Http::fake(['*' => Http::response(['errors' => [['code' => 'X', 'description' => 'Y'], 'boom']], 400)]);
 
     $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
 
-    expect($result->errors[0]['code'])->toBe('UNKNOWN_ERROR');
+    expect($result->errors)->toBe([['code' => 'X', 'description' => 'Y']]);
+});
+
+it('redacts credentials out of the synthesized error description', function (string $field): void {
+    // A rejected POST /accounts answers with the subaccount payload, key
+    // included, under a body shape that is not the canonical error envelope —
+    // so the whole body becomes the description. $errors is the one part of a
+    // result that no downstream scrub reaches: AsaasResult scrubs `data` by
+    // field name, and a credential pasted into a description is a string.
+    Http::fake(['*' => Http::response([$field => 'aact_prod_LIVEKEY123', 'status' => 'REJECTED'], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->post('/accounts');
+
+    expect($result->errors[0]['description'])
+        ->not->toContain('aact_prod_LIVEKEY123')
+        ->toContain('***')
+        ->toContain('REJECTED');
+})->with(['apiKey', 'accessToken', 'authToken', 'creditCardToken']);
+
+it('redacts a credential nested inside the synthesized error description', function (): void {
+    Http::fake(['*' => Http::response(['account' => ['apiKey' => 'aact_prod_LIVEKEY123']], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->post('/accounts');
+
+    expect($result->errors[0]['description'])->toBe('{"account":{"apiKey":"***"}}');
+});
+
+it('leaves a non-JSON error body alone, having no field names to key on', function (): void {
+    Http::fake(['*' => Http::response('upstream refused the connection', 502)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors[0]['description'])->toBe('upstream refused the connection');
 });
 
 it('falls back when the error body is markup with no readable text', function (): void {
@@ -1164,4 +1199,59 @@ it('falls back when the error body is markup with no readable text', function ()
         'code' => 'UNKNOWN_ERROR',
         'description' => 'Asaas returned status 503 with no readable error body.',
     ]]);
+});
+
+it('falls back when an error row is a list rather than an object', function (): void {
+    // `[[1, 2]]` survives an is_array() check but has no code/description to
+    // read — no more an error object than a scalar row is.
+    Http::fake(['*' => Http::response(['errors' => [[1, 2]]], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors[0]['code'])->toBe('UNKNOWN_ERROR');
+    expect($result->errors[0]['description'])->toBe('{"errors":[[1,2]]}');
+});
+
+it('passes through a canonical row that simply carries no fields', function (): void {
+    // `{}` and `[]` decode to the same PHP value, and the first is a legitimate
+    // row: AsaasRequestException already substitutes its own message for it.
+    Http::fake(['*' => Http::response(['errors' => [[]]], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors)->toBe([[]]);
+});
+
+it('keeps the readable error rows when a sibling row is malformed', function (): void {
+    // Dropping the whole envelope over one bad entry threw away the error the
+    // caller actually needed and replaced it with a dump of the body.
+    Http::fake(['*' => Http::response([
+        'errors' => [['code' => 'invalid_cpfCnpj', 'description' => 'CPF inválido'], [1, 2], 'boom'],
+    ], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors)->toBe([['code' => 'invalid_cpfCnpj', 'description' => 'CPF inválido']]);
+});
+
+it('falls back only when no row in the list can be read as an error object', function (): void {
+    Http::fake(['*' => Http::response(['errors' => [[1, 2], 'boom']], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors[0]['code'])->toBe('UNKNOWN_ERROR');
+    expect($result->errors[0]['description'])->toBe('{"errors":[[1,2],"boom"]}');
+});
+
+it('reindexes the surviving rows so errors stays a JSON list', function (): void {
+    // The unreadable row comes first, so the survivor sits at key 1 until it is
+    // reindexed — and a gapped array encodes as a JSON object, not a list.
+    Http::fake(['*' => Http::response([
+        'errors' => ['boom', ['code' => 'invalid_cpfCnpj', 'description' => 'CPF inválido']],
+    ], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect(array_keys($result->errors))->toBe([0]);
+    expect(json_encode($result->errors))->toStartWith('[{');
 });

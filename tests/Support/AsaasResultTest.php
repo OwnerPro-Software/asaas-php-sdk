@@ -133,3 +133,21 @@ it('carries a null data through debug output rather than scrubbing it', function
         'response' => null,
     ]);
 });
+
+it('scrubs a credential carried as a field on a canonical error row', function (): void {
+    // ErrorEnvelope scrubs the body it pastes into a synthesized description;
+    // a canonical row is passed through untouched, so the field-name scrub has
+    // to happen here as well. Neither layer covers the other.
+    $result = AsaasResult::failure(
+        [['code' => 'x', 'description' => 'see key', 'apiKey' => 'aact_prod_LIVEKEY123']],
+        RawResponse::fake(status: 400),
+    );
+
+    expect(json_encode($result))->not->toContain('aact_prod_LIVEKEY123');
+    expect($result->__debugInfo()['errors'])
+        ->toBe([['code' => 'x', 'description' => 'see key', 'apiKey' => '***']]);
+});
+
+it('leaves a null errors list null rather than scrubbing it into an array', function (): void {
+    expect(AsaasResult::success(['id' => 'pay_1'], RawResponse::fake())->__debugInfo()['errors'])->toBeNull();
+});

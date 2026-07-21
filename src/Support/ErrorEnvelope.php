@@ -37,7 +37,7 @@ final class ErrorEnvelope
         // absent, a scalar, a single error object rather than a list of them, or
         // a list carrying scalars — falls back, because callers read
         // `$errors[0]['description']` and only that shape has an offset to read.
-        if (! self::isCanonical($errors)) {
+        if (! is_array($errors) || ! array_is_list($errors)) {
             return [['code' => 'UNKNOWN_ERROR', 'description' => self::describe($response)]];
         }
 
@@ -45,26 +45,37 @@ final class ErrorEnvelope
             return [['code' => 'UNKNOWN_ERROR', 'description' => sprintf('Asaas returned empty errors array (status %d)', $response->status())]];
         }
 
-        /** @var non-empty-list<array{code?: string, description?: string}> $errors */
-        return $errors;
+        // Readable rows are kept even when a sibling is not one. Dropping the
+        // whole envelope over a single malformed entry throws away the
+        // `invalid_cpfCnpj` the caller actually needed and replaces it with a
+        // dump of the body; falling back is only right when *nothing* in the
+        // list can be read as an error object.
+        $readable = array_values(array_filter($errors, self::isErrorObject(...)));
+
+        if ($readable === []) {
+            return [['code' => 'UNKNOWN_ERROR', 'description' => self::describe($response)]];
+        }
+
+        /** @var non-empty-list<array{code?: string, description?: string}> $readable */
+        return $readable;
     }
 
     /**
-     * @phpstan-assert-if-true list<array<string, mixed>> $errors
+     * A row has to be a JSON *object* — the shape callers read `code` and
+     * `description` off. `{"errors": [[1, 2]]}` gives a list-shaped row: it
+     * survives an `is_array()` check and would then be passed through as if its
+     * int-keyed entries were those fields, which is what the `@var` on the
+     * pass-through asserts. It is no more readable as an error object than a
+     * scalar is, so it is dropped the same way.
+     *
+     * The empty array is the exception, and not a list here despite what
+     * `array_is_list()` says about it: `{}` and `[]` both decode to it, and the
+     * first is a canonical row that simply carries no fields. `AsaasRequestException`
+     * already substitutes its own message for a row with no `description`.
      */
-    private static function isCanonical(mixed $errors): bool
+    private static function isErrorObject(mixed $error): bool
     {
-        if (! is_array($errors) || ! array_is_list($errors)) {
-            return false;
-        }
-
-        foreach ($errors as $error) {
-            if (! is_array($error)) {
-                return false;
-            }
-        }
-
-        return true;
+        return is_array($error) && ($error === [] || ! array_is_list($error));
     }
 
     /**
@@ -81,12 +92,34 @@ final class ErrorEnvelope
             return $message;
         }
 
-        $body = trim(mb_substr(strip_tags($response->body()), 0, 350));
+        $body = trim(mb_substr(strip_tags(self::redactedBody($response)), 0, 350));
 
         if ($body !== '') {
             return $body;
         }
 
         return sprintf('Asaas returned status %d with no readable error body.', $response->status());
+    }
+
+    /**
+     * The fallback description is the response body, and a rejected
+     * `POST /accounts` answers with the subaccount payload — `apiKey` included.
+     * `$errors` is the one part of a result that is *not* scrubbed downstream:
+     * {@see AsaasResult::__debugInfo()} scrubs `data` by field name, and a
+     * credential pasted into a description is a string, not a field it can
+     * recognise. Scrubbing here is what keeps `dump($result)` and
+     * `Log::info(['result' => $result])` from printing a live key beside the
+     * `***` that {@see RawResponse::__debugInfo()} shows for the same bytes.
+     *
+     * Scrubbed before truncation, for the reason given in
+     * {@see RawResponse::__debugInfo()}: cutting first leaves JSON that
+     * {@see SecretRedactor::scrubJson()} can no longer parse. A body that is
+     * not JSON at all has no field names to key on and is returned as-is.
+     */
+    private static function redactedBody(Response $response): string
+    {
+        $body = $response->body();
+
+        return SecretRedactor::scrubJson($body) ?? $body;
     }
 }

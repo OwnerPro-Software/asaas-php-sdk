@@ -36,7 +36,7 @@ final readonly class AsaasPaginatedResult implements JsonSerializable, Redactabl
      * `$nextPageFetcher` is omitted: it is a private cursor closure, not state
      * a reader can act on.
      *
-     * @return array{success: bool, data: array<array-key, mixed>, totalCount: int, hasMore: bool, limit: int, offset: int, errors: ?list<array{code?: string, description?: string}>, response: ?RawResponse}
+     * @return array{success: bool, data: array<array-key, mixed>, totalCount: int, hasMore: bool, limit: int, offset: int, errors: ?list<array<string, mixed>>, response: ?RawResponse}
      */
     public function __debugInfo(): array
     {
@@ -47,7 +47,11 @@ final readonly class AsaasPaginatedResult implements JsonSerializable, Redactabl
             'hasMore' => $this->hasMore,
             'limit' => $this->limit,
             'offset' => $this->offset,
-            'errors' => $this->errors,
+            // See AsaasResult::__debugInfo() for why errors need scrubbing of
+            // their own on top of what ErrorEnvelope already did.
+            'errors' => $this->errors === null
+                ? null
+                : array_map(SecretRedactor::scrub(...), $this->errors),
             'response' => $this->response,
         ];
     }
@@ -58,7 +62,7 @@ final readonly class AsaasPaginatedResult implements JsonSerializable, Redactabl
      * `json_encode()`s — would otherwise write every shared secret on the page
      * into the log. See {@see AsaasResult::jsonSerialize()}.
      *
-     * @return array{success: bool, data: array<array-key, mixed>, totalCount: int, hasMore: bool, limit: int, offset: int, errors: ?list<array{code?: string, description?: string}>, response: ?RawResponse}
+     * @return array{success: bool, data: array<array-key, mixed>, totalCount: int, hasMore: bool, limit: int, offset: int, errors: ?list<array<string, mixed>>, response: ?RawResponse}
      */
     public function jsonSerialize(): array
     {
