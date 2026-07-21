@@ -1184,6 +1184,8 @@ $tenantClient->myAccount()->uploadDocumentFile(
 //    Monitor $status['bankAccountInfo'] to track approval (PENDING → APPROVED).
 ```
 
+Every upload filename (`uploadDocumentFile`, `updateDocumentFile`, `updatePaymentCheckoutConfig`, `payments()->uploadDocument`, `fiscalInfo()->update`) is validated before it reaches the HTTP client: directory components are stripped, and an empty name, a name over 255 chars, or one carrying a double quote or a control character throws `InvalidArgumentException`. Those characters would break out of the multipart `Content-Disposition` header and let a caller-supplied name forge extra form fields — so a browser-supplied `getClientOriginalName()` can be passed straight through.
+
 Listen to the `ACCOUNT_STATUS_*` webhook events (already in `WebhookEvent`) to react to approvals and rejections asynchronously.
 
 ### Credit Cards (`creditCards()`)
@@ -1380,8 +1382,9 @@ Objects that hold secrets — your API key, card numbers, CVVs, CPF/CNPJ, bank a
 | `var_dump()`, `print_r()` | redacted via `__debugInfo()` |
 | `dump()`, `dd()`, Ignition / Flare error pages | redacted via a VarDumper caster |
 | `json_encode()`, `(string)` | redacted via `jsonSerialize()` / `__toString()` |
-| `serialize()` | throws — secrets must never reach a queue, cache or session |
+| `serialize()` | throws — secrets must never reach a queue, cache or session; `AsaasClient` and `AsaasConnector` refuse it too |
 | stack traces | redacted via `#[SensitiveParameter]` |
+| `var_export()` | **not** redacted — the function ignores `__debugInfo()`; never point it at a client or a DTO |
 
 ```php
 $card = new CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737');

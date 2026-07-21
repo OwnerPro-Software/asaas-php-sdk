@@ -9,6 +9,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use InvalidArgumentException;
+use LogicException;
 use SensitiveParameter;
 
 final readonly class AsaasConnector implements Connector, Redactable
@@ -32,6 +33,29 @@ final readonly class AsaasConnector implements Connector, Redactable
     public function __debugInfo(): array
     {
         return ['baseUrl' => $this->baseUrl];
+    }
+
+    /**
+     * The wrapped `PendingRequest` carries the API key in its `access_token`
+     * header, and neither `serialize()` nor `var_export()` honours
+     * `__debugInfo()`. Refusing serialization keeps the key out of queue
+     * payloads, caches and session data; `var_export()` is unguardable, so it
+     * must never be pointed at a client (documented in the README).
+     *
+     * @return never
+     */
+    public function __serialize(): array
+    {
+        throw new LogicException(self::class.' cannot be serialized: it holds the Asaas API key, which must never reach a queue, cache, or session payload. Serialize the API key yourself (from your own secret store) and rebuild the client on the other side.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return never
+     */
+    public function __unserialize(array $data): void
+    {
+        throw new LogicException(self::class.' cannot be unserialized.');
     }
 
     public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10, bool $throwOnTransportFailure = false): self
@@ -88,13 +112,21 @@ final readonly class AsaasConnector implements Connector, Redactable
     {
         $data = MultipartPayload::stringifyBooleans($data);
 
-        return $this->sendRequest(function () use ($path, $data, $files): Response {
+        // Validated before the first attach: a rejection mid-loop would leave the
+        // already-attached files pending on the reused PendingRequest and smuggle
+        // them into the next upload.
+        $filenames = array_map(
+            static fn (array $file): ?string => isset($file['filename']) ? FilenameGuard::validate($file['filename']) : null,
+            $files,
+        );
+
+        return $this->sendRequest(function () use ($path, $data, $files, $filenames): Response {
             try {
-                foreach ($files as $file) {
+                foreach ($files as $index => $file) {
                     $this->pendingRequest->attach(
                         $file['name'],
                         $file['contents'],
-                        $file['filename'] ?? null,
+                        $filenames[$index],
                         $file['headers'] ?? [],
                     );
                 }

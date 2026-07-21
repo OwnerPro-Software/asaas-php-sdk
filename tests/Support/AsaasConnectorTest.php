@@ -31,6 +31,21 @@ it('__debugInfo() exposes only baseUrl (no PendingRequest, no api key leak)', fu
     expect($connector->__debugInfo())->toBe(['baseUrl' => '']);
 });
 
+it('refuses to serialize, keeping the api key out of queue and cache payloads', function (): void {
+    $connector = AsaasConnector::forLaravel('super-secret-key', Environment::Sandbox, 30);
+
+    expect(fn (): string => serialize($connector))
+        ->toThrow(LogicException::class, AsaasConnector::class.' cannot be serialized');
+});
+
+it('refuses to unserialize', function (): void {
+    $connector = AsaasConnector::forLaravel('super-secret-key', Environment::Sandbox, 30);
+
+    expect(function () use ($connector): void {
+        $connector->__unserialize(['baseUrl' => 'https://evil.example']);
+    })->toThrow(LogicException::class, AsaasConnector::class.' cannot be unserialized.');
+});
+
 // --- forLaravel factory ---
 
 it('forLaravel accepts string environment', function (): void {

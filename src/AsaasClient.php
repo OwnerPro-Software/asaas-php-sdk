@@ -7,6 +7,7 @@ namespace OwnerPro\Asaas;
 use Closure;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ResponseSequence;
+use LogicException;
 use OwnerPro\Asaas\Account\AccountResource;
 use OwnerPro\Asaas\Account\MyAccountResource;
 use OwnerPro\Asaas\BillPayment\BillPaymentResource;
@@ -58,6 +59,28 @@ final class AsaasClient implements AsaasClientContract, Redactable
                 'leanPayments',
             ],
         ];
+    }
+
+    /**
+     * The client reaches the API key through its connector, and `serialize()`
+     * ignores `__debugInfo()`. Refusing serialization keeps the key out of
+     * queue payloads, caches and session data — inject the client through the
+     * container on the other side instead of carrying it across the boundary.
+     *
+     * @return never
+     */
+    public function __serialize(): array
+    {
+        throw new LogicException(self::class.' cannot be serialized: it holds the Asaas API key, which must never reach a queue, cache, or session payload. Resolve the client from the container (or rebuild it with AsaasClient::for()) where you need it.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return never
+     */
+    public function __unserialize(array $data): void
+    {
+        throw new LogicException(self::class.' cannot be unserialized.');
     }
 
     public static function for(

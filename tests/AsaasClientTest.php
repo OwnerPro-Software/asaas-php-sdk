@@ -29,6 +29,21 @@ it('creates client via for() with defaults', function (): void {
     expect($client)->toBeInstanceOf(AsaasClient::class);
 });
 
+it('refuses to serialize, keeping the api key out of queue and cache payloads', function (): void {
+    $client = AsaasClient::for(apiKey: 'super-secret-key');
+
+    expect(fn (): string => serialize($client))
+        ->toThrow(LogicException::class, AsaasClient::class.' cannot be serialized');
+});
+
+it('refuses to unserialize', function (): void {
+    $client = AsaasClient::for(apiKey: 'super-secret-key');
+
+    expect(function () use ($client): void {
+        $client->__unserialize([]);
+    })->toThrow(LogicException::class, AsaasClient::class.' cannot be unserialized.');
+});
+
 it('for() uses default timeout of 30', function (): void {
     $client = AsaasClient::for(apiKey: 'test-key');
 

@@ -219,6 +219,51 @@ it('sends a multipart Content-Type on every sequential upload', function (): voi
     expect((string) $requests[1][0]->header('Content-Type')[0])->toStartWith('multipart/form-data; boundary=');
 });
 
+it('refuses a filename that would inject part headers into the multipart body', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $upload = fn (): AsaasResult => multipartConnector()->postMultipart('/u', [], [[
+        'name' => 'documentFile',
+        'contents' => 'x',
+        'filename' => "ok.png\"\r\nContent-Disposition: form-data; name=\"type\"\r\n\r\nIDENTIFICATION",
+    ]]);
+
+    expect($upload)->toThrow(InvalidArgumentException::class);
+
+    Http::assertNothingSent();
+});
+
+it('does not attach earlier files when a later filename is rejected', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $connector = multipartConnector();
+
+    expect(fn (): AsaasResult => $connector->postMultipart('/u', [], [
+        ['name' => 'documentFile', 'contents' => 'FIRST', 'filename' => 'first.png'],
+        ['name' => 'documentFile', 'contents' => 'EVIL', 'filename' => "evil.png\r\n"],
+    ]))->toThrow(InvalidArgumentException::class);
+
+    $connector->postMultipart('/u', [], [[
+        'name' => 'documentFile', 'contents' => 'SECOND', 'filename' => 'second.png',
+    ]]);
+
+    $body = (string) Http::recorded()[0][0]->body();
+
+    expect($body)->toContain('second.png')
+        ->and($body)->not->toContain('first.png')
+        ->and($body)->not->toContain('FIRST');
+});
+
+it('refuses an empty filename that would leak the local file path', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', [], [[
+        'name' => 'documentFile', 'contents' => 'x', 'filename' => '',
+    ]]))->toThrow(InvalidArgumentException::class);
+
+    Http::assertNothingSent();
+});
+
 it('restores JSON body format even when the multipart upload fails', function (): void {
     Http::fakeSequence()
         ->push(['errors' => [['description' => 'rejected']]], 400)
