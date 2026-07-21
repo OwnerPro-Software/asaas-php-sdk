@@ -1474,21 +1474,14 @@ Two things this does **not** do, by design:
 - **`serialize()` is allowed on results.** Unlike `AsaasClient` and the request DTOs, results are legitimately cached and queued, so they do not refuse it — and a serialized result of `accounts()->create()` carries the subaccount key in clear. Persist the fields you need, not the result.
 - **`$result->data` is a plain array.** `Log::info('created', $result->data)` logs the real key: nothing can intercept an array you pass on yourself. Reach for `$result->data['apiKey']` to store the key, never to print it. Unlike `errors`, `data` is redacted only in the debug views — the array itself always holds the real values.
 
-`dump()` / `dd()` coverage needs the caster to be installed. That happens automatically: the Laravel service provider does it on boot, and `AsaasClient::for()` does it for standalone use. If you build the client by hand (`new AsaasClient(new AsaasConnector(...))`) and want the caster before that point, register it yourself:
+`dump()` / `dd()` coverage needs no wiring at all. The caster is installed by `bootstrap/redaction.php`, which Composer includes from `vendor/autoload.php` — before your framework boots, before any code of yours runs, and it is a no-op when `symfony/var-dumper` is not installed.
 
-```php
-use OwnerPro\Asaas\Support\DumpRedaction;
-
-DumpRedaction::register();
-```
-
-The call is idempotent and a no-op when `symfony/var-dumper` is not installed.
-
-> **Register early.** Symfony's `AbstractCloner` copies the caster list in its
-> constructor, so a cloner built before registration never sees the caster.
-> Booting the service provider (or calling `AsaasClient::for()`) before anything
-> dumps is the normal case and needs no attention; a host that constructs its own
-> `VarCloner` during bootstrap should call `DumpRedaction::register()` ahead of it.
+> **Why an autoloaded file and not the service provider.** Symfony's
+> `AbstractCloner` copies the caster list in its constructor, and Laravel builds
+> the cloner behind `dump()`/`dd()` while service providers are still
+> *registering* — before any `boot()` runs. A caster installed from a provider
+> would always arrive too late and the dump would print the live key. Loading it
+> with the autoloader is the only placement early enough to be unconditional.
 
 Custom classes join in by implementing `OwnerPro\Asaas\Support\Redactable` and returning the safe view from `__debugInfo()` — the caster is keyed on the interface, so no further wiring is needed. The `MasksSensitiveData` trait supplies `mask()`, `__toString()`, `jsonSerialize()` and the serialization guards.
 
@@ -1618,6 +1611,13 @@ pasted into several slots carries its own `hasMore: false` everywhere and stops
 the walk after the first page. `stubPages()` needs at least one page; an empty
 list is rejected.
 
+`totalCount` has a coherence rule of its own. A non-final page may not declare a
+count the walk has already delivered by the time it ends — `->all()` stops at the
+declared count and reports `PAGINATION_INCONSISTENT` there, so the pages behind
+it would never reach the caller. Declare the count of the whole walk, or leave
+the key out and let it be inferred; a non-final `totalCount: 0` is fine, since
+that is what an envelope omitting the key reports.
+
 A single `stub()` is a different contract: it is one response replayed for every
 matching request, so it describes one page only. Declaring `hasMore: true` on
 one keeps `->list()` reporting `hasMore`, while `->all()` receives the empty
@@ -1628,10 +1628,11 @@ declares (0 when it declares none), so a stub written as page two
 request carrying no `offset` at all gets the body too. Model real multi-page
 walks with `stubPages()`.
 
-Patterns are relative to the base URL, which already ends in `/v3`. Both an
-absolute URL and a leading `v3/` segment are rejected: either one would build a
-pattern that matches nothing, and a pattern that matches nothing makes
-`assertNotSent()` pass no matter what the code under test did.
+Patterns are relative to the base URL, which already ends in `/v3`. An absolute
+URL, a leading `v3/` segment (in any casing) and whitespace inside the pattern
+are all rejected: each one would build a pattern that matches nothing, and a
+pattern that matches nothing makes `assertNotSent()` pass no matter what the code
+under test did. Surrounding whitespace is trimmed, so `' payments'` is fine.
 
 ### Assertions
 

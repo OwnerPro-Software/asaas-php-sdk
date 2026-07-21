@@ -41,9 +41,17 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   `fn (Request $r, Response $response)` raise `TypeError` the moment such a
   request is in the stream — widen them to `?Response`.
 - **`assertSent()` rejects two closures**, and **stub/assertion patterns reject
-  an absolute URL or a leading `v3/` segment**. All three forms previously
-  produced an assertion that could not fail; all three now throw
-  `InvalidArgumentException`.
+  an absolute URL, a leading `v3/` segment in any casing, or whitespace inside
+  the pattern**. Each form previously produced an assertion that could not fail;
+  all now throw `InvalidArgumentException`. Surrounding whitespace is still
+  trimmed — only interior whitespace is refused.
+- **`stubPages()` rejects a `totalCount` the walk exhausts early.** A non-final
+  page declaring a count the sequence has already delivered by the end of that
+  page made `all()` stop there and emit `PAGINATION_INCONSISTENT` into the row
+  stream, dropping every page behind it — the fake manufacturing a contradiction
+  rather than a test describing one. It now throws at registration. Declare the
+  count of the whole walk, or leave the key out; `totalCount: 0` is unaffected,
+  being what an envelope omitting the key reports.
 - **`MasksSensitiveData::mask()` emits a constant-width fill.** Tests asserting
   on the exact masked string need updating — see *Security*.
 - **An empty `permissions` list is rejected.** `permissions: []` on
@@ -99,9 +107,33 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   API key, PAN, CVV and CPF/CNPJ stayed visible next to their masked twins. A
   VarDumper caster now replaces the list outright. It is keyed on the new
   `Support\Redactable` interface, so every implementor is covered by one
-  registration, installed from `AsaasServiceProvider::boot()` for Laravel and
-  from `AsaasClient::for()` for plain-PHP hosts. Custom classes join by
-  implementing the interface.
+  registration, installed from `bootstrap/redaction.php` — a Composer `files`
+  autoload entry, included from `vendor/autoload.php` before any framework
+  boots. Custom classes join by implementing the interface, with no wiring of
+  their own.
+
+  Registering from a service provider was tried first and does not work:
+  `AbstractCloner` copies `$defaultCasters` in its constructor, and Laravel
+  builds the cloner behind `dump()`/`dd()`/Ignition during
+  `FoundationServiceProvider::register()` — which finishes before any `boot()`
+  begins. The caster never reached that cloner, so a dumped `AsaasResult`
+  printed the live `apiKey` in full and merely appended the redacted view below
+  it. The `Support\DumpRedaction` class that expressed that registration is gone
+  with it; nothing replaces it, because there is no longer a call to make.
+- **A body that could not be re-encoded was printed raw.** `SecretRedactor::scrubJson()`
+  answered `null` when `json_encode()` refused the payload it had just scrubbed,
+  and both callers fall back to the untouched body on `null` — so a body
+  `json_decode()` accepts but `json_encode()` cannot round-trip (a float literal
+  past the double range decodes to `INF`) printed the live key the scrub had
+  already replaced. A decoded body is never answered raw now; the failure
+  answers a placeholder instead.
+- **The multipart field-name guard was reachable around.** `ContentDispositionGuard`
+  validated `$files[].name`, but a `$data` key lands in the same unescaped
+  `Content-Disposition: form-data; name="%s"` slot, so a caller forwarding a
+  browser-supplied field name could close the quote, append part headers of its
+  own and forge a `documentFile` part with a filename no guard ever saw. `$data`
+  keys now go through the same guard. Field names are otherwise unaffected;
+  an empty one is now rejected, since it names no form field.
 - **An upload filename of `'0'` leaked the local file's name.** The guard
   rejected an empty name because the HTTP client then falls back to the stream's
   `uri` metadata — but it tested `=== ''` while Guzzle tests `empty()`, so the
