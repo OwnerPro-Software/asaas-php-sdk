@@ -257,7 +257,7 @@ it('paginate failure preserves offset and limit from query', function (): void {
     expect($result->limit)->toBe(25);
 });
 
-it('all uses API-returned limit for offset calculation', function (): void {
+it('all advances the offset by the rows each page delivered', function (): void {
     $capturedQueries = [];
     $callCount = 0;
     $connector = fakeConnector(function (string $path, array $query) use (&$callCount, &$capturedQueries): AsaasResult {

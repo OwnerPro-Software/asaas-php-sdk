@@ -42,10 +42,10 @@ trait PaginatesResults
             totalCount: $data['totalCount'] ?? 0,
             hasMore: $data['hasMore'] ?? false,
             limit: $data['limit'] ?? 0,
-            // Fall back to the offset we asked for: an envelope that omits it
-            // would otherwise pin the cursor at 0 and re-request page one
-            // forever once `next()` starts advancing from it.
-            offset: $data['offset'] ?? $requestedOffset,
+            // The offset we asked for, not the echoed one: it is always
+            // present, whereas an envelope omitting `offset` would pin the
+            // cursor at 0 and make `next()` re-request page one forever.
+            offset: $requestedOffset,
             rawResponse: $rawResponse,
             nextPageFetcher: $nextPageFetcher,
         );
