@@ -18,8 +18,9 @@ use OwnerPro\Asaas\Support\Connector;
 use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Support\ErrorEnvelope;
 use OwnerPro\Asaas\Support\PaginatesResults;
+use OwnerPro\Asaas\Support\ResponseInterpreter;
 
-mutates(AsaasConnector::class, PaginatesResults::class, ErrorEnvelope::class);
+mutates(AsaasConnector::class, PaginatesResults::class, ErrorEnvelope::class, ResponseInterpreter::class);
 
 it('implements Connector interface', function (): void {
     expect(AsaasConnector::class)->toImplement(Connector::class);

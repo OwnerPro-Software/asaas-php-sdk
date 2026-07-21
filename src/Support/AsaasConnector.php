@@ -218,36 +218,6 @@ final readonly class AsaasConnector implements Connector, Redactable
             );
         }
 
-        return $this->toResult($response);
-    }
-
-    private function toResult(Response $response): AsaasResult
-    {
-        $rawResponse = new RawResponse($response);
-
-        if ($response->failed()) {
-            return AsaasResult::failure(
-                ErrorEnvelope::extract($response),
-                $rawResponse,
-            );
-        }
-
-        $json = $response->json();
-
-        if (! is_array($json)) {
-            // 204 No Content is a definitive success with an intentionally
-            // empty body (e.g. deleteAccessToken, removeBackoff) — never an
-            // unreadable-body transport failure.
-            if ($this->throwOnTransportFailure && $response->status() !== 204) {
-                throw new IndeterminateResultException('body', response: $rawResponse);
-            }
-
-            $json = [];
-        }
-
-        /** @var array<string, mixed> $data */
-        $data = $json;
-
-        return AsaasResult::success($data, $rawResponse);
+        return ResponseInterpreter::toResult($response, $this->throwOnTransportFailure);
     }
 }

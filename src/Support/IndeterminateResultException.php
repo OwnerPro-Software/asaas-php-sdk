@@ -8,19 +8,22 @@ use Throwable;
 
 /**
  * The request may or may not have been processed by the Asaas API: it timed
- * out waiting for the response, the connection dropped mid-transfer, or a 2xx
+ * out waiting for the response, the connection dropped mid-transfer, a 2xx
  * arrived whose body is not the JSON object the SDK can interpret (invalid
- * JSON, empty non-204 body, or a bare scalar). **Never** retry blindly — reconcile first
+ * JSON, empty non-204 body, or a bare scalar), or the server answered 5xx —
+ * which reports that it could not answer, not that the operation was refused.
+ * **Never** retry blindly — reconcile first
  * (e.g. via the Asaas withdrawal-validation webhook or a lookup by your own
  * identifier). `phase` is null when the failure point could not be proven.
  */
 final class IndeterminateResultException extends TransportException
 {
     /**
-     * @param  'body'|'read'|'transfer'|null  $phase
+     * @param  'body'|'read'|'server'|'transfer'|null  $phase
      * @param  ?RawResponse  $response  the received-but-uninterpretable HTTP
-     *                                  response — populated only for `phase: 'body'`,
-     *                                  where a 2xx arrived; null for failures where
+     *                                  response — populated for `phase: 'body'`
+     *                                  (a 2xx arrived) and `phase: 'server'` (a
+     *                                  5xx arrived); null for failures where
      *                                  no complete response was received
      */
     public function __construct(

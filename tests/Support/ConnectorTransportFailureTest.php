@@ -12,8 +12,9 @@ use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Support\IndeterminateResultException;
 use OwnerPro\Asaas\Support\RequestNotDeliveredException;
+use OwnerPro\Asaas\Support\ResponseInterpreter;
 
-mutates(AsaasConnector::class);
+mutates(AsaasConnector::class, ResponseInterpreter::class);
 
 /** @param array<string, mixed> $context */
 function throwingTransportStub(array $context): Closure
@@ -138,6 +139,50 @@ it('relies on Laravel wrapping response-less Guzzle RequestException into Connec
     expect($exception->getPrevious())->toBeInstanceOf(ConnectionException::class);
 });
 
+it('throws IndeterminateResultException with server phase carrying the response on 5xx', function (): void {
+    Http::fake(['*' => Http::response('Bad Gateway', 502)]);
+
+    $exception = null;
+
+    try {
+        throwingConnector()->post('/transfers', ['value' => 10.0]);
+    } catch (IndeterminateResultException $exception) {
+    }
+
+    expect($exception)->toBeInstanceOf(IndeterminateResultException::class);
+    expect($exception->phase)->toBe('server');
+    expect($exception->response?->status())->toBe(502);
+    expect($exception->response?->body())->toBe('Bad Gateway');
+});
+
+// The whole 5xx range is indeterminate, not just the gateway statuses: a 500
+// from the API itself is as unproven as a 502 from a proxy in front of it.
+it('throws IndeterminateResultException across the 5xx range', function (int $status): void {
+    Http::fake(['*' => Http::response(['errors' => [['code' => 'x', 'description' => 'y']]], $status)]);
+
+    expect(fn () => throwingConnector()->post('/transfers', ['value' => 10.0]))
+        ->toThrow(IndeterminateResultException::class);
+})->with([500, 503, 504, 599]);
+
+// A 5xx with a canonical error envelope must still throw: the envelope is not
+// evidence that the operation was rejected, only that something rendered one.
+it('throws on 5xx even when the body carries a canonical error envelope', function (): void {
+    Http::fake(['*' => Http::response(['errors' => [['code' => 'internal', 'description' => 'boom']]], 500)]);
+
+    expect(fn () => throwingConnector()->get('/payments/pay_123'))
+        ->toThrow(IndeterminateResultException::class);
+});
+
+it('keeps returning a failure result on 5xx by default', function (): void {
+    Http::fake(['*' => Http::response(['errors' => [['code' => 'internal', 'description' => 'boom']]], 500)]);
+
+    $result = AsaasConnector::forLaravel('key', Environment::Sandbox, 30)->get('/payments/pay_123');
+
+    expect($result->success)->toBeFalse();
+    expect($result->errors)->toBe([['code' => 'internal', 'description' => 'boom']]);
+    expect($result->response?->status())->toBe(500);
+});
+
 it('still returns a failure result on definitive HTTP errors when throwing is enabled', function (): void {
     Http::fake(['*' => Http::response(['errors' => [['code' => 'invalid_value', 'description' => 'bad']]], 400)]);
 
@@ -146,6 +191,18 @@ it('still returns a failure result on definitive HTTP errors when throwing is en
     expect($result->success)->toBeFalse();
     expect($result->errors)->toBe([['code' => 'invalid_value', 'description' => 'bad']]);
 });
+
+// 408 and 429 are not verdicts on the operation either, but they are left as
+// definitive failures on purpose: the SDK only promotes a status to
+// indeterminate when the server states it could not answer at all.
+it('keeps 4xx definitive when throwing is enabled, including 408 and 429', function (int $status): void {
+    Http::fake(['*' => Http::response(['errors' => [['code' => 'x', 'description' => 'y']]], $status)]);
+
+    $result = throwingConnector()->get('/payments/pay_123');
+
+    expect($result->success)->toBeFalse();
+    expect($result->response?->status())->toBe($status);
+})->with([408, 429, 499]);
 
 it('still returns a success result on healthy 2xx JSON when throwing is enabled', function (): void {
     Http::fake(['*' => Http::response(['id' => 'pay_123'], 200)]);

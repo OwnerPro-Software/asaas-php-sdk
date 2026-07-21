@@ -91,6 +91,19 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   `stub()`, `stubError()`, `stubPages()`, `stubException()`,
   `stubRequestNotDelivered()` and `stubIndeterminateResult()`. Tests that
   asserted the throw at request time need to expect it at registration.
+- **With `throwOnTransportFailure: true`, a 5xx now throws
+  `IndeterminateResultException` instead of returning a failure result.** The
+  connector treated `$response->failed()` — 4xx *and* 5xx — as a definitive
+  answer. A 5xx is not Asaas answering about the operation: it is the server, or
+  a proxy in front of it, reporting that it could not answer, so the request may
+  well have been processed. On `POST /v3/transfers` that misclassification is
+  the difference between reconciling and retrying real money. The exception
+  carries `phase: 'server'` (a new value in the `phase` union) and the received
+  `response`, so status and body stay loggable. **4xx is unchanged** — it stays
+  an `AsaasResult` failure, including `408` and `429`. With the flag off
+  (default) nothing changes: 5xx still returns a failure result.
+  `FakeAsaasClient::stubIndeterminateResult()` accepts `phase: 'server'`, which
+  stubs a `502`.
 - **`$result->errors[0]['description']` can now hold `***` where it held the
   response body.** This is the one redaction in the SDK that replaces a value
   rather than a view of it, because a description is free text and nothing

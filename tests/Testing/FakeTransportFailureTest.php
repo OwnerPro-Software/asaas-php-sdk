@@ -51,9 +51,9 @@ it('indeterminateErrno rejects unknown phases', function (): void {
     FakeTransportFailure::indeterminateErrno('dns');
 })->throws(InvalidArgumentException::class, 'Unknown transport failure phase "dns"; expected one of: read, transfer.');
 
-it('stubIndeterminateResult rejects unknown phases listing body among the valid ones', function (): void {
+it('stubIndeterminateResult rejects unknown phases listing body and server among the valid ones', function (): void {
     AsaasClient::fake()->stubIndeterminateResult('transfers', 'bogus');
-})->throws(InvalidArgumentException::class, 'Unknown transport failure phase "bogus"; expected one of: body, read, transfer.');
+})->throws(InvalidArgumentException::class, 'Unknown transport failure phase "bogus"; expected one of: body, read, server, transfer.');
 
 // --- fake with throwOnTransportFailure: true mirrors the typed contract ---
 
@@ -99,7 +99,7 @@ it('stubIndeterminateResult throws the typed exception with the requested phase'
 
     expect($exception)->toBeInstanceOf(IndeterminateResultException::class);
     expect($exception->phase)->toBe($phase);
-})->with(['read', 'transfer', 'body']);
+})->with(['read', 'transfer', 'body', 'server']);
 
 it('stubIndeterminateResult defaults to the read phase', function (): void {
     $fake = AsaasClient::fake(throwOnTransportFailure: true)
@@ -222,4 +222,28 @@ it('stubIndeterminateResult with body phase returns the legacy empty success whe
 
     expect($result->success)->toBeTrue();
     expect($result->data)->toBe([]);
+});
+
+it('stubIndeterminateResult with server phase returns the legacy failure result when the flag is off', function (): void {
+    $fake = AsaasClient::fake()->stubIndeterminateResult('transfers', 'server');
+
+    $result = $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']);
+
+    expect($result->success)->toBeFalse();
+    expect($result->response?->status())->toBe(502);
+});
+
+it('stubIndeterminateResult with server phase carries the 5xx response on the thrown exception', function (): void {
+    $fake = AsaasClient::fake(throwOnTransportFailure: true)
+        ->stubIndeterminateResult('transfers', 'server');
+
+    $exception = null;
+
+    try {
+        $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']);
+    } catch (IndeterminateResultException $exception) {
+    }
+
+    expect($exception?->response?->status())->toBe(502);
+    expect($exception?->response?->body())->toBe('Bad Gateway');
 });

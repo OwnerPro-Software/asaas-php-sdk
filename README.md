@@ -206,10 +206,11 @@ try {
     $e->getPrevious();  // original Illuminate\Http\Client\ConnectionException
 } catch (IndeterminateResultException $e) {
     // The API MAY have processed the request: read timeout, connection lost
-    // mid-transfer, or a 2xx with an unreadable body. NEVER retry blindly —
-    // reconcile first (e.g. via the Asaas withdrawal-validation webhook).
-    $e->phase;          // 'body'|'read'|'transfer'|null
-    $e->response;       // ?RawResponse — the uninterpretable 2xx when phase is 'body', null otherwise
+    // mid-transfer, a 2xx with an unreadable body, or a 5xx. NEVER retry
+    // blindly — reconcile first (e.g. via the Asaas withdrawal-validation
+    // webhook).
+    $e->phase;          // 'body'|'read'|'server'|'transfer'|null
+    $e->response;       // ?RawResponse — the received response for 'body' (2xx) and 'server' (5xx), null otherwise
 }
 ```
 
@@ -220,7 +221,8 @@ Classification is deliberately conservative: `RequestNotDeliveredException` is t
 Two additional behaviors change with the flag on:
 
 - A 2xx response whose body is not a JSON object or array (invalid JSON, empty body, or a bare JSON scalar) throws `IndeterminateResultException` with `phase: 'body'` (by default it silently becomes a success with empty `data`). Exception: **204 No Content** endpoints (`deleteAccessToken`, `removeBackoff`) keep returning a success with empty `data` — an intentionally empty body is a definitive answer, not a transport failure.
-- Definitive HTTP errors (4xx/5xx) are **not** affected — they still return an `AsaasResult` failure. An error response from Asaas is a definitive answer, not a transport failure.
+- A **5xx** response throws `IndeterminateResultException` with `phase: 'server'` and the response attached (by default it returns an `AsaasResult` failure). A 5xx is not Asaas answering about the operation — it is the server, or a proxy in front of it, reporting that it could not answer, so the operation may well have been processed. This holds for the whole range and regardless of the body: a 5xx carrying a canonical `{"errors":[...]}` envelope still throws.
+- **4xx** responses are **not** affected — they still return an `AsaasResult` failure. A 4xx is Asaas rejecting the operation: a definitive answer, not a transport failure. This includes `408` and `429`, which are safe to retry on your side but are left definitive here because the SDK only promotes a status when the server states it could not answer at all.
 
 ### Resource ID Validation
 
@@ -1554,7 +1556,7 @@ use OwnerPro\Asaas\Support\RequestNotDeliveredException;
 
 $asaas = AsaasClient::fake(throwOnTransportFailure: true)
     ->stubRequestNotDelivered('transfers', phase: 'dns')       // 'connect'|'dns'|'tls'
-    ->stubIndeterminateResult('pix/qrCodes/pay', phase: 'read'); // 'body'|'read'|'transfer'
+    ->stubIndeterminateResult('pix/qrCodes/pay', phase: 'read'); // 'body'|'read'|'server'|'transfer'
 
 try {
     $asaas->transfers()->create([...]);
@@ -1563,9 +1565,11 @@ try {
 }
 ```
 
-With `throwOnTransportFailure` omitted (default), the same stubs reproduce the legacy behavior: `stubRequestNotDelivered`/`stubIndeterminateResult` yield the `CONNECTION_ERROR` result, and `phase: 'body'` yields a success with empty `data` — exactly what production returns without the flag.
+`phase: 'body'` and `phase: 'server'` stub a response instead of a cURL error — an unreadable `200` and a `502` respectively — because that is what production sees in those cases.
 
-A request that fails in transport is still a request that was sent: both stubs record it (with a `null` response), so `assertSent`/`assertSentCount` see it and `assertNotSent`/`assertNothingSent` correctly fail. Raw `stubException()` throws your exception as-is and bypasses that recording — reach for the phase stubs when the test asserts on what was sent.
+With `throwOnTransportFailure` omitted (default), the same stubs reproduce the legacy behavior: `stubRequestNotDelivered`/`stubIndeterminateResult` yield the `CONNECTION_ERROR` result, `phase: 'body'` yields a success with empty `data`, and `phase: 'server'` yields a failure result carrying the `502` — exactly what production returns without the flag.
+
+A request that fails in transport is still a request that was sent: the cURL-error stubs record it (with a `null` response), so `assertSent`/`assertSentCount` see it and `assertNotSent`/`assertNothingSent` correctly fail. Raw `stubException()` throws your exception as-is and bypasses that recording — reach for the phase stubs when the test asserts on what was sent.
 
 Closure stubs receive `(Illuminate\Http\Client\Request $request, array $options)` from Laravel's HTTP client and may return a `Response`, a `PromiseInterface`, or any value `Http::response()` accepts. The `$options` parameter can be ignored when not needed:
 

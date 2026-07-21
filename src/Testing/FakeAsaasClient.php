@@ -196,12 +196,13 @@ final class FakeAsaasClient implements AsaasClientContract
 
     /**
      * Simulates a failure after the request may have been processed (read
-     * timeout, connection dropped mid-transfer, or a 2xx with unreadable
-     * body for `phase: 'body'`). With `throwOnTransportFailure: true` the
-     * call throws `IndeterminateResultException`; without it, the legacy
-     * behaviour is returned — mirroring production.
+     * timeout, connection dropped mid-transfer, a 2xx with unreadable body for
+     * `phase: 'body'`, or a 5xx for `phase: 'server'`). With
+     * `throwOnTransportFailure: true` the call throws
+     * `IndeterminateResultException`; without it, the legacy behaviour is
+     * returned — mirroring production.
      *
-     * @param  'body'|'read'|'transfer'  $phase
+     * @param  'body'|'read'|'server'|'transfer'  $phase
      */
     public function stubIndeterminateResult(string $pattern, string $phase = 'read'): self
     {
@@ -211,10 +212,16 @@ final class FakeAsaasClient implements AsaasClientContract
             return $this;
         }
 
+        if ($phase === 'server') {
+            $this->register($pattern, Factory::response('Bad Gateway', 502));
+
+            return $this;
+        }
+
         // @phpstan-ignore function.alreadyNarrowedType (PHPDoc unions are not runtime-enforced; the guard rejects invalid caller input)
         if (! in_array($phase, ['read', 'transfer'], true)) {
             throw new InvalidArgumentException(sprintf(
-                'Unknown transport failure phase "%s"; expected one of: body, read, transfer.',
+                'Unknown transport failure phase "%s"; expected one of: body, read, server, transfer.',
                 $phase,
             ));
         }
