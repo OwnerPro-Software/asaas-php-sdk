@@ -14,6 +14,35 @@ they rely on. Every fix is pinned by a test that fails without it.
 
 ### Fixed
 
+- **The fake client could not be built outside Laravel.** `StubResponse` and
+  three `FakeAsaasClient` stub helpers normalized stubs through the `Http`
+  facade, while the fake deliberately builds its own `Factory` to stay
+  container-free. In a plain-PHP suite — the standalone usage `README.md`
+  documents — `AsaasClient::fake([...])` died in the constructor with
+  `RuntimeException: A facade root has not been set.` Stub responses are now
+  built via `Factory::response()` and `$factory->sequence()`, which need no
+  facade root.
+- **`stubPages()` stopped the walk after the first page.** Each page was
+  normalized in isolation, and the envelope inference marks a page it cannot
+  see past as `hasMore=false`, so `next()` returned `null` and `->all()` yielded
+  only the first page's rows — silently, indistinguishable from a complete walk.
+  The only multi-page test declared `hasMore` by hand and never exercised the
+  inference. Inference now runs over the whole sequence: every page but the last
+  gets `hasMore=true`, and `totalCount` counts the rows of all pages.
+- **`assertSent()` silently dropped its second closure.** `assertSent(fn ($r) =>
+  ..., fn ($r) => ...)` type-checks, but only the first predicate was ever
+  applied — the second was discarded without a warning, turning the call into an
+  assertion that can never fail (a payload check written that way passed against
+  any payload). Both `assertSent()` and `assertNotSent()` now throw
+  `InvalidArgumentException` when handed two closures.
+- **`AsaasClient::for()` escaped `Http::fake()` inside Laravel.** The standalone
+  factory built a bare `PendingRequest`, which carries its own Guzzle client and
+  therefore answers to neither `Http::fake()` nor
+  `Http::preventStrayRequests()`. Since `AsaasClient::for()` is the documented
+  way to hold a per-tenant API key, a Laravel suite that faked HTTP still issued
+  live calls to Asaas with real credentials. It now routes through the
+  framework's HTTP factory whenever one is bound, and falls back to the detached
+  request outside Laravel (new `Support\PendingRequestFactory`).
 - **`MyAccountResource::uploadDocumentFile()` posted to a route that does not
   exist.** It built `POST /v3/myAccount/documents/{id}/files`; the endpoint is
   `POST /v3/myAccount/documents/{id}` (`specs/domains/my-account-documents.json`

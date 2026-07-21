@@ -479,3 +479,34 @@ it('assertSentInOrder rejects an empty matcher list', function (): void {
     expect(fn () => AsaasClient::fake()->assertSentInOrder([]))
         ->toThrow(AssertionFailedError::class, 'assertSentInOrder requires at least one matcher');
 });
+
+it('rejects assertSent() with two closures instead of dropping the second', function (): void {
+    $fake = AsaasClient::fake(['payments/*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    // Honouring only the first predicate turns this into an assertion that can
+    // never fail: the second closure is impossible, yet the call would pass.
+    expect(fn () => $fake->assertSent(
+        fn (Request $request): bool => true,
+        fn (Request $request): bool => false,
+    ))->toThrow(InvalidArgumentException::class);
+});
+
+it('rejects assertNotSent() with two closures', function (): void {
+    $fake = AsaasClient::fake();
+
+    expect(fn () => $fake->assertNotSent(
+        fn (Request $request): bool => true,
+        fn (Request $request): bool => true,
+    ))->toThrow(InvalidArgumentException::class);
+});
+
+it('still accepts a lone closure predicate', function (): void {
+    $fake = AsaasClient::fake(['payments/*' => ['id' => 'pay_1']]);
+    $fake->payments()->find('pay_1');
+
+    $fake->assertSent(fn (Request $request): bool => $request->method() === 'GET');
+
+    expect(fn () => $fake->assertSent(fn (Request $request): bool => $request->method() === 'POST'))
+        ->toThrow(AssertionFailedError::class);
+});

@@ -7,6 +7,7 @@ use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedError;
@@ -1047,4 +1048,28 @@ it('accepts the minimum valid connect timeout (1 second)', function (): void {
     $connector = AsaasConnector::forStandalone('key', Environment::Sandbox, 30, 1);
 
     expect($connector)->toBeInstanceOf(AsaasConnector::class);
+});
+
+it('routes standalone clients through the Laravel HTTP factory when one is bound', function (): void {
+    // A bare `new PendingRequest` builds its own Guzzle client, so it bypasses
+    // Http::fake() and preventStrayRequests(): a Laravel suite faking HTTP would
+    // still issue live calls with real credentials through AsaasClient::for().
+    Http::fake(['*' => Http::response(['id' => 'pay_1'])]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toBe(['id' => 'pay_1']);
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_1');
+});
+
+it('still builds a standalone request when no facade root is set', function (): void {
+    $application = Facade::getFacadeApplication();
+    Facade::setFacadeApplication(null);
+
+    try {
+        expect(AsaasConnector::forStandalone('key', 'sandbox', 30))->toBeInstanceOf(AsaasConnector::class);
+    } finally {
+        Facade::setFacadeApplication($application);
+    }
 });

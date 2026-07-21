@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use PHPUnit\Framework\Assert;
 
 /**
@@ -121,11 +122,22 @@ trait RecordsHttpAssertions
     }
 
     /**
+     * The two-closure call is rejected rather than silently honouring only the
+     * first: dropping the second predicate turns `assertSent(fn ($r) => ...,
+     * fn ($r) => ...)` into an assertion that can never fail, and a test that
+     * cannot fail is worse than one that errors.
+     *
      * @return array{0: ?string, 1: ?Closure}
      */
     private function normalizeSentArgs(string|Closure $patternOrCallback, ?Closure $callback): array
     {
         if ($patternOrCallback instanceof Closure) {
+            if ($callback instanceof Closure) {
+                throw new InvalidArgumentException(
+                    'Pass either a URL pattern plus a predicate, or a single predicate — two closures cannot both be applied. Combine them into one closure instead.'
+                );
+            }
+
             return [null, $patternOrCallback];
         }
 

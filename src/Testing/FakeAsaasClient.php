@@ -10,7 +10,6 @@ use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Client\ResponseSequence;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use OwnerPro\Asaas\Account\AccountResource;
@@ -152,7 +151,7 @@ final class FakeAsaasClient implements AsaasClientContract
      */
     public function stubError(string $pattern, int $status, array $body = [], array $headers = []): self
     {
-        $this->register($pattern, Http::response($body, $status, $headers));
+        $this->register($pattern, Factory::response($body, $status, $headers));
 
         return $this;
     }
@@ -200,7 +199,7 @@ final class FakeAsaasClient implements AsaasClientContract
     public function stubIndeterminateResult(string $pattern, string $phase = 'read'): self
     {
         if ($phase === 'body') {
-            $this->register($pattern, Http::response('{invalid-json'));
+            $this->register($pattern, Factory::response('{invalid-json'));
 
             return $this;
         }
@@ -219,10 +218,10 @@ final class FakeAsaasClient implements AsaasClientContract
     /** @param list<array<string, mixed>> $pages */
     public function stubPages(string $pattern, array $pages): self
     {
-        $sequence = Http::sequence();
+        $sequence = $this->factory->sequence();
 
-        foreach ($pages as $page) {
-            $sequence->pushResponse(StubResponse::normalize($page));
+        foreach (StubResponse::normalizePages($pages) as $response) {
+            $sequence->pushResponse($response);
         }
 
         $this->register($pattern, $sequence);

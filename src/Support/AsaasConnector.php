@@ -8,7 +8,6 @@ use Closure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
 use SensitiveParameter;
 
@@ -37,12 +36,12 @@ final readonly class AsaasConnector implements Connector
 
     public static function forStandalone(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10, bool $throwOnTransportFailure = false): self
     {
-        return self::make(new PendingRequest, $apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure);
+        return self::make(PendingRequestFactory::standalone(), $apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure);
     }
 
     public static function forLaravel(#[SensitiveParameter] string $apiKey, Environment|string $environment, int $timeout, int $connectTimeout = 10, bool $throwOnTransportFailure = false): self
     {
-        return self::make(Http::createPendingRequest(), $apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure);
+        return self::make(PendingRequestFactory::laravel(), $apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure);
     }
 
     /** @param array<string, mixed> $query */

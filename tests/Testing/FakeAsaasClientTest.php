@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Account\AccountResource;
 use OwnerPro\Asaas\Account\MyAccountResource;
@@ -287,4 +288,25 @@ it('recorded() returns the same Request instances across calls', function (): vo
     expect($first[0][0])->toBeInstanceOf(Request::class);
     // Same underlying request instance preserved between calls.
     expect($first[0][0])->toBe($second[0][0]);
+});
+
+it('builds every stub kind without a facade root (standalone usage)', function (): void {
+    // The fake is documented for plain-PHP suites, where no facade root exists.
+    // Any Http:: facade call inside stub normalization raises
+    // "A facade root has not been set." the moment the fake is constructed.
+    $application = Facade::getFacadeApplication();
+    Facade::setFacadeApplication(null);
+
+    try {
+        $fake = AsaasClient::fake(['payments/*' => ['id' => 'pay_1']])
+            ->stubError('webhooks', 400, ['errors' => [['code' => 'x']]])
+            ->stubIndeterminateResult('invoices', 'body')
+            ->stubPages('transfers', [['data' => [['id' => 't_1']]]]);
+
+        expect($fake->payments()->find('pay_1')->data['id'])->toBe('pay_1');
+        expect($fake->webhooks()->list()->success)->toBeFalse();
+        expect(iterator_to_array($fake->transfers()->all(), preserve_keys: false))->toBe([['id' => 't_1']]);
+    } finally {
+        Facade::setFacadeApplication($application);
+    }
 });

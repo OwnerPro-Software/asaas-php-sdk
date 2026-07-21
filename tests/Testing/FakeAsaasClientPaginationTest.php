@@ -134,3 +134,47 @@ it('stubPages with leading-* pattern preserves leading * (no extra append)', fun
     // not match a URL ending with '?limit=10', so the iterator would fail.
     expect($items)->toBe([['id' => 'a']]);
 });
+
+it('stubPages() infers hasMore on every page but the last', function (): void {
+    // Inferring the envelope page by page marks every page hasMore=false, which
+    // stops next() after the first one — the exact walk stubPages() exists to
+    // drive. Only the last page ends the walk.
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'b']]],
+        ['data' => [['id' => 'c']]],
+    ]);
+
+    $items = iterator_to_array($fake->payments()->all(['limit' => 1]), preserve_keys: false);
+
+    expect($items)->toBe([['id' => 'a'], ['id' => 'b'], ['id' => 'c']]);
+});
+
+it('stubPages() describes the walk, not the page, in totalCount and offset', function (): void {
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a'], ['id' => 'b']]],
+        ['data' => [['id' => 'c']]],
+    ]);
+
+    $first = $fake->payments()->list(['limit' => 2]);
+
+    expect($first->hasMore)->toBeTrue();
+    expect($first->totalCount)->toBe(3);
+    expect($first->limit)->toBe(2);
+    expect($first->offset)->toBe(0);
+
+    $second = $first->next();
+
+    expect($second)->not->toBeNull();
+    expect($second->hasMore)->toBeFalse();
+    expect($second->totalCount)->toBe(3);
+    expect($second->offset)->toBe(2);
+});
+
+it('stubPages() infers a single page as the end of the walk', function (): void {
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']]],
+    ]);
+
+    expect($fake->payments()->list()->hasMore)->toBeFalse();
+});

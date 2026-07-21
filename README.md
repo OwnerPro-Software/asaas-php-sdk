@@ -126,6 +126,11 @@ foreach ($tenants as $tenant) {
 }
 ```
 
+`AsaasClient::for()` works in both worlds: outside Laravel it builds its own HTTP
+client, and inside a booted Laravel app it routes through the framework's HTTP
+factory — so per-tenant clients still honour `Http::fake()` and
+`Http::preventStrayRequests()` in your test suite.
+
 ## Result Handling
 
 All resource methods return `AsaasResult` or `AsaasPaginatedResult`.
@@ -1466,10 +1471,15 @@ When multiple stubs match the same URL, the **first registered wins**. Construct
 
 ```php
 $asaas->stubPages('payments', [
-    ['data' => [['id' => 'a']], 'hasMore' => true,  'totalCount' => 2],
-    ['data' => [['id' => 'b']], 'hasMore' => false, 'totalCount' => 2],
+    ['data' => [['id' => 'a']]],
+    ['data' => [['id' => 'b']]],
 ]);
 ```
+
+`stubPages()` infers the envelope across the whole sequence: every page but the
+last gets `hasMore=true`, and `totalCount` counts the rows of all pages, so
+`->all()` walks the sequence to the end. Declaring `hasMore`/`totalCount` on a
+page still opts that page out of inference.
 
 ### Assertions
 
@@ -1492,6 +1502,12 @@ $asaas->assertSentInOrder([
 $asaas->recorded();             // list<array{Request, ?Response}>
 $asaas->recorded('payments');
 ```
+
+The first argument is either a URL pattern **or** a predicate — never two
+predicates. `assertSent(fn ($r) => ..., fn ($r) => ...)` throws
+`InvalidArgumentException`: only one of them could ever be applied, which would
+make the assertion impossible to fail. Combine the conditions into a single
+closure instead.
 
 A matcher closure may accept the response as a second parameter, but it **must**
 be typed as nullable — a request that failed in transport is recorded with a
