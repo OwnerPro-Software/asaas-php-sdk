@@ -59,7 +59,7 @@ final readonly class AccountRequest implements JsonSerializable
             fn (array|CreateWebhookRequest $item): CreateWebhookRequest => $item instanceof CreateWebhookRequest ? $item : CreateWebhookRequest::fromArray($item),
             $webhooks,
         ) : null;
-        $this->accessTokenConfig = is_array($accessTokenConfig) ? AccessTokenConfig::fromArray($accessTokenConfig) : $accessTokenConfig;
+        $this->accessTokenConfig = AccessTokenConfig::coerce($accessTokenConfig);
     }
 
     /** @return array{name: string, email: string, cpfCnpj: string, mobilePhone: string, incomeValue: float, address: string, addressNumber: string, province: string, postalCode: string, birthDate: ?string, companyType: CompanyType|string|null, phone: ?string, complement: ?string, site: ?string, loginEmail: ?string, webhooks: ?list<CreateWebhookRequest>, accessTokenConfig: ?AccessTokenConfig} */

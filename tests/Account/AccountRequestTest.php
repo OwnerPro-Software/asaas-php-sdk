@@ -343,6 +343,80 @@ it('serializes accessTokenConfig to the documented Asaas wire shape', function (
     ]);
 });
 
+it('omits an accessTokenConfig that carries nothing to configure', function (): void {
+    $request = AccountRequest::fromArray([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'cpfCnpj' => '12345678901',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua',
+        'addressNumber' => '1',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'accessTokenConfig' => [],
+    ]);
+
+    expect($request->accessTokenConfig)->toBeNull();
+    expect($request->toArray())->not->toHaveKey('accessTokenConfig');
+});
+
+it('omits an empty accessTokenConfig instance too', function (): void {
+    $request = new AccountRequest(
+        name: 'John Doe',
+        email: 'john@example.com',
+        cpfCnpj: '12345678901',
+        mobilePhone: '11999999999',
+        incomeValue: 5000.00,
+        address: 'Rua',
+        addressNumber: '1',
+        province: 'Centro',
+        postalCode: '01001000',
+        accessTokenConfig: new AccessTokenConfig,
+    );
+
+    expect($request->accessTokenConfig)->toBeNull();
+    expect($request->toArray())->not->toHaveKey('accessTokenConfig');
+});
+
+it('keeps an accessTokenConfig carrying only permissions', function (): void {
+    $request = AccountRequest::fromArray([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'cpfCnpj' => '12345678901',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua',
+        'addressNumber' => '1',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'accessTokenConfig' => [
+            'permissions' => [['name' => 'TRANSFER', 'scope' => 'READ_WRITE']],
+        ],
+    ]);
+
+    expect($request->toArray()['accessTokenConfig'])->toBe([
+        'permissions' => [['name' => 'TRANSFER', 'scope' => 'READ_WRITE']],
+    ]);
+});
+
+it('keeps an accessTokenConfig carrying only a name', function (): void {
+    $request = AccountRequest::fromArray([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'cpfCnpj' => '12345678901',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua',
+        'addressNumber' => '1',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'accessTokenConfig' => ['name' => 'Onboarding'],
+    ]);
+
+    expect($request->toArray()['accessTokenConfig'])->toBe(['name' => 'Onboarding']);
+});
+
 it('cannot be serialized', function (): void {
     $request = new AccountRequest(
         name: 'Acme',

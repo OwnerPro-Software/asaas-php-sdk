@@ -132,8 +132,8 @@ final class FakeAsaasClient implements AsaasClientContract
         return $this->asaasClient->leanPayments();
     }
 
-    /** @param array<string, mixed>|PromiseInterface|Closure $stub */
-    public function stub(string $pattern, array|PromiseInterface|Closure $stub): self
+    /** @param array<string, mixed>|PromiseInterface|ResponseSequence|Closure $stub */
+    public function stub(string $pattern, array|PromiseInterface|ResponseSequence|Closure $stub): self
     {
         $this->register($pattern, $stub);
 

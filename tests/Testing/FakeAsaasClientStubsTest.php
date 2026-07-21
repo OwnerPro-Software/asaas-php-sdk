@@ -76,6 +76,21 @@ it('supports Http::sequence() for multi-call stubs', function (): void {
     expect($b->data['id'])->toBe('pay_2');
 });
 
+it('accepts Http::sequence() through the fluent stub() too', function (): void {
+    $fake = AsaasClient::fake()->stub(
+        'payments/*',
+        Http::sequence()
+            ->push(['id' => 'pay_1'])
+            ->push(['id' => 'pay_2']),
+    );
+
+    $a = $fake->payments()->find('pay_1');
+    $b = $fake->payments()->find('pay_1');
+
+    expect($a->data['id'])->toBe('pay_1');
+    expect($b->data['id'])->toBe('pay_2');
+});
+
 it('stubError() forwards response headers to the recorded response', function (): void {
     $fake = AsaasClient::fake()->stubError(
         'payments',

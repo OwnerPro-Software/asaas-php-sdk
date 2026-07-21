@@ -47,4 +47,27 @@ final readonly class AccessTokenConfig implements Arrayable
             permissions: $data['permissions'] ?? null,
         );
     }
+
+    /**
+     * Coerces the inline shape, collapsing a config that carries nothing to
+     * configure down to `null`.
+     *
+     * Both fields are optional, so `accessTokenConfig: []` — the shape Laravel's
+     * `$request->validated()` produces for an empty client-supplied object —
+     * would otherwise reach `toArray()` empty and ship as `"accessTokenConfig": []`,
+     * a JSON array where Asaas declares an object. `JsonBody` only rescues the
+     * top-level body; this is the nested counterpart.
+     *
+     * @param  array{name?: string, permissions?: list<array{name?: AccessTokenPermission|string, scope?: AccessTokenScope|string}|AccessTokenPermissionConfig>}|AccessTokenConfig|null  $value
+     */
+    public static function coerce(array|self|null $value): ?self
+    {
+        $config = is_array($value) ? self::fromArray($value) : $value;
+
+        if (! $config instanceof self || ($config->name === null && $config->permissions === null)) {
+            return null;
+        }
+
+        return $config;
+    }
 }

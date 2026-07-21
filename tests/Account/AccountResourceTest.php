@@ -230,6 +230,30 @@ it('sends accessTokenConfig on subaccount create to seed the initial key with TR
     });
 });
 
+it('never ships an empty accessTokenConfig as a JSON array', function (): void {
+    Http::fake(['*' => Http::response(['id' => 'acc_1'], 200)]);
+
+    accountResource()->create([
+        'name' => 'Sub Account',
+        'email' => 'sub@test.com',
+        'cpfCnpj' => '12345678900',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua X',
+        'addressNumber' => '100',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'accessTokenConfig' => [],
+    ]);
+
+    Http::assertSent(function ($request): bool {
+        expect($request->data())->not->toHaveKey('accessTokenConfig');
+        expect($request->body())->not->toContain('accessTokenConfig');
+
+        return true;
+    });
+});
+
 it('sends accessTokenConfig from DTO instances (enum cases) on subaccount create', function (): void {
     Http::fake(['*' => Http::response(['id' => 'acc_1'], 200)]);
 

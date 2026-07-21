@@ -855,16 +855,19 @@ Asaas::leanPayments()->all(array $filters = []): Generator (yields array|AsaasPa
 
 #### Credit card pre-authorization (two-step capture)
 
-Set `authorizeOnly: true` on `CreatePaymentRequest` (or via array) to reserve the value without capturing it. Capture later with `captureAuthorized($id)`:
+Set `authorizeOnly: true` on `CreatePaymentRequest` (or via array) to reserve the value without capturing it. Capture later with `captureAuthorized($id)`.
+
+Card fields — `creditCard`, `creditCardHolderInfo`, `creditCardToken`, `remoteIp` and `authorizeOnly` — are only accepted by `createWithCreditCard()`; `create()` posts to the endpoint that does not declare them, so an `authorizeOnly` sent through `create()` is dropped and the later capture fails. `remoteIp` is required and validated before the request leaves the SDK:
 
 ```php
-$result = Asaas::payments()->create(new CreatePaymentRequest(
+$result = Asaas::payments()->createWithCreditCard(new CreatePaymentRequest(
     customer: 'cus_abc123',
     billingType: 'CREDIT_CARD',
     value: 200.00,
     dueDate: '2026-04-01',
     creditCard: new CreditCard(/* ... */),
     creditCardHolderInfo: new CreditCardHolderInfo(/* ... */),
+    remoteIp: '203.0.113.10',
     authorizeOnly: true,
 ));
 

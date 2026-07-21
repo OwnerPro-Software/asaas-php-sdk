@@ -27,6 +27,18 @@ they rely on. Every fix is pinned by a test that fails without it.
 
 ### Fixed
 
+- **A nested all-optional payload shipped as a JSON array.** `accessTokenConfig`
+  carries two optional fields, so `accounts()->create([… 'accessTokenConfig' => []])`
+  — the shape Laravel's `$request->validated()` produces for an empty
+  client-supplied object — serialized to `"accessTokenConfig": []`, an array
+  where Asaas declares an object. `JsonBody` only rescues the top-level body;
+  this was the same defect one level deeper. A config with nothing to configure
+  is now omitted from the request entirely, via `AccessTokenConfig::coerce()`.
+- **`FakeAsaasClient::stub()` rejected `Http::sequence()`.** The parameter union
+  omitted `ResponseSequence`, even though the constructor, `AsaasClient::fake()`
+  and the private `register()` all accept and handle one. Registering a sequence
+  through the fluent path raised a `TypeError` while the documented constructor
+  form worked, leaving multi-call stubs unreachable after construction.
 - **Explicit `null` reached non-nullable constructor parameters.**
   `UpdatePaymentRequest`, `UpdateInvoiceRequest` and `UpdateWebhookRequest` built
   their DTOs with `array_key_exists()`, so `fromArray(['dueDate' => null])`

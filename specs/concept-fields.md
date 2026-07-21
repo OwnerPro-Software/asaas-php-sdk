@@ -59,31 +59,6 @@ Maintenance rule: if a future spec refresh adds an entry here to `asaas_openapi.
 
 ---
 
-## `GET /v3/payments/{id}/refunds`
-
-- **Spec gap:** absent from `specs/domains/payments.json`. Spec only documents `POST /v3/payments/{id}/refund` (singular, to create a refund) — not the list-refunds GET.
-- **Source:** https://docs.asaas.com/reference/listar-estornos-de-uma-cobranca
-- **SDK method:** `OwnerPro\Asaas\Payment\PaymentResource::listRefunds(string $id): AsaasResult`.
-
----
-
-## `POST /v3/payments/{id}/bankSlip/refund`
-
-- **Spec gap:** absent from `specs/domains/payments.json`.
-- **Source:** https://docs.asaas.com/reference/estornar-boleto and https://docs.asaas.com/changelog/endpoint-para-estorno-de-boleto.
-- **SDK method:** `OwnerPro\Asaas\Payment\PaymentResource::refundBankSlip(string $id): AsaasResult`.
-- **Body:** none. The docs are explicit — *"Este endpoint não exige envio de parâmetros no corpo da requisição"* — and this is **not** the credit-card refund in another shape: it starts a customer-driven flow and returns a single `requestUrl` field, the link the payer opens to submit bank details and documents. There is no partial-refund amount to send, so no request DTO applies. `refundOnCustomerCreditCard` does not exist on this endpoint, nor on `POST /v3/payments/{id}/refund` (whose body is `value?` / `description?` / `splitRefunds?`, matching `RefundPaymentRequest`).
-
----
-
-## `GET /v3/payments/{id}/chargeback`
-
-- **Spec gap:** absent from `specs/domains/payments.json`.
-- **Source:** https://docs.asaas.com/reference/recuperar-um-unico-chargeback
-- **SDK method:** `OwnerPro\Asaas\Payment\PaymentResource::getChargeback(string $id): AsaasResult`.
-
----
-
 ## `remoteIp` on `POST /v3/payments/{id}/payWithCreditCard`
 
 - **Endpoint** is in spec (`specs/domains/payments.json:4489`), but the request body schema only declares `creditCard`, `creditCardHolderInfo`, `creditCardToken`. `remoteIp` is absent from the schema.
