@@ -15,13 +15,14 @@ trait PaginatesResults
     public function paginate(string $path, array $query): AsaasPaginatedResult
     {
         $asaasResult = $this->get($path, $query);
+        $requestedOffset = self::queryInt($query, 'offset');
 
         if (! $asaasResult->success) {
             return AsaasPaginatedResult::failure(
                 $asaasResult->errors ?? [],
                 $asaasResult->response,
-                offset: isset($query['offset']) && is_numeric($query['offset']) ? (int) $query['offset'] : 0,
-                limit: isset($query['limit']) && is_numeric($query['limit']) ? (int) $query['limit'] : 0,
+                offset: $requestedOffset,
+                limit: self::queryInt($query, 'limit'),
             );
         }
 
@@ -41,7 +42,10 @@ trait PaginatesResults
             totalCount: $data['totalCount'] ?? 0,
             hasMore: $data['hasMore'] ?? false,
             limit: $data['limit'] ?? 0,
-            offset: $data['offset'] ?? 0,
+            // Fall back to the offset we asked for: an envelope that omits it
+            // would otherwise pin the cursor at 0 and re-request page one
+            // forever once `next()` starts advancing from it.
+            offset: $data['offset'] ?? $requestedOffset,
             rawResponse: $rawResponse,
             nextPageFetcher: $nextPageFetcher,
         );
@@ -86,5 +90,11 @@ trait PaginatesResults
 
             $result = $result->next();
         } while ($result !== null);
+    }
+
+    /** @param array<string, mixed> $query */
+    private static function queryInt(array $query, string $key): int
+    {
+        return isset($query[$key]) && is_numeric($query[$key]) ? (int) $query[$key] : 0;
     }
 }

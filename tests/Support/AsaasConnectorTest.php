@@ -737,6 +737,40 @@ it('all() enforces minimum limit of 1 for negative values', function (): void {
     Http::assertSent(fn ($request): bool => str_contains($request->url(), 'limit=1'));
 });
 
+it('all() keeps walking when the envelope omits limit and offset', function (): void {
+    Http::fakeSequence()
+        ->push(['hasMore' => true, 'totalCount' => 3, 'data' => [['id' => 'a']]], 200)
+        ->push(['hasMore' => true, 'totalCount' => 3, 'data' => [['id' => 'b']]], 200)
+        ->push(['hasMore' => false, 'totalCount' => 3, 'data' => [['id' => 'c']]], 200);
+
+    $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
+    $items = iterator_to_array($connector->all('/payments', []));
+
+    expect(array_column($items, 'id'))->toBe(['a', 'b', 'c']);
+
+    $offsets = Http::recorded()
+        ->map(fn ($pair): string => (string) $pair[0]->url())
+        ->map(fn (string $url): string => (string) parse_url($url, PHP_URL_QUERY))
+        ->all();
+
+    expect($offsets[0])->toContain('offset=0');
+    expect($offsets[1])->toContain('offset=1');
+    expect($offsets[2])->toContain('offset=2');
+});
+
+it('all() advances by rows delivered, not by the echoed limit', function (): void {
+    Http::fakeSequence()
+        ->push(['hasMore' => true, 'totalCount' => 2, 'limit' => 100, 'offset' => 0, 'data' => [['id' => 'a']]], 200)
+        ->push(['hasMore' => false, 'totalCount' => 2, 'limit' => 100, 'offset' => 1, 'data' => [['id' => 'b']]], 200);
+
+    $connector = AsaasConnector::forLaravel('key', Environment::Sandbox, 30);
+    $items = iterator_to_array($connector->all('/payments', ['limit' => 100]));
+
+    expect(array_column($items, 'id'))->toBe(['a', 'b']);
+
+    Http::assertSent(fn ($request): bool => str_contains($request->url(), 'offset=1'));
+});
+
 it('all() stops when API returns hasMore true with empty data', function (): void {
     $emptyPage = [
         'object' => 'list', 'hasMore' => true, 'totalCount' => 10, 'limit' => 10, 'offset' => 0,
@@ -769,7 +803,9 @@ it('all() yields AsaasPaginatedError on error during pagination', function (): v
     expect($items[2]->errors[0]['description'])->toBe('The value field is required');
     expect($items[2]->response)->not->toBeNull();
     expect($items[2]->response->status())->toBe(400);
-    expect($items[2]->offset)->toBe(10);
+    // The fixture delivers 2 rows against limit=10, so the failed page was
+    // requested at offset 2 — the first row not yet read, not offset+limit.
+    expect($items[2]->offset)->toBe(2);
     expect($items[2]->limit)->toBe(10);
 });
 
@@ -967,7 +1003,9 @@ it('all() yields AsaasPaginatedError on connection exception mid-pagination', fu
     expect($items[2])->toBeInstanceOf(AsaasPaginatedError::class);
     expect($items[2]->errors[0]['description'])->toBe('Unable to connect to the Asaas API.');
     expect($items[2]->response)->toBeNull();
-    expect($items[2]->offset)->toBe(10);
+    // The fixture delivers 2 rows against limit=10, so the failed page was
+    // requested at offset 2 — the first row not yet read, not offset+limit.
+    expect($items[2]->offset)->toBe(2);
     expect($items[2]->limit)->toBe(10);
 });
 

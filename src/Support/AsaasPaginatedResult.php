@@ -69,12 +69,21 @@ final readonly class AsaasPaginatedResult
         );
     }
 
+    /**
+     * Advance by the number of rows actually delivered, not by the echoed
+     * `limit`. A page that returns fewer rows than its limit would otherwise
+     * skip the difference, and an envelope that omits `limit` entirely would
+     * stop the walk while `hasMore` still says there is more to fetch.
+     *
+     * An empty page terminates the walk: there is nothing to advance past, so
+     * continuing would re-request the same offset forever.
+     */
     public function next(): ?self
     {
-        if (! $this->hasMore || $this->limit < 1 || ! $this->nextPageFetcher instanceof Closure) {
+        if (! $this->hasMore || $this->data === [] || ! $this->nextPageFetcher instanceof Closure) {
             return null;
         }
 
-        return ($this->nextPageFetcher)($this->offset + $this->limit);
+        return ($this->nextPageFetcher)($this->offset + count($this->data));
     }
 }

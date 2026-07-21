@@ -113,16 +113,22 @@ it('next() returns null when nextPageFetcher is null even with hasMore true', fu
     expect($result->next())->toBeNull();
 });
 
-it('next() returns null when limit is zero to prevent infinite loop', function (): void {
-    $nextResult = AsaasPaginatedResult::success(
-        data: [['id' => 'b']],
+it('next() returns null on an empty page to prevent infinite loop', function (): void {
+    $result = AsaasPaginatedResult::success(
+        data: [],
         totalCount: 10,
-        hasMore: false,
+        hasMore: true,
         limit: 10,
         offset: 0,
         rawResponse: RawResponse::fake(200),
-        nextPageFetcher: null,
+        nextPageFetcher: fn (int $offset) => throw new RuntimeException('must not fetch'),
     );
+
+    expect($result->next())->toBeNull();
+});
+
+it('next() still advances when the envelope omits limit', function (): void {
+    $receivedOffset = null;
 
     $result = AsaasPaginatedResult::success(
         data: [['id' => 'a']],
@@ -131,16 +137,29 @@ it('next() returns null when limit is zero to prevent infinite loop', function (
         limit: 0,
         offset: 0,
         rawResponse: RawResponse::fake(200),
-        nextPageFetcher: fn (int $offset) => $nextResult,
+        nextPageFetcher: function (int $offset) use (&$receivedOffset): AsaasPaginatedResult {
+            $receivedOffset = $offset;
+
+            return AsaasPaginatedResult::success(
+                data: [],
+                totalCount: 10,
+                hasMore: false,
+                limit: 0,
+                offset: $offset,
+                rawResponse: RawResponse::fake(200),
+                nextPageFetcher: null,
+            );
+        },
     );
 
-    expect($result->next())->toBeNull();
+    expect($result->next())->not->toBeNull();
+    expect($receivedOffset)->toBe(1);
 });
 
 it('next() passes correct offset to fetcher', function (): void {
     $receivedOffset = null;
     $nextResult = AsaasPaginatedResult::success(
-        data: [['id' => 'c']],
+        data: [['id' => 'f']],
         totalCount: 10,
         hasMore: false,
         limit: 5,
@@ -150,7 +169,7 @@ it('next() passes correct offset to fetcher', function (): void {
     );
 
     $result = AsaasPaginatedResult::success(
-        data: [['id' => 'a']],
+        data: [['id' => 'a'], ['id' => 'b'], ['id' => 'c'], ['id' => 'd'], ['id' => 'e']],
         totalCount: 10,
         hasMore: true,
         limit: 5,
