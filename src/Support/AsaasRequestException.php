@@ -14,10 +14,20 @@ final class AsaasRequestException extends AsaasException
         public readonly ?RawResponse $response,
     ) {
         $this->statusCode = $this->response?->status() ?? 0;
-        // `?:` rather than `??`: Asaas's canonical envelope reaches the caller
-        // verbatim, so a row carrying `"description": ""` would otherwise leave
-        // the exception — and the log line it produces — with no message at all.
-        $message = ($errors[0]['description'] ?? '') ?: 'Asaas API error';
-        parent::__construct($message, $this->statusCode);
+        parent::__construct($this->describe($errors[0]['description'] ?? null), $this->statusCode);
+    }
+
+    /**
+     * `ErrorEnvelope` passes a canonical row through verbatim, so `description`
+     * is whatever Asaas — or a proxy impersonating it — put there. An empty
+     * string would leave the log line with nothing to act on, and a non-string
+     * would raise `TypeError` out of `Exception::__construct()`, escaping the
+     * Result-based contract this exception exists to serve.
+     */
+    private function describe(mixed $description): string
+    {
+        return is_string($description) && $description !== ''
+            ? $description
+            : 'Asaas API error';
     }
 }

@@ -53,3 +53,18 @@ it('extends RuntimeException', function (): void {
 
     expect($exception)->toBeInstanceOf(RuntimeException::class);
 });
+
+it('falls back to the default message when a canonical row carries a non-string description', function (mixed $description): void {
+    // ErrorEnvelope passes canonical rows through verbatim, so `description` is
+    // whatever the upstream put there. A non-string would otherwise raise
+    // TypeError out of Exception::__construct(), escaping the Result contract.
+    $exception = new AsaasRequestException([['code' => 'X', 'description' => $description]], null);
+
+    expect($exception->getMessage())->toBe('Asaas API error');
+})->with([
+    'int' => 123,
+    'null' => null,
+    'array' => [[['nested']]],
+    'bool' => true,
+    'float' => 1.5,
+]);
