@@ -13,8 +13,8 @@ namespace OwnerPro\Asaas\Support;
  * honours the hook exclusively, but Symfony VarDumper — which backs Laravel's
  * `dump()`, `dd()` and the Ignition/Flare error pages — *merges* the hook's
  * entries on top of the real property list instead of replacing it. This
- * interface is the registration key that {@see DumpRedaction} uses to install
- * a VarDumper caster, and a caster does replace the property list.
+ * interface is the registration key that `bootstrap/redaction.php` uses to
+ * install a VarDumper caster, and a caster does replace the property list.
  *
  * Implement it on any new class that defines `__debugInfo()` for redaction
  * purposes; the caster then covers it with no further wiring.

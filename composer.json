@@ -37,7 +37,10 @@
     "autoload": {
         "psr-4": {
             "OwnerPro\\Asaas\\": "src/"
-        }
+        },
+        "files": [
+            "bootstrap/redaction.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

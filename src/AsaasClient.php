@@ -23,7 +23,6 @@ use OwnerPro\Asaas\PixTransaction\PixTransactionResource;
 use OwnerPro\Asaas\Statement\StatementResource;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Connector;
-use OwnerPro\Asaas\Support\DumpRedaction;
 use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Support\Redactable;
 use OwnerPro\Asaas\Testing\FakeAsaasClient;
@@ -90,10 +89,6 @@ final class AsaasClient implements AsaasClientContract, Redactable
         int $connectTimeout = 10,
         bool $throwOnTransportFailure = false,
     ): self {
-        // The standalone entry point has no service provider to boot, so it is
-        // where the dump caster gets installed for plain-PHP hosts.
-        DumpRedaction::register();
-
         return new self(AsaasConnector::forStandalone($apiKey, $environment, $timeout, $connectTimeout, $throwOnTransportFailure));
     }
 

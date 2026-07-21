@@ -10,7 +10,6 @@ use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
-use OwnerPro\Asaas\Support\DumpRedaction;
 use OwnerPro\Asaas\Support\RawResponse;
 use OwnerPro\Asaas\Support\Redactable;
 use Symfony\Component\VarDumper\Cloner\AbstractCloner;
@@ -18,20 +17,20 @@ use Symfony\Component\VarDumper\Cloner\Stub;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 
-mutates(AsaasClient::class, DumpRedaction::class);
+mutates(AsaasClient::class);
 
 /**
  * Renders a value exactly the way `dump()` / `dd()` and the Laravel error page
  * do, so these tests exercise the real leak path rather than a stand-in.
  *
- * The cloner is built *after* registration on purpose: `AbstractCloner` copies
- * `$defaultCasters` in its constructor, so a cloner made earlier would never
- * see the caster.
+ * Nothing is registered here on purpose. `bootstrap/redaction.php` installed the
+ * caster when Composer's autoloader was included, which is the only moment early
+ * enough to matter — see 'installs the caster before anything can build a
+ * cloner'. A helper that registered first would hide a caster that arrives too
+ * late, which is exactly the defect this suite once missed.
  */
 function dumpToString(mixed $value): string
 {
-    DumpRedaction::register();
-
     $stream = fopen('php://memory', 'r+');
     expect($stream)->not->toBeFalse();
 
@@ -111,30 +110,49 @@ it('redacts a redactable nested deep inside another structure', function (): voi
     expect($output)->not->toContain('4111111111111111');
 });
 
-it('installs the caster from the standalone entry point', function (): void {
-    // Deliberately does not call register() itself: under Testbench the service
-    // provider has already booted, so only starting from an uninstalled caster
-    // proves `AsaasClient::for()` covers hosts that have no provider to boot.
-    unset(AbstractCloner::$defaultCasters[Redactable::class]);
+it('installs the caster before anything can build a cloner', function (): void {
+    // Runs in a fresh process that loads nothing but Composer's autoloader and
+    // then builds a cloner immediately — the position Laravel is in, since it
+    // constructs the cloner behind dump()/dd() during
+    // FoundationServiceProvider::register(), before any boot() runs.
+    //
+    // A subprocess is the only honest way to pin this: inside the suite the
+    // provider has already booted and every entry point has already registered,
+    // so nothing left in-process can tell a caster installed in time from one
+    // installed too late. Registration moved to Composer's `files` autoload for
+    // exactly this reason; drop that entry and this case fails while every
+    // other one here still passes.
+    $script = <<<'PHP'
+        require __DIR__ . '/vendor/autoload.php';
+        $cloner = new Symfony\Component\VarDumper\Cloner\VarCloner();
+        $card = new OwnerPro\Asaas\Support\DTO\CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737');
+        $stream = fopen('php://memory', 'r+');
+        (new Symfony\Component\VarDumper\Dumper\CliDumper($stream))->dump($cloner->cloneVar($card));
+        rewind($stream);
+        echo stream_get_contents($stream);
+        PHP;
 
-    AsaasClient::for(apiKey: 'key');
+    $output = shell_exec(sprintf(
+        'cd %s && %s -r %s',
+        escapeshellarg(dirname(__DIR__, 2)),
+        escapeshellarg(PHP_BINARY),
+        escapeshellarg($script),
+    ));
 
+    expect($output)
+        ->toBeString()
+        ->not->toContain('4111111111111111')
+        ->not->toContain('737')
+        ->toContain('********1111');
+});
+
+it('registers exactly one caster, keyed on the interface', function (): void {
+    // VarDumper stores one callable per type, so a registration that appended
+    // rather than assigned would run the caster once per entry.
     expect(AbstractCloner::$defaultCasters[Redactable::class] ?? null)->toBeInstanceOf(Closure::class);
 });
 
-it('registers one caster no matter how many entry points run', function (): void {
-    DumpRedaction::register();
-    DumpRedaction::register();
-    AsaasClient::for(apiKey: 'key');
-
-    // A plain assignment, so repeated entry points overwrite rather than stack.
-    // VarDumper stores one callable per type; an array of callables here would
-    // mean the caster runs once per registration.
-    expect(AbstractCloner::$defaultCasters[Redactable::class])->toBeInstanceOf(Closure::class);
-});
-
 it('answers with the redacted view and discards the collected properties', function (): void {
-    DumpRedaction::register();
     $creditCard = new CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737');
 
     // Called exactly the way AbstractCloner::castObject() calls it, trailing
