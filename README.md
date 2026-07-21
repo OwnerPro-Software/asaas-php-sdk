@@ -721,6 +721,20 @@ would otherwise report `0` for every page. `next()` advances by the number of
 rows the page actually delivered (not by `limit`, which a short page would
 overshoot) and returns `null` once a page comes back empty.
 
+`all()` stops on an empty page **and** once it has delivered the envelope's own
+`totalCount` — which every domain spec defines as the total for the filters
+sent, not the page. The second brake matters on endpoints whose query parameters
+Asaas never documented: one that ignored `offset` would answer every request
+with the same non-empty page and `hasMore: true`, and the generator would emit
+duplicates forever. An envelope that omits `totalCount` reports `0`, and then
+only the empty-page rule applies.
+
+If that brake fires while the response *still* says `hasMore: true`, the
+endpoint is contradicting itself and rows may be missing. Rather than stop
+quietly — which would look exactly like a complete walk — the generator yields a
+final `AsaasPaginatedError` carrying code `PAGINATION_INCONSISTENT`. Code that
+already checks each yielded item for `AsaasPaginatedError` needs no change.
+
 ### Lazy Iteration
 
 The `all()` method returns a Generator that auto-paginates:
@@ -1066,7 +1080,9 @@ Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRe
 
 `AccessTokenPermission` covers all 33 permission codes documented by Asaas (`PAYMENT`, `TRANSFER`, `WEBHOOK`, `PIX_*`, `INVOICE`, `BILL`, etc.); `AccessTokenScope` is `READ` or `READ_WRITE`. Both DTOs accept the enum **or** the raw string for forward-compat.
 
-> **An empty `permissions` list is omitted, not sent.** `permissions: []` — what `$request->validated()` yields for an absent client-supplied list — drops out of the body entirely, so the key keeps the all-permissions `READ_WRITE` default. `{"permissions": []}` has no documented meaning at Asaas, and sending it would leave the key in an undefined permission state. Pass at least one `AccessTokenPermissionConfig` when you mean to restrict a key.
+> **An empty `permissions` list is rejected, not omitted.** Omitting `permissions` mints a key with **all** permissions (`READ_WRITE` on everything) — that is Asaas's documented default. An explicit `permissions: []` reads as the opposite request, so folding it into an omission would answer "no privileges" with the most privileged key Asaas issues. `{"permissions": []}` has no documented meaning either, so there is no third option that both reaches the wire and behaves: `[]` raises `InvalidArgumentException` and you say which one you meant. Pass at least one `AccessTokenPermissionConfig` to restrict a key, or leave the field out to accept the all-permissions default.
+>
+> This applies to `CreateAccessTokenRequest`, `UpdateAccessTokenRequest` and the `accessTokenConfig` carried inline on `accounts()->create()`. If you build the payload from `$request->validated()`, note that an absent key is simply missing from the array — `[]` only reaches the DTO when the client explicitly sent an empty array.
 
 #### Permission ↔ endpoint mapping (heuristic)
 
@@ -1184,7 +1200,7 @@ $tenantClient->myAccount()->uploadDocumentFile(
 //    Monitor $status['bankAccountInfo'] to track approval (PENDING → APPROVED).
 ```
 
-Every upload filename (`uploadDocumentFile`, `updateDocumentFile`, `updatePaymentCheckoutConfig`, `payments()->uploadDocument`, `fiscalInfo()->update`) is validated before it reaches the HTTP client: directory components are stripped, and an empty name, a name over 255 chars, or one carrying a double quote, a backslash or a control character throws `InvalidArgumentException`. Those characters break out of the multipart `Content-Disposition` header — the double quote closes the value outright, and a trailing backslash escapes the closing quote — and would let a caller-supplied name forge extra form fields. A browser-supplied `getClientOriginalName()` can therefore be passed straight through. The part name each file is sent under is validated by the same rules, for callers reaching `Connector::postMultipart()` directly.
+Every upload filename (`uploadDocumentFile`, `updateDocumentFile`, `updatePaymentCheckoutConfig`, `payments()->uploadDocument`, `fiscalInfo()->update`) is validated before it reaches the HTTP client: directory components are stripped, and an empty name, a name over 255 chars, or one carrying a double quote, a backslash or a control character throws `InvalidArgumentException`. Those characters break out of the multipart `Content-Disposition` header — the double quote closes the value outright, and a trailing backslash escapes the closing quote — and would let a caller-supplied name forge extra form fields. A browser-supplied `getClientOriginalName()` can therefore be passed straight through. The part name each file is sent under is validated by the same rules, for callers reaching `Connector::postMultipart()` directly — as are any extra `headers` such a caller hangs on a part: the HTTP client writes them into the part preamble as `"{$name}: {$value}\r\n"` with no validation of its own, so a CR or LF in either half would close the header block and append arbitrary parts. Header names must be RFC 7230 tokens and values must carry no control characters; quotes and backslashes are allowed there, since a header value is not a quoted string.
 
 Listen to the `ACCOUNT_STATUS_*` webhook events (already in `WebhookEvent`) to react to approvals and rejections asynchronously.
 
@@ -1415,7 +1431,7 @@ Four response fields carry a live credential, and a result object exposes the re
 | `authToken` | `webhooks()->list()` / `get()` — the webhook shared secret |
 | `creditCardToken` | the card tokenization endpoints |
 
-`AsaasResult` and `AsaasPaginatedResult` scrub those field names — at any nesting depth, and in every row of a page — before `print_r()`, `var_dump()`, `dump()`, `dd()` or an error page can print them. `RawResponse` scrubs them out of the body it shows while debugging:
+`AsaasResult` and `AsaasPaginatedResult` scrub those field names — at any nesting depth, and in every row of a page — before `print_r()`, `var_dump()`, `dump()`, `dd()`, `json_encode()` or an error page can print them. The `json_encode()` path is the one that reaches a log file: `Log::info('created', ['result' => $result])` hands the result to Monolog, which encodes its context. `RawResponse` scrubs them out of the body it shows while debugging:
 
 ```php
 $result = $asaas->accounts()->create([...]);
@@ -1441,6 +1457,12 @@ DumpRedaction::register();
 ```
 
 The call is idempotent and a no-op when `symfony/var-dumper` is not installed.
+
+> **Register early.** Symfony's `AbstractCloner` copies the caster list in its
+> constructor, so a cloner built before registration never sees the caster.
+> Booting the service provider (or calling `AsaasClient::for()`) before anything
+> dumps is the normal case and needs no attention; a host that constructs its own
+> `VarCloner` during bootstrap should call `DumpRedaction::register()` ahead of it.
 
 Custom classes join in by implementing `OwnerPro\Asaas\Support\Redactable` and returning the safe view from `__debugInfo()` — the caster is keyed on the interface, so no further wiring is needed. The `MasksSensitiveData` trait supplies `mask()`, `__toString()`, `jsonSerialize()` and the serialization guards.
 
@@ -1557,17 +1579,33 @@ $asaas->stubPages('payments', [
 
 `stubPages()` infers the envelope across the whole sequence: every page but the
 last gets `hasMore=true`, and `totalCount` counts the rows of all pages, so
-`->all()` walks the sequence to the end. Inference is per key, not per page — a
-page that declares `hasMore` or `totalCount` keeps the value it declared and
-still has the remaining envelope keys filled in. `stubPages()` needs at least
-one page; an empty list is rejected.
+`->all()` walks the sequence to the end. A page keeps every key it declares —
+`totalCount`, `limit`, `offset`, anything extra.
+
+`hasMore` is the one key with a caveat. On a **non-final** page it is only a
+default, so a page declaring `hasMore: false` keeps it and the walk ends there —
+that is how you pin "the walk stops when the server says it does". On the
+**final** page it is overridden to `false`, because a last page promising
+another one sends the walk off the end of the sequence and into Laravel's raw
+`response sequence is empty`. One consequence worth knowing: a realistic fixture
+pasted into several slots carries its own `hasMore: false` everywhere and stops
+the walk after the first page. `stubPages()` needs at least one page; an empty
+list is rejected.
 
 A single `stub()` is a different contract: it is one response replayed for every
-matching request, so it describes page one only. Declaring `hasMore: true` on
+matching request, so it describes one page only. Declaring `hasMore: true` on
 one keeps `->list()` reporting `hasMore`, while `->all()` receives the empty
-terminal page once it asks for the next offset — otherwise the walk would
-re-request the same rows forever. Model real multi-page walks with
-`stubPages()`.
+terminal page once it asks for a different offset — otherwise the walk would
+re-request the same rows forever. The page it describes is the `offset` it
+declares (0 when it declares none), so a stub written as page two
+(`'offset' => 10`) answers `->list(['offset' => 10])` with its own body; a
+request carrying no `offset` at all gets the body too. Model real multi-page
+walks with `stubPages()`.
+
+Patterns are relative to the base URL, which already ends in `/v3`. Both an
+absolute URL and a leading `v3/` segment are rejected: either one would build a
+pattern that matches nothing, and a pattern that matches nothing makes
+`assertNotSent()` pass no matter what the code under test did.
 
 ### Assertions
 

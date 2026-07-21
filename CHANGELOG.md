@@ -41,23 +41,21 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   `fn (Request $r, Response $response)` raise `TypeError` the moment such a
   request is in the stream — widen them to `?Response`.
 - **`assertSent()` rejects two closures**, and **stub/assertion patterns reject
-  an absolute URL**. Both forms previously produced an assertion that could not
-  fail; both now throw `InvalidArgumentException`.
+  an absolute URL or a leading `v3/` segment**. All three forms previously
+  produced an assertion that could not fail; all three now throw
+  `InvalidArgumentException`.
 - **`MasksSensitiveData::mask()` emits a constant-width fill.** Tests asserting
   on the exact masked string need updating — see *Security*.
-
-### Changed
-
-- **BREAKING: `payments()->listRefunds()` now returns `AsaasPaginatedResult`.**
-  `GET /v3/payments/{id}/refunds` answers with the standard pagination envelope
-  (`specs/domains/payment-refunds.json` declares `object`, `hasMore`,
-  `totalCount`, `limit`, `offset`, `data`), but the method used `get()` and
-  handed back a flat `AsaasResult`. It was the only `get()` in the SDK pointed at
-  a paginated endpoint. A payment with more refunds than the page limit silently
-  returned only the first page, with no `next()`, `hasMore` or `totalCount` to
-  notice it by. It now takes an optional `$query` and returns
-  `AsaasPaginatedResult`; `allRefunds()` was added to walk every page. Callers
-  reading `$result->data` keep working — the rows are still there.
+- **An empty `permissions` list is rejected.** `permissions: []` on
+  `CreateAccessTokenRequest`, `UpdateAccessTokenRequest` or the inline
+  `accessTokenConfig` now raises `InvalidArgumentException` instead of being
+  omitted from the body. See *Security*.
+- **`stubPages()` overrides `hasMore` on the last page.** A final page declaring
+  `hasMore: true` promised a page the sequence cannot serve and ran the walk off
+  the end into Laravel's raw "response sequence is empty"; it is now forced to
+  `false`. On non-final pages `hasMore` remains a default, so a page declaring
+  `hasMore: false` still ends the walk there — that is the only way to pin the
+  termination contract. Every other key a page declares is honoured either way.
 
 ### Security
 
@@ -80,10 +78,29 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   recursively and case-insensitively, and the response body is scrubbed *before*
   it is truncated — truncating first leaves unparseable JSON, which falls
   through to the raw text the scrub exists to withhold.
+  Both result classes also implement `JsonSerializable`, because the dump
+  surface is not the one that reaches a log file: `Log::info('created',
+  ['result' => $result])` hands the result to Monolog, which `json_encode()`s
+  its context — and an encoder walking the public properties writes the live
+  subaccount key, or every `authToken` on a page of `GET /webhooks`, into the
+  log.
   Two gaps stay open by design and are documented in `README.md`: results still
   allow `serialize()` (unlike the client and the request DTOs, they are
   legitimately cached and queued), and `$result->data` is a plain array that
   nothing intercepts once a caller passes it on.
+- **An empty `permissions` list silently minted an all-permissions key.**
+  `permissions: []` was folded into an omission — and omitting the field is the
+  documented signal for a key with `READ_WRITE` on everything
+  (`specs/concept-fields.md`). The most restrictive-looking input therefore
+  produced the most privileged key Asaas issues, and on `accounts()->create()`
+  it defeated `accessTokenConfig` entirely, for which there is no documented
+  post-create way to scope the initial key. `{"permissions": []}` has no
+  documented meaning either, so there is no third option that both reaches the
+  wire and behaves: `AccessTokenPermissionConfig::coerceList()` now throws
+  `InvalidArgumentException` and the caller says which one they meant. The
+  previous rationale — that `[]` is what `$request->validated()` yields for an
+  absent list — was wrong: `validated()` omits absent keys entirely, so `[]`
+  only ever arrives when a client explicitly sent one.
 - **`serialize()` is refused on `AsaasClient` and `AsaasConnector`.** See
   *Breaking* above for the migration.
 - **Upload filenames could break out of the `Content-Disposition` header.**
@@ -96,14 +113,22 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   name makes Guzzle fall back to the stream's `uri` metadata and ship it anyway —
   and rejects a double quote, a **backslash** (RFC 2616 reads `\"` as a
   quoted-pair, so a trailing one escapes the closing quote just as effectively),
-  every control character, and anything over 255 chars. Both header values are
-  validated before the first `attach()`: a rejection mid-loop would leave the
-  already-attached files pending on the reused `PendingRequest` and smuggle them
-  into the next upload.
+  every control character, and anything over 255 chars. The same guard now
+  covers the per-part `headers` a caller reaching `Connector::postMultipart()`
+  directly can supply: Guzzle writes each pair as `"{$name}: {$value}\r\n"` with
+  no validation of its own (`MultipartStream::getHeaders()`), so a CR or LF in
+  either half closes the part's header block and appends arbitrary headers — or
+  a whole extra part. Header names must be RFC 7230 tokens; values must carry no
+  control characters, but keep quotes and backslashes, which are ordinary
+  outside a quoted string. Every caller-supplied value is validated before the
+  first `attach()`: a rejection mid-loop would leave the already-attached files
+  pending on the reused `PendingRequest` and smuggle them into the next upload.
 - **The mask published the exact length of the value it hid.** One asterisk per
   hidden character distinguishes an 11-digit CPF from a 14-digit CNPJ and narrows
   a brute-force search over a token. `mask()` now emits a constant-width fill,
-  and a value no longer than the visible suffix is masked whole.
+  and a value no longer than the visible suffix is masked whole. An empty value
+  stays empty: a fill there would disguise an unset field as a redacted one and
+  hide empty-payload bugs from the dump.
 
 ### Fixed
 
@@ -382,8 +407,8 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   `stubPages([['data' => [$a], 'totalCount' => 2], ['data' => [$b]]])` ended the
   walk after page one: `->all()` yielded `[$a]` and looked like a complete
   result. The rule now applies to `stub()` only, where there is no sequence to
-  reason about; `stubPages()` always fills in `hasMore` and still lets each page
-  keep every pagination key it declares.
+  reason about; `stubPages()` decides `hasMore` itself — see *Breaking* — and
+  still lets each page keep every other pagination key it declares.
 - **A scalar inside the `errors` list broke `$errors[0]['description']`.**
   Widening the guard to reject object-shaped envelopes left the sibling case
   open: `{"errors": ["boom"]}` is a list, so it passed through annotated as a
@@ -400,8 +425,57 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   empty-body fix above was meant to close. The body is now trimmed before the
   check.
 
+- **A stub modelling a later page answered with an empty one.** A lone `stub()`
+  declaring `hasMore: true` served its body only at offset 0, so a stub written
+  as page two (`'offset' => 10`) answered `->list(['offset' => 10])` with the
+  empty terminal page — a page the test never described. The cut is now the
+  offset the stub declares, and a request carrying no `offset` at all still gets
+  the body. The anti-loop guarantee is unchanged: `next()` always asks for a
+  different, explicit offset.
+- **A `v3/`-prefixed pattern made `assertNotSent()` incapable of failing.** The
+  base URL already ends in `/v3`, so `assertNotSent('v3/payments/pay_1')` — the
+  shape docs.asaas.com uses for every endpoint — resolved to
+  `…/v3/v3/payments/pay_1*`, matched nothing, and passed however many such
+  requests the code under test had sent. Same defect the absolute-URL guard
+  closed, different trigger; the guard now covers both.
+- **A canonical `description` that was not a string escaped the Result
+  contract.** `ErrorEnvelope` passes canonical rows through verbatim, so
+  `{"errors":[{"description":123}]}` reached `AsaasRequestException`, whose
+  parent constructor requires a string: `orFail()` raised `TypeError` rather
+  than the SDK's own exception. The empty-string fallback now covers every
+  non-string value too.
+- **`all()` could iterate forever on an endpoint that ignored `offset`.** The
+  walk stopped only on an empty page, so a server answering every request with
+  the same non-empty page and `hasMore: true` produced an infinite generator
+  emitting duplicates. This is a live possibility on the routes whose query
+  parameters Asaas never documented — `GET /v3/payments/{id}/refunds` among them,
+  which `allRefunds()` now walks. The walk also stops once the envelope's own
+  `totalCount` has been delivered — every domain spec defines that field as
+  "quantidade total de itens para os filtros informados", the whole filtered set
+  rather than the page. An envelope omitting `totalCount` reports `0` and only
+  the empty-page rule applies. When the brake fires while the same response
+  still says `hasMore: true`, the endpoint is contradicting itself and rows may
+  be missing, so the generator yields a final `AsaasPaginatedError` with code
+  `PAGINATION_INCONSISTENT` instead of stopping quietly — a silent stop there
+  would be indistinguishable from a complete walk, which is the failure this
+  backstop sits beside. `specs/concept-fields.md` records the refunds
+  query-parameter gap and flags it as inferred from the response envelope rather
+  than read off a doc page.
+
 ### Changed
 
+- **BREAKING: `payments()->listRefunds()` now returns `AsaasPaginatedResult`.**
+  `GET /v3/payments/{id}/refunds` answers with the standard pagination envelope
+  (`specs/domains/payment-refunds.json` declares `object`, `hasMore`,
+  `totalCount`, `limit`, `offset`, `data`), but the method used `get()` and
+  handed back a flat `AsaasResult`. It was the only `get()` in the SDK pointed at
+  a paginated endpoint. A payment with more refunds than the page limit silently
+  returned only the first page, with no `next()`, `hasMore` or `totalCount` to
+  notice it by. It now takes an optional `$query` and returns
+  `AsaasPaginatedResult`; `allRefunds()` was added to walk every page. Callers
+  reading `$result->data` keep working — the rows are still there. The endpoint's
+  request-side query parameters are undocumented upstream; see the
+  infinite-walk entry under *Fixed* and the `specs/concept-fields.md` record.
 - `AsaasPaginatedResult::$offset` now reports the offset the SDK requested for
   that page rather than the one echoed by the server. The two agree whenever the
   API echoes what it was asked for; the requested value is used because it is
@@ -425,13 +499,12 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   `AsaasClient`. The two surfaces are identical apart from `__debugInfo()`,
   which is never reached through a facade call.
 
-> **Release note — no breaking change in this cycle.** Commit `ad10b54` is
-> worded `fix(invoices)!` with a `BREAKING CHANGE:` footer. That classification
-> was reconsidered: the removed field never had any effect on an update, so it
-> carried no behaviour a caller could depend on. This release is a **minor**.
-> If the release tooling derives the version from commit trailers, override it
-> for this cycle — the trailer in `ad10b54` was left in place because rewriting
-> published history was not worth the churn.
+> **Release note — on the `municipalServiceName` classification.** Commit
+> `ad10b54` is worded `fix(invoices)!` with a `BREAKING CHANGE:` footer. Taken
+> alone that field's removal is arguably not breaking — it never had any effect
+> on an update, so no caller could depend on its behaviour — but the point is
+> moot: the *Breaking* section above carries several changes that are breaking
+> on their own terms, so this release is a **major** either way.
 
 ## [2.1.0] - 2026-07-20
 
