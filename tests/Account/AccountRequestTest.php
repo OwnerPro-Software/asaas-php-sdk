@@ -379,6 +379,45 @@ it('omits an empty accessTokenConfig instance too', function (): void {
     expect($request->toArray())->not->toHaveKey('accessTokenConfig');
 });
 
+it('omits an accessTokenConfig whose permissions list is empty', function (): void {
+    // `{"permissions": []}` has no documented meaning: omitting the field mints
+    // the all-permissions READ_WRITE key, so shipping the empty list would leave
+    // the subaccount's initial key in an undefined permission state.
+    $request = AccountRequest::fromArray([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'cpfCnpj' => '12345678901',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua',
+        'addressNumber' => '1',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'accessTokenConfig' => ['permissions' => []],
+    ]);
+
+    expect($request->accessTokenConfig)->toBeNull();
+    expect($request->toArray())->not->toHaveKey('accessTokenConfig');
+});
+
+it('keeps an accessTokenConfig carrying a name but no permissions', function (): void {
+    $request = AccountRequest::fromArray([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'cpfCnpj' => '12345678901',
+        'mobilePhone' => '11999999999',
+        'incomeValue' => 5000.00,
+        'address' => 'Rua',
+        'addressNumber' => '1',
+        'province' => 'Centro',
+        'postalCode' => '01001000',
+        'accessTokenConfig' => ['name' => 'Onboarding', 'permissions' => []],
+    ]);
+
+    expect($request->accessTokenConfig)->not->toBeNull();
+    expect($request->toArray()['accessTokenConfig'])->toEqual(['name' => 'Onboarding', 'permissions' => []]);
+});
+
 it('keeps an accessTokenConfig carrying only permissions', function (): void {
     $request = AccountRequest::fromArray([
         'name' => 'John Doe',

@@ -208,3 +208,93 @@ it('stubPages() keeps a page-declared totalCount over the inferred one', functio
     expect($first->totalCount)->toBe(99);
     expect($first->hasMore)->toBeTrue();
 });
+
+it('terminates ->all() on a lone stub that declares hasMore=true', function (): void {
+    // A lone stub is one response replayed for every request, so it describes
+    // page one only: without a terminal page the walk re-requests the same rows
+    // forever and hangs the suite.
+    $fake = AsaasClient::fake()->stub('payments', [
+        'data' => [['id' => 'pay_1']],
+        'hasMore' => true,
+        'totalCount' => 5,
+    ]);
+
+    $ids = [];
+
+    foreach ($fake->payments()->all() as $row) {
+        $ids[] = $row['id'];
+    }
+
+    expect($ids)->toBe(['pay_1']);
+});
+
+it('keeps the declared envelope on the first page of a hasMore=true stub', function (): void {
+    $fake = AsaasClient::fake()->stub('payments', [
+        'data' => [['id' => 'pay_1']],
+        'hasMore' => true,
+        'totalCount' => 5,
+        'limit' => 1,
+    ]);
+
+    $result = $fake->payments()->list();
+
+    expect($result->hasMore)->toBeTrue();
+    expect($result->totalCount)->toBe(5);
+    expect($result->data)->toBe([['id' => 'pay_1']]);
+});
+
+it('serves the terminal page to any request past the first on a hasMore=true stub', function (): void {
+    $fake = AsaasClient::fake()->stub('payments', [
+        'data' => [['id' => 'pay_1']],
+        'hasMore' => true,
+        'totalCount' => 5,
+        'limit' => 1,
+    ]);
+
+    $result = $fake->payments()->list(['offset' => 1]);
+
+    expect($result->success)->toBeTrue();
+    expect($result->data)->toBe([]);
+    expect($result->hasMore)->toBeFalse();
+    expect($result->totalCount)->toBe(5);
+    expect($result->limit)->toBe(1);
+    expect($result->offset)->toBe(1);
+});
+
+it('derives the terminal envelope from the rows when the stub declares only hasMore', function (): void {
+    $fake = AsaasClient::fake()->stub('payments', [
+        'data' => [['id' => 'pay_1'], ['id' => 'pay_2']],
+        'hasMore' => true,
+    ]);
+
+    $result = $fake->payments()->list(['offset' => 2]);
+
+    expect($result->data)->toBe([]);
+    expect($result->totalCount)->toBe(2);
+    expect($result->limit)->toBe(2);
+});
+
+it('treats a non-numeric offset as page one on a hasMore=true stub', function (): void {
+    $fake = AsaasClient::fake()->stub('payments', [
+        'data' => [['id' => 'pay_1']],
+        'hasMore' => true,
+    ]);
+
+    $result = $fake->payments()->list(['offset' => 'not-a-number']);
+
+    expect($result->data)->toBe([['id' => 'pay_1']]);
+});
+
+it('replays a lone stub that declares hasMore=false at any offset', function (): void {
+    $fake = AsaasClient::fake()->stub('payments', [
+        'data' => [['id' => 'pay_1']],
+        'hasMore' => false,
+    ]);
+
+    expect($fake->payments()->list(['offset' => 7])->data)->toBe([['id' => 'pay_1']]);
+});
+
+it('rejects an empty stubPages() sequence at registration', function (): void {
+    expect(fn (): FakeAsaasClient => AsaasClient::fake()->stubPages('payments', []))
+        ->toThrow(InvalidArgumentException::class, 'stubPages() requires at least one page');
+});

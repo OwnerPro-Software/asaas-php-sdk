@@ -31,6 +31,15 @@ it('falls back to default message when no description', function (): void {
     expect($exception->getMessage())->toBe('Asaas API error');
 });
 
+it('falls back to default message when the description is an empty string', function (): void {
+    // Canonical envelopes reach the caller verbatim, so an upstream row may
+    // carry an empty description — the log line must still say something.
+    $exception = new AsaasRequestException([['code' => 'invalid', 'description' => '']], RawResponse::fake(400));
+
+    expect($exception->getMessage())->toBe('Asaas API error');
+    expect($exception->errors)->toBe([['code' => 'invalid', 'description' => '']]);
+});
+
 it('derives status code zero when response is null', function (): void {
     $exception = new AsaasRequestException([['code' => 'CONNECTION_ERROR']], null);
 

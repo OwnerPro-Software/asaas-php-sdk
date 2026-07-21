@@ -15,8 +15,13 @@ use Illuminate\Http\Client\Response;
  * to a synthesized `UNKNOWN_ERROR` row whose `description` is either the
  * upstream `message` field (alternative shape) or the response body trimmed
  * to 350 chars with HTML stripped. The empty-array, object-shaped and
- * empty-body cases are synthesized too, so `$result->errors[0]['description']`
- * is always a non-empty string.
+ * empty-body cases are synthesized too, so every **synthesized** row carries a
+ * non-empty `description`.
+ *
+ * Canonical rows are passed through untouched — upstream owns their contents,
+ * and rewriting them would hide what Asaas actually said. A canonical row may
+ * therefore carry an absent or empty `description`; `AsaasRequestException`
+ * substitutes its own message in that case.
  *
  * @internal Extraction detail of `AsaasConnector` — not part of the SDK's
  * public contract; consume errors via `AsaasResult::$errors`.

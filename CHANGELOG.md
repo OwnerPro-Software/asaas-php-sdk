@@ -27,6 +27,34 @@ they rely on. Every fix is pinned by a test that fails without it.
 
 ### Fixed
 
+- **A lone `stub()` declaring `hasMore: true` hung `->all()` forever.** A single
+  stub is one response replayed for every matching request, so it describes page
+  one and nothing else — the walk kept re-requesting the same rows and never
+  terminated, hanging the consumer's test suite with no error to read. Such a
+  stub now serves the declared page at offset 0 and the empty terminal page a
+  real endpoint would answer with beyond it, so `->list()` still observes the
+  declared `hasMore` while `->all()` ends. `stubPages()` remains the way to model
+  a real multi-page walk, and it now rejects an empty page list at registration
+  instead of failing later as an exhausted sequence.
+- **An empty upstream `description` produced an exception with no message.**
+  Canonical error envelopes reach the caller verbatim, so a row carrying
+  `"description": ""` left `AsaasRequestException::getMessage()` empty — the
+  "nothing to act on in the log" outcome `ErrorEnvelope` documents as the thing
+  it prevents. The default message now also covers the empty-string case; the
+  `ErrorEnvelope` docblock has been corrected to scope its non-empty guarantee to
+  the rows it synthesizes.
+- **IPv4-mapped IPv6 addresses failed the webhook allowlist.**
+  `WebhookVerifier::isFromAsaas()` compared raw strings, but a dual-stack
+  listener or proxy reports an IPv4 client as `::ffff:52.67.12.206` — the same
+  host as `52.67.12.206`, never string-equal to it. Every genuine webhook was
+  rejected and reconciliation stopped silently. Addresses are now compared as
+  packed bytes with the IPv4-mapped range folded to its IPv4 form, so either
+  notation matches on either side; non-IP values still never match.
+- **`accessTokenConfig` shipped an undefined permission state.**
+  `{"permissions": []}` survived the empty-config collapse, yet omitting
+  `accessTokenConfig` entirely is what mints the documented all-permissions
+  `READ_WRITE` key — an explicitly empty list has no documented meaning. A config
+  whose only content is an empty permissions list is now omitted too.
 - **A nested all-optional payload shipped as a JSON array.** `accessTokenConfig`
   carries two optional fields, so `accounts()->create([… 'accessTokenConfig' => []])`
   — the shape Laravel's `$request->validated()` produces for an empty

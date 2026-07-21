@@ -60,6 +60,46 @@ it('accepts custom trusted IPs', function (): void {
     expect($verifier->isFromAsaas('52.67.12.206'))->toBeFalse();
 });
 
+it('accepts the IPv4-mapped IPv6 form a dual-stack listener reports', function (): void {
+    $verifier = new WebhookVerifier('token');
+
+    expect($verifier->isFromAsaas('::ffff:52.67.12.206'))->toBeTrue();
+});
+
+it('matches an IPv4 caller against an allowlist written in IPv4-mapped form', function (): void {
+    $verifier = new WebhookVerifier('token', ['::ffff:10.0.0.1']);
+
+    expect($verifier->isFromAsaas('10.0.0.1'))->toBeTrue();
+});
+
+it('still rejects a mapped address outside the allowlist', function (): void {
+    $verifier = new WebhookVerifier('token');
+
+    expect($verifier->isFromAsaas('::ffff:1.2.3.4'))->toBeFalse();
+});
+
+it('matches genuine IPv6 allowlist entries in any notation', function (): void {
+    $verifier = new WebhookVerifier('token', ['2001:0db8:0000:0000:0000:0000:0000:0001']);
+
+    expect($verifier->isFromAsaas('2001:db8::1'))->toBeTrue();
+});
+
+it('does not confuse distinct IPv6 addresses that share their last four bytes', function (): void {
+    // Only the IPv4-mapped range may be folded to 4 bytes: folding every 16-byte
+    // address would make any two IPv6 hosts with the same suffix compare equal.
+    $verifier = new WebhookVerifier('token', ['2001:db8::1']);
+
+    expect($verifier->isFromAsaas('2002:db8::1'))->toBeFalse();
+});
+
+it('rejects values that are not IP addresses at all', function (): void {
+    $verifier = new WebhookVerifier('token', ['not-an-ip']);
+
+    expect($verifier->isFromAsaas('not-an-ip'))->toBeFalse();
+    expect($verifier->isFromAsaas('52.67.12.206.7'))->toBeFalse();
+    expect($verifier->isFromAsaas('10.0.0.1'))->toBeFalse();
+});
+
 it('exposes default IPs as a public constant', function (): void {
     expect(WebhookVerifier::DEFAULT_IPS)->toBe([
         '52.67.12.206',

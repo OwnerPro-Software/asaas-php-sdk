@@ -1482,8 +1482,17 @@ $asaas->stubPages('payments', [
 
 `stubPages()` infers the envelope across the whole sequence: every page but the
 last gets `hasMore=true`, and `totalCount` counts the rows of all pages, so
-`->all()` walks the sequence to the end. Declaring `hasMore`/`totalCount` on a
-page still opts that page out of inference.
+`->all()` walks the sequence to the end. Inference is per key, not per page — a
+page that declares `hasMore` or `totalCount` keeps the value it declared and
+still has the remaining envelope keys filled in. `stubPages()` needs at least
+one page; an empty list is rejected.
+
+A single `stub()` is a different contract: it is one response replayed for every
+matching request, so it describes page one only. Declaring `hasMore: true` on
+one keeps `->list()` reporting `hasMore`, while `->all()` receives the empty
+terminal page once it asks for the next offset — otherwise the walk would
+re-request the same rows forever. Model real multi-page walks with
+`stubPages()`.
 
 ### Assertions
 

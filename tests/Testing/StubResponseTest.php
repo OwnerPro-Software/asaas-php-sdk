@@ -138,6 +138,23 @@ it('skips inference when only totalCount is set', function (): void {
     ]);
 });
 
+it('replays a stub that declares no hasMore at every offset', function (): void {
+    // Only `hasMore: true` promises a page a single response cannot serve; a
+    // stub that never claims one keeps its envelope at any offset.
+    $factory = new Factory;
+    $factory->fake(['*' => StubResponse::normalize([
+        'data' => [['id' => 'a']],
+        'totalCount' => 99,
+    ])]);
+
+    $response = $factory->createPendingRequest()->get('https://example.test/api/v3/x?offset=3');
+
+    expect($response->json())->toBe([
+        'data' => [['id' => 'a']],
+        'totalCount' => 99,
+    ]);
+});
+
 it('passes through PromiseInterface stubs unchanged', function (): void {
     $promise = Http::response(['x' => 1], 201);
 
@@ -148,4 +165,86 @@ it('passes through closure stubs unchanged', function (): void {
     $closure = static fn (): Response => new Response(new GuzzleHttp\Psr7\Response(200, [], '{"x":1}'));
 
     expect(StubResponse::normalize($closure))->toBe($closure);
+});
+
+it('serves a hasMore=true stub as page one at offset zero', function (): void {
+    $factory = new Factory;
+    $factory->fake(['*' => StubResponse::normalize([
+        'data' => [['id' => 'a']],
+        'hasMore' => true,
+        'totalCount' => 9,
+        'limit' => 7,
+    ])]);
+
+    $response = $factory->createPendingRequest()->get('https://example.test/api/v3/x');
+
+    expect($response->json())->toBe([
+        'data' => [['id' => 'a']],
+        'hasMore' => true,
+        'totalCount' => 9,
+        'limit' => 7,
+    ]);
+});
+
+it('serves the terminal page past page one, keeping the declared envelope', function (): void {
+    $factory = new Factory;
+    $factory->fake(['*' => StubResponse::normalize([
+        'data' => [['id' => 'a']],
+        'hasMore' => true,
+        'totalCount' => 9,
+        'limit' => 7,
+    ])]);
+
+    $response = $factory->createPendingRequest()->get('https://example.test/api/v3/x?offset=1');
+
+    expect($response->json())->toBe([
+        'object' => 'list',
+        'hasMore' => false,
+        'totalCount' => 9,
+        'limit' => 7,
+        'offset' => 1,
+        'data' => [],
+    ]);
+});
+
+it('derives the terminal totalCount and limit from the rows when undeclared', function (): void {
+    $factory = new Factory;
+    $factory->fake(['*' => StubResponse::normalize([
+        'data' => [['id' => 'a'], ['id' => 'b']],
+        'hasMore' => true,
+    ])]);
+
+    $response = $factory->createPendingRequest()->get('https://example.test/api/v3/x?offset=5');
+
+    expect($response->json())->toBe([
+        'object' => 'list',
+        'hasMore' => false,
+        'totalCount' => 2,
+        'limit' => 2,
+        'offset' => 5,
+        'data' => [],
+    ]);
+});
+
+it('treats an absent, empty or non-numeric offset as page one', function (string $url): void {
+    $factory = new Factory;
+    $factory->fake(['*' => StubResponse::normalize([
+        'data' => [['id' => 'a']],
+        'hasMore' => true,
+    ])]);
+
+    $response = $factory->createPendingRequest()->get($url);
+
+    expect($response->json())->toBe(['data' => [['id' => 'a']], 'hasMore' => true]);
+})->with([
+    'no query string' => ['https://example.test/api/v3/x'],
+    'other filters only' => ['https://example.test/api/v3/x?limit=10'],
+    'non-numeric offset' => ['https://example.test/api/v3/x?offset=abc'],
+    'empty offset' => ['https://example.test/api/v3/x?offset='],
+    'explicit zero' => ['https://example.test/api/v3/x?offset=0'],
+]);
+
+it('rejects an empty stubPages() sequence', function (): void {
+    expect(fn (): array => StubResponse::normalizePages([]))
+        ->toThrow(InvalidArgumentException::class, 'stubPages() requires at least one page');
 });

@@ -14,7 +14,10 @@ final class AsaasRequestException extends AsaasException
         public readonly ?RawResponse $response,
     ) {
         $this->statusCode = $this->response?->status() ?? 0;
-        $message = $errors[0]['description'] ?? 'Asaas API error';
+        // `?:` rather than `??`: Asaas's canonical envelope reaches the caller
+        // verbatim, so a row carrying `"description": ""` would otherwise leave
+        // the exception — and the log line it produces — with no message at all.
+        $message = ($errors[0]['description'] ?? '') ?: 'Asaas API error';
         parent::__construct($message, $this->statusCode);
     }
 }
