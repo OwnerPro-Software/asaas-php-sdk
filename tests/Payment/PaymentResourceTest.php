@@ -717,13 +717,13 @@ it('gets escrow details for a payment', function (): void {
         && $request->method() === 'GET');
 });
 
-it('finishes escrow on a payment', function (): void {
+it('finishes escrow by the guarantee id returned by getEscrow, not the payment id', function (): void {
     Http::fake(['*' => Http::response(['object' => 'payment', 'id' => 'pay_abc123'], 200)]);
 
-    $result = paymentResource()->finishEscrow('pay_abc123');
+    $result = paymentResource()->finishEscrow('4f468235-cec3-482f-b3d0-348af4c7194');
 
     expect($result->success)->toBeTrue();
-    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/escrow/pay_abc123/finish'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/escrow/4f468235-cec3-482f-b3d0-348af4c7194/finish'
         && $request->method() === 'POST');
 });
 

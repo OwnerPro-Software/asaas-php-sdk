@@ -87,9 +87,15 @@ final readonly class PaymentResource
         return $this->connector->get($this->path($id, '/escrow'));
     }
 
-    public function finishEscrow(string $id): AsaasResult
+    /**
+     * @param  string  $escrowId  the escrow **guarantee** id — not the payment id.
+     *                            Read it from `getEscrow($paymentId)`, whose response
+     *                            `id` field carries it (a UUID, e.g.
+     *                            `4f468235-cec3-482f-b3d0-348af4c7194`).
+     */
+    public function finishEscrow(string $escrowId): AsaasResult
     {
-        return $this->connector->post($this->escrowPath($id));
+        return $this->connector->post($this->escrowPath($escrowId));
     }
 
     public function restore(string $id): AsaasResult
@@ -249,8 +255,8 @@ final readonly class PaymentResource
         return sprintf('%s/splits/%s/%s', self::BASE, $kind, IdGuard::validate($id));
     }
 
-    private function escrowPath(string $id): string
+    private function escrowPath(string $escrowId): string
     {
-        return sprintf('/escrow/%s/finish', IdGuard::validate($id));
+        return sprintf('/escrow/%s/finish', IdGuard::validate($escrowId));
     }
 }

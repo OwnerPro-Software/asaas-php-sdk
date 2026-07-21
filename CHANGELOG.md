@@ -83,6 +83,16 @@ they rely on. Every fix is pinned by a test that fails without it.
   and static analysis blessed `$entry[1]->status()` on a value that can be null.
   The type is now `?Response` everywhere, with the nullability documented on the
   trait and in `README.md`.
+- **`finishEscrow()` invited the wrong identifier.** Its parameter was `$id`,
+  sitting one line below `getEscrow(string $id)` in both the class and
+  `README.md`, so the obvious reading was "same id, two calls". It is not:
+  `GET /v3/payments/{id}/escrow` takes the payment id and *returns* the
+  guarantee id, while `POST /v3/escrow/{id}/finish` takes that guarantee id — a
+  UUID, per `specs/domains/escrow.json`. Feeding it a `pay_…` id produced a 404
+  that `IdGuard` cannot catch, since a UUID and a payment id share the same
+  charset. The parameter is now `$escrowId`, documented on the method and in
+  `README.md`, and the test that froze the wrong semantic now pins the
+  guarantee id.
 
 ### Changed
 

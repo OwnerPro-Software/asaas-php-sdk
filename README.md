@@ -791,7 +791,7 @@ Asaas::payments()->identificationField(string $id): AsaasResult
 Asaas::payments()->viewingInfo(string $id): AsaasResult
 Asaas::payments()->getChargeback(string $id): AsaasResult
 Asaas::payments()->getEscrow(string $id): AsaasResult
-Asaas::payments()->finishEscrow(string $id): AsaasResult
+Asaas::payments()->finishEscrow(string $escrowId): AsaasResult  // guarantee id, not the payment id — see below
 Asaas::payments()->simulate(array|SimulatePaymentRequest $data): AsaasResult
 Asaas::payments()->limits(): AsaasResult
 Asaas::payments()->all(array $filters = []): Generator (yields array|AsaasPaginatedError)
@@ -814,6 +814,18 @@ Asaas::payments()->listSplitsPaid(array $query = []): AsaasPaginatedResult
 Asaas::payments()->findSplitPaid(string $id): AsaasResult
 Asaas::payments()->listSplitsReceived(array $query = []): AsaasPaginatedResult
 Asaas::payments()->findSplitReceived(string $id): AsaasResult
+```
+
+`getEscrow()` and `finishEscrow()` take **different identifiers**. `getEscrow()`
+takes the payment id (`GET /v3/payments/{id}/escrow`) and returns the guarantee
+in its `id` field; `finishEscrow()` takes that guarantee id
+(`POST /v3/escrow/{id}/finish`), which is a UUID, not a `pay_…` id. Passing a
+payment id to `finishEscrow()` gets a 404:
+
+```php
+$escrow = Asaas::payments()->getEscrow('pay_080225913252')->orFail();
+
+Asaas::payments()->finishEscrow($escrow->data['id']); // 4f468235-cec3-482f-b3d0-348af4c7194
 ```
 
 ### Lean Payments (`leanPayments()`)
