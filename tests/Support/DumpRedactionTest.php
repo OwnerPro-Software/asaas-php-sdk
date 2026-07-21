@@ -209,6 +209,18 @@ it('redacts the error object a walk yields in place of a page', function (): voi
     expect(json_encode($error))->not->toContain('$aact_live_key')
         ->and(dumpToString($error))->not->toContain('$aact_live_key')
         ->and($error->errors[0]['apiKey'])->toBe('$aact_live_key');
+
+    // The redacted view is still the whole object: an error that lost its
+    // offset, limit or response tells the reader nothing about which page
+    // failed, which is the only reason to look at one.
+    $decoded = json_decode((string) json_encode($error), true);
+
+    expect($decoded)->toBe([
+        'errors' => [['code' => 'invalid_value', 'description' => 'rejected', 'apiKey' => '***']],
+        'response' => ['status' => 400, 'headers' => [], 'body' => '[]'],
+        'offset' => 10,
+        'limit' => 10,
+    ]);
 });
 
 it('keeps the real value reachable on the property after json redaction', function (): void {

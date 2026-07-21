@@ -34,13 +34,13 @@ final class PageEnvelopeGuard
      *
      * @param  array<string, mixed>  $body
      * @param  string  $origin  how to name this body in the failure message
-     * @return int the declared `totalCount`, or 0 when the page leaves it out —
-     *             the same value an envelope omitting the key reports
+     * @return ?int the declared `totalCount`, or `null` when the page leaves it
+     *              out or is not a page at all
      */
-    public static function validate(array $body, string $origin): int
+    public static function validate(array $body, string $origin): ?int
     {
         if (! self::isPageEnvelope($body)) {
-            return 0;
+            return null;
         }
 
         self::requireBool($body, 'hasMore', $origin);
@@ -49,10 +49,20 @@ final class PageEnvelopeGuard
         return self::requireInt($body, 'totalCount', $origin);
     }
 
-    /** @param array<string, mixed> $body */
-    private static function requireInt(array $body, string $key, string $origin): int
+    /**
+     * A key the page leaves out reads as `null` rather than as the envelope's
+     * default: the caller has to tell "declared 0" from "not declared", and
+     * borrowing the default here would silently answer the wrong question.
+     *
+     * @param  array<string, mixed>  $body
+     */
+    private static function requireInt(array $body, string $key, string $origin): ?int
     {
-        $value = $body[$key] ?? 0;
+        if (! array_key_exists($key, $body)) {
+            return null;
+        }
+
+        $value = $body[$key];
 
         if (! is_int($value)) {
             throw self::mistyped($origin, $key, 'int', $value);
@@ -62,15 +72,11 @@ final class PageEnvelopeGuard
     }
 
     /** @param array<string, mixed> $body */
-    private static function requireBool(array $body, string $key, string $origin): bool
+    private static function requireBool(array $body, string $key, string $origin): void
     {
-        $value = $body[$key] ?? false;
-
-        if (! is_bool($value)) {
-            throw self::mistyped($origin, $key, 'bool', $value);
+        if (array_key_exists($key, $body) && ! is_bool($body[$key])) {
+            throw self::mistyped($origin, $key, 'bool', $body[$key]);
         }
-
-        return $value;
     }
 
     private static function mistyped(string $origin, string $key, string $expected, mixed $value): InvalidArgumentException

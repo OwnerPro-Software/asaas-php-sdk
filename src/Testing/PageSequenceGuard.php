@@ -17,10 +17,10 @@ final class PageSequenceGuard
     /**
      * @param  list<array<string, mixed>>  $pages
      * @param  list<int>  $rowCounts  rows per page, positionally aligned with `$pages`
-     * @param  list<int>  $declaredCounts  each page's own `totalCount` — already
-     *                                     proven to be an int by
-     *                                     {@see PageEnvelopeGuard}, and 0 where
-     *                                     the page leaves the key out
+     * @param  list<?int>  $declaredCounts  each page's own `totalCount` — already
+     *                                      proven to be an int by
+     *                                      {@see PageEnvelopeGuard}, and `null`
+     *                                      where the page leaves the key out
      */
     public static function validate(array $pages, array $rowCounts, array $declaredCounts): void
     {
@@ -57,7 +57,7 @@ final class PageSequenceGuard
      *
      * @param  list<array<string, mixed>>  $pages
      * @param  list<int>  $rowCounts
-     * @param  list<int>  $declaredCounts
+     * @param  list<?int>  $declaredCounts
      */
     private static function rejectExhaustedCount(array $pages, array $rowCounts, array $declaredCounts): void
     {
@@ -71,9 +71,10 @@ final class PageSequenceGuard
 
             // A count of 0 is what an envelope omitting the key reports, so
             // `all()` cannot read it as "the set is complete" and it never ends
-            // the walk early. The last page ends the walk on its own, so a count
-            // it has already delivered is the coherent case there.
-            if ($index !== $lastIndex && $declared > 0 && $delivered >= $declared) {
+            // the walk early — a page declaring 0 is exempt for the same reason
+            // one declaring nothing is. The last page ends the walk on its own,
+            // so a count it has already delivered is the coherent case there.
+            if ($index !== $lastIndex && $declared !== null && $declared > 0 && $delivered >= $declared) {
                 throw new InvalidArgumentException(sprintf(
                     'stubPages() page %d declares totalCount %d, which the walk has already delivered by the end of that page, while %d more page(s) wait behind it. all() stops at the declared count and reports PAGINATION_INCONSISTENT there, so the later pages never reach the caller. Declare the count of the whole walk, or leave totalCount out and let it be inferred.',
                     $index + 1,

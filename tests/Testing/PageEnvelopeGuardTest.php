@@ -64,6 +64,32 @@ it('leaves a loosely declared offset alone', function (): void {
     expect($result->data)->toBe([['id' => 'a']]);
 });
 
+/**
+ * A body declaring a walk position is a page even with no `data` at all — an
+ * endpoint answering an empty result set says exactly that.
+ */
+it('holds a body with no data but a declared count to the envelope types', function (): void {
+    AsaasClient::fake()->stub('payments', ['totalCount' => '5']);
+})->throws(InvalidArgumentException::class, 'declares totalCount as string');
+
+it('holds a body with no data but a declared hasMore to the envelope types', function (): void {
+    AsaasClient::fake()->stub('payments', ['hasMore' => 'false']);
+})->throws(InvalidArgumentException::class, 'declares hasMore as string');
+
+/**
+ * A page that leaves `totalCount` out declares nothing, and nothing is not a
+ * count the walk can exhaust — the sequence guard must not read a default in
+ * its place.
+ */
+it('lets a sequence whose pages declare no count through', function (): void {
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'b']]],
+    ]);
+
+    expect(array_column(iterator_to_array($fake->payments()->all()), 'id'))->toBe(['a', 'b']);
+});
+
 it('accepts a page that declares every key with the type the envelope reads', function (): void {
     $fake = AsaasClient::fake()->stub('payments', [
         'data' => [['id' => 'a']], 'hasMore' => false, 'totalCount' => 1, 'limit' => 1, 'offset' => 0,

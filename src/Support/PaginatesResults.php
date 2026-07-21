@@ -100,10 +100,10 @@ trait PaginatesResults
         do {
             $pages += 1;
 
-            $stop = self::stopBeforeRows($result, $previousRows, $delivered);
+            $fault = self::faultBeforeRows($result, $previousRows, $delivered);
 
-            if ($stop !== null) {
-                yield from $stop;
+            if ($fault instanceof AsaasPaginatedError) {
+                yield $fault;
 
                 break;
             }
@@ -115,10 +115,10 @@ trait PaginatesResults
             $delivered += count($result->data);
             $previousRows = $result->data;
 
-            $stop = self::stopAfterRows($result, $delivered, $pages);
+            $fault = self::faultAfterRows($result, $delivered, $pages);
 
-            if ($stop !== null) {
-                yield from $stop;
+            if ($fault instanceof AsaasPaginatedError) {
+                yield $fault;
 
                 break;
             }
@@ -128,57 +128,56 @@ trait PaginatesResults
     }
 
     /**
-     * Whether the walk ends before this page's rows go out, and with what.
+     * The fault that ends the walk before this page's rows go out, or `null`
+     * when there is none.
      *
-     * `null` means carry on. A list means stop — and `yield from` it, which is
-     * how one shape covers both endings: an empty list is a walk that finished
-     * with nothing to report, a one-element list a walk that stopped with
-     * something the caller has to see. The two are not interchangeable, and
-     * keeping them in one return value is what stops the loop from having to
-     * ask *why* it is stopping.
+     * `null` does not mean "carry on" — it means "nothing to report". An
+     * ordinary ending needs no branch of its own here: `next()` already returns
+     * `null` for a page that is empty or says the walk is over, which ends the
+     * loop on its own terms. Only the faults need saying out loud, so those are
+     * the only thing this decides.
      *
-     * The stall check comes first among the ending conditions for the reason
-     * {@see self::stalledPage()} gives: those rows must not be handed over.
+     * The stall check comes last for the reason {@see self::stalledPage()}
+     * gives — it must still run before the rows are handed over.
      *
      * @param  ?list<array<string, mixed>>  $previousRows
-     * @return ?list<AsaasPaginatedError>
      */
-    private static function stopBeforeRows(AsaasPaginatedResult $asaasPaginatedResult, ?array $previousRows, int $delivered): ?array
+    private static function faultBeforeRows(AsaasPaginatedResult $asaasPaginatedResult, ?array $previousRows, int $delivered): ?AsaasPaginatedError
     {
         if (! $asaasPaginatedResult->success) {
-            return [new AsaasPaginatedError(
+            return new AsaasPaginatedError(
                 $asaasPaginatedResult->errors ?? [],
                 $asaasPaginatedResult->response,
                 $asaasPaginatedResult->offset,
                 $asaasPaginatedResult->limit,
-            )];
+            );
         }
 
-        if ($asaasPaginatedResult->data === []) {
-            return $asaasPaginatedResult->hasMore ? [self::truncatedWalk($asaasPaginatedResult, $delivered)] : [];
+        if ($asaasPaginatedResult->data === [] && $asaasPaginatedResult->hasMore) {
+            return self::truncatedWalk($asaasPaginatedResult, $delivered);
         }
 
         if (self::isStalled($asaasPaginatedResult, $previousRows)) {
-            return [self::stalledPage($asaasPaginatedResult, $delivered)];
+            return self::stalledPage($asaasPaginatedResult, $delivered);
         }
 
         return null;
     }
 
     /**
-     * Whether the walk ends now that this page's rows have gone out, and with
-     * what. Same contract as {@see self::stopBeforeRows()}.
-     *
-     * @return ?list<AsaasPaginatedError>
+     * The fault that ends the walk now that this page's rows have gone out.
+     * Same contract as {@see self::faultBeforeRows()}: a walk that reached its
+     * `totalCount` while the envelope agrees it is over ends through `next()`,
+     * with nothing to report.
      */
-    private static function stopAfterRows(AsaasPaginatedResult $asaasPaginatedResult, int $delivered, int $pages): ?array
+    private static function faultAfterRows(AsaasPaginatedResult $asaasPaginatedResult, int $delivered, int $pages): ?AsaasPaginatedError
     {
         if (self::hasDeliveredWholeSet($asaasPaginatedResult, $delivered)) {
-            return $asaasPaginatedResult->hasMore ? [self::contradictedCount($asaasPaginatedResult, $delivered)] : [];
+            return $asaasPaginatedResult->hasMore ? self::contradictedCount($asaasPaginatedResult, $delivered) : null;
         }
 
         if ($pages >= self::MAX_PAGES) {
-            return [self::runawayWalk($asaasPaginatedResult, $delivered)];
+            return self::runawayWalk($asaasPaginatedResult, $delivered);
         }
 
         return null;
