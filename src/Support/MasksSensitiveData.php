@@ -43,10 +43,16 @@ trait MasksSensitiveData
      * a CPF from a CNPJ. Length is free entropy to hand out, so it is not.
      *
      * Values no longer than `$visibleSuffix` are masked whole — a suffix cannot
-     * be revealed without revealing the value.
+     * be revealed without revealing the value. An empty value stays empty:
+     * there is nothing to hide, and printing a fill for it would disguise an
+     * unset field as a redacted one, hiding empty-payload bugs from the dump.
      */
     protected static function mask(string $value, int $visibleSuffix): string
     {
+        if ($value === '') {
+            return '';
+        }
+
         $fill = str_repeat('*', 8);
 
         if (strlen($value) <= $visibleSuffix) {

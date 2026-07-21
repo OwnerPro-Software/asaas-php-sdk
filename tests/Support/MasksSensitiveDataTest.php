@@ -137,7 +137,9 @@ it('mask keeps the specified number of trailing characters visible', function ()
     expect($results[1])->toBe('********1111');
     expect($results[2])->toBe('********89');
     expect($results[3])->toBe('********');
-    expect($results[4])->toBe('********');
+    // An empty value stays empty: a fill would disguise an unset field as a
+    // redacted one and hide empty-payload bugs from the dump.
+    expect($results[4])->toBe('');
 });
 
 it('mask hides the length of the value, so inputs of different sizes are indistinguishable', function (): void {
