@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OwnerPro\Asaas\Account\Request;
 
+use InvalidArgumentException;
 use OwnerPro\Asaas\Support\HasUpdatableArrayFactory;
 use OwnerPro\Asaas\Support\Missing;
 
@@ -26,13 +27,13 @@ final readonly class PaymentCheckoutConfigRequest
         public bool|Missing $enabled = Missing::Value,
     ) {}
 
-    /** @param array{logoBackgroundColor: string, infoBackgroundColor: string, fontColor: string, enabled?: bool} $data */
+    /** @param array{logoBackgroundColor?: string, infoBackgroundColor?: string, fontColor?: string, enabled?: bool} $data */
     public static function fromArray(array $data): static
     {
         return new self(
-            logoBackgroundColor: $data['logoBackgroundColor'],
-            infoBackgroundColor: $data['infoBackgroundColor'],
-            fontColor: $data['fontColor'],
+            logoBackgroundColor: $data['logoBackgroundColor'] ?? throw new InvalidArgumentException('PaymentCheckoutConfigRequest: logoBackgroundColor is required'),
+            infoBackgroundColor: $data['infoBackgroundColor'] ?? throw new InvalidArgumentException('PaymentCheckoutConfigRequest: infoBackgroundColor is required'),
+            fontColor: $data['fontColor'] ?? throw new InvalidArgumentException('PaymentCheckoutConfigRequest: fontColor is required'),
             enabled: $data['enabled'] ?? Missing::Value,
         );
     }

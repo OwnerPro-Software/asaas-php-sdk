@@ -18,7 +18,9 @@ final class IdGuard
             );
         }
 
-        if (preg_match('/^[a-zA-Z0-9_-]+$/', $id) !== 1) {
+        // `D` anchors `$` at the very end: without it PCRE also matches just
+        // before a trailing newline, letting an untrimmed ID reach the URL.
+        if (preg_match('/^[a-zA-Z0-9_-]+$/D', $id) !== 1) {
             throw new InvalidArgumentException(
                 sprintf("Invalid resource ID: '%s'", $id),
             );

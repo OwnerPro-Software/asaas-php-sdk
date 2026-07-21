@@ -56,6 +56,9 @@ it('rejects IDs with whitespace', function (string $id): void {
     'pay 123',
     "pay\n123",
     "pay\t123",
+    "pay_123\n",
+    "pay_123\r\n",
+    'pay_123 ',
 ]);
 
 it('rejects IDs with slashes', function (string $id): void {

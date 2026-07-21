@@ -30,3 +30,12 @@ it('includes enabled when supplied', function (): void {
 
     expect($req->toArray()['enabled'])->toBeFalse();
 });
+
+it('rejects a missing required key with a descriptive exception', function (array $data, string $missing): void {
+    expect(fn () => PaymentCheckoutConfigRequest::fromArray($data))
+        ->toThrow(InvalidArgumentException::class, "PaymentCheckoutConfigRequest: {$missing} is required");
+})->with([
+    'logoBackgroundColor' => [['infoBackgroundColor' => '#fff', 'fontColor' => '#abc'], 'logoBackgroundColor'],
+    'infoBackgroundColor' => [['logoBackgroundColor' => '#000', 'fontColor' => '#abc'], 'infoBackgroundColor'],
+    'fontColor' => [['logoBackgroundColor' => '#000', 'infoBackgroundColor' => '#fff'], 'fontColor'],
+]);
