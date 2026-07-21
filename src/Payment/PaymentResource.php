@@ -67,9 +67,19 @@ final readonly class PaymentResource
         return $this->connector->post($this->path($id, '/refund'), RefundPaymentRequest::resolveData($data));
     }
 
-    public function listRefunds(string $id): AsaasResult
+    /** @param array<string, mixed> $query */
+    public function listRefunds(string $id, array $query = []): AsaasPaginatedResult
     {
-        return $this->connector->get($this->path($id, '/refunds'));
+        return $this->connector->paginate($this->path($id, '/refunds'), $query);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
+     */
+    public function allRefunds(string $id, array $filters = []): Generator
+    {
+        return $this->connector->all($this->path($id, '/refunds'), $filters);
     }
 
     /**
@@ -213,9 +223,10 @@ final readonly class PaymentResource
         );
     }
 
-    public function listDocuments(string $paymentId): AsaasPaginatedResult
+    /** @param array<string, mixed> $query */
+    public function listDocuments(string $paymentId, array $query = []): AsaasPaginatedResult
     {
-        return $this->connector->paginate($this->path($paymentId, '/documents'), []);
+        return $this->connector->paginate($this->path($paymentId, '/documents'), $query);
     }
 
     public function findDocument(string $paymentId, string $documentId): AsaasResult

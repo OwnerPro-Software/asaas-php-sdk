@@ -594,7 +594,7 @@ Asaas::billPayments()->simulate(new SimulateBillPaymentRequest(
 
 ### Partial Updates: Omitting Fields
 
-Update DTOs (`UpdatePaymentRequest`, `UpdateInvoiceRequest`, `UpdateWebhookRequest`) use `Missing::Value` as the default for every field. Omit a field to leave it untouched; pass a value to change it. The Asaas spec marks every request-body field as `nullable: false`, so explicit `null` is **not** supported — passing `null` to a typed field now raises `TypeError` instead of leaking `{"field": null}` onto the wire (which the API rejects).
+Update DTOs (`UpdatePaymentRequest`, `UpdateInvoiceRequest`, `UpdateWebhookRequest`) use `Missing::Value` as the default for every field. Omit a field to leave it untouched; pass a value to change it. The Asaas spec marks every request-body field as `nullable: false`, so explicit `null` is **not** sent: `fromArray(['dueDate' => null])` treats the field as omitted, exactly as if the key were absent. This matters when feeding a DTO straight from Laravel's `$request->validated()`, which legitimately yields `null` for untouched optional fields. Passing `null` directly to the constructor still raises `TypeError` — the array factory is the coercion boundary.
 
 ```php
 use OwnerPro\Asaas\Payment\Request\UpdatePaymentRequest;
@@ -782,7 +782,8 @@ Asaas::payments()->list(array $query = []): AsaasPaginatedResult
 Asaas::payments()->update(string $id, array|UpdatePaymentRequest $data): AsaasResult
 Asaas::payments()->delete(string $id): AsaasResult
 Asaas::payments()->refund(string $id, array|RefundPaymentRequest $data = []): AsaasResult
-Asaas::payments()->listRefunds(string $id): AsaasResult
+Asaas::payments()->listRefunds(string $id, array $query = []): AsaasPaginatedResult
+Asaas::payments()->allRefunds(string $id, array $filters = []): Generator
 Asaas::payments()->refundBankSlip(string $id): AsaasResult
 Asaas::payments()->restore(string $id): AsaasResult
 Asaas::payments()->captureAuthorized(string $id): AsaasResult
@@ -809,7 +810,7 @@ Asaas::payments()->uploadDocument(
     bool $availableAfterPayment,
     string $filename,
 ): AsaasResult
-Asaas::payments()->listDocuments(string $paymentId): AsaasPaginatedResult
+Asaas::payments()->listDocuments(string $paymentId, array $query = []): AsaasPaginatedResult
 Asaas::payments()->findDocument(string $paymentId, string $documentId): AsaasResult
 Asaas::payments()->updateDocument(string $paymentId, string $documentId, array|UpdatePaymentDocumentRequest $data): AsaasResult
 Asaas::payments()->deleteDocument(string $paymentId, string $documentId): AsaasResult

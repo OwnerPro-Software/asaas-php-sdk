@@ -76,18 +76,18 @@ final readonly class UpdatePaymentRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            billingType: array_key_exists('billingType', $data) ? $data['billingType'] : Missing::Value,
-            value: array_key_exists('value', $data) ? $data['value'] : Missing::Value,
-            dueDate: array_key_exists('dueDate', $data) ? $data['dueDate'] : Missing::Value,
-            description: array_key_exists('description', $data) ? $data['description'] : Missing::Value,
-            externalReference: array_key_exists('externalReference', $data) ? $data['externalReference'] : Missing::Value,
-            discount: array_key_exists('discount', $data) ? $data['discount'] : Missing::Value,
-            interest: array_key_exists('interest', $data) ? $data['interest'] : Missing::Value,
-            fine: array_key_exists('fine', $data) ? $data['fine'] : Missing::Value,
-            postalService: array_key_exists('postalService', $data) ? $data['postalService'] : Missing::Value,
-            daysAfterDueDateToRegistrationCancellation: array_key_exists('daysAfterDueDateToRegistrationCancellation', $data) ? $data['daysAfterDueDateToRegistrationCancellation'] : Missing::Value,
-            split: array_key_exists('split', $data) ? $data['split'] : Missing::Value,
-            callback: array_key_exists('callback', $data) ? $data['callback'] : Missing::Value,
+            billingType: $data['billingType'] ?? Missing::Value,
+            value: $data['value'] ?? Missing::Value,
+            dueDate: $data['dueDate'] ?? Missing::Value,
+            description: $data['description'] ?? Missing::Value,
+            externalReference: $data['externalReference'] ?? Missing::Value,
+            discount: $data['discount'] ?? Missing::Value,
+            interest: $data['interest'] ?? Missing::Value,
+            fine: $data['fine'] ?? Missing::Value,
+            postalService: $data['postalService'] ?? Missing::Value,
+            daysAfterDueDateToRegistrationCancellation: $data['daysAfterDueDateToRegistrationCancellation'] ?? Missing::Value,
+            split: $data['split'] ?? Missing::Value,
+            callback: $data['callback'] ?? Missing::Value,
         );
     }
 }

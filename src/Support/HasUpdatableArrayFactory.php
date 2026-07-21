@@ -17,6 +17,11 @@ namespace OwnerPro\Asaas\Support;
  * Pairing `T|Missing|null` with this trait was the root cause of the v2.1
  * null-leak bug fixed in `UpdateInvoiceRequest`, `UpdatePaymentRequest`, and
  * `UpdateWebhookRequest`. Stick to `T|Missing` for new partial-update DTOs.
+ *
+ * Because no field is nullable, `fromArray()` maps an explicit `null` to
+ * `Missing::Value` (via `??`) rather than forwarding it to a non-nullable
+ * constructor parameter — feeding a DTO from Laravel's `$request->validated()`
+ * would otherwise raise a `TypeError` and escape the Result-based contract.
  */
 trait HasUpdatableArrayFactory
 {

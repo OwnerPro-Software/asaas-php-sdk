@@ -14,8 +14,9 @@ use Illuminate\Http\Client\Response;
  * each item carries `code` and `description`. Otherwise the SDK falls back
  * to a synthesized `UNKNOWN_ERROR` row whose `description` is either the
  * upstream `message` field (alternative shape) or the response body trimmed
- * to 350 chars with HTML stripped. The empty-array case is synthesized too,
- * so `$result->errors[0]['description']` is always populated.
+ * to 350 chars with HTML stripped. The empty-array, object-shaped and
+ * empty-body cases are synthesized too, so `$result->errors[0]['description']`
+ * is always a non-empty string.
  *
  * @internal Extraction detail of `AsaasConnector` — not part of the SDK's
  * public contract; consume errors via `AsaasResult::$errors`.
@@ -27,16 +28,12 @@ final class ErrorEnvelope
     {
         $errors = $response->json('errors');
 
-        if (! is_array($errors)) {
-            $message = $response->json('message');
-
-            if (is_string($message) && $message !== '') {
-                return [['code' => 'UNKNOWN_ERROR', 'description' => $message]];
-            }
-
-            $body = mb_substr(strip_tags($response->body()), 0, 350);
-
-            return [['code' => 'UNKNOWN_ERROR', 'description' => $body]];
+        // A list is the canonical envelope. Anything else — absent, a scalar, or
+        // a single error object rather than a list of them — falls back, because
+        // callers read `$errors[0]['description']` and an object-shaped envelope
+        // has no index 0 to read.
+        if (! is_array($errors) || ! array_is_list($errors)) {
+            return [['code' => 'UNKNOWN_ERROR', 'description' => self::describe($response)]];
         }
 
         if ($errors === []) {
@@ -45,5 +42,27 @@ final class ErrorEnvelope
 
         /** @var non-empty-list<array{code?: string, description?: string}> $errors */
         return $errors;
+    }
+
+    /**
+     * Never returns an empty string: a proxy, gateway or WAF answering with no
+     * body at all would otherwise produce an `AsaasRequestException` carrying no
+     * message, leaving the caller's log with nothing to act on.
+     */
+    private static function describe(Response $response): string
+    {
+        $message = $response->json('message');
+
+        if (is_string($message) && $message !== '') {
+            return $message;
+        }
+
+        $body = mb_substr(strip_tags($response->body()), 0, 350);
+
+        if ($body !== '') {
+            return $body;
+        }
+
+        return sprintf('Asaas returned status %d with no readable error body.', $response->status());
     }
 }

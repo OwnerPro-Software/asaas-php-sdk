@@ -35,16 +35,14 @@ final readonly class UpdateInvoiceRequest
     public static function fromArray(array $data): static
     {
         return new self(
-            serviceDescription: array_key_exists('serviceDescription', $data) ? $data['serviceDescription'] : Missing::Value,
-            observations: array_key_exists('observations', $data) ? $data['observations'] : Missing::Value,
-            value: array_key_exists('value', $data) ? $data['value'] : Missing::Value,
-            deductions: array_key_exists('deductions', $data) ? $data['deductions'] : Missing::Value,
-            effectiveDate: array_key_exists('effectiveDate', $data) ? $data['effectiveDate'] : Missing::Value,
-            taxes: array_key_exists('taxes', $data)
-                ? (is_array($data['taxes']) ? Taxes::fromArray($data['taxes']) : $data['taxes'])
-                : Missing::Value,
-            externalReference: array_key_exists('externalReference', $data) ? $data['externalReference'] : Missing::Value,
-            updatePayment: array_key_exists('updatePayment', $data) ? $data['updatePayment'] : Missing::Value,
+            serviceDescription: $data['serviceDescription'] ?? Missing::Value,
+            observations: $data['observations'] ?? Missing::Value,
+            value: $data['value'] ?? Missing::Value,
+            deductions: $data['deductions'] ?? Missing::Value,
+            effectiveDate: $data['effectiveDate'] ?? Missing::Value,
+            taxes: $data['taxes'] ?? Missing::Value,
+            externalReference: $data['externalReference'] ?? Missing::Value,
+            updatePayment: $data['updatePayment'] ?? Missing::Value,
         );
     }
 }

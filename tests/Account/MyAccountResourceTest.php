@@ -73,7 +73,9 @@ it('approves the sandbox account via POST /sandbox/myAccount/approve', function 
 
     Http::assertSent(fn ($request): bool => $request->method() === 'POST'
         && $request->url() === 'https://api-sandbox.asaas.com/v3/sandbox/myAccount/approve'
-        && $request->body() === '[]');
+        // A bodyless POST still ships an object, never a JSON array: the
+        // endpoint declares an object schema.
+        && $request->body() === '{}');
 });
 
 it('propagates 400 from approveSandbox when called against production', function (): void {

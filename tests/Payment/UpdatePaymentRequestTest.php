@@ -104,3 +104,27 @@ it('still accepts existing fields untouched (regression)', function (): void {
     expect($request->split)->toHaveCount(1);
     expect($request->split[0])->toBeInstanceOf(Split::class);
 });
+
+it('omits fields whose value is an explicit null', function (): void {
+    // Laravel's $request->validated() legitimately yields null for an untouched
+    // optional field. Passing that through raised a raw TypeError, escaping the
+    // Result-based error contract — while the same input on FiscalInfoRequest
+    // was silently omitted. Null now means "omit" everywhere.
+    $request = UpdatePaymentRequest::fromArray(['dueDate' => null, 'value' => 150.0]);
+
+    expect($request->toArray())->toBe(['value' => 150.0]);
+});
+
+it('carries every field from fromArray() into the payload', function (): void {
+    $payload = [
+        'billingType' => 'PIX',
+        'value' => 10.0,
+        'dueDate' => '2026-01-01',
+        'description' => 'a description',
+        'externalReference' => 'ref-1',
+        'postalService' => false,
+        'daysAfterDueDateToRegistrationCancellation' => 7,
+    ];
+
+    expect(UpdatePaymentRequest::fromArray($payload)->toArray())->toBe($payload);
+});

@@ -12,8 +12,50 @@ resources against `specs/domains/*.json`, the DTO factories against their own
 constructors, and the Laravel/testing seams against the framework internals
 they rely on. Every fix is pinned by a test that fails without it.
 
+### Changed
+
+- **BREAKING: `payments()->listRefunds()` now returns `AsaasPaginatedResult`.**
+  `GET /v3/payments/{id}/refunds` answers with the standard pagination envelope
+  (`specs/domains/payment-refunds.json` declares `object`, `hasMore`,
+  `totalCount`, `limit`, `offset`, `data`), but the method used `get()` and
+  handed back a flat `AsaasResult`. It was the only `get()` in the SDK pointed at
+  a paginated endpoint. A payment with more refunds than the page limit silently
+  returned only the first page, with no `next()`, `hasMore` or `totalCount` to
+  notice it by. It now takes an optional `$query` and returns
+  `AsaasPaginatedResult`; `allRefunds()` was added to walk every page. Callers
+  reading `$result->data` keep working — the rows are still there.
+
 ### Fixed
 
+- **Explicit `null` reached non-nullable constructor parameters.**
+  `UpdatePaymentRequest`, `UpdateInvoiceRequest` and `UpdateWebhookRequest` built
+  their DTOs with `array_key_exists()`, so `fromArray(['dueDate' => null])`
+  forwarded `null` into a `string|Missing` parameter and raised an uncaught
+  `TypeError` — while the same input on `FiscalInfoRequest` /
+  `CommercialInfoRequest` was silently omitted. Feeding an update DTO from
+  Laravel's `$request->validated()`, which legitimately yields `null` for an
+  untouched optional field, escaped the Result-based error contract on three
+  resources and worked fine on the others. No request-body field is nullable, so
+  all five now agree: an explicit `null` means "omit".
+- **An all-optional payload shipped as a JSON array.** `json_encode([])` yields
+  `[]`, so `payments()->update($id, [])`, `invoices()->cancel($id)` and every
+  other bodyless mutation sent `[]` where Asaas declares an object schema. The
+  connector now routes JSON bodies through `Support\JsonBody`, which serializes
+  an empty payload as `{}`.
+- **An empty error body produced an exception with no message.**
+  `ErrorEnvelope` trimmed the body to `''`, and the `?? 'Asaas API error'`
+  default in `AsaasRequestException` only covers `null` — so a 502/504 from a
+  proxy, gateway or WAF surfaced as an exception whose `getMessage()` was the
+  empty string, contradicting the class's own contract. Such responses now
+  describe themselves by status.
+- **An object-shaped `errors` envelope broke `$errors[0]`.** The guard only
+  checked `is_array()`, so `{"errors": {"code": …, "description": …}}` passed
+  through annotated as a `non-empty-list` it was not, leaving
+  `$result->errors[0]['description']` undefined. Non-list envelopes now fall back
+  to the synthesized `UNKNOWN_ERROR` row.
+- **`payments()->listDocuments()` could not be paged from the first call.** It
+  hardcoded an empty query, the only `list*` method in the SDK without a
+  `$query` parameter, so `limit`/`offset` were unreachable until `next()`.
 - **The fake client could not be built outside Laravel.** `StubResponse` and
   three `FakeAsaasClient` stub helpers normalized stubs through the `Http`
   facade, while the fake deliberately builds its own `Factory` to stay

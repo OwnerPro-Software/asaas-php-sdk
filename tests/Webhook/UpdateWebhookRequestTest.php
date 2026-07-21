@@ -82,3 +82,22 @@ it('cannot be serialized', function (): void {
 
     serialize($request);
 })->throws(LogicException::class);
+
+it('omits fields whose value is an explicit null', function (): void {
+    $request = UpdateWebhookRequest::fromArray(['url' => null, 'enabled' => true]);
+
+    expect($request->toArray())->toBe(['enabled' => true]);
+});
+
+it('carries every scalar field from fromArray() into the payload', function (): void {
+    $payload = [
+        'url' => 'https://example.test/hook',
+        'name' => 'a name',
+        'enabled' => true,
+        'interrupted' => false,
+        'sendType' => 'SEQUENTIALLY',
+        'authToken' => 'secret',
+    ];
+
+    expect(UpdateWebhookRequest::fromArray($payload)->toArray())->toBe($payload);
+});

@@ -1073,3 +1073,48 @@ it('still builds a standalone request when no facade root is set', function (): 
         Facade::setFacadeApplication($application);
     }
 });
+
+it('synthesizes a description when the error body is empty', function (): void {
+    // Proxies, gateways and WAFs answer 502/504 with no body at all. Trimming
+    // that to '' left AsaasRequestException with an empty message, since the
+    // '?? Asaas API error' default only covers null.
+    Http::fake(['*' => Http::response('', 502)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors)->toBe([[
+        'code' => 'UNKNOWN_ERROR',
+        'description' => 'Asaas returned status 502 with no readable error body.',
+    ]]);
+    expect(fn () => $result->orFail())->toThrow(AsaasRequestException::class, 'Asaas returned status 502 with no readable error body.');
+});
+
+it('falls back when errors is an object instead of a list', function (): void {
+    // An object-shaped envelope has no index 0, so passing it through would
+    // break every caller reading $errors[0]['description'].
+    Http::fake(['*' => Http::response(['errors' => ['code' => 'X', 'description' => 'Y']], 400)]);
+
+    $result = AsaasConnector::forStandalone('key', 'sandbox', 30)->get('/payments/pay_1');
+
+    expect($result->errors[0]['code'])->toBe('UNKNOWN_ERROR');
+    expect($result->errors[0]['description'])->not->toBe('');
+});
+
+it('sends an empty body as a JSON object, not a JSON array', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    $connector = AsaasConnector::forStandalone('key', 'sandbox', 30);
+    $connector->post('/payments/pay_1/refund');
+    $connector->put('/payments/pay_1');
+
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'POST' && $request->body() === '{}');
+    Http::assertSent(fn (Request $request): bool => $request->method() === 'PUT' && $request->body() === '{}');
+});
+
+it('still sends a populated body as a JSON object', function (): void {
+    Http::fake(['*' => Http::response([], 200)]);
+
+    AsaasConnector::forStandalone('key', 'sandbox', 30)->post('/payments', ['value' => 100.0]);
+
+    Http::assertSent(fn (Request $request): bool => $request->body() === '{"value":100}');
+});

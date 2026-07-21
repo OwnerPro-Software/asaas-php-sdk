@@ -46,13 +46,13 @@ final readonly class UpdateWebhookRequest implements JsonSerializable
     public static function fromArray(array $data): static
     {
         return new self(
-            url: array_key_exists('url', $data) ? $data['url'] : Missing::Value,
-            name: array_key_exists('name', $data) ? $data['name'] : Missing::Value,
-            enabled: array_key_exists('enabled', $data) ? $data['enabled'] : Missing::Value,
-            interrupted: array_key_exists('interrupted', $data) ? $data['interrupted'] : Missing::Value,
-            sendType: array_key_exists('sendType', $data) ? $data['sendType'] : Missing::Value,
-            authToken: array_key_exists('authToken', $data) ? $data['authToken'] : Missing::Value,
-            events: array_key_exists('events', $data) ? $data['events'] : Missing::Value,
+            url: $data['url'] ?? Missing::Value,
+            name: $data['name'] ?? Missing::Value,
+            enabled: $data['enabled'] ?? Missing::Value,
+            interrupted: $data['interrupted'] ?? Missing::Value,
+            sendType: $data['sendType'] ?? Missing::Value,
+            authToken: $data['authToken'] ?? Missing::Value,
+            events: $data['events'] ?? Missing::Value,
         );
     }
 }

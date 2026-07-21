@@ -677,14 +677,44 @@ it('pins creditCardToken on the wire when passed via DTO', function (array $fixt
         && ($request->data()['remoteIp'] ?? null) === '203.0.113.42');
 })->with('payment_fixture');
 
-it('lists refunds for a payment', function (): void {
-    Http::fake(['*' => Http::response(['object' => 'list', 'data' => [['id' => 'ref_1']]], 200)]);
+it('lists refunds for a payment as a paginated result', function (): void {
+    // The endpoint answers with the standard envelope, so a payment with more
+    // refunds than the page limit needs next()/hasMore like every other list.
+    Http::fake(['*' => Http::response([
+        'object' => 'list',
+        'hasMore' => true,
+        'totalCount' => 12,
+        'limit' => 10,
+        'offset' => 0,
+        'data' => [['id' => 'ref_1']],
+    ], 200)]);
 
-    $result = paymentResource()->listRefunds('pay_abc123');
+    $result = paymentResource()->listRefunds('pay_abc123', ['limit' => 10]);
 
+    expect($result)->toBeInstanceOf(AsaasPaginatedResult::class);
     expect($result->success)->toBeTrue();
-    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/refunds'
+    expect($result->hasMore)->toBeTrue();
+    expect($result->totalCount)->toBe(12);
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/refunds?limit=10'
         && $request->method() === 'GET');
+});
+
+it('walks every refund page through allRefunds()', function (): void {
+    Http::fakeSequence()
+        ->push(['object' => 'list', 'hasMore' => true, 'totalCount' => 2, 'limit' => 1, 'offset' => 0, 'data' => [['id' => 'ref_1']]])
+        ->push(['object' => 'list', 'hasMore' => false, 'totalCount' => 2, 'limit' => 1, 'offset' => 1, 'data' => [['id' => 'ref_2']]]);
+
+    $refunds = iterator_to_array(paymentResource()->allRefunds('pay_abc123', ['limit' => 1]), preserve_keys: false);
+
+    expect($refunds)->toBe([['id' => 'ref_1'], ['id' => 'ref_2']]);
+});
+
+it('forwards the query to listDocuments()', function (): void {
+    Http::fake(['*' => Http::response(['object' => 'list', 'data' => []], 200)]);
+
+    paymentResource()->listDocuments('pay_abc123', ['limit' => 5]);
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/payments/pay_abc123/documents?limit=5');
 });
 
 it('refunds a bank slip payment without a body', function (): void {

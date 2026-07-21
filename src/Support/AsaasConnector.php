@@ -56,7 +56,7 @@ final readonly class AsaasConnector implements Connector
     public function post(string $path, array $data = []): AsaasResult
     {
         return $this->sendRequest(
-            fn (): Response => $this->pendingRequest->post($path, $data),
+            fn (): Response => $this->pendingRequest->post($path, JsonBody::of($data)),
         );
     }
 
@@ -64,7 +64,7 @@ final readonly class AsaasConnector implements Connector
     public function put(string $path, array $data = []): AsaasResult
     {
         return $this->sendRequest(
-            fn (): Response => $this->pendingRequest->put($path, $data),
+            fn (): Response => $this->pendingRequest->put($path, JsonBody::of($data)),
         );
     }
 
