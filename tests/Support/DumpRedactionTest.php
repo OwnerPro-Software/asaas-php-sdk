@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\AsaasClient;
+use OwnerPro\Asaas\Payment\PaymentResource;
+use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Support\AsaasPaginatedResult;
+use OwnerPro\Asaas\Support\AsaasRequestException;
 use OwnerPro\Asaas\Support\AsaasResult;
 use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
+use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Support\RawResponse;
 use OwnerPro\Asaas\Support\Redactable;
 use Symfony\Component\VarDumper\Cloner\AbstractCloner;
@@ -221,6 +226,73 @@ it('redacts the error object a walk yields in place of a page', function (): voi
         'offset' => 10,
         'limit' => 10,
     ]);
+});
+
+it('keeps the api key out of a var_exported result', function (): void {
+    // `var_export()` is the one reader that asks an object nothing: it ignores
+    // __debugInfo() and jsonSerialize() and walks private properties directly.
+    // A result is exactly what an app exports when a payment is rejected, and
+    // the response it carries used to hold the Illuminate response — and
+    // through its transfer stats, the *request* headers. Nothing but not
+    // holding it can close that path.
+    Http::fake(['*' => Http::response(['errors' => [['code' => 'invalid_value', 'description' => 'rejected']]], 400)]);
+
+    $result = (new PaymentResource(AsaasConnector::forLaravel('$aact_live_key', Environment::Sandbox, 30)))->find('pay_1');
+
+    expect(var_export($result, true))->not->toContain('$aact_live_key')
+        ->and(var_export($result->response, true))->not->toContain('$aact_live_key');
+});
+
+it('redacts a credential on the exception orFail() throws', function (): void {
+    // `orFail()` hands the same rows to an exception, and an exception reaches a
+    // log by more routes than a result does — `Log::error('failed', ['e' => $e])`
+    // and the framework error page both render it. Redacting the result while
+    // its own thrown form printed the key left the credential one `->orFail()`
+    // away from the log line.
+    $result = AsaasResult::failure(
+        [['code' => 'invalid_cpfCnpj', 'description' => 'rejected', 'apiKey' => '$aact_live_key']],
+        new RawResponse(new Response(new GuzzleResponse(400, [], '{}'))),
+    );
+
+    $exception = null;
+
+    try {
+        $result->orFail();
+    } catch (AsaasRequestException $asaasRequestException) {
+        $exception = $asaasRequestException;
+    }
+
+    expect($exception)->toBeInstanceOf(AsaasRequestException::class)
+        ->and(json_encode($exception))->not->toContain('$aact_live_key')
+        ->and(dumpToString($exception))->not->toContain('$aact_live_key')
+        // Redaction is a display concern here too: the caller still has to be
+        // able to read what Asaas actually rejected.
+        ->and($exception->errors[0]['apiKey'])->toBe('$aact_live_key');
+
+    $decoded = json_decode((string) json_encode($exception), true);
+
+    expect($decoded['errors'])->toBe([['code' => 'invalid_cpfCnpj', 'description' => 'rejected', 'apiKey' => '***']])
+        ->and($decoded['statusCode'])->toBe(400)
+        ->and($decoded['message'])->toBe('rejected')
+        ->and($decoded['response'])->toBe(['status' => 400, 'headers' => [], 'body' => '[]']);
+});
+
+it('keeps the exception readable as an exception once the caster replaces its properties', function (): void {
+    // The caster replaces the property list outright, so a redacted view that
+    // dropped the message, file and line would trade a leak for an exception
+    // nobody can debug.
+    $exception = new AsaasRequestException([['code' => 'invalid_value', 'description' => 'rejected']], null);
+
+    $output = dumpToString($exception);
+    $decoded = json_decode((string) json_encode($exception), true);
+
+    expect($output)->toContain('rejected')
+        ->and($output)->toContain('statusCode')
+        ->and($output)->toContain(basename(__FILE__))
+        // File without line points at a 200-line method, which is the same as
+        // pointing nowhere.
+        ->and($decoded['file'])->toBe($exception->getFile())
+        ->and($decoded['line'])->toBe($exception->getLine());
 });
 
 it('keeps the real value reachable on the property after json redaction', function (): void {

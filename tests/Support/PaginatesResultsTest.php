@@ -476,6 +476,116 @@ it('all stops quietly when the envelope agrees the walk is over', function (): v
         ->toBe([['id' => 'r1'], ['id' => 'r2']]);
 });
 
+it('all reports a walk that ends holding fewer rows than the envelope counted', function (): void {
+    // The mirror of PAGINATION_INCONSISTENT, and the direction that loses rows:
+    // the endpoint counted 100 and then declared the walk over after 2. Ending
+    // is the only thing to do — `hasMore: false` leaves nothing to advance to —
+    // but ending quietly would make this indistinguishable from a complete
+    // walk, which on a listing driving reconciliation reads as "those 98
+    // payments do not exist".
+    $calls = 0;
+
+    $connector = fakeConnector(function () use (&$calls): AsaasResult {
+        $calls++;
+
+        return AsaasResult::success(
+            ['data' => [['id' => 'r1'], ['id' => 'r2']], 'totalCount' => 100, 'hasMore' => false, 'limit' => 2, 'offset' => 0],
+            RawResponse::fake(),
+        );
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 2]));
+
+    expect($items[0])->toBe(['id' => 'r1']);
+    expect($items[1])->toBe(['id' => 'r2']);
+    expect($items)->toHaveCount(3);
+    expect($items[2])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[2]->errors[0]['code'])->toBe('PAGINATION_SHORT');
+    expect($items[2]->errors[0]['description'])->toContain('after 2 rows');
+    expect($items[2]->errors[0]['description'])->toContain('totalCount of 100');
+    expect($items[2]->errors[0]['description'])->toContain('98 row(s) it counted never arrived');
+    expect($items[2]->offset)->toBe(0);
+    expect($items[2]->limit)->toBe(2);
+    expect($calls)->toBe(1);
+});
+
+it('all counts the whole walk, not the last page, before calling it short', function (): void {
+    // Two pages of one row each against a count of 3: the shortfall is measured
+    // against everything delivered, so the report says one row is missing
+    // rather than two.
+    $pages = [
+        ['data' => [['id' => 'a']], 'totalCount' => 3, 'hasMore' => true, 'limit' => 1, 'offset' => 0],
+        ['data' => [['id' => 'b']], 'totalCount' => 3, 'hasMore' => false, 'limit' => 1, 'offset' => 1],
+    ];
+
+    $connector = fakeConnector(function () use (&$pages): AsaasResult {
+        return AsaasResult::success(array_shift($pages), RawResponse::fake());
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 1]), preserve_keys: false);
+
+    expect($items[0])->toBe(['id' => 'a']);
+    expect($items[1])->toBe(['id' => 'b']);
+    expect($items[2])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[2]->errors[0]['code'])->toBe('PAGINATION_SHORT');
+    expect($items[2]->errors[0]['description'])->toContain('after 2 rows');
+    expect($items[2]->errors[0]['description'])->toContain('1 row(s) it counted never arrived');
+    expect($items[2]->offset)->toBe(1);
+});
+
+it('all reports a single owed row, not just larger shortfalls', function (): void {
+    // The count that ends a walk quietly is 0 — what an envelope omitting the
+    // field reports — so the smallest count that can be short of anything is 1.
+    $connector = fakeConnector(fn (): AsaasResult => AsaasResult::success(
+        ['data' => [], 'totalCount' => 1, 'hasMore' => false, 'limit' => 10, 'offset' => 0],
+        RawResponse::fake(),
+    ));
+
+    $items = iterator_to_array($connector->all('/v3/payments', []));
+
+    expect($items)->toHaveCount(1);
+    expect($items[0])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[0]->errors[0]['code'])->toBe('PAGINATION_SHORT');
+    expect($items[0]->errors[0]['description'])->toContain('1 row(s) it counted never arrived');
+});
+
+it('all does not call a page short while the envelope still promises another', function (): void {
+    // Delivering fewer rows than the count is what every page but the last one
+    // does. Only a page that says the walk is over can be short of it.
+    $pages = [
+        ['data' => [['id' => 'a']], 'totalCount' => 2, 'hasMore' => true, 'limit' => 1, 'offset' => 0],
+        ['data' => [['id' => 'b']], 'totalCount' => 2, 'hasMore' => false, 'limit' => 1, 'offset' => 1],
+    ];
+
+    $connector = fakeConnector(function () use (&$pages): AsaasResult {
+        return AsaasResult::success(array_shift($pages), RawResponse::fake());
+    });
+
+    expect(iterator_to_array($connector->all('/v3/payments', ['limit' => 1]), preserve_keys: false))
+        ->toBe([['id' => 'a'], ['id' => 'b']]);
+});
+
+it('all reports an empty final page that ends a walk short of the count', function (): void {
+    // The empty page is not the TRUNCATED case — that one needs `hasMore: true`
+    // — and it carries no rows to compare against the previous page, so nothing
+    // but the count can tell this walk apart from a complete one.
+    $pages = [
+        ['data' => [['id' => 'a']], 'totalCount' => 9, 'hasMore' => true, 'limit' => 1, 'offset' => 0],
+        ['data' => [], 'totalCount' => 9, 'hasMore' => false, 'limit' => 1, 'offset' => 1],
+    ];
+
+    $connector = fakeConnector(function () use (&$pages): AsaasResult {
+        return AsaasResult::success(array_shift($pages), RawResponse::fake());
+    });
+
+    $items = iterator_to_array($connector->all('/v3/payments', ['limit' => 1]), preserve_keys: false);
+
+    expect($items[0])->toBe(['id' => 'a']);
+    expect($items[1])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[1]->errors[0]['code'])->toBe('PAGINATION_SHORT');
+    expect($items[1]->errors[0]['description'])->toContain('8 row(s) it counted never arrived');
+});
+
 it('all keeps walking while the envelope reports more rows than delivered so far', function (): void {
     $pages = [
         ['data' => [['id' => 'a']], 'totalCount' => 3, 'hasMore' => true, 'limit' => 1, 'offset' => 0],

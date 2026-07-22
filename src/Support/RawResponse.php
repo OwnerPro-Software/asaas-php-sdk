@@ -12,10 +12,39 @@ use JsonSerializable;
  * Public read-only view of the HTTP response carried by results and
  * transport exceptions. The underlying `Illuminate` Response is intentionally
  * not exposed to prevent API key leakage via request headers.
+ *
+ * Not exposed means not *held*. An `Illuminate\Http\Client\Response` reaches
+ * the `TransferStats` of the call that produced it, and through those the
+ * **request** headers — the `access_token`. A private property is enough to
+ * stop every reader that asks the object what it is: `dump()`, `var_dump()`,
+ * `json_encode()` and `print_r()` all route through the redacted view. It is
+ * not enough for `var_export()`, which walks private properties directly and
+ * answers nothing when asked. So the three things this class actually reads
+ * are copied out at construction and the response itself is dropped: what is
+ * not held cannot be walked to.
+ *
+ * Copying is safe because all three are already buffered — Guzzle has read the
+ * body into memory by the time a `Response` exists — and because this view is
+ * immutable by construction anyway.
  */
 final readonly class RawResponse implements JsonSerializable, Redactable
 {
-    public function __construct(private Response $response) {}
+    private int $status;
+
+    /** @var array<string, list<string>> */
+    private array $headers;
+
+    private string $body;
+
+    public function __construct(Response $response)
+    {
+        /** @var array<string, list<string>> $headers */
+        $headers = $response->headers();
+
+        $this->status = $response->status();
+        $this->headers = $headers;
+        $this->body = $response->body();
+    }
 
     /**
      * The body is scrubbed before it is truncated, never after: truncation
@@ -38,12 +67,12 @@ final readonly class RawResponse implements JsonSerializable, Redactable
      */
     public function __debugInfo(): array
     {
-        $body = SecretRedactor::scrubJson($this->body()) ?? $this->body();
+        $body = SecretRedactor::scrubJson($this->body) ?? $this->body;
         $length = mb_strlen($body);
         $limit = 350;
 
         return [
-            'status' => $this->status(),
+            'status' => $this->status,
             'headers' => $this->redactedHeaders(),
             'body' => $length <= $limit
                 ? $body
@@ -66,26 +95,38 @@ final readonly class RawResponse implements JsonSerializable, Redactable
 
     public function status(): int
     {
-        return $this->response->status();
+        return $this->status;
     }
 
     /** @return array<string, list<string>> */
     public function headers(): array
     {
-        /** @var array<string, list<string>> */
-        return $this->response->headers();
+        return $this->headers;
     }
 
+    /**
+     * Header names are case-insensitive per RFC 7230, and the name a server
+     * chose to send is not the name a caller will ask for — Asaas answers
+     * `Content-Disposition` while the SDK's own reader asks for
+     * `content-disposition`. A repeated field is joined the way PSR-7 joins it,
+     * which is the behaviour this replaced.
+     */
     public function header(string $key): ?string
     {
-        $value = $this->response->header($key);
+        foreach ($this->headers as $name => $values) {
+            if (strcasecmp($name, $key) === 0) {
+                $value = implode(', ', $values);
 
-        return $value === '' ? null : $value;
+                return $value === '' ? null : $value;
+            }
+        }
+
+        return null;
     }
 
     public function body(): string
     {
-        return $this->response->body();
+        return $this->body;
     }
 
     /** @param array<string, string> $headers */
@@ -106,7 +147,7 @@ final readonly class RawResponse implements JsonSerializable, Redactable
     {
         $redacted = [];
 
-        foreach ($this->headers() as $name => $values) {
+        foreach ($this->headers as $name => $values) {
             $redacted[$name] = SecretRedactor::isSecretName($name)
                 ? [SecretRedactor::PLACEHOLDER]
                 : $values;

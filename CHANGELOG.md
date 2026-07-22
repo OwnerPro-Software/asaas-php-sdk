@@ -45,6 +45,28 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   silence is gone. Code that already inspects each yielded item for
   `AsaasPaginatedError` needs no change; a test asserting such a walk yields
   nothing at all does.
+- **`all()` reports a walk that ends holding fewer rows than the envelope
+  counted.** A page saying `hasMore: false` while its own `totalCount` still
+  owed rows ended the walk in silence — the mirror of the contradiction
+  `PAGINATION_INCONSISTENT` already reported, and the direction that actually
+  loses rows: an endpoint counting 100 for your filters and then declaring the
+  walk over after 20 produced a stream indistinguishable from a complete one,
+  which on a listing that drives reconciliation reads as "the other 80 do not
+  exist". It now yields a final `PAGINATION_SHORT` error object. The walk still
+  ends there; only the silence is gone. `totalCount: 0` — what an envelope
+  omitting the key reports — never triggers it. Code that already inspects each
+  yielded item for `AsaasPaginatedError` needs no change; a test whose fixture
+  declares a count larger than the rows it serves does.
+- **The fake's terminal page describes the rows it served, not the count the
+  stub declared.** A lone `stub()` with `hasMore: true`, `totalCount: 5` and one
+  row is served as exactly one row, so repeating the 5 on the page that ends the
+  walk made the fake manufacture the `PAGINATION_SHORT` contradiction above —
+  the same thing `stubPages()` already refuses on a sequence. `totalCount` on
+  that page is now the rows served; the declared value still reaches `->list()`,
+  which reads the stub's own page. For a `stubPages()` sequence the inferred
+  count covers the pages up to and including the one that ends the walk, rather
+  than every page in the array. Tests asserting `totalCount` on a page past the
+  first need updating.
 - **A stub declaring a pagination key the SDK cannot read is rejected at
   registration.** `stub()` and `stubPages()` accepted
   `['data' => [$row], 'totalCount' => '1']` and then raised
@@ -91,6 +113,8 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   `false`. On non-final pages `hasMore` remains a default, so a page declaring
   `hasMore: false` still ends the walk there — that is the only way to pin the
   termination contract. Every other key a page declares is honoured either way.
+  "Last" means the last entry, whatever the keys: a filtered fixture list
+  arrives keyed 0 and 2, and the sequence reindexes before reading positions.
 - **`Connector::postMultipart()` requires a `filename` on every entry of
   `$files`.** Omitting it never reached the filename guard at all: `attach()`
   leaves the key out and the HTTP client substitutes the local file's name,
@@ -192,6 +216,29 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   `json_encode($result)` — the path `Log::info(['result' => $result])` takes
   through Monolog — wrote `"response":{}` where the redacted status, headers and
   body belonged. It now serializes the same view the dumper shows.
+- **The exception `orFail()` throws published the rows every result scrubs.**
+  `AsaasResult`, `AsaasPaginatedResult` and `AsaasPaginatedError` all scrub a
+  credential-named field on a row Asaas passed through untouched;
+  `AsaasRequestException`, which carries the *same* rows, implemented neither
+  `__debugInfo()` nor `JsonSerializable`. A rejected `POST /accounts` answers
+  with the subaccount's live `apiKey` on an error row, so `$result->orFail()`
+  followed by `Log::error('failed', ['e' => $e])` wrote the key into the log —
+  beside the `***` the exception's own `$response` showed for the same bytes.
+  It now implements `Redactable` and serializes the redacted view, with the
+  message, status, file and line restated: the caster replaces the property
+  list rather than adding to it, and a redacted exception nobody can debug
+  would trade one defect for another. `$e->errors` still holds the real values.
+- **`var_export()` on a result printed the API key.** `RawResponse` held the
+  `Illuminate` response privately, and that object reaches the `TransferStats`
+  of the call that produced it — and through those, the *request* headers.
+  A private property stops every reader that asks the object what it is, but
+  `var_export()` asks nothing: it walks private properties directly, honouring
+  neither `__debugInfo()` nor `jsonSerialize()`. Exporting a rejected payment's
+  result therefore printed `'access_token' => '$aact_…'` in full. `RawResponse`
+  now copies the status, headers and body it actually reads at construction and
+  drops the response: what is not held cannot be walked to. The documented
+  caveat stands for `AsaasClient`, `AsaasConnector` and request DTOs, which do
+  hold their secrets — never `var_export()` those.
 - **An upstream `message` reached `$result->errors` unscrubbed.** `ErrorEnvelope`
   scrubbed the response body it pastes into a synthesized description but not
   the `message` field beside it, which is the branch that wins when present. A

@@ -41,6 +41,30 @@ it('returns null for missing header', function (): void {
     expect($rawResponse->header('X-Missing'))->toBeNull();
 });
 
+it('reads a header under any casing, as the protocol defines it', function (): void {
+    // Header names are case-insensitive per RFC 7230, and the SDK's own reader
+    // asks for `content-disposition` while Asaas sends `Content-Disposition`.
+    $rawResponse = new RawResponse(new Response(new Psr7Response(200, [
+        'Content-Disposition' => 'attachment; filename="a.pdf"',
+    ])));
+
+    expect($rawResponse->header('content-disposition'))->toBe('attachment; filename="a.pdf"');
+});
+
+it('answers null for a header sent with an empty value', function (): void {
+    // A field that is present but carries nothing tells a caller as much as an
+    // absent one, and every caller here branches on null rather than on ''.
+    $rawResponse = new RawResponse(new Response(new Psr7Response(200, ['X-Trace' => ''])));
+
+    expect($rawResponse->header('X-Trace'))->toBeNull();
+});
+
+it('joins a header repeated across several fields', function (): void {
+    $rawResponse = new RawResponse(new Response(new Psr7Response(200, ['X-Trace' => ['a', 'b']])));
+
+    expect($rawResponse->header('X-Trace'))->toBe('a, b');
+});
+
 it('returns the raw response body', function (): void {
     $rawResponse = new RawResponse(new Response(new Psr7Response(200, [], '{"id":"pay_123"}')));
 

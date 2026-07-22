@@ -282,7 +282,11 @@ it('serves the terminal page to any request past the first on a hasMore=true stu
     expect($result->success)->toBeTrue();
     expect($result->data)->toBe([]);
     expect($result->hasMore)->toBeFalse();
-    expect($result->totalCount)->toBe(5);
+    // Held to the row the fake actually served, not the 5 the stub declared:
+    // the page that ends a walk is the one `all()` checks its own tally
+    // against, and repeating the 5 here would make the fake emit
+    // `PAGINATION_SHORT` on a stub the test wrote as coherent.
+    expect($result->totalCount)->toBe(1);
     expect($result->limit)->toBe(1);
     expect($result->offset)->toBe(1);
 });

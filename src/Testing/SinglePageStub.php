@@ -63,15 +63,24 @@ final class SinglePageStub
      * the stub is describing the endpoint, and a page that quietly drops them
      * is a page their assertions cannot recognise.
      *
+     * `totalCount` is one of the replaced keys rather than one of the kept
+     * ones. A stub declaring `hasMore: true` with `totalCount: 5` and one row
+     * describes a walk this fake serves exactly one row of, and a terminal page
+     * repeating the 5 is the fake manufacturing the contradiction
+     * `PAGINATION_SHORT` reports — the same thing
+     * {@see PageSequenceGuard::rejectExhaustedCount()} refuses on a sequence.
+     * The declared count still reaches `->list()`, which reads the stub's own
+     * page; only the page that ends the walk is held to what was served.
+     *
      * @param  array<string, mixed>  $body
      * @return array<string, mixed>
      */
     private static function terminalPage(array $body, int $offset, int $rowCount): array
     {
         return array_merge(
-            ['object' => 'list', 'totalCount' => $rowCount, 'limit' => $rowCount],
+            ['object' => 'list', 'limit' => $rowCount],
             $body,
-            ['hasMore' => false, 'offset' => $offset, 'data' => []],
+            ['hasMore' => false, 'offset' => $offset, 'data' => [], 'totalCount' => $rowCount],
         );
     }
 

@@ -69,11 +69,23 @@ final class StubResponse
      * everywhere and stops after the first; that is visible in the fixture,
      * whereas a suppressed early stop would not be recoverable at all.
      *
-     * @param  list<array<string, mixed>>  $pages
+     * The parameter is any keyed array rather than a `list`, because that is
+     * what a public seam is handed: `array_filter($fixtures, ...)` preserves
+     * keys, and a signature promising otherwise only moves the problem to the
+     * caller. Reindexing is the first thing this does.
+     *
+     * @param  array<array-key, array<string, mixed>>  $pages
      * @return list<PromiseInterface>
      */
     public static function normalizePages(array $pages): array
     {
+        // The `list<>` on the parameter is PHPDoc, and `stubPages()` is a public
+        // seam: `array_filter($fixtures, ...)` hands over pages keyed 0 and 2,
+        // and the positional `$declaredCounts` below would then be read at keys
+        // the sequence rules never wrote. Reindexing once here is what lets
+        // every index in this method mean the same thing.
+        $pages = array_values($pages);
+
         // Shape before sequence: a page declaring `totalCount` as a string is
         // not a contradiction the sequence rules can reason about, and reading
         // it as one would report the wrong defect.
@@ -87,8 +99,8 @@ final class StubResponse
 
         PageSequenceGuard::validate($pages, $rowCounts, $declaredCounts);
 
-        $totalCount = array_sum($rowCounts);
         $lastIndex = count($pages) - 1;
+        $totalCount = self::servedRowCount($pages, $rowCounts);
 
         $responses = [];
 
@@ -103,6 +115,34 @@ final class StubResponse
         }
 
         return $responses;
+    }
+
+    /**
+     * Rows the walk will actually be handed: every page up to and including the
+     * one that ends it.
+     *
+     * A page declaring `hasMore: false` keeps it — see this method's caller —
+     * so the pages behind it are never requested. Counting them anyway would
+     * put a `totalCount` on the served pages describing rows that never arrive,
+     * which is the `PAGINATION_SHORT` fault: the fake would be manufacturing
+     * the contradiction rather than the test describing one.
+     *
+     * @param  list<array<string, mixed>>  $pages
+     * @param  list<int>  $rowCounts
+     */
+    private static function servedRowCount(array $pages, array $rowCounts): int
+    {
+        $served = 0;
+
+        foreach ($pages as $index => $page) {
+            $served += $rowCounts[$index];
+
+            if (($page['hasMore'] ?? null) === false) {
+                break;
+            }
+        }
+
+        return $served;
     }
 
     /**

@@ -709,7 +709,7 @@ would otherwise report `0` for every page. `next()` advances by the number of
 rows the page actually delivered (not by `limit`, which a short page would
 overshoot) and returns `null` once a page comes back empty.
 
-`all()` has four brakes. A walk that ends on anything but a plain empty page
+`all()` has five brakes. A walk that ends on anything but a plain empty page
 yields a final `AsaasPaginatedError` rather than returning quietly — a silent
 stop would look exactly like a complete walk. Code that already checks each
 yielded item for `AsaasPaginatedError` needs no change.
@@ -719,11 +719,20 @@ yielded item for `AsaasPaginatedError` needs no change.
 | Empty page | the page carries no rows | nothing, when the same page says `hasMore: false`; `PAGINATION_TRUNCATED` when it still promises another |
 | Repeated page | a page carries exactly the rows of the page before it **and still says `hasMore: true`** | `PAGINATION_STALLED` |
 | `totalCount` reached, `hasMore` still true | the envelope contradicts itself | `PAGINATION_INCONSISTENT` |
+| `hasMore: false` short of `totalCount` | the envelope contradicts itself the other way | `PAGINATION_SHORT` |
 | Page ceiling | 10 000 pages fetched and no brake above ever fired | `PAGINATION_RUNAWAY` |
 
 An empty page always ends the walk — there is nothing to advance past — but one
 that still sets `hasMore: true` is an envelope contradicting itself, and rows
 may be missing behind it. That is what `PAGINATION_TRUNCATED` reports.
+
+`PAGINATION_SHORT` is the mirror of `PAGINATION_INCONSISTENT`, and the direction
+that actually loses rows: the endpoint counted 100 for your filters and then
+declared the walk over after 20. Ending is the only thing to do — `hasMore:
+false` leaves nothing to advance to — but on a listing that drives
+reconciliation, ending quietly reads as "the other 80 do not exist". A
+`totalCount` of `0` is what an envelope omitting the field reports, so it never
+triggers this.
 
 The ceiling is the last resort: an endpoint that ignores `offset` **and** answers
 in an unstable order repeats no page and reports no usable `totalCount`, so
@@ -1423,7 +1432,7 @@ Objects that hold secrets — your API key, card numbers, CVVs, CPF/CNPJ, bank a
 | `json_encode()`, `(string)` | redacted via `jsonSerialize()` / `__toString()` |
 | `serialize()` | throws on request DTOs, `AsaasClient` and `AsaasConnector` — secrets must never reach a queue, cache or session (results are exempt, see [below](#secrets-asaas-sends-back)) |
 | stack traces | redacted via `#[SensitiveParameter]` |
-| `var_export()` | **not** redacted — the function ignores `__debugInfo()`; never point it at a client or a DTO |
+| `var_export()` | **not** redacted — the function ignores `__debugInfo()`; never point it at a client or a DTO. Results and `RawResponse` are safe: they hold no object that reaches your API key |
 
 ```php
 $card = new CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737');

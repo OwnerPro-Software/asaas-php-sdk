@@ -169,11 +169,20 @@ trait PaginatesResults
      * Same contract as {@see self::faultBeforeRows()}: a walk that reached its
      * `totalCount` while the envelope agrees it is over ends through `next()`,
      * with nothing to report.
+     *
+     * The count is read in both directions. Delivering more rows than it
+     * promised is {@see self::contradictedCount()}; delivering fewer while
+     * saying the walk is over is {@see self::shortWalk()}. Only the second
+     * loses rows.
      */
     private static function faultAfterRows(AsaasPaginatedResult $asaasPaginatedResult, int $delivered, int $pages): ?AsaasPaginatedError
     {
         if (self::hasDeliveredWholeSet($asaasPaginatedResult, $delivered)) {
             return $asaasPaginatedResult->hasMore ? self::contradictedCount($asaasPaginatedResult, $delivered) : null;
+        }
+
+        if (self::endsShortOfCount($asaasPaginatedResult)) {
+            return self::shortWalk($asaasPaginatedResult, $delivered);
         }
 
         if ($pages >= self::MAX_PAGES) {
@@ -206,6 +215,19 @@ trait PaginatesResults
     }
 
     /**
+     * The envelope says the walk is over while its own count says rows are
+     * still owed. Reached only once {@see self::hasDeliveredWholeSet()} has
+     * answered false, so the shortfall is what `totalCount > 0` leaves.
+     *
+     * `hasMore` is what makes this a fault rather than a page boundary: a walk
+     * short of its count with another page coming is simply mid-flight.
+     */
+    private static function endsShortOfCount(AsaasPaginatedResult $asaasPaginatedResult): bool
+    {
+        return ! $asaasPaginatedResult->hasMore && $asaasPaginatedResult->totalCount > 0;
+    }
+
+    /**
      * The envelope's own count is the walk's backstop. Every domain spec
      * defines `totalCount` as "quantidade total de itens para os filtros
      * informados" — the whole filtered set, not the page — so having delivered
@@ -225,6 +247,36 @@ trait PaginatesResults
                 'description' => sprintf(
                     'Walk stopped after %d rows, the totalCount the API reported, but the same response still set hasMore=true. The endpoint is contradicting itself — rows may be missing. Page manually with next() if you need to inspect this.',
                     $delivered,
+                ),
+            ]],
+            $asaasPaginatedResult->response,
+            $asaasPaginatedResult->offset,
+            $asaasPaginatedResult->limit,
+        );
+    }
+
+    /**
+     * The walk ended having delivered fewer rows than the envelope's own
+     * `totalCount` — the mirror of {@see self::contradictedCount()}, and the
+     * direction that actually loses rows: the count promises a set the endpoint
+     * then declared complete without handing over.
+     *
+     * Ending is the only thing to do — `hasMore: false` leaves nothing to
+     * advance to — but ending quietly would make a short walk look like a
+     * complete one, which on a listing that drives reconciliation reads as
+     * "these payments do not exist". Same reason `PAGINATION_INCONSISTENT`
+     * exists; the opposite contradiction, so its own code.
+     */
+    private static function shortWalk(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
+    {
+        return new AsaasPaginatedError(
+            [[
+                'code' => 'PAGINATION_SHORT',
+                'description' => sprintf(
+                    'Walk stopped after %d rows with hasMore=false, while the same response reported a totalCount of %d. The endpoint is contradicting itself and %d row(s) it counted never arrived. Page manually with next() if you need to inspect this.',
+                    $delivered,
+                    $asaasPaginatedResult->totalCount,
+                    $asaasPaginatedResult->totalCount - $delivered,
                 ),
             ]],
             $asaasPaginatedResult->response,

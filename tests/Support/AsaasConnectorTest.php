@@ -668,7 +668,11 @@ it('paginate returns failure on error', function (): void {
 it('iterates all pages lazily via all()', function (): void {
     $page1 = json_decode(file_get_contents(__DIR__.'/../Fixtures/payment_list.json'), true);
     $page2 = [
-        'object' => 'list', 'hasMore' => false, 'totalCount' => 50, 'limit' => 10, 'offset' => 10,
+        // The count the *final* page reports is the one the walk checks itself
+        // against, so it has to describe the set the sequence actually serves:
+        // a terminal page still claiming 50 is an endpoint dropping 47 rows,
+        // which is what `PAGINATION_SHORT` exists to report.
+        'object' => 'list', 'hasMore' => false, 'totalCount' => 3, 'limit' => 10, 'offset' => 10,
         'data' => [['id' => 'pay_3', 'status' => 'PAID']],
     ];
 

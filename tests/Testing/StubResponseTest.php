@@ -205,10 +205,16 @@ it('serves the terminal page past page one, keeping the declared envelope', func
     // meaning in a JSON object and pinning it would fail on a rearrangement
     // that changes nothing. Not toEqualCanonicalizing, which would also sort
     // nested arrays and stop pinning row order the day `data` is non-empty.
+    //
+    // `limit: 7` is the stub's and survives; `totalCount: 9` does not. The
+    // terminal page ends the walk, and a page ending a walk after one row while
+    // claiming nine is the contradiction `PAGINATION_SHORT` reports — the fake
+    // would be manufacturing it. The declared 9 still reaches `->list()`, which
+    // reads the stub's own page.
     expect($response->json())->toEqual([
         'object' => 'list',
         'hasMore' => false,
-        'totalCount' => 9,
+        'totalCount' => 1,
         'limit' => 7,
         'offset' => 1,
         'data' => [],
@@ -280,6 +286,26 @@ it('treats an absent, empty or non-numeric offset as page one', function (string
 it('rejects an empty stubPages() sequence', function (): void {
     expect(fn (): array => StubResponse::normalizePages([]))
         ->toThrow(InvalidArgumentException::class, 'stubPages() requires at least one page');
+});
+
+it('normalizes a stubPages sequence whose keys are not sequential', function (): void {
+    // `array_filter($fixtures, ...)` preserves keys, so a filtered fixture list
+    // arrives keyed 0 and 2 — the idiomatic way to build one. Read positionally
+    // as it was, the second page fell outside the sequence's own bookkeeping:
+    // it was never recognised as the last, so it kept `hasMore: true` and the
+    // walk ran off the end of the sequence into Laravel's raw "response
+    // sequence is empty" — the failure normalizePages() exists to prevent.
+    $pages = StubResponse::normalizePages([0 => ['data' => [['id' => 'a']]], 2 => ['data' => [['id' => 'b']]]]);
+
+    $factory = new Factory;
+    $factory->fake(['*' => $factory->sequence()->pushResponse($pages[0])->pushResponse($pages[1])]);
+
+    $first = $factory->createPendingRequest()->get('https://example.test/api/v3/x')->json();
+    $second = $factory->createPendingRequest()->get('https://example.test/api/v3/x?offset=1')->json();
+
+    expect($first['hasMore'])->toBeTrue();
+    expect($second['hasMore'])->toBeFalse();
+    expect($second['totalCount'])->toBe(2);
 });
 
 it('leaves a stubPages entry with no data key untouched', function (): void {

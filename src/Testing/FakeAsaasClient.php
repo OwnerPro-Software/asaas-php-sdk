@@ -224,7 +224,12 @@ final class FakeAsaasClient implements AsaasClientContract
         return $this->stubTransportFailure($pattern, FakeTransportFailure::indeterminateErrno($phase));
     }
 
-    /** @param list<array<string, mixed>> $pages */
+    /**
+     * Keys are ignored: a filtered fixture list arrives keyed 0 and 2, and
+     * {@see StubResponse::normalizePages()} reindexes before reading positions.
+     *
+     * @param  array<array-key, array<string, mixed>>  $pages
+     */
     public function stubPages(string $pattern, array $pages): self
     {
         $sequence = $this->factory->sequence();

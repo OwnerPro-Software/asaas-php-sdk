@@ -317,7 +317,10 @@ it('iterates all payments lazily', function (array $page1): void {
     $page2 = [
         'object' => 'list',
         'hasMore' => false,
-        'totalCount' => 50,
+        // Describes the set this two-page sequence serves, not the 50 of the
+        // first page's fixture: a terminal page reporting a count it never
+        // delivered is the `PAGINATION_SHORT` fault, not a complete walk.
+        'totalCount' => 3,
         'limit' => 10,
         'offset' => 10,
         'data' => [['id' => 'pay_3', 'status' => 'PAID']],
