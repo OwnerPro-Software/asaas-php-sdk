@@ -11,7 +11,10 @@ use Generator;
  * answers — a 2xx the SDK could read, or a 4xx verdict from Asaas. Anything
  * that is not an answer (no response, an unreadable one, or a 5xx) throws a
  * `TransportException` subclass, so an unknown outcome can never be mistaken
- * for a rejection.
+ * for a rejection. The one 4xx that is not a verdict is the rate limit: a 429
+ * throws {@see RateLimitedException} — deliberately outside the
+ * `TransportException` family, since the request was answered but never
+ * processed — so a `catch (TransportException)` alone does not cover it.
  */
 interface Connector
 {
@@ -19,6 +22,7 @@ interface Connector
      * @param  array<string, mixed>  $query
      *
      * @throws TransportException when no readable answer was received
+     * @throws RateLimitedException when Asaas rate limited the request (429); nothing was processed
      */
     public function get(string $path, array $query = []): AsaasResult;
 
@@ -26,6 +30,7 @@ interface Connector
      * @param  array<string, mixed>  $data
      *
      * @throws TransportException when no readable answer was received
+     * @throws RateLimitedException when Asaas rate limited the request (429); nothing was processed
      */
     public function post(string $path, array $data = []): AsaasResult;
 
@@ -33,10 +38,14 @@ interface Connector
      * @param  array<string, mixed>  $data
      *
      * @throws TransportException when no readable answer was received
+     * @throws RateLimitedException when Asaas rate limited the request (429); nothing was processed
      */
     public function put(string $path, array $data = []): AsaasResult;
 
-    /** @throws TransportException when no readable answer was received */
+    /**
+     * @throws TransportException when no readable answer was received
+     * @throws RateLimitedException when Asaas rate limited the request (429); nothing was processed
+     */
     public function delete(string $path): AsaasResult;
 
     /**
@@ -60,6 +69,7 @@ interface Connector
      * }> $files
      *
      * @throws TransportException when no readable answer was received
+     * @throws RateLimitedException when Asaas rate limited the request (429); nothing was processed
      */
     public function postMultipart(string $path, array $data, array $files = []): AsaasResult;
 
@@ -67,6 +77,7 @@ interface Connector
      * @param  array<string, mixed>  $query
      *
      * @throws TransportException when no readable answer was received
+     * @throws RateLimitedException when Asaas rate limited the request (429); nothing was processed
      */
     public function paginate(string $path, array $query): AsaasPaginatedResult;
 
@@ -77,6 +88,7 @@ interface Connector
      * @return Generator<int, array<string, mixed>|AsaasPaginatedError>
      *
      * @throws TransportException when no readable answer was received
+     * @throws RateLimitedException when Asaas rate limited the request (429); nothing was processed
      */
     public function all(string $path, array $filters): Generator;
 }
