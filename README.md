@@ -206,6 +206,8 @@ try {
 
 `RequestNotDeliveredException` and `IndeterminateResultException` extend `TransportException` (itself an `AsaasException`), so a single `catch (TransportException $e)` works when the distinction doesn't matter. `RateLimitedException` is deliberately outside that hierarchy: the request travelled and was answered, it just was not processed. Since the SDK never returns a result for an unanswered request, a method that returns at all returned an answer — you can read `$result->success` without wondering which kind of failure it was.
 
+Both keep the original `ConnectionException` in `getPrevious()`, which is where the cURL errno behind the verdict is readable. That chain reaches the failed request and the `access_token` header on it, so these exceptions redact themselves like every other secret-holding object — `dump()`, `dd()`, `var_dump()`, `print_r()`, `json_encode()` and the framework error page show the message, phase, response, file and line instead of the property list. See [Sensitive data in debug output](#sensitive-data-in-debug-output) for the two paths that still read private state directly.
+
 Classification is deliberately conservative: `RequestNotDeliveredException` is thrown only on unequivocal cURL evidence that no bytes reached the API (errno 6/7/35/58/60). A timeout (cURL 28) is **always** indeterminate — curl reports zeroed connection timers on reused keep-alive connections, so `connect_time` cannot prove a connect-phase timeout. Anything ambiguous classifies as indeterminate, because the costs are asymmetric — a mislabelled "not delivered" invites a duplicate transfer, while a mislabelled "indeterminate" costs one reconciliation lookup.
 
 Two received-response cases also throw, for the same reason:
@@ -1446,9 +1448,9 @@ Objects that hold secrets — your API key, card numbers, CVVs, CPF/CNPJ, bank a
 | `var_dump()`, `print_r()` | redacted via `__debugInfo()` |
 | `dump()`, `dd()`, Ignition / Flare error pages | redacted via a VarDumper caster |
 | `json_encode()`, `(string)` | redacted via `jsonSerialize()` / `__toString()` |
-| `serialize()` | throws on request DTOs, `AsaasClient` and `AsaasConnector` — secrets must never reach a queue, cache or session (results are exempt, see [below](#secrets-asaas-sends-back)) |
+| `serialize()` | throws on request DTOs, `AsaasClient` and `AsaasConnector` — secrets must never reach a queue, cache or session (results are exempt, see [below](#secrets-asaas-sends-back)). Transport failures do **not** refuse it, and they hold the failed request in `getPrevious()`: serializing one writes your API key into the payload |
 | stack traces | redacted via `#[SensitiveParameter]` |
-| `var_export()` | **not** redacted — the function ignores `__debugInfo()`; never point it at a client or a DTO. Results and `RawResponse` are safe: they hold no object that reaches your API key |
+| `var_export()` | **not** redacted — the function ignores `__debugInfo()`; never point it at a client, a DTO or a transport failure. Results and `RawResponse` are safe: they hold no object that reaches your API key |
 
 ```php
 $card = new CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737');

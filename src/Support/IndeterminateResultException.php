@@ -40,4 +40,22 @@ final class IndeterminateResultException extends TransportException
             $previous,
         );
     }
+
+    /**
+     * The redacted view. See {@see TransportException} for why the property
+     * list cannot be shown: `previous` reaches the API key. `response` is a
+     * {@see RawResponse}, which redacts itself on the way out.
+     *
+     * @return array{message: string, phase: ?string, response: ?RawResponse, file: string, line: int}
+     */
+    public function __debugInfo(): array
+    {
+        return [
+            'message' => $this->getMessage(),
+            'phase' => $this->phase,
+            'response' => $this->response,
+            'file' => $this->getFile(),
+            'line' => $this->getLine(),
+        ];
+    }
 }

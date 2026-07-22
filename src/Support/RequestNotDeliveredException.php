@@ -24,4 +24,20 @@ final class RequestNotDeliveredException extends TransportException
             $previous,
         );
     }
+
+    /**
+     * The redacted view. See {@see TransportException} for why the property
+     * list cannot be shown: `previous` reaches the API key.
+     *
+     * @return array{message: string, phase: string, file: string, line: int}
+     */
+    public function __debugInfo(): array
+    {
+        return [
+            'message' => $this->getMessage(),
+            'phase' => $this->phase,
+            'file' => $this->getFile(),
+            'line' => $this->getLine(),
+        ];
+    }
 }

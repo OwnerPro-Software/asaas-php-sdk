@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Psr7\Request as Psr7Request;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\AsaasClient;
@@ -16,14 +19,23 @@ use OwnerPro\Asaas\Support\DTO\BankAccount;
 use OwnerPro\Asaas\Support\DTO\CreditCard;
 use OwnerPro\Asaas\Support\DTO\CreditCardHolderInfo;
 use OwnerPro\Asaas\Support\Environment;
+use OwnerPro\Asaas\Support\IndeterminateResultException;
 use OwnerPro\Asaas\Support\RawResponse;
 use OwnerPro\Asaas\Support\Redactable;
+use OwnerPro\Asaas\Support\RequestNotDeliveredException;
+use OwnerPro\Asaas\Support\TransportException;
+use OwnerPro\Asaas\Support\TransportFailureClassifier;
 use Symfony\Component\VarDumper\Cloner\AbstractCloner;
 use Symfony\Component\VarDumper\Cloner\Stub;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 
-mutates(AsaasClient::class);
+mutates(
+    AsaasClient::class,
+    TransportException::class,
+    RequestNotDeliveredException::class,
+    IndeterminateResultException::class,
+);
 
 /**
  * Renders a value exactly the way `dump()` / `dd()` and the Laravel error page
@@ -304,4 +316,90 @@ it('keeps the real value reachable on the property after json redaction', functi
     );
 
     expect($result->data['apiKey'])->toBe('$aact_live_key');
+});
+
+// --- transport failures ---
+
+/**
+ * The chain Laravel's `PendingRequest::marshalConnectionException()` really
+ * builds: the Guzzle exception keeps the PSR-7 request it failed on, and that
+ * request carries the `access_token` header. Nothing on the SDK's own
+ * exception is a secret — the key is two hops down `getPrevious()`.
+ *
+ * @param  array<string, mixed>  $context
+ */
+function transportFailureCarryingKey(string $apiKey, array $context): ConnectionException
+{
+    $curlFailure = new ConnectException(
+        'cURL failure',
+        new Psr7Request('POST', 'https://api-sandbox.asaas.com/v3/payments', ['access_token' => $apiKey]),
+        null,
+        $context,
+    );
+
+    return new ConnectionException($curlFailure->getMessage(), 0, $curlFailure);
+}
+
+it('keeps the API key out of a RequestNotDeliveredException on every view that reads __debugInfo', function (): void {
+    // README tells callers to catch this exception, so a caller holding it and
+    // reaching for dd($e) is the documented path, not a stray one.
+    $exception = TransportFailureClassifier::classify(transportFailureCarryingKey('$aact_live_key', ['errno' => 7]));
+
+    expect($exception)->toBeInstanceOf(RequestNotDeliveredException::class)
+        ->and(dumpToString($exception))->not->toContain('$aact_live_key')
+        ->and(print_r($exception, true))->not->toContain('$aact_live_key')
+        ->and(json_encode($exception))->not->toContain('$aact_live_key');
+});
+
+it('keeps the API key out of an IndeterminateResultException, response included', function (): void {
+    $exception = TransportFailureClassifier::classify(transportFailureCarryingKey('$aact_live_key', ['errno' => 28]));
+
+    expect($exception)->toBeInstanceOf(IndeterminateResultException::class)
+        ->and(dumpToString($exception))->not->toContain('$aact_live_key')
+        ->and(print_r($exception, true))->not->toContain('$aact_live_key')
+        ->and(json_encode($exception))->not->toContain('$aact_live_key');
+});
+
+it('redacts the attached response of an indeterminate result without hiding it', function (): void {
+    $exception = new IndeterminateResultException(
+        'server',
+        null,
+        new RawResponse(new Response(new GuzzleResponse(502, [], '{"apiKey":"$aact_live_key"}'))),
+    );
+
+    $decoded = json_decode((string) json_encode($exception), true);
+
+    expect($decoded['response']['status'])->toBe(502)
+        ->and($decoded['response']['body'])->not->toContain('$aact_live_key')
+        ->and($decoded['phase'])->toBe('server')
+        // The replaced view still has to read as an exception report, or
+        // redaction costs the reader the reason they dumped it.
+        ->and($decoded['message'])->toBe($exception->getMessage())
+        ->and($decoded['file'])->toBe($exception->getFile())
+        ->and($decoded['line'])->toBe($exception->getLine());
+});
+
+it('keeps the diagnostic chain reachable behind the redacted view', function (): void {
+    // The view is replaced, not the object: the errno behind the verdict is
+    // only readable through getPrevious(), which is why emptying the exception
+    // was not an option.
+    $connectionException = transportFailureCarryingKey('$aact_live_key', ['errno' => 7]);
+
+    $exception = TransportFailureClassifier::classify($connectionException);
+
+    expect($exception->getPrevious())->toBe($connectionException);
+});
+
+it('keeps a transport failure readable as an exception once the caster replaces its properties', function (): void {
+    $exception = TransportFailureClassifier::classify(transportFailureCarryingKey('$aact_live_key', ['errno' => 6]));
+
+    $output = dumpToString($exception);
+    $decoded = json_decode((string) json_encode($exception), true);
+
+    expect($output)->toContain('dns')
+        ->and($output)->toContain('safe to retry')
+        ->and($decoded['message'])->toBe($exception->getMessage())
+        ->and($decoded['phase'])->toBe('dns')
+        ->and($decoded['file'])->toBe($exception->getFile())
+        ->and($decoded['line'])->toBe($exception->getLine());
 });
