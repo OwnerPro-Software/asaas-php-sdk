@@ -18,6 +18,35 @@ are collected under *Breaking* so an upgrade can be planned from one list.
 
 ### Breaking
 
+- **`408` and `429` no longer return an `AsaasResult`.** Neither status is Asaas
+  answering about the operation, so neither may reach the caller as a verdict.
+  A **408** now throws `IndeterminateResultException` with the new
+  `phase: 'timeout'` and the response attached — the server is reporting that
+  it stopped waiting for the request, which it may already have been
+  processing. A **429** now throws the new `RateLimitedException`, carrying
+  `retryAfter` (the `Retry-After` header, when Asaas states it as a delay in
+  seconds) and the response; a rate limit is a refusal taken *before*
+  processing, so nothing moved and the call is safe to repeat after backing
+  off. Code that inspected `$result->success` for these two statuses — or that
+  let them fall through `orFail()` into `AsaasRequestException` alongside an
+  `invalid_cpfCnpj` — must catch the typed exceptions instead. The upside is
+  the invariant this restores: an `AsaasRequestException` now only ever carries
+  a 4xx that is a genuine verdict on the operation.
+- **`AsaasPaginatedError::orFail()` throws `AsaasPaginationException` for a
+  fault the SDK diagnosed.** The five `all()` brakes synthesize `PAGINATION_*`
+  rows for pages that were answered but did not add up, and relaying those as
+  `AsaasRequestException` produced one whose `statusCode` was `0` — a status
+  nobody stated, in the type whose status callers read as a verdict. A page
+  Asaas itself refused still throws `AsaasRequestException` with its 4xx;
+  only the SDK's own diagnoses change type. `AsaasPaginationException` carries
+  `errors`, `response`, `offset` and `limit`. Code catching
+  `AsaasRequestException` around a walk must add the new type, or catch
+  `AsaasException` for both.
+- **`AsaasPaginatedError` is built through named constructors.** `new
+  AsaasPaginatedError(...)` is gone in favour of `::fromApi()` (rows Asaas
+  sent) and `::fromWalk()` (rows this SDK wrote), which is what decides the
+  type `orFail()` throws. Tests constructing the object directly must pick one.
+
 - **`serialize()` now throws on `AsaasClient` and `AsaasConnector`.** Both reach
   the API key, and `serialize()` honours neither `__debugInfo()` nor the
   VarDumper caster, so a queued job holding a client wrote the key into the
@@ -754,6 +783,27 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   real walk), and the repeat must still promise another page — a page saying the
   walk is over ends it either way, and a sequence of fixtures in `stubPages()`
   produces exactly the shape a stalled endpoint does.
+
+### Added
+
+- **`RateLimitedException`** (`OwnerPro\Asaas\Support`) — what a `429` throws.
+  Carries `retryAfter` (`?int` seconds; null when the header is absent or sent
+  as an HTTP-date, which is left unparsed on purpose — converting it needs a
+  clock, and a wrong clock turns a backoff into a hot loop) and the
+  `RawResponse`. Deliberately outside `TransportException`: the request
+  travelled and was answered, it just was not processed.
+- **`AsaasPaginationException`** (`OwnerPro\Asaas\Support`) — what a
+  `PAGINATION_*` fault throws out of `orFail()`. See *Breaking*.
+- **`FakeAsaasClient::stubTransportErrno(pattern, errno)`** — fails a stubbed
+  call with an arbitrary cURL errno and lets `TransportFailureClassifier`
+  decide what it means. The phase stubs pin the SDK's own mapping; this one
+  drives an errno the mapping has a line for (18, 52, 55, 58, 60 and 92
+  included) or none at all, so a test can assert the classifier's verdict
+  instead of the fake's phase table.
+- **`stubIndeterminateResult()` reaches two more outcomes.** `phase: 'timeout'`
+  stubs the `408`, and `phase: null` the classifier's default branch — the
+  unproven failure production reaches on an unmapped errno, and previously the
+  only outcome no test could produce through the public API.
 
 ### Changed
 

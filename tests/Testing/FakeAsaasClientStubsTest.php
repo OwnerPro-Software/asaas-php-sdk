@@ -6,6 +6,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\Support\IndeterminateResultException;
+use OwnerPro\Asaas\Support\RateLimitedException;
 use OwnerPro\Asaas\Testing\FakeAsaasClient;
 
 mutates(FakeAsaasClient::class);
@@ -97,12 +98,16 @@ it('stubError() forwards response headers to the recorded response', function ()
         headers: ['Retry-After' => '30'],
     );
 
-    $fake->payments()->create([
-        'value' => 100,
-        'customer' => 'c',
-        'billingType' => 'PIX',
-        'dueDate' => '2026-01-01',
-    ]);
+    // A 429 throws on the way out; the recorded response is the point here.
+    try {
+        $fake->payments()->create([
+            'value' => 100,
+            'customer' => 'c',
+            'billingType' => 'PIX',
+            'dueDate' => '2026-01-01',
+        ]);
+    } catch (RateLimitedException) {
+    }
 
     $response = $fake->recorded()[0][1];
     expect($response->status())->toBe(429);

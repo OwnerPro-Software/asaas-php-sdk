@@ -39,6 +39,18 @@ final class FakeTransportFailure
         return self::errno($phase, self::indeterminatePhases());
     }
 
+    /**
+     * An errno the classifier deliberately has no line for, so a stub built on
+     * it lands on the default branch — `IndeterminateResultException` with a
+     * null phase. cURL 95 is `CURLE_HTTP3`, real enough to arrive in
+     * production and outside the map by design; if it ever gains a line there,
+     * this must move to another unmapped one.
+     */
+    public static function unclassifiedErrno(): int
+    {
+        return 95;
+    }
+
     public static function connectException(int $errno, RequestInterface $request): ConnectException
     {
         return new ConnectException(

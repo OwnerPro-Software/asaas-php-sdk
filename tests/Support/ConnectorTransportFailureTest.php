@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Support\IndeterminateResultException;
+use OwnerPro\Asaas\Support\RateLimitedException;
 use OwnerPro\Asaas\Support\RequestNotDeliveredException;
 use OwnerPro\Asaas\Support\ResponseInterpreter;
 
-mutates(AsaasConnector::class, ResponseInterpreter::class);
+mutates(AsaasConnector::class, RateLimitedException::class, ResponseInterpreter::class);
 
 /** @param array<string, mixed> $context */
 function throwingTransportStub(array $context): Closure
@@ -182,17 +183,63 @@ it('still returns a failure result on definitive HTTP errors', function (): void
     expect($result->errors)->toBe([['code' => 'invalid_value', 'description' => 'bad']]);
 });
 
-// 408 and 429 are not verdicts on the operation either, but they are left as
-// definitive failures on purpose: the SDK only promotes a status to
-// indeterminate when the server states it could not answer at all.
-it('keeps 4xx definitive, including 408 and 429', function (int $status): void {
+it('keeps an ordinary 4xx definitive', function (int $status): void {
     Http::fake(['*' => Http::response(['errors' => [['code' => 'x', 'description' => 'y']]], $status)]);
 
     $result = throwingConnector()->get('/payments/pay_123');
 
     expect($result->success)->toBeFalse();
     expect($result->response?->status())->toBe($status);
-})->with([408, 429, 499]);
+})->with([400, 422, 499]);
+
+// A 408 is the server saying it gave up waiting for the request — not that it
+// refused the operation. It may have processed what it already had.
+it('promotes 408 to an indeterminate result carrying the response', function (): void {
+    Http::fake(['*' => Http::response(['errors' => [['code' => 'x', 'description' => 'y']]], 408)]);
+
+    try {
+        throwingConnector()->get('/payments/pay_123');
+    } catch (IndeterminateResultException $e) {
+        expect($e->phase)->toBe('timeout')
+            ->and($e->response?->status())->toBe(408);
+
+        return;
+    }
+
+    $this->fail('a 408 did not throw IndeterminateResultException');
+});
+
+// A 429 is a refusal taken before processing: nothing moved, so the caller's
+// own state must stay untouched and the retry is safe once the window reopens.
+it('promotes 429 to a rate-limit exception carrying Retry-After', function (): void {
+    Http::fake(['*' => Http::response(['errors' => []], 429, ['Retry-After' => '30'])]);
+
+    try {
+        throwingConnector()->get('/payments/pay_123');
+    } catch (RateLimitedException $e) {
+        expect($e->retryAfter)->toBe(30)
+            ->and($e->response->status())->toBe(429)
+            ->and($e->getCode())->toBe(429);
+
+        return;
+    }
+
+    $this->fail('a 429 did not throw RateLimitedException');
+});
+
+it('leaves retryAfter null when Retry-After is absent or not a delay in seconds', function (?string $header): void {
+    Http::fake(['*' => Http::response(['errors' => []], 429, $header === null ? [] : ['Retry-After' => $header])]);
+
+    try {
+        throwingConnector()->get('/payments/pay_123');
+    } catch (RateLimitedException $e) {
+        expect($e->retryAfter)->toBeNull();
+
+        return;
+    }
+
+    $this->fail('a 429 did not throw RateLimitedException');
+})->with([null, 'Wed, 21 Oct 2026 07:28:00 GMT', '-5', '2.5', '']);
 
 it('still returns a success result on healthy 2xx JSON', function (): void {
     Http::fake(['*' => Http::response(['id' => 'pay_123'], 200)]);

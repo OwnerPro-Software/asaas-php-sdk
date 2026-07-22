@@ -145,7 +145,7 @@ trait PaginatesResults
     private static function faultBeforeRows(AsaasPaginatedResult $asaasPaginatedResult, ?array $previousRows, int $delivered): ?AsaasPaginatedError
     {
         if (! $asaasPaginatedResult->success) {
-            return new AsaasPaginatedError(
+            return AsaasPaginatedError::fromApi(
                 $asaasPaginatedResult->errors ?? [],
                 $asaasPaginatedResult->response,
                 $asaasPaginatedResult->offset,
@@ -241,7 +241,7 @@ trait PaginatesResults
      */
     private static function contradictedCount(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
     {
-        return new AsaasPaginatedError(
+        return AsaasPaginatedError::fromWalk(
             [[
                 'code' => 'PAGINATION_INCONSISTENT',
                 'description' => sprintf(
@@ -269,7 +269,7 @@ trait PaginatesResults
      */
     private static function shortWalk(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
     {
-        return new AsaasPaginatedError(
+        return AsaasPaginatedError::fromWalk(
             [[
                 'code' => 'PAGINATION_SHORT',
                 'description' => sprintf(
@@ -298,7 +298,7 @@ trait PaginatesResults
      */
     private static function truncatedWalk(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
     {
-        return new AsaasPaginatedError(
+        return AsaasPaginatedError::fromWalk(
             [[
                 'code' => 'PAGINATION_TRUNCATED',
                 'description' => sprintf(
@@ -325,7 +325,7 @@ trait PaginatesResults
      */
     private static function runawayWalk(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
     {
-        return new AsaasPaginatedError(
+        return AsaasPaginatedError::fromWalk(
             [[
                 'code' => 'PAGINATION_RUNAWAY',
                 'description' => sprintf(
@@ -366,7 +366,7 @@ trait PaginatesResults
      */
     private static function stalledPage(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
     {
-        return new AsaasPaginatedError(
+        return AsaasPaginatedError::fromWalk(
             [[
                 'code' => 'PAGINATION_STALLED',
                 'description' => sprintf(

@@ -204,7 +204,7 @@ it('redacts a credential on every row when a page is json-encoded', function ():
 it('redacts the error object a walk yields in place of a page', function (): void {
     // This is what `all()` hands the caller when a page is rejected, so it
     // reaches a log by the same two routes the results do.
-    $error = new AsaasPaginatedError(
+    $error = AsaasPaginatedError::fromApi(
         [['code' => 'invalid_value', 'description' => 'rejected', 'apiKey' => '$aact_live_key']],
         new RawResponse(new Response(new GuzzleResponse(400, [], '{}'))),
         offset: 10,

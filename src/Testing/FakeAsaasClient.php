@@ -28,6 +28,7 @@ use OwnerPro\Asaas\PixTransaction\PixTransactionResource;
 use OwnerPro\Asaas\Statement\StatementResource;
 use OwnerPro\Asaas\Support\AsaasConnector;
 use OwnerPro\Asaas\Support\Environment;
+use OwnerPro\Asaas\Support\TransportFailureClassifier;
 use OwnerPro\Asaas\Transfer\TransferResource;
 use OwnerPro\Asaas\Webhook\WebhookResource;
 use Throwable;
@@ -188,7 +189,7 @@ final class FakeAsaasClient implements AsaasClientContract
      */
     public function stubRequestNotDelivered(string $pattern, string $phase = 'connect'): self
     {
-        return $this->stubTransportFailure($pattern, FakeTransportFailure::notDeliveredErrno($phase));
+        return $this->stubTransportErrno($pattern, FakeTransportFailure::notDeliveredErrno($phase));
     }
 
     /**
@@ -197,18 +198,31 @@ final class FakeAsaasClient implements AsaasClientContract
      * `phase: 'body'`, or a 5xx for `phase: 'server'`): the call throws
      * `IndeterminateResultException`.
      *
-     * @param  'body'|'read'|'server'|'transfer'  $phase
+     * `phase: 'timeout'` stubs the 408 the server answers when it gives up
+     * waiting, and `phase: null` the failure whose point could not be proven —
+     * the classifier's default branch, reached in production by an errno
+     * outside its map. Both are outcomes callers have to handle, so both are
+     * reachable from here.
+     *
+     * @param  'body'|'read'|'server'|'timeout'|'transfer'|null  $phase
      */
-    public function stubIndeterminateResult(string $pattern, string $phase = 'read'): self
+    public function stubIndeterminateResult(string $pattern, ?string $phase = 'read'): self
     {
-        if ($phase === 'body') {
-            $this->register($pattern, Factory::response('{invalid-json'));
-
-            return $this;
+        if ($phase === null) {
+            return $this->stubTransportErrno($pattern, FakeTransportFailure::unclassifiedErrno());
         }
 
-        if ($phase === 'server') {
-            $this->register($pattern, Factory::response('Bad Gateway', 502));
+        // The three phases a received response produces. Building the promise
+        // inside the match keeps the unreached ones unbuilt.
+        $received = match ($phase) {
+            'body' => static fn (): PromiseInterface => Factory::response('{invalid-json'),
+            'server' => static fn (): PromiseInterface => Factory::response('Bad Gateway', 502),
+            'timeout' => static fn (): PromiseInterface => Factory::response('Request Timeout', 408),
+            default => null,
+        };
+
+        if ($received instanceof Closure) {
+            $this->register($pattern, $received());
 
             return $this;
         }
@@ -216,12 +230,29 @@ final class FakeAsaasClient implements AsaasClientContract
         // @phpstan-ignore function.alreadyNarrowedType (PHPDoc unions are not runtime-enforced; the guard rejects invalid caller input)
         if (! in_array($phase, ['read', 'transfer'], true)) {
             throw new InvalidArgumentException(sprintf(
-                'Unknown transport failure phase "%s"; expected one of: body, read, server, transfer.',
+                'Unknown transport failure phase "%s"; expected one of: body, read, server, timeout, transfer, or null.',
                 $phase,
             ));
         }
 
-        return $this->stubTransportFailure($pattern, FakeTransportFailure::indeterminateErrno($phase));
+        return $this->stubTransportErrno($pattern, FakeTransportFailure::indeterminateErrno($phase));
+    }
+
+    /**
+     * Fails the call with an arbitrary cURL errno and lets
+     * {@see TransportFailureClassifier} decide what it
+     * means — which is the point: the phase stubs above pin the SDK's own
+     * mapping, while this one lets a test drive an errno the mapping has a line
+     * for (18, 52, 55, 58, 60, 92) or none at all, and assert the classifier's
+     * verdict rather than the fake's.
+     */
+    public function stubTransportErrno(string $pattern, int $errno): self
+    {
+        $this->register($pattern, static function (Request $request) use ($errno): never {
+            throw FakeTransportFailure::connectException($errno, $request->toPsrRequest());
+        });
+
+        return $this;
     }
 
     /**
@@ -276,15 +307,6 @@ final class FakeAsaasClient implements AsaasClientContract
      * Register a stub that fails the way cURL does, so Laravel marshals it
      * through `marshalConnectionException()` and records the request.
      */
-    private function stubTransportFailure(string $pattern, int $errno): self
-    {
-        $this->register($pattern, static function (Request $request) use ($errno): never {
-            throw FakeTransportFailure::connectException($errno, $request->toPsrRequest());
-        });
-
-        return $this;
-    }
-
     /**
      * The pattern is resolved here, not only inside the router, so an invalid
      * one is reported where it was written. The router reaches a pattern only

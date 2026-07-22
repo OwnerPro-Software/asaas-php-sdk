@@ -19,6 +19,7 @@ use OwnerPro\Asaas\Support\Environment;
 use OwnerPro\Asaas\Support\ErrorEnvelope;
 use OwnerPro\Asaas\Support\IndeterminateResultException;
 use OwnerPro\Asaas\Support\PaginatesResults;
+use OwnerPro\Asaas\Support\RateLimitedException;
 use OwnerPro\Asaas\Support\ResponseInterpreter;
 
 mutates(AsaasConnector::class, PaginatesResults::class, ErrorEnvelope::class, ResponseInterpreter::class);
@@ -366,7 +367,7 @@ it('propagates error envelope shape across documented and undocumented status co
     expect($result->data)->toBeNull();
 })->with('error_envelope_fixture');
 
-it('exposes Retry-After header from 429 response through AsaasResult', function (): void {
+it('exposes Retry-After and the rate-limit envelope through RateLimitedException', function (): void {
     $fixture = json_decode((string) file_get_contents(__DIR__.'/../Fixtures/error_429.json'), true);
 
     $pendingRequest = (new PendingRequest)
@@ -377,14 +378,19 @@ it('exposes Retry-After header from 429 response through AsaasResult', function 
         ->stub([fn ($request, $options) => Factory::response($fixture, 429, ['Retry-After' => '30'])]);
 
     $connector = new AsaasConnector($pendingRequest, '');
-    $result = $connector->get('/pix/tokenBucket/addressKey');
 
-    expect($result->success)->toBeFalse();
-    expect($result->response)->not->toBeNull();
-    expect($result->response->status())->toBe(429);
-    expect($result->response->header('Retry-After'))->toBe('30');
-    expect($result->errors[0]['code'])->toBe('rate_limit_exceeded');
-    expect($result->errors[0]['description'])->toBe('Too many requests. Please retry after the period indicated by the Retry-After header.');
+    try {
+        $connector->get('/pix/tokenBucket/addressKey');
+    } catch (RateLimitedException $e) {
+        expect($e->retryAfter)->toBe(30);
+        expect($e->response->status())->toBe(429);
+        expect($e->response->header('Retry-After'))->toBe('30');
+        expect($e->response->body())->toContain('rate_limit_exceeded');
+
+        return;
+    }
+
+    $this->fail('a 429 did not throw RateLimitedException');
 });
 
 it('synthesizes UNKNOWN_ERROR from {message: ...} shape when errors key is absent', function (): void {

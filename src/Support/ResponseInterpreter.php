@@ -28,6 +28,20 @@ final class ResponseInterpreter
             throw new IndeterminateResultException('server', response: $rawResponse);
         }
 
+        // 408 and 429 are the two 4xx that say nothing about the operation.
+        // A 408 is the server reporting it stopped waiting for the request —
+        // it may have processed what it already had. A 429 is a refusal taken
+        // before processing, so nothing moved. Neither is a verdict, and
+        // relaying either as one would have the caller mark a payment refused
+        // on a timeout and on a rate limit.
+        if ($response->status() === 408) {
+            throw new IndeterminateResultException('timeout', response: $rawResponse);
+        }
+
+        if ($response->status() === 429) {
+            throw new RateLimitedException($rawResponse);
+        }
+
         if ($response->failed()) {
             return AsaasResult::failure(ErrorEnvelope::extract($response), $rawResponse);
         }

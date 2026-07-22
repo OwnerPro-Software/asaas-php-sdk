@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Http\Client\Response as ClientResponse;
 use OwnerPro\Asaas\AsaasClient;
 use OwnerPro\Asaas\Support\IndeterminateResultException;
 use OwnerPro\Asaas\Support\RequestNotDeliveredException;
 use OwnerPro\Asaas\Support\TransportException;
+use OwnerPro\Asaas\Support\TransportFailureClassifier;
 use OwnerPro\Asaas\Testing\FakeAsaasClient;
 use OwnerPro\Asaas\Testing\FakeTransportFailure;
 use PHPUnit\Framework\ExpectationFailedException;
@@ -66,7 +68,7 @@ it('indeterminateErrno rejects unknown phases', function (): void {
 
 it('stubIndeterminateResult rejects unknown phases listing body and server among the valid ones', function (): void {
     AsaasClient::fake()->stubIndeterminateResult('transfers', 'bogus');
-})->throws(InvalidArgumentException::class, 'Unknown transport failure phase "bogus"; expected one of: body, read, server, transfer.');
+})->throws(InvalidArgumentException::class, 'Unknown transport failure phase "bogus"; expected one of: body, read, server, timeout, transfer, or null.');
 
 // --- the fake mirrors the typed contract ---
 
@@ -112,7 +114,71 @@ it('stubIndeterminateResult throws the typed exception with the requested phase'
 
     expect($exception)->toBeInstanceOf(IndeterminateResultException::class);
     expect($exception->phase)->toBe($phase);
-})->with(['read', 'transfer', 'body', 'server']);
+})->with(['read', 'transfer', 'body', 'server', 'timeout']);
+
+// The classifier's default branch is what production reaches on an errno
+// outside its map, so a test has to be able to reach it too.
+it('stubIndeterminateResult with a null phase reaches the unproven-failure branch', function (): void {
+    $fake = AsaasClient::fake()
+        ->stubIndeterminateResult('transfers', phase: null);
+
+    $exception = null;
+
+    try {
+        $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']);
+    } catch (IndeterminateResultException $exception) {
+    }
+
+    expect($exception)->toBeInstanceOf(IndeterminateResultException::class);
+    expect($exception->phase)->toBeNull();
+});
+
+it('unclassifiedErrno stays outside the classifier map', function (): void {
+    // The value is pinned, not just its effect: a test asserting only "the
+    // classifier ignores it" passes for every unmapped number, so it would not
+    // notice the day this stops being CURLE_HTTP3.
+    expect(FakeTransportFailure::unclassifiedErrno())->toBe(95);
+
+    $connectionException = new ConnectionException(
+        'boom',
+        0,
+        FakeTransportFailure::connectException(FakeTransportFailure::unclassifiedErrno(), new Request('POST', 'https://asaas.test/v3/transfers')),
+    );
+
+    $classified = TransportFailureClassifier::classify($connectionException);
+
+    expect($classified)->toBeInstanceOf(IndeterminateResultException::class);
+    expect($classified->phase)->toBeNull();
+});
+
+// The point of the errno stub: drive an errno the classifier has a line for
+// and assert the classifier's verdict, not the fake's phase table.
+it('stubTransportErrno lets the classifier decide, covering every mapped errno', function (int $errno, string $exceptionClass, ?string $phase): void {
+    $fake = AsaasClient::fake()->stubTransportErrno('transfers', $errno);
+
+    $exception = null;
+
+    try {
+        $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']);
+    } catch (TransportException $exception) {
+    }
+
+    expect($exception)->toBeInstanceOf($exceptionClass);
+    expect($exception->phase)->toBe($phase);
+})->with([
+    'dns' => [6, RequestNotDeliveredException::class, 'dns'],
+    'connect' => [7, RequestNotDeliveredException::class, 'connect'],
+    'ssl connect' => [35, RequestNotDeliveredException::class, 'tls'],
+    'ssl cert problem' => [58, RequestNotDeliveredException::class, 'tls'],
+    'peer verification' => [60, RequestNotDeliveredException::class, 'tls'],
+    'timeout' => [28, IndeterminateResultException::class, 'read'],
+    'got nothing' => [52, IndeterminateResultException::class, 'read'],
+    'partial file' => [18, IndeterminateResultException::class, 'transfer'],
+    'send error' => [55, IndeterminateResultException::class, 'transfer'],
+    'recv error' => [56, IndeterminateResultException::class, 'transfer'],
+    'http2 stream' => [92, IndeterminateResultException::class, 'transfer'],
+    'unmapped' => [999, IndeterminateResultException::class, null],
+]);
 
 it('stubIndeterminateResult defaults to the read phase', function (): void {
     $fake = AsaasClient::fake()

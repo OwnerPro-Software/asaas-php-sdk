@@ -173,12 +173,13 @@ try {
 
 ### Transport Failures (typed exceptions)
 
-An `AsaasResult` is only ever an **answer**: a 2xx the SDK could read, or a 4xx verdict from Asaas. Anything else — a timeout, a DNS error, a connection refused, an unreadable body, a 5xx — throws, because those cannot tell you the one thing that matters on money-moving endpoints: **whether the API processed the request or not**. A read timeout on `transfers()->create()` may mean the transfer *was* created; folding that into a failure result invites a blind retry that moves money twice.
+An `AsaasResult` is only ever an **answer**: a 2xx the SDK could read, or a 4xx verdict from Asaas about the operation. Anything else — a timeout, a DNS error, a connection refused, an unreadable body, a 5xx, a 408, a 429 — throws, because those cannot tell you the one thing that matters on money-moving endpoints: **whether the API processed the request or not**. A read timeout on `transfers()->create()` may mean the transfer *was* created; folding that into a failure result invites a blind retry that moves money twice.
 
 There is no flag and no opt-out. The typed exceptions are the contract:
 
 ```php
 use OwnerPro\Asaas\Support\IndeterminateResultException;
+use OwnerPro\Asaas\Support\RateLimitedException;
 use OwnerPro\Asaas\Support\RequestNotDeliveredException;
 
 try {
@@ -193,12 +194,17 @@ try {
     // mid-transfer, a 2xx with an unreadable body, or a 5xx. NEVER retry
     // blindly — reconcile first (e.g. via the Asaas withdrawal-validation
     // webhook).
-    $e->phase;          // 'body'|'read'|'server'|'transfer'|null
-    $e->response;       // ?RawResponse — the received response for 'body' (2xx) and 'server' (5xx), null otherwise
+    $e->phase;          // 'body'|'read'|'server'|'timeout'|'transfer'|null
+    $e->response;       // ?RawResponse — the received response for 'body' (2xx), 'server' (5xx) and 'timeout' (408), null otherwise
+} catch (RateLimitedException $e) {
+    // Asaas refused the request BEFORE processing it (429). Nothing moved, so
+    // leave your own state untouched and back off.
+    $e->retryAfter;     // ?int — seconds, when Asaas states a delay
+    $e->response;       // RawResponse — always present
 }
 ```
 
-Both extend `TransportException` (itself an `AsaasException`), so a single `catch (TransportException $e)` works when the distinction doesn't matter. Since the SDK never returns a result for an unanswered request, a method that returns at all returned an answer — you can read `$result->success` without wondering which kind of failure it was.
+`RequestNotDeliveredException` and `IndeterminateResultException` extend `TransportException` (itself an `AsaasException`), so a single `catch (TransportException $e)` works when the distinction doesn't matter. `RateLimitedException` is deliberately outside that hierarchy: the request travelled and was answered, it just was not processed. Since the SDK never returns a result for an unanswered request, a method that returns at all returned an answer — you can read `$result->success` without wondering which kind of failure it was.
 
 Classification is deliberately conservative: `RequestNotDeliveredException` is thrown only on unequivocal cURL evidence that no bytes reached the API (errno 6/7/35/58/60). A timeout (cURL 28) is **always** indeterminate — curl reports zeroed connection timers on reused keep-alive connections, so `connect_time` cannot prove a connect-phase timeout. Anything ambiguous classifies as indeterminate, because the costs are asymmetric — a mislabelled "not delivered" invites a duplicate transfer, while a mislabelled "indeterminate" costs one reconciliation lookup.
 
@@ -208,7 +214,12 @@ Two received-response cases also throw, for the same reason:
 - A 2xx **list** response whose pagination envelope cannot be read throws the same way: `data` that is not a list of objects, or a `totalCount`/`limit` that is not an integer, or a `hasMore` that is not a boolean. Nothing is coerced — `totalCount` bounds the walk and `hasMore` continues it, so reading `"3"` as `3` would end a walk early or run one forever while still looking like a complete answer.
 - A **5xx** response throws `IndeterminateResultException` with `phase: 'server'` and the response attached. A 5xx is not Asaas answering about the operation — it is the server, or a proxy in front of it, reporting that it could not answer, so the operation may well have been processed. This holds for the whole range and regardless of the body: a 5xx carrying a canonical `{"errors":[...]}` envelope still throws.
 
-**4xx** responses return an `AsaasResult` failure, as always. A 4xx is Asaas rejecting the operation: a definitive answer. This includes `408` and `429`, which are safe to retry on your side but stay definitive here because the SDK only promotes a status when the server states it could not answer at all.
+Two 4xx statuses are not verdicts either, and neither returns a result:
+
+- A **408** throws `IndeterminateResultException` with `phase: 'timeout'` and the response attached. The server is reporting that it stopped waiting for the request — it may have processed what it already had.
+- A **429** throws `RateLimitedException`, carrying `retryAfter` (seconds, when Asaas states a delay in that form) and the response. A rate limit is a refusal taken *before* processing: nothing moved, so the operation's own state must stay untouched and the call is safe to repeat after backing off. `Retry-After` is only read in its delay-in-seconds form; when Asaas sends an HTTP-date, `retryAfter` is null and the raw value stays available through `$e->response->header('Retry-After')`.
+
+Every other **4xx** returns an `AsaasResult` failure, as always: it is Asaas rejecting the operation — a definitive answer. Consequently an `AsaasRequestException` only ever carries a genuine 4xx verdict.
 
 ### Resource ID Validation
 
@@ -793,12 +804,17 @@ You can opt-in to exceptions by calling `orFail()` on the error object:
 ```php
 foreach (Asaas::payments()->all() as $payment) {
     if ($payment instanceof \OwnerPro\Asaas\Support\AsaasPaginatedError) {
-        $payment->orFail(); // throws AsaasRequestException
+        $payment->orFail(); // throws AsaasRequestException or AsaasPaginationException
     }
 
     processPayment($payment);
 }
 ```
+
+`orFail()` throws one of two types, and which one says where the fault came from:
+
+- **`AsaasRequestException`** — Asaas refused the page. The rows are its envelope and `statusCode` is its 4xx, exactly as on a single call.
+- **`AsaasPaginationException`** — the SDK's own diagnosis: one of the five brakes above fired, so the rows carry a `PAGINATION_*` code written by this SDK. It carries `errors`, `response` (the page the walk stopped on, when there is one), `offset` and `limit` — but no status code, because no one stated one. It extends `AsaasException`, not `AsaasRequestException`, so that an `AsaasRequestException` always means "Asaas answered with a 4xx verdict".
 
 ## Resources
 
@@ -1559,7 +1575,7 @@ use OwnerPro\Asaas\Support\RequestNotDeliveredException;
 
 $asaas = AsaasClient::fake()
     ->stubRequestNotDelivered('transfers', phase: 'dns')       // 'connect'|'dns'|'tls'
-    ->stubIndeterminateResult('pix/qrCodes/pay', phase: 'read'); // 'body'|'read'|'server'|'transfer'
+    ->stubIndeterminateResult('pix/qrCodes/pay', phase: 'read'); // 'body'|'read'|'server'|'timeout'|'transfer'|null
 
 try {
     $asaas->transfers()->create([...]);
@@ -1568,7 +1584,23 @@ try {
 }
 ```
 
-`phase: 'body'` and `phase: 'server'` stub a response instead of a cURL error — an unreadable `200` and a `502` respectively — because that is what production sees in those cases.
+`phase: 'body'`, `phase: 'server'` and `phase: 'timeout'` stub a response instead of a cURL error — an unreadable `200`, a `502` and a `408` respectively — because that is what production sees in those cases. `phase: null` stubs the classifier's default branch: a failure whose point could not be proven, which production reaches on a cURL errno outside the map.
+
+To pin the classifier itself rather than the fake's phase table, stub the errno and let it decide:
+
+```php
+use OwnerPro\Asaas\Support\IndeterminateResultException;
+
+$asaas = AsaasClient::fake()->stubTransportErrno('transfers', errno: 52); // CURLE_GOT_NOTHING
+
+try {
+    $asaas->transfers()->create([...]);
+} catch (IndeterminateResultException $e) {
+    $e->phase; // 'read' — decided by the classifier, not by the stub
+}
+```
+
+Any errno works, mapped (6, 7, 18, 28, 35, 52, 55, 56, 58, 60, 92) or not, so a test can cover every line of the mapping and its default through the public API.
 
 A request that fails in transport is still a request that was sent: the cURL-error stubs record it (with a `null` response), so `assertSent`/`assertSentCount` see it and `assertNotSent`/`assertNothingSent` correctly fail. Raw `stubException()` bypasses that recording — reach for the phase stubs when the test asserts on what was sent.
 
@@ -1582,7 +1614,7 @@ $asaas->stub('payments/*', function (\Illuminate\Http\Client\Request $r): \Guzzl
 });
 ```
 
-Pass response headers via the fourth `stubError()` parameter when simulating retry/throttling responses:
+Pass response headers via the fourth `stubError()` parameter when simulating retry/throttling responses. A stubbed `429` throws `RateLimitedException` on the way out, as production does — the request stays visible to the assertion helpers either way:
 
 ```php
 $asaas->stubError('payments', status: 429, body: [], headers: ['Retry-After' => '30']);
