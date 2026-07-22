@@ -320,3 +320,40 @@ it('leaves a stubPages entry with no data key untouched', function (): void {
 
     expect($response->json())->toBe(['id' => 'pay_1', 'status' => 'CONFIRMED']);
 });
+
+// --- empty pages inside a sequence ---
+
+// Both positions used to register happily and then fail as a pagination fault
+// the endpoint never stated, blaming the SDK for a defect in the fixture. A
+// trailing empty page is the natural one to write — it is the shape
+// SinglePageStub::terminalPage() itself serves — which is exactly why it has to
+// be refused where it was written rather than silently turned into a fault.
+it('rejects an empty page sharing the sequence with others', function (array $pages, int $offender): void {
+    expect(fn (): array => StubResponse::normalizePages($pages))
+        ->toThrow(
+            InvalidArgumentException::class,
+            sprintf('stubPages() page %d carries no rows, in a sequence of %d.', $offender, count($pages)),
+        );
+})->with([
+    'trailing' => [[['data' => [['id' => 'a'], ['id' => 'b']]], ['data' => [['id' => 'c']]], ['data' => []]], 3],
+    'trailing, minimal' => [[['data' => [['id' => 'a']]], ['data' => []]], 2],
+    'middle' => [[['data' => [['id' => 'a']]], ['data' => []], ['data' => [['id' => 'b']]]], 2],
+    'leading' => [[['data' => []], ['data' => [['id' => 'a']]]], 1],
+    'every page' => [[['data' => []], ['data' => []]], 1],
+]);
+
+it('keeps a lone empty page, which is the no-results fixture', function (): void {
+    // Nothing precedes it to contradict, and the walk ends on it by hasMore.
+    $pages = StubResponse::normalizePages([['data' => []]]);
+
+    expect($pages)->toHaveCount(1);
+});
+
+it('leaves an opaque body in a sequence alone, having no rows to be missing', function (): void {
+    // A body that is not a page carries no `data` list the walk reads, so it is
+    // not an empty page — the guard has to tell the two apart or it would refuse
+    // fixtures the SDK serves perfectly well.
+    $pages = StubResponse::normalizePages([['data' => [['id' => 'a']]], ['id' => 'opaque']]);
+
+    expect($pages)->toHaveCount(2);
+});

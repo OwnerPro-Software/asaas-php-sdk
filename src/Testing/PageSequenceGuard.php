@@ -16,16 +16,20 @@ final class PageSequenceGuard
 {
     /**
      * @param  list<array<string, mixed>>  $pages
-     * @param  list<int>  $rowCounts  rows per page, positionally aligned with `$pages`
+     * @param  list<?list<mixed>>  $rows  each page's rows, positionally aligned
+     *                                    with `$pages`, and `null` where the
+     *                                    body is not a page at all — which a
+     *                                    page carrying no rows is not
      * @param  list<?int>  $declaredCounts  each page's own `totalCount` — already
      *                                      proven to be an int by
      *                                      {@see PageEnvelopeGuard}, and `null`
      *                                      where the page leaves the key out
      */
-    public static function validate(array $pages, array $rowCounts, array $declaredCounts): void
+    public static function validate(array $pages, array $rows, array $declaredCounts): void
     {
         self::rejectEmptySequence($pages);
-        self::rejectExhaustedCount($pages, $rowCounts, $declaredCounts);
+        self::rejectEmptyPage($pages, $rows);
+        self::rejectExhaustedCount($pages, $rows, $declaredCounts);
     }
 
     /** @param list<array<string, mixed>> $pages */
@@ -35,6 +39,44 @@ final class PageSequenceGuard
             throw new InvalidArgumentException(
                 'stubPages() requires at least one page; an empty sequence has no response to serve and would surface as an exhausted-sequence error at request time instead of here.',
             );
+        }
+    }
+
+    /**
+     * Rejects a page that carries no rows while other pages share the sequence.
+     *
+     * Neither position is servable, and both fail as a fault the endpoint never
+     * committed. Every page but the last is served with `hasMore: true`, so an
+     * empty one *is* the `PAGINATION_TRUNCATED` contradiction — no rows, more
+     * promised — and `all()` stops there, stranding the pages behind it. Last is
+     * no better: to reach it, the page carrying the final row must still say
+     * `hasMore: true`, while the inferred `totalCount` already says the walk is
+     * complete, and `all()` reports `PAGINATION_INCONSISTENT` on that page
+     * without ever requesting the empty one.
+     *
+     * Alone it is the legitimate no-results fixture and stays: nothing precedes
+     * it to contradict, and the walk ends on it by `hasMore: false`.
+     *
+     * A body that is not a page — `null` here — is opaque to the walk and holds
+     * no rows to be missing, so it is untouched.
+     *
+     * @param  list<array<string, mixed>>  $pages
+     * @param  list<?list<mixed>>  $rows
+     */
+    private static function rejectEmptyPage(array $pages, array $rows): void
+    {
+        if (count($pages) === 1) {
+            return;
+        }
+
+        foreach (array_keys($pages) as $index) {
+            if ($rows[$index] === []) {
+                throw new InvalidArgumentException(sprintf(
+                    'stubPages() page %d carries no rows, in a sequence of %d. An empty page is only servable as the whole sequence: everywhere else all() reports a fault the endpoint never stated — PAGINATION_TRUNCATED where the page sits before the end, PAGINATION_INCONSISTENT where it sits at the end — and the pages behind it never reach the caller. Drop it and let the last page carrying rows end the sequence.',
+                    $index + 1,
+                    count($pages),
+                ));
+            }
         }
     }
 
@@ -56,16 +98,16 @@ final class PageSequenceGuard
      * out early.
      *
      * @param  list<array<string, mixed>>  $pages
-     * @param  list<int>  $rowCounts
+     * @param  list<?list<mixed>>  $rows
      * @param  list<?int>  $declaredCounts
      */
-    private static function rejectExhaustedCount(array $pages, array $rowCounts, array $declaredCounts): void
+    private static function rejectExhaustedCount(array $pages, array $rows, array $declaredCounts): void
     {
         $lastIndex = count($pages) - 1;
         $delivered = 0;
 
         foreach (array_keys($pages) as $index) {
-            $delivered += $rowCounts[$index];
+            $delivered += count($rows[$index] ?? []);
 
             $declared = $declaredCounts[$index];
 

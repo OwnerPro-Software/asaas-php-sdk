@@ -1661,6 +1661,16 @@ pasted into several slots carries its own `hasMore: false` everywhere and stops
 the walk after the first page. `stubPages()` needs at least one page; an empty
 list is rejected.
 
+A page carrying no rows is rejected too, unless it is the whole sequence. There
+is no position where one is servable: before the end it is served with
+`hasMore=true`, which *is* the `PAGINATION_TRUNCATED` contradiction — no rows,
+more promised — so `->all()` stops there and the pages behind it never reach the
+caller; at the end it is never requested at all, because the page carrying the
+final row must still say `hasMore=true` while the inferred `totalCount` already
+says the walk is complete, which `->all()` reports as `PAGINATION_INCONSISTENT`.
+Drop the empty page and let the last page carrying rows end the sequence. On its
+own it is the no-results fixture and is served as written.
+
 `totalCount` has a coherence rule of its own. A non-final page may not declare a
 count the walk has already delivered by the time it ends — `->all()` stops at the
 declared count and reports `PAGINATION_INCONSISTENT` there, so the pages behind

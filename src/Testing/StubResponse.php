@@ -95,12 +95,16 @@ final class StubResponse
             $declaredCounts[] = PageEnvelopeGuard::validate($page, sprintf('stubPages() page %d', $index + 1));
         }
 
-        $rowCounts = array_map(static fn (array $page): int => count(self::rowsOf($page)), $pages);
+        // The rows themselves rather than their counts: `null` marks a body that
+        // is not a page at all — an opaque stub sitting in a sequence — which
+        // the guard has to tell apart from a page carrying no rows, and `[]`
+        // counts the same as `null` everywhere except there.
+        $rows = array_map(self::pageRows(...), $pages);
 
-        PageSequenceGuard::validate($pages, $rowCounts, $declaredCounts);
+        PageSequenceGuard::validate($pages, $rows, $declaredCounts);
 
         $lastIndex = count($pages) - 1;
-        $totalCount = self::servedRowCount($pages, $rowCounts);
+        $totalCount = self::servedRowCount($pages, $rows);
 
         $responses = [];
 
@@ -128,14 +132,14 @@ final class StubResponse
      * the contradiction rather than the test describing one.
      *
      * @param  list<array<string, mixed>>  $pages
-     * @param  list<int>  $rowCounts
+     * @param  list<?list<mixed>>  $rows  `null` where the body is not a page
      */
-    private static function servedRowCount(array $pages, array $rowCounts): int
+    private static function servedRowCount(array $pages, array $rows): int
     {
         $served = 0;
 
         foreach ($pages as $index => $page) {
-            $served += $rowCounts[$index];
+            $served += count($rows[$index] ?? []);
 
             if (($page['hasMore'] ?? null) === false) {
                 break;
