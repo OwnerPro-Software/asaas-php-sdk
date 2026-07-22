@@ -398,6 +398,37 @@ are collected under *Breaking* so an upgrade can be planned from one list.
 
 ### Fixed
 
+- **`stubPages()` refused a coherent fixture that declares its stop.** The
+  exhausted-count guard never consulted `hasMore`, so a page declaring
+  `hasMore: false` together with the `totalCount` it had just delivered — the
+  very value the fake infers for that sequence — was rejected at registration
+  with a message describing a fault that cannot fire: the declared stop ends
+  the walk cleanly on that page. The guard now stops where the walk does, so
+  a declared `hasMore: false` exempts its own page and everything behind it.
+- **`stubPages()` accepted a repeated page and then faulted it at request
+  time.** Pasting one realistic fixture into two adjacent slots handed the
+  walk the same rows twice under the injected `hasMore: true`, which `all()`
+  reports as `PAGINATION_STALLED` — blaming the endpoint for ignoring its
+  offset — while the pages behind the repeat never reach the caller. The shape
+  is now refused at registration like the other manufactured faults, with the
+  two servable spellings pointed out: declare `hasMore: false` to end the walk
+  on the repeat, or declare `hasMore: true` to simulate a stalled endpoint on
+  purpose (that declaration stays accepted).
+- **A lone later-page stub made `->all()` manufacture `PAGINATION_SHORT`.**
+  The terminal page served to a request *below* the stub's declared `offset`
+  repeated the stub's row count, but that walk — `all()` starts at offset 0
+  and only moves forward — was never served those rows, so it ended claiming
+  rows arrived short when none were owed. The terminal page now reports
+  `totalCount: 0` (the value an envelope omitting the key reports) below the
+  declared offset, and the walk ends empty and clean; requests at or past the
+  stub's own page keep the served count as before.
+- **The `Connector` interface promised less than it throws.** Its contract
+  documented `TransportException` as the only non-answer outcome, but a 429
+  throws `RateLimitedException`, which deliberately sits outside the
+  `TransportException` family — so code written against the interface alone
+  (`catch (TransportException $e)` around a call or a walk) let the rate limit
+  escape uncaught. Every method now declares the `@throws`, and the
+  interface docblock names the third outcome.
 - **`PAGINATION_RUNAWAY` blamed the endpoint for a ceiling the caller chose.**
   The message stated the endpoint "reported no usable totalCount and never
   repeated a page", but the ceiling counts *pages*: a walk with a perfectly good

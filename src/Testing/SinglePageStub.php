@@ -50,7 +50,7 @@ final class SinglePageStub
             return Factory::response(
                 $requested === null || $requested === $declared
                     ? $body
-                    : self::terminalPage($body, $requested, $rowCount),
+                    : self::terminalPage($body, $requested, $declared, $rowCount),
             );
         };
     }
@@ -72,15 +72,28 @@ final class SinglePageStub
      * The declared count still reaches `->list()`, which reads the stub's own
      * page; only the page that ends the walk is held to what was served.
      *
+     * Holding the terminal page to what was served cuts both ways. A request
+     * *below* the declared offset belongs to a walk that never reached the
+     * stub's page — `all()` starts at offset 0 and only moves forward — so
+     * that walk was served no rows at all, and repeating `$rowCount` there
+     * manufactures the same `PAGINATION_SHORT` for rows the walk never saw.
+     * It gets `totalCount: 0` instead, the value an envelope omitting the key
+     * reports, and the walk ends empty and clean.
+     *
      * @param  array<string, mixed>  $body
      * @return array<string, mixed>
      */
-    private static function terminalPage(array $body, int $offset, int $rowCount): array
+    private static function terminalPage(array $body, int $offset, int $declared, int $rowCount): array
     {
         return array_merge(
             ['object' => 'list', 'limit' => $rowCount],
             $body,
-            ['hasMore' => false, 'offset' => $offset, 'data' => [], 'totalCount' => $rowCount],
+            [
+                'hasMore' => false,
+                'offset' => $offset,
+                'data' => [],
+                'totalCount' => $offset < $declared ? 0 : $rowCount,
+            ],
         );
     }
 

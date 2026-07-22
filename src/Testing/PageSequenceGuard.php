@@ -30,6 +30,7 @@ final class PageSequenceGuard
         self::rejectEmptySequence($pages);
         self::rejectEmptyPage($pages, $rows);
         self::rejectExhaustedCount($pages, $rows, $declaredCounts);
+        RepeatedPageGuard::validate($pages, $rows);
     }
 
     /** @param list<array<string, mixed>> $pages */
@@ -108,6 +109,16 @@ final class PageSequenceGuard
 
         foreach (array_keys($pages) as $index) {
             $delivered += count($rows[$index] ?? []);
+
+            // A page declaring `hasMore: false` ends the walk by the server's
+            // own statement — the same early stop as
+            // {@see StubResponse::servedRowCount()}. Its count cannot be
+            // exhausted "while more is promised", since the contradiction this
+            // guard refuses needs the injected `hasMore: true`, and the pages
+            // behind it are never requested at all.
+            if (($pages[$index]['hasMore'] ?? null) === false) {
+                return;
+            }
 
             $declared = $declaredCounts[$index];
 

@@ -6,9 +6,10 @@ use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use OwnerPro\Asaas\Testing\PageSequenceGuard;
+use OwnerPro\Asaas\Testing\RepeatedPageGuard;
 use OwnerPro\Asaas\Testing\StubResponse;
 
-mutates(StubResponse::class, PageSequenceGuard::class);
+mutates(StubResponse::class, PageSequenceGuard::class, RepeatedPageGuard::class);
 
 it('wraps raw associative array as 200 JSON response', function (): void {
     $factory = new Factory;
@@ -356,4 +357,80 @@ it('leaves an opaque body in a sequence alone, having no rows to be missing', fu
     $pages = StubResponse::normalizePages([['data' => [['id' => 'a']]], ['id' => 'opaque']]);
 
     expect($pages)->toHaveCount(2);
+});
+
+it('accepts an exhausted count on the page that declares hasMore:false with it', function (): void {
+    // The declared stop ends the walk on that page, so PAGINATION_INCONSISTENT
+    // can never fire there: the fault the guard refuses needs the injected
+    // `hasMore: true`. Refusing this shape would reject the very totalCount
+    // servedRowCount() infers for the same sequence.
+    $pages = StubResponse::normalizePages([
+        ['data' => [['id' => 'a']], 'hasMore' => false, 'totalCount' => 1],
+        ['data' => [['id' => 'b']]],
+    ]);
+
+    expect($pages)->toHaveCount(2);
+});
+
+it('accepts an exhausted count sitting behind a declared hasMore:false stop', function (): void {
+    // The walk never requests past the stop, so counts back there describe
+    // pages it cannot reach.
+    $pages = StubResponse::normalizePages([
+        ['data' => [['id' => 'a']], 'hasMore' => false],
+        ['data' => [['id' => 'b']], 'totalCount' => 1],
+        ['data' => [['id' => 'c']]],
+    ]);
+
+    expect($pages)->toHaveCount(3);
+});
+
+it('rejects a non-final page repeating the previous rows into the injected hasMore', function (): void {
+    expect(fn (): array => StubResponse::normalizePages([
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'b']]],
+    ]))->toThrow(
+        InvalidArgumentException::class,
+        'stubPages() page 2 repeats the rows of page 1 and is served with hasMore: true, so all() reads it as the endpoint ignoring the offset it was sent and reports PAGINATION_STALLED — a fault the endpoint never committed — while 1 page(s) behind it never reach the caller.',
+    );
+});
+
+it('accepts a repeated page that declares its own hasMore', function (array $pages): void {
+    // Declaring `hasMore: true` on the repeat is the author simulating a
+    // stalled endpoint on purpose; declaring `false` ends the walk there.
+    // Only the injected default manufactures a stall the author never wrote.
+    expect(StubResponse::normalizePages($pages))->toHaveCount(count($pages));
+})->with([
+    'explicit true — the stall simulation' => [[
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'a']], 'hasMore' => true],
+        ['data' => [['id' => 'b']]],
+    ]],
+    'explicit false — the walk ends there' => [[
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'a']], 'hasMore' => false],
+        ['data' => [['id' => 'b']]],
+    ]],
+]);
+
+it('accepts a final page repeating the one before it, where hasMore is forced false', function (): void {
+    $pages = StubResponse::normalizePages([
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'a']]],
+    ]);
+
+    expect($pages)->toHaveCount(2);
+});
+
+it('accepts repeated opaque bodies, which are not pages of a walk', function (): void {
+    // Two identical non-page bodies compare equal as `null` rows, not as a
+    // repeated page — the stall the guard refuses is a walk reading the same
+    // rows twice, and an opaque body has none.
+    $pages = StubResponse::normalizePages([
+        ['id' => 'opaque'],
+        ['id' => 'opaque'],
+        ['data' => [['id' => 'a']]],
+    ]);
+
+    expect($pages)->toHaveCount(3);
 });

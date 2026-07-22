@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use OwnerPro\Asaas\AsaasClient;
+use OwnerPro\Asaas\Support\AsaasPaginatedError;
 use OwnerPro\Asaas\Testing\FakeAsaasClient;
 use OwnerPro\Asaas\Testing\NoMatchingStubException;
 
@@ -386,6 +387,98 @@ it('leaves a last-page count alone, since no page waits behind it', function ():
     expect(iterator_to_array($fake->payments()->all()))->toBe([['id' => 'a'], ['id' => 'b']]);
 });
 
+it('accepts a declared count on a page that also declares hasMore:false', function (): void {
+    // The page ends the walk by the server's own statement, so its count can
+    // never be exhausted "while more is promised" — and totalCount 1 is the
+    // very value the fake itself would infer for this sequence. The page
+    // behind the stop is never requested and cannot contradict anything.
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']], 'hasMore' => false, 'totalCount' => 1],
+        ['data' => [['id' => 'b']]],
+    ]);
+
+    expect(iterator_to_array($fake->payments()->all()))->toBe([['id' => 'a']]);
+});
+
+it('ignores an exhausted count behind a declared hasMore:false stop', function (): void {
+    // Pages past the stop are unreachable, so a count the walk would have
+    // exhausted there describes requests that are never made.
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']], 'hasMore' => false],
+        ['data' => [['id' => 'b']], 'totalCount' => 1],
+        ['data' => [['id' => 'c']]],
+    ]);
+
+    expect(iterator_to_array($fake->payments()->all()))->toBe([['id' => 'a']]);
+});
+
+it('rejects a stubPages() page that repeats the previous rows into the injected hasMore', function (): void {
+    // Pasting one realistic fixture into two slots hands the walk the same
+    // rows twice under the injected `hasMore: true`, which all() reads as the
+    // endpoint ignoring its offset: row `a` comes out, then PAGINATION_STALLED
+    // — a fault the fixture author never wrote — and page 3 is stranded.
+    expect(fn (): FakeAsaasClient => AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'b']]],
+    ]))->toThrow(
+        InvalidArgumentException::class,
+        'stubPages() page 2 repeats the rows of page 1 and is served with hasMore: true',
+    );
+});
+
+it('lets the final page repeat the one before it, where hasMore is forced false', function (): void {
+    // A repeat only stalls under `hasMore: true`, and the final page never
+    // carries it — the walk ends there with both copies delivered.
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'a']]],
+    ]);
+
+    expect(iterator_to_array($fake->payments()->all()))->toBe([['id' => 'a'], ['id' => 'a']]);
+});
+
+it('keeps an explicit hasMore:true repeat as the way to simulate a stalled endpoint', function (): void {
+    // Declaring `hasMore: true` on the repeat is the author asking for the
+    // stall — the one declarative way to exercise PAGINATION_STALLED handling
+    // through the fake — so registration must not refuse it.
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'a']], 'hasMore' => true],
+        ['data' => [['id' => 'b']]],
+    ]);
+
+    $items = iterator_to_array($fake->payments()->all(), preserve_keys: false);
+
+    expect($items)->toHaveCount(2);
+    expect($items[0])->toBe(['id' => 'a']);
+    expect($items[1])->toBeInstanceOf(AsaasPaginatedError::class);
+    expect($items[1]->errors[0]['code'])->toBe('PAGINATION_STALLED');
+});
+
+it('lets a repeat that declares hasMore:false end the walk instead of stalling', function (): void {
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']]],
+        ['data' => [['id' => 'a']], 'hasMore' => false],
+        ['data' => [['id' => 'b']]],
+    ]);
+
+    expect(iterator_to_array($fake->payments()->all()))->toBe([['id' => 'a'], ['id' => 'a']]);
+});
+
+it('ignores a repeated page behind a declared hasMore:false stop', function (): void {
+    // Without the stop, page 3 repeating page 2 into the injected hasMore
+    // would be refused; behind it, neither page is ever requested.
+    $fake = AsaasClient::fake()->stubPages('payments', [
+        ['data' => [['id' => 'a']], 'hasMore' => false],
+        ['data' => [['id' => 'b']]],
+        ['data' => [['id' => 'b']]],
+        ['data' => [['id' => 'c']]],
+    ]);
+
+    expect(iterator_to_array($fake->payments()->all()))->toBe([['id' => 'a']]);
+});
+
 it('serves a stub that models a later page to the request that asks for it', function (): void {
     // A stub declaring `offset: 10` describes page two. Cutting on a literal
     // offset 0 would hand the test an empty page it never described.
@@ -431,4 +524,38 @@ it('reads a stub-declared offset that arrives as a string', function (): void {
 
     expect($fake->payments()->list(['offset' => 10, 'limit' => 10])->data)
         ->toBe([['id' => 'p11']]);
+});
+
+it('ends ->all() empty and clean on a stub that models a later page', function (): void {
+    // all() starts at offset 0 and only moves forward, so it never reaches the
+    // stub's own page: this walk was served no rows at all. A terminal page
+    // repeating the stub's row count there would be the fake manufacturing
+    // PAGINATION_SHORT for rows the walk never saw.
+    $fake = AsaasClient::fake(['payments' => [
+        'hasMore' => true,
+        'totalCount' => 30,
+        'limit' => 10,
+        'offset' => 10,
+        'data' => [['id' => 'p11'], ['id' => 'p12']],
+    ]]);
+
+    expect(iterator_to_array($fake->payments()->all()))->toBe([]);
+});
+
+it('reports an unknown count to a request below the stub-declared offset', function (): void {
+    $fake = AsaasClient::fake(['payments' => [
+        'hasMore' => true,
+        'totalCount' => 30,
+        'limit' => 10,
+        'offset' => 10,
+        'data' => [['id' => 'p11'], ['id' => 'p12']],
+    ]]);
+
+    $result = $fake->payments()->list(['offset' => 0]);
+
+    expect($result->data)->toBe([]);
+    expect($result->hasMore)->toBeFalse();
+    // 0 — the value an envelope omitting the key reports — not the 2 rows the
+    // stub carries: those belong to a page this walk never requested.
+    expect($result->totalCount)->toBe(0);
 });
