@@ -734,7 +734,7 @@ yielded item for `AsaasPaginatedError` needs no change.
 | Repeated page | a page carries exactly the rows of the page before it **and still says `hasMore: true`** | `PAGINATION_STALLED` |
 | `totalCount` reached, `hasMore` still true | the envelope contradicts itself | `PAGINATION_INCONSISTENT` |
 | `hasMore: false` short of `totalCount` | the envelope contradicts itself the other way | `PAGINATION_SHORT` |
-| Page ceiling | 10 000 pages fetched and no brake above ever fired | `PAGINATION_RUNAWAY` |
+| Page ceiling | 10 000 pages fetched, the last of them **still saying `hasMore: true`**, and no brake above ever fired | `PAGINATION_RUNAWAY` |
 
 An empty page always ends the walk — there is nothing to advance past — but one
 that still sets `hasMore: true` is an envelope contradicting itself, and rows

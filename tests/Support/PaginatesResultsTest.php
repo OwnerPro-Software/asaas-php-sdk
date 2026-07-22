@@ -682,3 +682,28 @@ it('stops a walk that never reports the end and says why', function (): void {
         ->toContain('after 10000 pages and 10000 rows');
     expect($rows)->toHaveCount(10_000);
 });
+
+it('does not fault a walk that ends exactly on the page ceiling', function (): void {
+    // The boundary the ceiling must not fire on. Page 10 000 arrives with
+    // hasMore: false and an envelope that omits totalCount, so neither count
+    // backstop fires and the walk ends through next() having delivered
+    // everything. The ceiling check read the page count alone, so it reported
+    // PAGINATION_RUNAWAY anyway — rows all yielded, and then an error saying
+    // they might be missing, which orFail() turns into an exception on a walk
+    // that succeeded. One page earlier is the control: it was already clean.
+    $page = 0;
+
+    $connector = fakeConnector(function () use (&$page): AsaasResult {
+        $page++;
+
+        return AsaasResult::success(
+            ['data' => [['id' => 'r'.$page]], 'hasMore' => $page < 10_000],
+            RawResponse::fake(200, [], '{}'),
+        );
+    });
+
+    $rows = iterator_to_array($connector->all('/payments', []), false);
+
+    expect($rows)->toHaveCount(10_000);
+    expect(array_filter($rows, static fn (mixed $row): bool => $row instanceof AsaasPaginatedError))->toBe([]);
+});

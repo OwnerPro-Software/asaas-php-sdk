@@ -185,7 +185,13 @@ trait PaginatesResults
             return self::shortWalk($asaasPaginatedResult, $delivered);
         }
 
-        if ($pages >= self::MAX_PAGES) {
+        // The ceiling only bites on a walk that would otherwise carry on. A page
+        // landing exactly on it while saying `hasMore: false` has ended the walk
+        // itself — `next()` returns null a step later — so faulting there would
+        // report rows missing from a set that arrived whole, and `orFail()`
+        // would raise on a walk that completed. Reading `hasMore` is what
+        // separates "stopped by the ceiling" from "stopped at the ceiling".
+        if ($pages >= self::MAX_PAGES && $asaasPaginatedResult->hasMore) {
             return self::runawayWalk($asaasPaginatedResult, $delivered);
         }
 
@@ -314,13 +320,17 @@ trait PaginatesResults
     }
 
     /**
-     * The walk hit its page ceiling with no other backstop having fired.
+     * The walk hit its page ceiling still promising another page, with no other
+     * backstop having fired.
      *
      * Reported rather than stopped quietly, for the same reason as the others:
-     * a silent stop is indistinguishable from a complete walk. See
-     * {@see self::MAX_PAGES} for what gets a walk here — and note the ceiling
-     * counts pages, so the message must not claim the envelope withheld a
-     * `totalCount`: a walk with a perfectly good count reaches the ceiling
+     * a silent stop is indistinguishable from a complete walk. The converse
+     * costs as much — a page that lands on the ceiling saying `hasMore: false`
+     * ended the walk itself, and reporting one there described a complete set
+     * as possibly missing rows — so the caller checks `hasMore` before coming
+     * here. See {@see self::MAX_PAGES} for what gets a walk here — and note the
+     * ceiling counts pages, so the message must not claim the envelope withheld
+     * a `totalCount`: a walk with a perfectly good count reaches the ceiling
      * first whenever that count exceeds `MAX_PAGES * limit`.
      */
     private static function runawayWalk(AsaasPaginatedResult $asaasPaginatedResult, int $delivered): AsaasPaginatedError
