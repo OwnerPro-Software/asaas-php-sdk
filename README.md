@@ -252,10 +252,9 @@ $result->response->status();                   // HTTP status code
 $result->response->headers();                  // All response headers
 $result->response->header('X-Request-Id');     // Single header (null if absent)
 $result->response->body();                     // Raw response body
-
-// Connection errors have no HTTP response
-$result->response;  // null when connection failed
 ```
+
+A result always carries its response: a request that got no readable answer never returns — it throws a `TransportException` subclass instead (see [Transport Failures](#transport-failures-typed-exceptions)). There is no null-check to write here.
 
 The `RawResponse` wrapper keeps your code decoupled from the underlying HTTP client.
 
@@ -304,6 +303,11 @@ PaymentStatus::from($payment['status']);     // PaymentStatus::Pending
 | `PixTransaction\PixTransactionType` | `Debit`, `Credit`, `CreditRefund`, `DebitRefund`, `DebitRefundCancellation` |
 | `PixTransaction\PixTransactionStatus` | `AwaitingBalanceValidation`, `AwaitingInstantPaymentAccountBalance`, `AwaitingCriticalActionAuthorization`, `AwaitingCheckoutRiskAnalysisRequest`, `AwaitingCashInRiskAnalysisRequest`, `Scheduled`, `AwaitingRequest`, `Requested`, `Done`, `Refused`, `Cancelled` |
 | `PixTransaction\PixQrCodeType` | `Static`, `Dynamic`, `DynamicWithAsaasAddressKey`, `Composite` |
+| `PixTransaction\PixRecurringStatus` | `AwaitingCriticalActionAuthorization`, `Pending`, `Scheduled`, `Cancelled`, `Done` |
+| `PixTransaction\PixRecurringItemStatus` | `Pending`, `Cancelled`, `Refused`, `Done` |
+| `PixAutomatic\PixAutomaticFrequency` | `Weekly`, `Monthly`, `Quarterly`, `Semiannually`, `Annually` |
+| `PixAutomatic\PixAutomaticAuthorizationStatus` | `Created`, `Active`, `Cancelled`, `Refused`, `Expired` |
+| `PixAutomatic\PixAutomaticPaymentInstructionStatus` | `AwaitingRequest`, `Scheduled`, `Done`, `Cancelled`, `Refused` |
 | `Transfer\TransferOperationType` | `Pix`, `Ted`, `Internal` |
 | `Transfer\TransferRecurrenceFrequency` | `Weekly`, `Monthly` |
 | `Transfer\TransferStatus` | `Pending`, `BankProcessing`, `Done`, `Cancelled`, `Failed` |
@@ -1035,6 +1039,8 @@ if (! $verifier->isFromAsaas($request->ip())) {
 }
 ```
 
+> **The IP check is only as trustworthy as the IP you hand it.** `WebhookVerifier` compares whatever address it receives; the trust boundary is the caller's. Laravel's `$request->ip()` resolves from the `X-Forwarded-For` header for requests arriving through a trusted proxy, so with `TrustProxies` set to `*` (common behind a load balancer) and an edge that does not strip client-supplied forwarding headers, an attacker can spoof a known Asaas IP and pass this check. Restrict `TrustProxies` to your real infrastructure proxies before treating `isFromAsaas()` as meaningful. Either way, the `authToken` verification above is the primary defense — the IP allowlist is defense in depth, never a substitute.
+
 The default known Asaas IPs are `52.67.12.206`, `18.230.8.159`, `54.94.136.112`, and `54.94.183.101`. You can override them if Asaas updates their IP list:
 
 ```php
@@ -1143,7 +1149,7 @@ Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRe
 | `CustomerNotification` | `/v3/customers/{id}/notifications`, `/v3/notifications/*` | not exposed — use `Connector` directly |
 | `Payment` | `/v3/payments`, `/v3/payments/{id}`, `/v3/payments/{id}/status`, `/v3/payments/{id}/billingInfo`, `/v3/payments/{id}/viewingInfo`, `/v3/payments/{id}/identificationField`, `/v3/payments/{id}/pixQrCode`, `/v3/payments/{id}/receiveInCash`, `/v3/payments/{id}/undoReceivedInCash`, `/v3/payments/{id}/captureAuthorizedPayment`, `/v3/payments/{id}/payWithCreditCard`, `/v3/payments/{id}/refund`, `/v3/payments/{id}/restore`, `/v3/payments/limits`, `/v3/payments/simulate`, `/v3/lean/payments/*` | `PaymentResource`, `LeanPaymentResource` |
 | `PaymentRefund` | `/v3/payments/{id}/refunds`, `/v3/payments/{id}/bankSlip/refund` | `PaymentResource::refunds*` |
-| `Chargeback` | `/v3/chargebacks/*`, `/v3/payments/{id}/chargeback` | partial — `PaymentResource::chargeback` |
+| `Chargeback` | `/v3/chargebacks/*`, `/v3/payments/{id}/chargeback` | partial — `PaymentResource::getChargeback` |
 | `Installment` | `/v3/installments/*` | not exposed — use `Connector` directly |
 | `Subscription` | `/v3/subscriptions/*` | not exposed — use `Connector` directly |
 | `PixCredit` | `/v3/payments/{id}/pixQrCode` (receive via Pix); dynamic QR Code | `PaymentResource::pixQrCode` |
@@ -1152,13 +1158,13 @@ Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRe
 | `CreditCard` | `/v3/creditCard/tokenizeCreditCard`, `/v3/creditCard/preAuthorization/config` | `CreditCardResource` |
 | `Anticipation` | `/v3/anticipations`, `/v3/anticipations/{id}`, `/v3/anticipations/{id}/cancel`, `/v3/anticipations/simulate`, `/v3/anticipations/limits` | not exposed — use `Connector` directly |
 | `AnticipationConfig` | `/v3/anticipations/configurations` | not exposed — use `Connector` directly |
-| `Escrow` | `/v3/escrow/{id}/finish`, `/v3/payments/{id}/escrow`, `/v3/accounts/{id}/escrow` | partial — `AccountResource::getEscrow`/`updateEscrow` |
-| `EscrowConfig` | `/v3/accounts/escrow`, `/v3/accounts/{id}/escrow` (PUT/POST config) | `AccountResource::*EscrowConfig` |
+| `Escrow` | `/v3/escrow/{id}/finish`, `/v3/payments/{id}/escrow`, `/v3/accounts/{id}/escrow` | `PaymentResource::getEscrow`/`finishEscrow`, `AccountResource::escrowConfig` |
+| `EscrowConfig` | `/v3/accounts/escrow`, `/v3/accounts/{id}/escrow` (PUT/POST config) | `AccountResource::escrowConfig`/`setEscrowConfig`/`defaultEscrowConfig`/`setDefaultEscrowConfig` |
 | `CreditBureau` | `/v3/creditBureauReport`, `/v3/creditBureauReport/{id}` | not exposed — use `Connector` directly |
 | `PaymentDunning` | `/v3/paymentDunnings/*` | not exposed — use `Connector` directly |
 | `FiscalInfo` | `/v3/fiscalInfo/*` (config, services, NBS, taxes, federalServiceCodes, taxClassificationCodes, taxSituationCodes, operationIndicatorCodes, municipalOptions, nationalPortal) | `FiscalInfoResource` |
 | `Invoice` | `/v3/invoices`, `/v3/invoices/{id}`, `/v3/invoices/{id}/authorize`, `/v3/invoices/{id}/cancel` | `InvoiceResource` |
-| `PixDebit` | `/v3/pix/qrCodes/decode`, `/v3/pix/qrCodes/pay` (pay) | `PixTransactionResource::decode`/`pay` |
+| `PixDebit` | `/v3/pix/qrCodes/decode`, `/v3/pix/qrCodes/pay` (pay) | `PixTransactionResource::decodeQrCode`/`payQrCode` |
 | `PixAddressKey` | `/v3/pix/addressKeys`, `/v3/pix/addressKeys/{id}`, `/v3/pix/tokenBucket/addressKey` | `PixResource::*Key` |
 | `PixRecurring` | `/v3/pix/transactions/recurrings`, `/v3/pix/transactions/recurrings/{id}`, `/v3/pix/transactions/recurrings/{id}/cancel`, `/v3/pix/transactions/recurrings/{id}/items`, `/v3/pix/transactions/recurrings/items/{id}/cancel` | `PixTransactionResource::recurring*` |
 | `PixTransaction` | `/v3/pix/transactions`, `/v3/pix/transactions/{id}`, `/v3/pix/transactions/{id}/cancel`, `/v3/pix/qrCodes/static`, `/v3/pix/qrCodes/static/{id}` | `PixTransactionResource`, `PixResource::*StaticQr*` |
