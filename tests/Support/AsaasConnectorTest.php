@@ -193,6 +193,21 @@ it('forLaravel enforces TLS certificate verification', function (): void {
     expect($pendingRequest->getOptions()['verify'])->toBeTrue();
 });
 
+it('refuses redirects on both factories', function (string $factory): void {
+    // Same safety-critical-invariant carve-out as the TLS cases above: the
+    // option is unobservable through the public API, and following a redirect
+    // forwards the `access_token` header to whatever host answered (Guzzle
+    // strips only Authorization and Cookie), allows an https→http downgrade,
+    // and replays a POST as a GET whose 200 would be relayed as the POST's
+    // verdict.
+    Http::fake();
+    $connector = AsaasConnector::{$factory}('test-key', Environment::Sandbox, 30);
+
+    $pendingRequest = (new ReflectionProperty($connector, 'pendingRequest'))->getValue($connector);
+
+    expect($pendingRequest->getOptions()['allow_redirects'])->toBeFalse();
+})->with(['forStandalone', 'forLaravel']);
+
 // --- Standalone HTTP behavior via DI constructor with stubbed PendingRequest ---
 
 it('standalone get returns success result', function (): void {

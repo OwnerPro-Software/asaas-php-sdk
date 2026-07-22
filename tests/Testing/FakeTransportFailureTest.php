@@ -68,7 +68,7 @@ it('indeterminateErrno rejects unknown phases', function (): void {
 
 it('stubIndeterminateResult rejects unknown phases listing body and server among the valid ones', function (): void {
     AsaasClient::fake()->stubIndeterminateResult('transfers', 'bogus');
-})->throws(InvalidArgumentException::class, 'Unknown transport failure phase "bogus"; expected one of: body, read, server, timeout, transfer, or null.');
+})->throws(InvalidArgumentException::class, 'Unknown transport failure phase "bogus"; expected one of: body, read, redirect, server, timeout, transfer, or null.');
 
 // --- the fake mirrors the typed contract ---
 
@@ -114,7 +114,7 @@ it('stubIndeterminateResult throws the typed exception with the requested phase'
 
     expect($exception)->toBeInstanceOf(IndeterminateResultException::class);
     expect($exception->phase)->toBe($phase);
-})->with(['read', 'transfer', 'body', 'server', 'timeout']);
+})->with(['read', 'transfer', 'body', 'server', 'timeout', 'redirect']);
 
 // The classifier's default branch is what production reaches on an errno
 // outside its map, so a test has to be able to reach it too.
@@ -294,4 +294,26 @@ it('stubIndeterminateResult with server phase carries the 5xx response on the th
 
     expect($exception?->response?->status())->toBe(502);
     expect($exception?->response?->body())->toBe('Bad Gateway');
+});
+
+// The phase stubs exist to serve what production actually sees, so the shape
+// each one produces is part of the contract — not just the phase it lands on.
+// Every 3xx classifies as 'redirect', so asserting the phase alone would leave
+// the status, the Location header and the empty body unpinned.
+it('stubIndeterminateResult redirect phase serves the 302 production would see', function (): void {
+    $fake = AsaasClient::fake()->stubIndeterminateResult('transfers', 'redirect');
+
+    $exception = null;
+
+    try {
+        $fake->transfers()->create(['value' => 10.0, 'pixAddressKey' => 'key@pix.com']);
+    } catch (IndeterminateResultException $exception) {
+    }
+
+    expect($exception?->response?->status())->toBe(302)
+        // A 3xx without a Location is not what Guzzle would have chased, so the
+        // stub carries one: it models the redirect that is refused, not an
+        // oddity no middleware would have acted on.
+        ->and($exception?->response?->header('Location'))->not->toBeNull()
+        ->and($exception?->response?->body())->toBe('');
 });

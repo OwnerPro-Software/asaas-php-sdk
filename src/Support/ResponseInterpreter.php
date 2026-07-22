@@ -42,6 +42,20 @@ final class ResponseInterpreter
             throw new RateLimitedException($rawResponse);
         }
 
+        // The connector refuses redirects, so a 3xx arrives here instead of
+        // being chased — and it is not a verdict either. Asaas issues none, so
+        // something in front of the API answered in its place, and whether the
+        // operation was processed before that is unknowable. Reporting it beats
+        // following it: Guzzle's non-strict default replays a POST as a GET,
+        // and that GET's 200 would arrive here as the POST's verdict.
+        //
+        // `failed()` is `>= 400`, so without this branch a 3xx fell through to
+        // the success return and a body that happened to decode became an
+        // answer the API never gave.
+        if ($response->redirect()) {
+            throw new IndeterminateResultException('redirect', response: $rawResponse);
+        }
+
         if ($response->failed()) {
             return AsaasResult::failure(ErrorEnvelope::extract($response), $rawResponse);
         }

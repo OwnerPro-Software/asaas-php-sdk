@@ -203,12 +203,13 @@ final class FakeAsaasClient implements AsaasClientContract
      * `IndeterminateResultException`.
      *
      * `phase: 'timeout'` stubs the 408 the server answers when it gives up
-     * waiting, and `phase: null` the failure whose point could not be proven —
-     * the classifier's default branch, reached in production by an errno
-     * outside its map. Both are outcomes callers have to handle, so both are
-     * reachable from here.
+     * waiting, `phase: 'redirect'` the 3xx something in front of the API
+     * answers in its place, and `phase: null` the failure whose point could not
+     * be proven — the classifier's default branch, reached in production by an
+     * errno outside its map. All are outcomes callers have to handle, so all
+     * are reachable from here.
      *
-     * @param  'body'|'read'|'server'|'timeout'|'transfer'|null  $phase
+     * @param  'body'|'read'|'redirect'|'server'|'timeout'|'transfer'|null  $phase
      */
     public function stubIndeterminateResult(string $pattern, ?string $phase = 'read'): self
     {
@@ -222,6 +223,7 @@ final class FakeAsaasClient implements AsaasClientContract
             'body' => static fn (): PromiseInterface => Factory::response('{invalid-json'),
             'server' => static fn (): PromiseInterface => Factory::response('Bad Gateway', 502),
             'timeout' => static fn (): PromiseInterface => Factory::response('Request Timeout', 408),
+            'redirect' => static fn (): PromiseInterface => Factory::response('', 302, ['Location' => 'https://elsewhere.example/v3/payments']),
             default => null,
         };
 
@@ -234,7 +236,7 @@ final class FakeAsaasClient implements AsaasClientContract
         // @phpstan-ignore function.alreadyNarrowedType (PHPDoc unions are not runtime-enforced; the guard rejects invalid caller input)
         if (! in_array($phase, ['read', 'transfer'], true)) {
             throw new InvalidArgumentException(sprintf(
-                'Unknown transport failure phase "%s"; expected one of: body, read, server, timeout, transfer, or null.',
+                'Unknown transport failure phase "%s"; expected one of: body, read, redirect, server, timeout, transfer, or null.',
                 $phase,
             ));
         }
@@ -390,7 +392,11 @@ final class FakeAsaasClient implements AsaasClientContract
      * router closure before reaching the network — enforced by the guarded stub
      * returns and by `preventStrayRequests()` in the constructor — so
      * timeout/connectTimeout options would only add ceremony without affecting
-     * behaviour. SSL `verify` stays on to mirror production wiring.
+     * behaviour. SSL `verify` and the redirect refusal stay on to mirror
+     * production wiring — the stub handler replaces the transfer handler but
+     * leaves Guzzle's middleware stack in place, so without the refusal a
+     * stubbed 3xx carrying a `Location` would be chased inside a test and never
+     * reach the interpreter the test meant to exercise.
      */
     private function buildClient(): AsaasClient
     {
@@ -398,7 +404,7 @@ final class FakeAsaasClient implements AsaasClientContract
             ->createPendingRequest()
             ->baseUrl($this->baseUrl)
             ->withHeader('access_token', 'fake-key')
-            ->withOptions(['verify' => true]);
+            ->withOptions(['verify' => true, 'allow_redirects' => false]);
 
         return new AsaasClient(new AsaasConnector($pendingRequest, $this->baseUrl));
     }

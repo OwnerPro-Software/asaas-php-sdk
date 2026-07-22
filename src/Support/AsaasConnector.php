@@ -172,7 +172,18 @@ final readonly class AsaasConnector implements Connector, Redactable
                 ->withHeader('access_token', $apiKey)
                 ->connectTimeout($connectTimeout)
                 ->timeout($timeout)
-                ->withOptions(['verify' => true]),
+                // Redirects are refused, not followed. Guzzle strips only
+                // `Authorization` and `Cookie` when one crosses origins, so the
+                // `access_token` header would travel to whatever host answered
+                // with a `Location`; its default `protocols` allows an
+                // https→http downgrade, sending the key in clear; and its
+                // non-strict default replays a POST as a GET, whose 200 would
+                // reach {@see ResponseInterpreter} as the POST's verdict — the
+                // silent no-op CHANGELOG 2.0.0 called the real exposure of the
+                // trailing-slash drift. Asaas issues no redirect, so nothing
+                // legitimate is lost, and a 3xx that does arrive is reported as
+                // indeterminate rather than chased.
+                ->withOptions(['verify' => true, 'allow_redirects' => false]),
             $environment->baseUrl(),
         );
     }

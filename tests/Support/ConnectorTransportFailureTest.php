@@ -298,3 +298,56 @@ it('throws through direct two-argument construction as well', function (): void 
     expect(fn () => (new AsaasConnector($pendingRequest, ''))->get('/payments/pay_123'))
         ->toThrow(IndeterminateResultException::class);
 });
+
+// --- 3xx: not a verdict, and never chased ---
+
+it('throws IndeterminateResultException with redirect phase carrying the response on 3xx', function (): void {
+    Http::fake(['*' => Http::response('', 302, ['Location' => 'https://elsewhere.example/v3/transfers'])]);
+
+    $exception = null;
+
+    try {
+        throwingConnector()->post('/transfers', ['value' => 10.0]);
+    } catch (IndeterminateResultException $exception) {
+    }
+
+    expect($exception)->toBeInstanceOf(IndeterminateResultException::class);
+    expect($exception->phase)->toBe('redirect');
+    expect($exception->response?->status())->toBe(302);
+});
+
+// The rule is the class, not a list of statuses: 304 and 399 are as unproven as
+// the ones a proxy is likely to send.
+it('throws IndeterminateResultException across the 3xx range', function (int $status): void {
+    Http::fake(['*' => Http::response('', $status, ['Location' => 'https://elsewhere.example/v3/transfers'])]);
+
+    expect(fn () => throwingConnector()->post('/transfers', ['value' => 10.0]))
+        ->toThrow(IndeterminateResultException::class);
+})->with([300, 301, 302, 303, 304, 307, 308, 399]);
+
+// The defect this closes: `failed()` is `>= 400`, so a 3xx fell through to the
+// success branch and a body that happened to decode became a verdict the API
+// never gave. A proxy answering 303 with JSON is the shape that reached it,
+// since Guzzle only chases a 3xx that carries a Location.
+it('does not report a 3xx carrying a JSON object as a success', function (): void {
+    Http::fake(['*' => Http::response(['maintenance' => true], 303)]);
+
+    expect(fn () => throwingConnector()->get('/payments/pay_123'))
+        ->toThrow(IndeterminateResultException::class);
+});
+
+// A redirect is answered, not followed: chasing it would forward the
+// access_token header to whatever host the Location names, and Guzzle's
+// non-strict default would replay this POST as a GET whose 200 would be
+// relayed as the POST's verdict.
+it('does not follow a redirect', function (): void {
+    Http::fake([
+        '*/v3/transfers' => Http::response('', 301, ['Location' => 'https://elsewhere.example/v3/transfers/']),
+        '*' => Http::response(['id' => 'tra_1'], 200),
+    ]);
+
+    expect(fn () => throwingConnector()->post('/transfers', ['value' => 10.0]))
+        ->toThrow(IndeterminateResultException::class);
+
+    Http::assertSentCount(1);
+});

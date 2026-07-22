@@ -194,7 +194,7 @@ try {
     // mid-transfer, a 2xx with an unreadable body, or a 5xx. NEVER retry
     // blindly — reconcile first (e.g. via the Asaas withdrawal-validation
     // webhook).
-    $e->phase;          // 'body'|'read'|'server'|'timeout'|'transfer'|null
+    $e->phase;          // 'body'|'read'|'redirect'|'server'|'timeout'|'transfer'|null
     $e->response;       // ?RawResponse — the received response for 'body' (2xx), 'server' (5xx) and 'timeout' (408), null otherwise
 } catch (RateLimitedException $e) {
     // Asaas refused the request BEFORE processing it (429). Nothing moved, so
@@ -215,6 +215,7 @@ Two received-response cases also throw, for the same reason:
 - A 2xx response whose body is not a JSON object or array (invalid JSON, empty body, or a bare JSON scalar) throws `IndeterminateResultException` with `phase: 'body'`. Exception: **204 No Content** endpoints (`deleteAccessToken`, `removeBackoff`) return a success with empty `data` — an intentionally empty body is a definitive answer.
 - A 2xx **list** response whose pagination envelope cannot be read throws the same way: `data` that is not a list of objects, or a `totalCount`/`limit` that is not an integer, or a `hasMore` that is not a boolean. Nothing is coerced — `totalCount` bounds the walk and `hasMore` continues it, so reading `"3"` as `3` would end a walk early or run one forever while still looking like a complete answer.
 - A **5xx** response throws `IndeterminateResultException` with `phase: 'server'` and the response attached. A 5xx is not Asaas answering about the operation — it is the server, or a proxy in front of it, reporting that it could not answer, so the operation may well have been processed. This holds for the whole range and regardless of the body: a 5xx carrying a canonical `{"errors":[...]}` envelope still throws.
+- A **3xx** response throws `IndeterminateResultException` with `phase: 'redirect'` and the response attached. The SDK does not follow redirects, so the 3xx arrives rather than being chased. Asaas issues none, which is the point: something in front of the API answered in its place, and whether the operation was processed first is unknowable. Following one would be worse — Guzzle strips only `Authorization` and `Cookie` across origins, so the `access_token` header would travel to whatever host the `Location` names; its default protocol list allows an `https`→`http` downgrade; and its non-strict default replays a `POST` as a `GET`, whose `200` would be relayed as the `POST`'s verdict.
 
 Two 4xx statuses are not verdicts either, and neither returns a result:
 
@@ -1579,7 +1580,7 @@ use OwnerPro\Asaas\Support\RequestNotDeliveredException;
 
 $asaas = AsaasClient::fake()
     ->stubRequestNotDelivered('transfers', phase: 'dns')       // 'connect'|'dns'|'tls'
-    ->stubIndeterminateResult('pix/qrCodes/pay', phase: 'read'); // 'body'|'read'|'server'|'timeout'|'transfer'|null
+    ->stubIndeterminateResult('pix/qrCodes/pay', phase: 'read'); // 'body'|'read'|'redirect'|'server'|'timeout'|'transfer'|null
 
 try {
     $asaas->transfers()->create([...]);
@@ -1588,7 +1589,7 @@ try {
 }
 ```
 
-`phase: 'body'`, `phase: 'server'` and `phase: 'timeout'` stub a response instead of a cURL error — an unreadable `200`, a `502` and a `408` respectively — because that is what production sees in those cases. `phase: null` stubs the classifier's default branch: a failure whose point could not be proven, which production reaches on a cURL errno outside the map.
+`phase: 'body'`, `phase: 'server'`, `phase: 'timeout'` and `phase: 'redirect'` stub a response instead of a cURL error — an unreadable `200`, a `502`, a `408` and a `302` respectively — because that is what production sees in those cases. `phase: null` stubs the classifier's default branch: a failure whose point could not be proven, which production reaches on a cURL errno outside the map.
 
 To pin the classifier itself rather than the fake's phase table, stub the errno and let it decide:
 
