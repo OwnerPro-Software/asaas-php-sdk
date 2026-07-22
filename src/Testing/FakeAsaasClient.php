@@ -52,7 +52,11 @@ final class FakeAsaasClient implements AsaasClientContract
         Environment|string $environment = Environment::Sandbox,
     ) {
         $this->baseUrl = ($environment instanceof Environment ? $environment : Environment::from($environment))->baseUrl();
-        $this->factory = new Factory;
+        // The router answers or throws on every request, so nothing should ever
+        // reach the real network. This says so to Laravel as well: should a
+        // future change let a request slip past the router, it fails as a stray
+        // request instead of quietly travelling to the live API.
+        $this->factory = (new Factory)->preventStrayRequests();
 
         foreach ($stubs as $pattern => $stub) {
             $this->register($pattern, $stub);
@@ -351,6 +355,11 @@ final class FakeAsaasClient implements AsaasClientContract
      * Closures as a fallback, hiding the difference). If a future Guzzle
      * release ever adds __invoke to PromiseInterface this branch would need
      * tightening — verify with mutation testing before changing.
+     *
+     * What a callable returns is normalized by {@see StubReturnGuard}: Laravel
+     * drops a falsy stub return and reads the absence as "no stub matched",
+     * which sends the request to the real API, so the value cannot be handed
+     * back unchecked.
      */
     private function installRouter(): void
     {
@@ -362,7 +371,9 @@ final class FakeAsaasClient implements AsaasClientContract
                     continue;
                 }
 
-                return is_callable($stub) ? $stub($request, $options) : $stub;
+                return is_callable($stub)
+                    ? StubReturnGuard::normalize($stub($request, $options), $absolute)
+                    : $stub;
             }
 
             throw NoMatchingStubException::for(
@@ -376,9 +387,10 @@ final class FakeAsaasClient implements AsaasClientContract
     /**
      * Build the underlying real client. The fake injects a placeholder API key
      * and intentionally omits timeouts: every request is short-circuited by the
-     * router closure before reaching the network, so timeout/connectTimeout
-     * options would only add ceremony without affecting behaviour. SSL `verify`
-     * stays on to mirror production wiring.
+     * router closure before reaching the network — enforced by the guarded stub
+     * returns and by `preventStrayRequests()` in the constructor — so
+     * timeout/connectTimeout options would only add ceremony without affecting
+     * behaviour. SSL `verify` stays on to mirror production wiring.
      */
     private function buildClient(): AsaasClient
     {

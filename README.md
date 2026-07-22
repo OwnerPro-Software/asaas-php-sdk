@@ -1606,7 +1606,7 @@ A request that fails in transport is still a request that was sent: the cURL-err
 
 `stubException()` also does **not** guarantee the exception you passed is the one your test catches. It is raised where a real transport failure would be, so the connector classifies it on the way out: a `ConnectionException` surfaces as `RequestNotDeliveredException` or `IndeterminateResultException` exactly as production traffic does. Only an exception the connector does not handle travels through untouched. Assert on the typed exception, or use the phase stubs, which say what they produce.
 
-Closure stubs receive `(Illuminate\Http\Client\Request $request, array $options)` from Laravel's HTTP client and may return a `Response`, a `PromiseInterface`, or any value `Http::response()` accepts. The `$options` parameter can be ignored when not needed:
+Closure stubs receive `(Illuminate\Http\Client\Request $request, array $options)` from Laravel's HTTP client and must return one of: a `PromiseInterface` (what `Http::response()` builds), an `Illuminate\Http\Client\Response`, an array body, or a string body. The `$options` parameter can be ignored when not needed:
 
 ```php
 $asaas->stub('payments/*', function (\Illuminate\Http\Client\Request $r): \GuzzleHttp\Promise\PromiseInterface {
