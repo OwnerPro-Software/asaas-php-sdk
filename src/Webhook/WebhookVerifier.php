@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace OwnerPro\Asaas\Webhook;
 
 use InvalidArgumentException;
+use LogicException;
+use OwnerPro\Asaas\Support\Redactable;
 use SensitiveParameter;
 
-final readonly class WebhookVerifier
+final readonly class WebhookVerifier implements Redactable
 {
     /** @var list<string> */
     public const array DEFAULT_IPS = [
@@ -29,6 +31,54 @@ final readonly class WebhookVerifier
         if ($authToken === '') {
             throw new InvalidArgumentException('The webhook auth token must not be empty.');
         }
+    }
+
+    /**
+     * `#[SensitiveParameter]` marks the constructor *parameter*, not the
+     * promoted property, so it only ever swapped the argument out of a recorded
+     * stack trace — and under PHP's default `zend.exception_ignore_args=1` it
+     * did not even do that. The secret itself stayed readable on the object,
+     * and this is the object built to hold it: the README has it constructed in
+     * the controller that answers Asaas, so `dd($verifier)` while debugging a
+     * rejected delivery printed the value authenticating every inbound webhook.
+     *
+     * The token is shown as `***` rather than partially masked, matching
+     * `CreateWebhookRequest` and `UpdateWebhookRequest` — the two other places
+     * this same secret is redacted. `trustedIps` is not a secret and stays
+     * readable: which addresses are allowed is the other half of a rejected
+     * webhook, and hiding it would make the dump useless for the case it is
+     * reached for.
+     *
+     * @return array{authToken: string, trustedIps: list<string>}
+     */
+    public function __debugInfo(): array
+    {
+        return [
+            'authToken' => '***',
+            'trustedIps' => $this->trustedIps,
+        ];
+    }
+
+    /**
+     * Neither `serialize()` nor `var_export()` honours `__debugInfo()`.
+     * Refusing serialization keeps the shared secret out of queue payloads,
+     * caches and session data; `var_export()` is unguardable, so it must never
+     * be pointed at a verifier (documented in the README).
+     *
+     * @return never
+     */
+    public function __serialize(): array
+    {
+        throw new LogicException(self::class.' cannot be serialized: it holds the webhook shared secret, which must never reach a queue, cache, or session payload. Rebuild it where you need it, reading the token from your own secret store.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return never
+     */
+    public function __unserialize(array $data): void
+    {
+        throw new LogicException(self::class.' cannot be unserialized.');
     }
 
     public function verify(string $headerToken): bool

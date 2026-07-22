@@ -1043,6 +1043,8 @@ $verifier = new WebhookVerifier(
 );
 ```
 
+The verifier holds the shared secret, so it redacts itself like every other secret-holding object: `dump()`, `dd()`, `var_dump()`, `print_r()` and the framework error page show `authToken: ***` alongside the readable `trustedIps`, and `serialize()` throws. This matters here because debugging a rejected delivery is exactly when you reach for `dd($verifier)`. See [Sensitive data in debug output](#sensitive-data-in-debug-output).
+
 ### Invoices (`invoices()`)
 
 ```php
@@ -1448,9 +1450,9 @@ Objects that hold secrets — your API key, card numbers, CVVs, CPF/CNPJ, bank a
 | `var_dump()`, `print_r()` | redacted via `__debugInfo()` |
 | `dump()`, `dd()`, Ignition / Flare error pages | redacted via a VarDumper caster |
 | `json_encode()`, `(string)` | redacted via `jsonSerialize()` / `__toString()` |
-| `serialize()` | throws on request DTOs, `AsaasClient` and `AsaasConnector` — secrets must never reach a queue, cache or session (results are exempt, see [below](#secrets-asaas-sends-back)). Transport failures do **not** refuse it, and they hold the failed request in `getPrevious()`: serializing one writes your API key into the payload |
+| `serialize()` | throws on request DTOs, `AsaasClient`, `AsaasConnector` and `WebhookVerifier` — secrets must never reach a queue, cache or session (results are exempt, see [below](#secrets-asaas-sends-back)). Transport failures do **not** refuse it, and they hold the failed request in `getPrevious()`: serializing one writes your API key into the payload |
 | stack traces | redacted via `#[SensitiveParameter]` |
-| `var_export()` | **not** redacted — the function ignores `__debugInfo()`; never point it at a client, a DTO or a transport failure. Results and `RawResponse` are safe: they hold no object that reaches your API key |
+| `var_export()` | **not** redacted — the function ignores `__debugInfo()`; never point it at a client, a DTO, a transport failure or a webhook verifier. Results and `RawResponse` are safe: they hold no object that reaches your API key |
 
 ```php
 $card = new CreditCard('JOHN DOE', '4111111111111111', '12', '2030', '737');

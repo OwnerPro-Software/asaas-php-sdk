@@ -108,3 +108,43 @@ it('exposes default IPs as a public constant', function (): void {
         '54.94.183.101',
     ]);
 });
+
+// --- redaction ---
+
+it('keeps the shared secret out of print_r and var_dump', function (): void {
+    $verifier = new WebhookVerifier('wh_shared_secret');
+
+    ob_start();
+    var_dump($verifier);
+    $dumped = (string) ob_get_clean();
+
+    expect(print_r($verifier, true))->not->toContain('wh_shared_secret')
+        ->and($dumped)->not->toContain('wh_shared_secret');
+});
+
+it('refuses to serialize', function (): void {
+    // The verifier holds the secret that authenticates every inbound webhook,
+    // and it is not an object anything legitimately caches or queues — unlike a
+    // result, which is exempt for that reason.
+    $verifier = new WebhookVerifier('wh_shared_secret');
+
+    expect(fn (): string => serialize($verifier))
+        ->toThrow(LogicException::class, WebhookVerifier::class.' cannot be serialized');
+});
+
+it('refuses to unserialize', function (): void {
+    $verifier = new WebhookVerifier('wh_shared_secret');
+
+    expect(function () use ($verifier): void {
+        $verifier->__unserialize([]);
+    })->toThrow(LogicException::class, WebhookVerifier::class.' cannot be unserialized.');
+});
+
+it('shows the trusted addresses while hiding the token', function (): void {
+    $verifier = new WebhookVerifier('wh_shared_secret', ['52.67.12.206']);
+
+    expect($verifier->__debugInfo())->toBe([
+        'authToken' => '***',
+        'trustedIps' => ['52.67.12.206'],
+    ]);
+});

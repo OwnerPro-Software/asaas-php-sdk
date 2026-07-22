@@ -25,6 +25,7 @@ use OwnerPro\Asaas\Support\Redactable;
 use OwnerPro\Asaas\Support\RequestNotDeliveredException;
 use OwnerPro\Asaas\Support\TransportException;
 use OwnerPro\Asaas\Support\TransportFailureClassifier;
+use OwnerPro\Asaas\Webhook\WebhookVerifier;
 use Symfony\Component\VarDumper\Cloner\AbstractCloner;
 use Symfony\Component\VarDumper\Cloner\Stub;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
@@ -35,6 +36,7 @@ mutates(
     TransportException::class,
     RequestNotDeliveredException::class,
     IndeterminateResultException::class,
+    WebhookVerifier::class,
 );
 
 /**
@@ -402,4 +404,22 @@ it('keeps a transport failure readable as an exception once the caster replaces 
         ->and($decoded['phase'])->toBe('dns')
         ->and($decoded['file'])->toBe($exception->getFile())
         ->and($decoded['line'])->toBe($exception->getLine());
+});
+
+it('keeps the webhook shared secret out of a dumped verifier', function (): void {
+    // The verifier is bound in the container and injected into the controller
+    // that answers Asaas, so dd($verifier) while debugging a rejected delivery
+    // is the path that reached the secret authenticating every inbound webhook.
+    $verifier = new WebhookVerifier('wh_shared_secret', ['52.67.12.206']);
+
+    $output = dumpToString($verifier);
+
+    expect($output)->not->toContain('wh_shared_secret')
+        // The allowlist is the other half of a rejected webhook — redacting it
+        // too would make the dump useless for the case it is reached for.
+        ->and($output)->toContain('52.67.12.206')
+        ->and($output)->toContain('authToken')
+        // Redaction is a display concern: the comparison still sees the real
+        // token.
+        ->and($verifier->verify('wh_shared_secret'))->toBeTrue();
 });
