@@ -519,11 +519,13 @@ it('still accepts nested list values, whose numeric keys are valid part names', 
 
     expect($result->success)->toBeTrue();
 
+    // Laravel 12 flattens list values to `tags[]`; Laravel 13.20+ to
+    // `tags[0]`/`tags[1]`. The index style is framework detail — pinned here
+    // is only that both leaves reach the wire under a validated name.
     Http::assertSent(function ($request): bool {
-        expect($request->body())
-            ->toContain('name="tags[0]"')
-            ->toContain('name="tags[1]"');
+        $body = (string) $request->body();
 
-        return true;
+        return preg_match('/name="tags\[\d*\]"\r\nContent-Length: 5\r\n\r\nfirst/', $body) === 1
+            && preg_match('/name="tags\[\d*\]"\r\nContent-Length: 6\r\n\r\nsecond/', $body) === 1;
     });
 });
