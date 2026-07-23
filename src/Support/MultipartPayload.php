@@ -58,9 +58,12 @@ final class MultipartPayload
      * quote, append part headers of its own, and forge a `documentFile` part
      * carrying a filename none of the other guards ever saw.
      *
-     * A value that is itself an array becomes `"{$key}[]"`, so the bracket
-     * suffix rides on an already-validated name; the brackets themselves are
-     * ordinary characters inside a quoted header value.
+     * A value that is itself an array is expanded by `MultipartStream` into
+     * one part per leaf, named `"{$key}[{$childKey}]"` — the child key lands in
+     * the same unescaped `name="%s"` slot as the top-level one. Validation
+     * therefore recurses: every key at every depth is a part name on the wire.
+     * The brackets the stream adds are ordinary characters inside a quoted
+     * header value.
      *
      * Keys are cast to string because PHP narrows a numeric one to `int` on the
      * way into the array — `['0' => 'x']` arrives as `[0 => 'x']` and reaches
@@ -71,8 +74,12 @@ final class MultipartPayload
      */
     public static function guardFieldNames(array $data): array
     {
-        foreach (array_keys($data) as $key) {
+        foreach ($data as $key => $value) {
             ContentDispositionGuard::partName((string) $key);
+
+            if (is_array($value)) {
+                self::guardFieldNames($value);
+            }
         }
 
         return $data;

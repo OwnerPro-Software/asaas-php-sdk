@@ -479,3 +479,51 @@ it('still accepts a nested $data array that is not a part', function (): void {
 
     expect($result->success)->toBeTrue();
 });
+
+it('refuses a nested $data key that would inject part headers, closing the guard one level down', function (): void {
+    // MultipartStream expands an array value into `name="meta[childKey]"`, so
+    // the child key lands in the same unescaped slot as a top-level one.
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $evil = "a\"\r\nX-Injected: yes\r\nContent-Disposition: form-data; name=\"documentFile\"; filename=\"evil.exe";
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', ['meta' => [$evil => 'payload']]))
+        ->toThrow(InvalidArgumentException::class, 'Invalid multipart part name');
+
+    Http::assertNothingSent();
+});
+
+it('refuses an injecting key at any nesting depth', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', [
+        'meta' => ['inner' => ['quote"break' => 'payload']],
+    ]))->toThrow(InvalidArgumentException::class, 'Invalid multipart part name');
+
+    Http::assertNothingSent();
+});
+
+it('refuses an empty nested $data key, which names no form field at all', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    expect(fn (): AsaasResult => multipartConnector()->postMultipart('/u', ['meta' => ['' => 'orphan']]))
+        ->toThrow(InvalidArgumentException::class, 'must not be empty');
+
+    Http::assertNothingSent();
+});
+
+it('still accepts nested list values, whose numeric keys are valid part names', function (): void {
+    Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+    $result = multipartConnector()->postMultipart('/u', ['tags' => ['first', 'second']]);
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(function ($request): bool {
+        expect($request->body())
+            ->toContain('name="tags[0]"')
+            ->toContain('name="tags[1]"');
+
+        return true;
+    });
+});
