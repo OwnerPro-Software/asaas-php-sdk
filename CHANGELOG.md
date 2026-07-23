@@ -293,6 +293,14 @@ are collected under *Breaking* so an upgrade can be planned from one list.
   own and forge a `documentFile` part with a filename no guard ever saw. `$data`
   keys now go through the same guard. Field names are otherwise unaffected;
   an empty one is now rejected, since it names no form field.
+- **The multipart field-name guard stopped at the top level.** A `$data` value
+  that is itself an array is expanded by the HTTP client into one part per
+  leaf, named `parent[childKey]` — and the child key lands in the same
+  unescaped `Content-Disposition: form-data; name="%s"` slot the guard above
+  exists to protect, one level down. A CRLF in a nested key appended part
+  headers of its own; a quote forged a filename. Keys are now validated at
+  every depth. No SDK resource passes nested `$data`, so only direct
+  `postMultipart()` callers can observe the new rejection.
 - **An upload filename of `'0'` leaked the local file's name.** The guard
   rejected an empty name because the HTTP client then falls back to the stream's
   `uri` metadata — but it tested `=== ''` while Guzzle tests `empty()`, so the
