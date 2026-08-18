@@ -965,7 +965,8 @@ transfers legitimately accept them (`TransferRequest::$pixAddressKeyType`).
 that resolves **any** Pix key in the ecosystem to its owner and financial
 institution, the check a transfer form runs before the money moves. Pass the
 key value and its type (`CPF`, `CNPJ`, `EMAIL`, `PHONE` or `EVP`, as the
-`PixAddressKeyType` enum or the raw string); the response carries `key`,
+`PixAddressKeyType` enum or the raw string — a string outside the enum throws
+`ValueError` before any request is sent); the response carries `key`,
 `type`, `ispb`, `ispbName`, `financialInstitution{id,name,code}` and
 `owner{name,cpfCnpj}` (masked). The endpoint is absent from the upstream
 OpenAPI export — see `specs/concept-fields.md`.

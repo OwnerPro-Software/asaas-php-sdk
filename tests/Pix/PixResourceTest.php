@@ -142,6 +142,10 @@ it('looks up a third-party pix key on the DICT by string type', function (array 
         && $request->method() === 'GET');
 })->with('pix_external_key_fixture');
 
+it('rejects a DICT lookup type outside the Pix key enum', function (): void {
+    pixResource()->findExternalKey('47996515839', 'CELLPHONE');
+})->throws(ValueError::class);
+
 it('returns failure when the DICT lookup is refused', function (array $errorFixture): void {
     Http::fake(['*' => Http::response($errorFixture, 400)]);
 

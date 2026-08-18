@@ -48,7 +48,9 @@ final readonly class PixResource
      */
     public function findExternalKey(string $key, PixAddressKeyType|string $type): AsaasResult
     {
-        return $this->connector->get(self::KEYS.'/external', ['type' => $type, 'key' => $key]);
+        $type = $type instanceof PixAddressKeyType ? $type : PixAddressKeyType::from($type);
+
+        return $this->connector->get(self::KEYS.'/external', ['type' => $type->value, 'key' => $key]);
     }
 
     public function deleteKey(string $id): AsaasResult

@@ -14,8 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolves a third-party Pix key to its owner and financial institution.
   `findKey()` only reads keys registered on the calling account by their Asaas
   id, so until now the lookup a transfer form runs before the money moves had
-  no SDK method. The endpoint is absent from the upstream OpenAPI export and is
-  documented from `docs.asaas.com` in `specs/concept-fields.md`.
+  no SDK method. A string `type` outside `PixAddressKeyType` throws
+  `ValueError` before any request is sent. The endpoint is absent from the
+  upstream OpenAPI export and is documented from `docs.asaas.com` in
+  `specs/concept-fields.md`.
 
 ## [3.0.0] - 2026-07-23
 
