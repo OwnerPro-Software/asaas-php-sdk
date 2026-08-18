@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.1.0] - 2026-08-18
 
 ### Added
 
@@ -1345,7 +1345,8 @@ Initial public release. See [README](README.md) for full feature documentation.
 - Pagination helpers `paginate()` and `all()` (generator).
 - `WebhookVerifier` with timing-safe token comparison and configurable IP allowlist.
 
-[Unreleased]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/OwnerPro-Software/asaas-php-sdk/compare/v1.4.0...v2.0.0
