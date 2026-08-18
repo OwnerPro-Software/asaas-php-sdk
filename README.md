@@ -944,6 +944,7 @@ Asaas::payments()->captureAuthorized($result->data['id']);
 ```php
 Asaas::pix()->createKey(array|PixKeyRequest $data): AsaasResult  // type must be 'EVP' — see below
 Asaas::pix()->findKey(string $id): AsaasResult
+Asaas::pix()->findExternalKey(string $key, PixAddressKeyType|string $type): AsaasResult  // DICT lookup of a third-party key
 Asaas::pix()->listKeys(array $query = []): AsaasPaginatedResult
 Asaas::pix()->deleteKey(string $id): AsaasResult
 Asaas::pix()->createStaticQrCode(array|StaticQrCodeRequest $data = []): AsaasResult
@@ -958,6 +959,23 @@ the Asaas panel, not through the API, so `PixKeyRequest` rejects them with an
 `InvalidArgumentException` instead of letting the request earn a remote 400.
 The shared `PixAddressKeyType` enum still carries all five cases because
 transfers legitimately accept them (`TransferRequest::$pixAddressKeyType`).
+
+`findKey()` reads a key registered on **your** account by its Asaas id.
+`findExternalKey()` is the DICT lookup — `GET /v3/pix/addressKeys/external` —
+that resolves **any** Pix key in the ecosystem to its owner and financial
+institution, the check a transfer form runs before the money moves. Pass the
+key value and its type (`CPF`, `CNPJ`, `EMAIL`, `PHONE` or `EVP`, as the
+`PixAddressKeyType` enum or the raw string); the response carries `key`,
+`type`, `ispb`, `ispbName`, `financialInstitution{id,name,code}` and
+`owner{name,cpfCnpj}` (masked). The endpoint is absent from the upstream
+OpenAPI export — see `specs/concept-fields.md`.
+
+```php
+$result = Asaas::pix()->findExternalKey('47996515839', PixAddressKeyType::Phone);
+
+$result->data['owner']['name'];            // "John Doe"
+$result->data['financialInstitution']['name'];
+```
 
 ### Pix Transactions (`pixTransactions()`)
 
@@ -1165,7 +1183,7 @@ Asaas::accounts()->updateAccessToken('acc_123', 'tok_1', new UpdateAccessTokenRe
 | `FiscalInfo` | `/v3/fiscalInfo/*` (config, services, NBS, taxes, federalServiceCodes, taxClassificationCodes, taxSituationCodes, operationIndicatorCodes, municipalOptions, nationalPortal) | `FiscalInfoResource` |
 | `Invoice` | `/v3/invoices`, `/v3/invoices/{id}`, `/v3/invoices/{id}/authorize`, `/v3/invoices/{id}/cancel` | `InvoiceResource` |
 | `PixDebit` | `/v3/pix/qrCodes/decode`, `/v3/pix/qrCodes/pay` (pay) | `PixTransactionResource::decodeQrCode`/`payQrCode` |
-| `PixAddressKey` | `/v3/pix/addressKeys`, `/v3/pix/addressKeys/{id}`, `/v3/pix/tokenBucket/addressKey` | `PixResource::*Key` |
+| `PixAddressKey` | `/v3/pix/addressKeys`, `/v3/pix/addressKeys/{id}`, `/v3/pix/addressKeys/external`, `/v3/pix/tokenBucket/addressKey` | `PixResource::*Key` |
 | `PixRecurring` | `/v3/pix/transactions/recurrings`, `/v3/pix/transactions/recurrings/{id}`, `/v3/pix/transactions/recurrings/{id}/cancel`, `/v3/pix/transactions/recurrings/{id}/items`, `/v3/pix/transactions/recurrings/items/{id}/cancel` | `PixTransactionResource::recurring*` |
 | `PixTransaction` | `/v3/pix/transactions`, `/v3/pix/transactions/{id}`, `/v3/pix/transactions/{id}/cancel`, `/v3/pix/qrCodes/static`, `/v3/pix/qrCodes/static/{id}` | `PixTransactionResource`, `PixResource::*StaticQr*` |
 | `PixAutomatic` | `/v3/pix/automatic/authorizations`, `/v3/pix/automatic/authorizations/{id}`, `/v3/pix/automatic/paymentInstructions`, `/v3/pix/automatic/paymentInstructions/{id}` | `PixAutomaticResource` |

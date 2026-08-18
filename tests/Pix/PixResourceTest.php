@@ -110,6 +110,48 @@ it('finds a pix key', function (array $fixture): void {
     Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/addressKeys/pix_123');
 })->with('pix_key_fixture');
 
+// --- findExternalKey ---
+
+dataset('pix_external_key_fixture', [fn (): array => [
+    'type' => 'PHONE', 'key' => '+5547996515839', 'ispb' => '19540550', 'ispbName' => 'ASAAS IP S.A.',
+    'financialInstitution' => ['id' => 461, 'name' => 'ASAAS IP S.A.', 'code' => '461'],
+    'owner' => ['name' => 'John Doe', 'cpfCnpj' => '***.123.456-**'],
+]]);
+
+it('looks up a third-party pix key on the DICT by enum type', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = pixResource()->findExternalKey('47996515839', PixAddressKeyType::Phone);
+
+    expect($result->success)->toBeTrue();
+    expect($result->data['key'])->toBe('+5547996515839');
+    expect($result->data['owner']['name'])->toBe('John Doe');
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/addressKeys/external?type=PHONE&key=47996515839'
+        && $request->method() === 'GET');
+})->with('pix_external_key_fixture');
+
+it('looks up a third-party pix key on the DICT by string type', function (array $fixture): void {
+    Http::fake(['*' => Http::response($fixture, 200)]);
+
+    $result = pixResource()->findExternalKey('john@example.com', 'EMAIL');
+
+    expect($result->success)->toBeTrue();
+
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://api-sandbox.asaas.com/v3/pix/addressKeys/external?type=EMAIL&key=john%40example.com'
+        && $request->method() === 'GET');
+})->with('pix_external_key_fixture');
+
+it('returns failure when the DICT lookup is refused', function (array $errorFixture): void {
+    Http::fake(['*' => Http::response($errorFixture, 400)]);
+
+    $result = pixResource()->findExternalKey('47996515839', PixAddressKeyType::Phone);
+
+    expect($result->success)->toBeFalse();
+    expect($result->response->status())->toBe(400);
+    expect($result->errors[0]['description'])->toBe('The value field is required');
+})->with('error_fixture');
+
 // --- deleteKey ---
 
 it('deletes a pix key', function (): void {

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`PixResource::findExternalKey(string $key, PixAddressKeyType|string $type)`**
+  — `GET /v3/pix/addressKeys/external?type=&key=`, the DICT lookup that
+  resolves a third-party Pix key to its owner and financial institution.
+  `findKey()` only reads keys registered on the calling account by their Asaas
+  id, so until now the lookup a transfer form runs before the money moves had
+  no SDK method. The endpoint is absent from the upstream OpenAPI export and is
+  documented from `docs.asaas.com` in `specs/concept-fields.md`.
+
 ## [3.0.0] - 2026-07-23
 
 Bug-hunt passes over the whole package: thirty defects found by auditing the

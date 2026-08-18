@@ -38,6 +38,19 @@ final readonly class PixResource
         return $this->connector->get($this->path(self::KEYS, $id));
     }
 
+    /**
+     * Looks a third-party key up on the DICT (`GET /v3/pix/addressKeys/external`).
+     *
+     * Unlike {@see findKey()}, which reads a key registered on the calling
+     * account by its Asaas id, this resolves any Pix key in the ecosystem to
+     * its owner and financial institution — the lookup a transfer form runs
+     * before the money moves.
+     */
+    public function findExternalKey(string $key, PixAddressKeyType|string $type): AsaasResult
+    {
+        return $this->connector->get(self::KEYS.'/external', ['type' => $type, 'key' => $key]);
+    }
+
     public function deleteKey(string $id): AsaasResult
     {
         return $this->connector->delete($this->path(self::KEYS, $id));

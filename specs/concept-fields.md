@@ -93,3 +93,14 @@ Maintenance rule: if a future spec refresh adds an entry here to `asaas_openapi.
 - **Source:** https://docs.asaas.com/reference/listar-documentos-de-uma-cobranca — page documents no query parameters. The *response* schema in the same spec file declares the standard envelope, so the endpoint is paginated even though the request side is undocumented.
 - **Accepted query params:** `offset` (int, default 0), `limit` (int, default 100). **Unverified against a live endpoint**, inferred from the response envelope; the same `all()` brakes described above apply.
 - **SDK method:** `OwnerPro\Asaas\Payment\PaymentResource::listDocuments(string $paymentId, array $query = []): AsaasPaginatedResult`.
+
+---
+
+## `GET /v3/pix/addressKeys/external` (DICT lookup of a third-party key)
+
+- **Endpoint** is absent from `specs/domains/pix.json` and `specs/asaas_openapi.json` — the export only carries the own-account key endpoints (`/v3/pix/addressKeys`, `/v3/pix/addressKeys/{id}`, `/v3/pix/tokenBucket/addressKey`).
+- **Source:** https://docs.asaas.com/reference/consultar-chave-pix
+- **Query params:** `type` (enum `CPF`, `CNPJ`, `EMAIL`, `PHONE`, `EVP`), `key` (string, the key value). The doc page marks both as optional, but the lookup is meaningless without them, so the SDK method requires both.
+- **Response (200):** `type`, `key`, `ispb`, `ispbName`, `financialInstitution{id,name,code}`, `owner{name,cpfCnpj}` (masked). Errors follow the standard envelope (`400` on an unknown key, `401` on an invalid API key, `403` when the GET carries a body).
+- **Why it matters:** `findKey()` reads a key registered on the calling account by its Asaas id; this is the only way to resolve any Pix key in the ecosystem to its owner and institution before a transfer.
+- **SDK method:** `OwnerPro\Asaas\Pix\PixResource::findExternalKey(string $key, PixAddressKeyType|string $type): AsaasResult`.
